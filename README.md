@@ -34,7 +34,8 @@ the project by doing the following:
 
 1. Get the ANTLR grammar for WDL 1.1 from https://github.com/openwdl/wdl
 2. Generate Python3 parser code from the grammar using the ANTLR tool
-https://www.antlr.org/index.html
+https://www.antlr.org/index.html The command for this will be something like:
+`antlr4 -Dlanguage=Python -o . grammar.g4`
 3. Using the generated parser code, write a simple program that prints
 out the names of the ‘tasks’ from
 https://github.com/broadinstitute/warp/blob/develop/tasks/broad/Utilities.wdl
