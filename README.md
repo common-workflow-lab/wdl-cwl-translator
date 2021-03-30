@@ -27,6 +27,10 @@ much older versions of WDL and CWL.  It should be used for
 inspiration, however we expect this project will involve writing a new
 program that uses the ANTLR grammar for WDL.
 
+For some discussion comparing the two languages (mainly from the perspective of translating in the other direction, CWL to WDL), see this document:
+
+https://github.com/dnanexus/dxCompiler/blob/main/doc/CWL_v1.2.0_to_WDL_v1.md
+
 # For Outreachy contributors
 
 Applicants can demonstrate their technical ability to contribute to
