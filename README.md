@@ -39,6 +39,8 @@ https://www.antlr.org/index.html The command for this will be something like:
 3. Using the generated parser code, write a simple program that prints
 out the names of the ‘tasks’ from
 https://github.com/broadinstitute/warp/blob/develop/tasks/broad/Utilities.wdl
+This article discusses how to get started with ANTLR and Python:
+https://medium.com/@raguiar2/building-a-working-calculator-in-python-with-antlr-d879e2ea9058
 4. Using
    [cwl-utils](https://github.com/common-workflow-language/cwl-utils)
    write a simple program that starts with `cwl_utils.parser_v1_2.CommandLineTool` and constructs a CWL data structure that corresponds to this file:
