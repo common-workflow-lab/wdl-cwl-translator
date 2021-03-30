@@ -41,6 +41,7 @@ out the names of the ‘tasks’ from
 https://github.com/broadinstitute/warp/blob/develop/tasks/broad/Utilities.wdl
 This article discusses how to get started with ANTLR and Python:
 https://medium.com/@raguiar2/building-a-working-calculator-in-python-with-antlr-d879e2ea9058
+and the official documentation for the ANTLR Python target is here https://github.com/antlr/antlr4/blob/master/doc/python-target.md
 4. Using
    [cwl-utils](https://github.com/common-workflow-language/cwl-utils)
    write a simple program that starts with `cwl_utils.parser_v1_2.CommandLineTool` and constructs a CWL data structure that corresponds to this file:
