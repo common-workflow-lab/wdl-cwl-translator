@@ -10,6 +10,7 @@ pytest_runner = ["pytest < 7", "pytest-runner"] if needs_pytest else []
 
 setup(
     install_requires = [
-        "cwl-utils"
+        "cwl-utils",
+        "antlr4-python3-runtime",
     ]
 )
