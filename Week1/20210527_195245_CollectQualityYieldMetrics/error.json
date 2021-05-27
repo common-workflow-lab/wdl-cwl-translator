@@ -1,0 +1,23 @@
+{
+  "error": "RunFailed",
+  "task": "CollectQualityYieldMetrics",
+  "run": "CollectQualityYieldMetrics",
+  "dir": "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/20210527_195245_CollectQualityYieldMetrics",
+  "cause": {
+    "error": "OutputError",
+    "message": "File/Directory path not found in task output quality_yield_metrics",
+    "node": "decl-quality_yield_metrics",
+    "run": "CollectQualityYieldMetrics",
+    "dir": "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/20210527_195245_CollectQualityYieldMetrics",
+    "pos": {
+      "source": "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/Qc.wdl",
+      "line": 19,
+      "column": 1
+    }
+  },
+  "pos": {
+    "source": "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/Qc.wdl",
+    "line": 19,
+    "column": 1
+  }
+}

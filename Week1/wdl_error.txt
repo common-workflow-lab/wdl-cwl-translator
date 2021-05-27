@@ -1,0 +1,85 @@
+miniwdl run Qc.wdl  input_bam=simple1.bam  metrics_filename="metrics_filename"  preemptible_tries=2 --verbose
+2021-05-27 19:52:44.131 miniwdl-run no configuration file found
+2021-05-27 19:52:45.851 wdl.t:CollectQualityYieldMetrics task start :: name: "CollectQualityYieldMetrics", source: "Qc.wdl", line: 19, column: 1, dir: "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/20210527_195245_CollectQualityYieldMetrics", thread: 140451065161536
+2021-05-27 19:52:46.169 wdl.t:CollectQualityYieldMetrics docker swarm resources :: workers: 1, max_cpus: 4, max_mem_bytes: 8051531776, total_cpus: 4, total_mem_bytes: 8051531776
+2021-05-27 19:52:46.169 wdl.t:CollectQualityYieldMetrics input :: name: "preemptible_tries", value: 2
+2021-05-27 19:52:46.169 wdl.t:CollectQualityYieldMetrics input :: name: "metrics_filename", value: "metrics_filename"
+2021-05-27 19:52:46.170 wdl.t:CollectQualityYieldMetrics input :: name: "input_bam", value: "/mnt/miniwdl_task_container/work/_miniwdl_inputs/0/simple1.bam"
+2021-05-27 19:52:46.170 wdl.t:CollectQualityYieldMetrics eval :: name: "disk_size", value: 21
+2021-05-27 19:52:46.171 wdl.t:CollectQualityYieldMetrics effective runtime :: docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8", memory_reservation: 3758096384, preemptible: 2
+2021-05-27 19:52:46.171 wdl.t:CollectQualityYieldMetrics ignored runtime settings :: keys: ["disks"]
+2021-05-27 19:52:46.185 wdl.t:CollectQualityYieldMetrics docker image :: tag: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8", id: "sha256:9df9c96fb5d89a8d4a67b7221844d7214b65ecef5d408db5cc095091e53507e4", RepoDigest: "us.gcr.io/broad-gotc-prod/picard-cloud@sha256:bb9207a31bdbdd96e34623ecde44d8a45e11bcbabacb34bbf860aa99d841cfea"
+2021-05-27 19:52:48.189 wdl.t:CollectQualityYieldMetrics docker task starting :: service: "w4nvhjvp7f", task: "b5x5585pec", node: "6193wo3y6r", desired: "running"
+2021-05-27 19:52:49.788 wdl.t:CollectQualityYieldMetrics docker task running :: service: "w4nvhjvp7f", task: "b5x5585pec", node: "6193wo3y6r", message: "started"
+2021-05-27 19:52:49.788 wdl.t:CollectQualityYieldMetrics.stderr USAGE: CollectQualityYieldMetrics [arguments]
+2021-05-27 19:52:49.789 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.789 wdl.t:CollectQualityYieldMetrics.stderr Collect metrics about reads that pass quality thresholds and Illumina-specific filters.  This tool evaluates the overall
+2021-05-27 19:52:49.789 wdl.t:CollectQualityYieldMetrics.stderr quality of reads within a bam file containing one read group. The output indicates the total numbers of bases within a
+2021-05-27 19:52:49.789 wdl.t:CollectQualityYieldMetrics.stderr read group that pass a minimum base quality score threshold and (in the case of Illumina data) pass Illumina quality
+2021-05-27 19:52:49.789 wdl.t:CollectQualityYieldMetrics.stderr filters as described in the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>GATK Dictionary
+2021-05-27 19:52:49.789 wdl.t:CollectQualityYieldMetrics.stderr entry</a>. <br /><h4>Note on base quality score options</h4>If the quality score of read bases has been modified in a
+2021-05-27 19:52:49.790 wdl.t:CollectQualityYieldMetrics.stderr previous data processing step such as <a href='https://www.broadinstitute.org/gatk/guide/article?id=44'>GATK Base
+2021-05-27 19:52:49.790 wdl.t:CollectQualityYieldMetrics.stderr Recalibration</a> and an OQ tag is available, this tool can be set to use the OQ value instead of the primary quality
+2021-05-27 19:52:49.790 wdl.t:CollectQualityYieldMetrics.stderr value for the evaluation. <br /><br />Note that the default behaviour of this program changed as of November 6th 2015 to
+2021-05-27 19:52:49.790 wdl.t:CollectQualityYieldMetrics.stderr no longer include secondary and supplemental alignments in the computation. <br /><h4>Usage Example:</h4><pre>java -jar
+2021-05-27 19:52:49.790 wdl.t:CollectQualityYieldMetrics.stderr picard.jar CollectQualityYieldMetrics \<br />       I=input.bam \<br />       O=quality_yield_metrics.txt \<br
+2021-05-27 19:52:49.790 wdl.t:CollectQualityYieldMetrics.stderr /></pre>Please see <a
+2021-05-27 19:52:49.791 wdl.t:CollectQualityYieldMetrics.stderr href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectQualityYieldMetrics.QualityYieldMetrics'>the
+2021-05-27 19:52:49.791 wdl.t:CollectQualityYieldMetrics.stderr QualityYieldMetrics documentation</a> for details and explanations of the output metrics.<hr />
+2021-05-27 19:52:49.791 wdl.t:CollectQualityYieldMetrics.stderr Version:2.23.8-SNAPSHOT
+2021-05-27 19:52:49.791 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.791 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.791 wdl.t:CollectQualityYieldMetrics.stderr Required Arguments:
+2021-05-27 19:52:49.791 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.792 wdl.t:CollectQualityYieldMetrics.stderr --INPUT,-I:File               Input SAM or BAM file.  Required.
+2021-05-27 19:52:49.792 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.792 wdl.t:CollectQualityYieldMetrics.stderr --OUTPUT,-O:File              The file to write the output to.  Required.
+2021-05-27 19:52:49.792 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.792 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.792 wdl.t:CollectQualityYieldMetrics.stderr Optional Arguments:
+2021-05-27 19:52:49.792 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.793 wdl.t:CollectQualityYieldMetrics.stderr --arguments_file:File         read one or more arguments files and add them to the command line  This argument may be
+2021-05-27 19:52:49.793 wdl.t:CollectQualityYieldMetrics.stderr                               specified 0 or more times. Default value: null.
+2021-05-27 19:52:49.793 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.793 wdl.t:CollectQualityYieldMetrics.stderr --ASSUME_SORTED,-AS:Boolean   If true (default), then the sort order in the header file will be ignored.  Default value:
+2021-05-27 19:52:49.793 wdl.t:CollectQualityYieldMetrics.stderr                               true. Possible values: {true, false}
+2021-05-27 19:52:49.793 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.794 wdl.t:CollectQualityYieldMetrics.stderr --help,-h:Boolean             display the help message  Default value: false. Possible values: {true, false}
+2021-05-27 19:52:49.794 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.794 wdl.t:CollectQualityYieldMetrics.stderr --INCLUDE_SECONDARY_ALIGNMENTS:Boolean
+2021-05-27 19:52:49.794 wdl.t:CollectQualityYieldMetrics.stderr                               If true, include bases from secondary alignments in metrics. Setting to true may cause
+2021-05-27 19:52:49.794 wdl.t:CollectQualityYieldMetrics.stderr                               double-counting of bases if there are secondary alignments in the input file.  Default
+2021-05-27 19:52:49.794 wdl.t:CollectQualityYieldMetrics.stderr                               value: false. Possible values: {true, false}
+2021-05-27 19:52:49.794 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.795 wdl.t:CollectQualityYieldMetrics.stderr --INCLUDE_SUPPLEMENTAL_ALIGNMENTS:Boolean
+2021-05-27 19:52:49.795 wdl.t:CollectQualityYieldMetrics.stderr                               If true, include bases from supplemental alignments in metrics. Setting to true may cause
+2021-05-27 19:52:49.795 wdl.t:CollectQualityYieldMetrics.stderr                               double-counting of bases if there are supplemental alignments in the input file.  Default
+2021-05-27 19:52:49.795 wdl.t:CollectQualityYieldMetrics.stderr                               value: false. Possible values: {true, false}
+2021-05-27 19:52:49.795 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.795 wdl.t:CollectQualityYieldMetrics.stderr --STOP_AFTER:Long             Stop after processing N reads, mainly for debugging.  Default value: 0.
+2021-05-27 19:52:49.795 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.796 wdl.t:CollectQualityYieldMetrics.stderr --USE_ORIGINAL_QUALITIES,-OQ:Boolean
+2021-05-27 19:52:49.796 wdl.t:CollectQualityYieldMetrics.stderr                               If available in the OQ tag, use the original quality scores as inputs instead of the
+2021-05-27 19:52:49.796 wdl.t:CollectQualityYieldMetrics.stderr                               quality scores in the QUAL field.  Default value: true. Possible values: {true, false}
+2021-05-27 19:52:49.796 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.796 wdl.t:CollectQualityYieldMetrics.stderr --version:Boolean             display the version number for this tool  Default value: false. Possible values: {true,
+2021-05-27 19:52:49.796 wdl.t:CollectQualityYieldMetrics.stderr                               false}
+2021-05-27 19:52:49.797 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.797 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.797 wdl.t:CollectQualityYieldMetrics.stderr Advanced Arguments:
+2021-05-27 19:52:49.797 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.797 wdl.t:CollectQualityYieldMetrics.stderr --showHidden,-showHidden:Boolean
+2021-05-27 19:52:49.797 wdl.t:CollectQualityYieldMetrics.stderr                               display hidden arguments  Default value: false. Possible values: {true, false}
+2021-05-27 19:52:49.797 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.798 wdl.t:CollectQualityYieldMetrics.stderr 
+2021-05-27 19:52:49.798 wdl.t:CollectQualityYieldMetrics.stderr Illegal argument value: Positional arguments were provided ',-}' but no positional argument is defined for this tool.
+2021-05-27 19:52:49.798 wdl.t:CollectQualityYieldMetrics.stderr ../command: line 2: -: command not found
+2021-05-27 19:52:49.798 wdl.t:CollectQualityYieldMetrics.stderr ../command: line 3: -: command not found
+2021-05-27 19:52:50.925 wdl.t:CollectQualityYieldMetrics docker task complete :: service: "w4nvhjvp7f", task: "b5x5585pec", node: "6193wo3y6r", desired: "shutdown", message: "finished"
+2021-05-27 19:52:50.926 wdl.t:CollectQualityYieldMetrics docker task exit :: state: "complete", exit_code: 0
+2021-05-27 19:52:54.323 wdl.t:CollectQualityYieldMetrics output :: name: "quality_yield_metrics", value: "data/metrics_filename"
+
+#################################################################################################################
+2021-05-27 19:52:54.324 wdl.t:CollectQualityYieldMetrics output path not found in container (error unless declared type is optional) :: output: "quality_yield_metrics", path: "data/metrics_filename"
+2021-05-27 19:52:54.327 wdl.t:CollectQualityYieldMetrics task CollectQualityYieldMetrics (Qc.wdl Ln 19 Col 1) failed :: dir: "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/20210527_195245_CollectQualityYieldMetrics", error: "OutputError", message: "File/Directory path not found in task output quality_yield_metrics", node: "decl-quality_yield_metrics"
+2021-05-27 19:52:54.330 miniwdl-run File/Directory path not found in task output quality_yield_metrics :: error: "OutputError", node: "decl-quality_yield_metrics", dir: "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/20210527_195245_CollectQualityYieldMetrics"

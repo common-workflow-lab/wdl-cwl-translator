@@ -1,0 +1,6 @@
+2021-05-27 00:02:00.463 wdl.w:ga4ghMd5.t:call-md5 NOTICE task start :: name: "md5", source: "md5.wdl", line: 3, column: 1, dir: "/home/dinithiw/Documents/Codes/WDL_Training/test1/20210527_000200_ga4ghMd5/call-md5", thread: 140090769704704
+2021-05-27 00:02:00.925 wdl.w:ga4ghMd5.t:call-md5 NOTICE docker swarm resources :: workers: 1, max_cpus: 4, max_mem_bytes: 8051535872, total_cpus: 4, total_mem_bytes: 8051535872
+2021-05-27 00:02:30.866 wdl.w:ga4ghMd5.t:call-md5 NOTICE docker image :: tag: "quay.io/briandoconnor/dockstore-tool-md5sum:1.0.4", id: "sha256:8c1d429312ea1224a511ed4f48518b2f8f14cb985107a10f64b20c4ae838c537", RepoDigest: "quay.io/briandoconnor/dockstore-tool-md5sum@sha256:9dea21819f321321bde6ed9fcfa5aa27c4d400b0f92adb65b1b9a4e5ecc9f8c4"
+2021-05-27 00:02:35.256 wdl.w:ga4ghMd5.t:call-md5 NOTICE docker task running :: service: "ii2lnv54ec", task: "tic0bz8912", node: "6193wo3y6r", message: "started"
+2021-05-27 00:02:36.186 wdl.w:ga4ghMd5.t:call-md5 NOTICE docker task exit :: state: "complete", exit_code: 0
+2021-05-27 00:02:39.800 wdl.w:ga4ghMd5.t:call-md5 NOTICE done

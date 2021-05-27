@@ -1,0 +1,6 @@
+input_bam:
+  class: File
+  path: simple.bam
+
+metrics_filename: metrics_file
+  
