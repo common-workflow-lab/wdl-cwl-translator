@@ -1,0 +1,35 @@
+2021-05-28 19:12:00.126 wdl.t:CollectQualityYieldMetrics NOTICE task start :: name: "CollectQualityYieldMetrics", source: "Qc.wdl", line: 19, column: 1, dir: "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/20210528_191200_CollectQualityYieldMetrics", thread: 140346168985408
+2021-05-28 19:12:00.600 wdl.t:CollectQualityYieldMetrics NOTICE docker swarm resources :: workers: 1, max_cpus: 4, max_mem_bytes: 8051531776, total_cpus: 4, total_mem_bytes: 8051531776
+2021-05-28 19:12:00.600 wdl.t:CollectQualityYieldMetrics INFO input :: name: "preemptible_tries", value: 2
+2021-05-28 19:12:00.601 wdl.t:CollectQualityYieldMetrics INFO input :: name: "metrics_filename", value: "metrics_filename"
+2021-05-28 19:12:00.601 wdl.t:CollectQualityYieldMetrics INFO input :: name: "input_bam", value: "/mnt/miniwdl_task_container/work/_miniwdl_inputs/0/insert_size_metrics_test.sam"
+2021-05-28 19:12:00.602 wdl.t:CollectQualityYieldMetrics INFO eval :: name: "disk_size", value: 21
+2021-05-28 19:12:00.604 wdl.t:CollectQualityYieldMetrics INFO effective runtime :: docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8", memory_reservation: 3758096384, preemptible: 2
+2021-05-28 19:12:00.604 wdl.t:CollectQualityYieldMetrics WARNING ignored runtime settings :: keys: ["disks"]
+2021-05-28 19:12:00.634 wdl.t:CollectQualityYieldMetrics NOTICE docker image :: tag: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8", id: "sha256:9df9c96fb5d89a8d4a67b7221844d7214b65ecef5d408db5cc095091e53507e4", RepoDigest: "us.gcr.io/broad-gotc-prod/picard-cloud@sha256:bb9207a31bdbdd96e34623ecde44d8a45e11bcbabacb34bbf860aa99d841cfea"
+2021-05-28 19:12:02.580 wdl.t:CollectQualityYieldMetrics INFO docker task starting :: service: "s6bs6zf672", task: "c8wlvhouoi", node: "6193wo3y6r", desired: "running"
+2021-05-28 19:12:04.636 wdl.t:CollectQualityYieldMetrics NOTICE docker task running :: service: "s6bs6zf672", task: "c8wlvhouoi", node: "6193wo3y6r", message: "started"
+2021-05-28 19:12:04.637 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE INFO	2021-05-28 13:42:03	CollectQualityYieldMetrics
+2021-05-28 19:12:04.637 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE 
+2021-05-28 19:12:04.637 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE ********** NOTE: Picard's command line syntax is changing.
+2021-05-28 19:12:04.637 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE **********
+2021-05-28 19:12:04.637 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE ********** For more information, please see:
+2021-05-28 19:12:04.637 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE ********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)
+2021-05-28 19:12:04.637 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE **********
+2021-05-28 19:12:04.638 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE ********** The command line looks like this in the new syntax:
+2021-05-28 19:12:04.638 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE **********
+2021-05-28 19:12:04.638 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE **********    CollectQualityYieldMetrics -INPUT /mnt/miniwdl_task_container/work/_miniwdl_inputs/0/insert_size_metrics_test.sam -OQ true -OUTPUT metrics_filename
+2021-05-28 19:12:04.638 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE **********
+2021-05-28 19:12:04.638 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE 
+2021-05-28 19:12:04.638 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE 
+2021-05-28 19:12:04.638 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE 13:42:03.814 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/usr/picard/picard.jar!/com/intel/gkl/native/libgkl_compression.so
+2021-05-28 19:12:04.638 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE [Fri May 28 13:42:03 UTC 2021] CollectQualityYieldMetrics USE_ORIGINAL_QUALITIES=true INPUT=/mnt/miniwdl_task_container/work/_miniwdl_inputs/0/insert_size_metrics_test.sam OUTPUT=metrics_filename    INCLUDE_SECONDARY_ALIGNMENTS=false INCLUDE_SUPPLEMENTAL_ALIGNMENTS=false ASSUME_SORTED=true STOP_AFTER=0 VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false GA4GH_CLIENT_SECRETS=client_secrets.json USE_JDK_DEFLATER=false USE_JDK_INFLATER=false
+2021-05-28 19:12:04.639 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE May 28, 2021 1:42:04 PM shaded.cloud_nio.com.google.auth.oauth2.ComputeEngineCredentials runningOnComputeEngine
+2021-05-28 19:12:04.639 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE INFO: Failed to detect whether we are running on Google Compute Engine.
+2021-05-28 19:12:04.639 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE [Fri May 28 13:42:04 UTC 2021] Executing as root@fae5ae7a26bb on Linux 4.15.0-143-generic amd64; OpenJDK 64-Bit Server VM 1.8.0_222-b10; Deflater: Intel; Inflater: Intel; Provider GCS is available; Picard version: 2.23.8-SNAPSHOT
+2021-05-28 19:12:04.639 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE [Fri May 28 13:42:04 UTC 2021] picard.analysis.CollectQualityYieldMetrics done. Elapsed time: 0.01 minutes.
+2021-05-28 19:12:04.639 wdl.t:CollectQualityYieldMetrics.stderr VERBOSE Runtime.totalMemory()=2010120192
+2021-05-28 19:12:06.348 wdl.t:CollectQualityYieldMetrics INFO docker task complete :: service: "s6bs6zf672", task: "c8wlvhouoi", node: "6193wo3y6r", desired: "shutdown", message: "finished"
+2021-05-28 19:12:06.349 wdl.t:CollectQualityYieldMetrics NOTICE docker task exit :: state: "complete", exit_code: 0
+2021-05-28 19:12:09.795 wdl.t:CollectQualityYieldMetrics INFO output :: name: "quality_yield_metrics", value: "metrics_filename"
+2021-05-28 19:12:09.806 wdl.t:CollectQualityYieldMetrics NOTICE done

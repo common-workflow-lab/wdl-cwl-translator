@@ -1,6 +1,6 @@
 input_bam:
   class: File
-  path: simple.bam
+  path: insert_size_metrics_test.sam
 
 metrics_filename: metrics_file
   

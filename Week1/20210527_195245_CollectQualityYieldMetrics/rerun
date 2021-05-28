@@ -1,1 +1,0 @@
-pushd /home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1 && miniwdl run Qc.wdl input_bam=simple1.bam metrics_filename=metrics_filename preemptible_tries=2 --verbose; popd

@@ -1,5 +1,0 @@
-{
-  "preemptible_tries": 2,
-  "metrics_filename": "metrics_filename",
-  "input_bam": "/home/dinithiw/Documents/Codes/wdl-cwl-translator/Week1/simple1.bam"
-}

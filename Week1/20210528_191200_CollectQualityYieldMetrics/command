@@ -1,0 +1,6 @@
+java -Xms2000m -jar /usr/picard/picard.jar \
+  CollectQualityYieldMetrics \
+  INPUT=/mnt/miniwdl_task_container/work/_miniwdl_inputs/0/insert_size_metrics_test.sam \
+  OQ=true \
+  OUTPUT=metrics_filename
+ 

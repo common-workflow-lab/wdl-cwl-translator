@@ -16,13 +16,9 @@ hints:
 inputs:
   input_bam:
     type: File
-    inputBinding:
-      position: 1
   
   metrics_filename:
     type: string
-    inputBinding:
-      position: 2
 
 outputs:
   quality_yield_metrics:
@@ -30,8 +26,6 @@ outputs:
     outputBinding:
       glob: $(inputs.metrics_filename)
 
-baseCommand: [java -Xms2000m -jar /usr/picard/picard.jar \
-      CollectQualityYieldMetrics \
-      INPUT=$(input_bam) \
-      OQ=true \
-      OUTPUT=$(metrics_filename)]
+baseCommand: [java, -Xms2000m, -jar, /usr/picard/picard.jar, CollectQualityYieldMetrics ]
+
+arguments: [INPUT=$(inputs.input_bam.path) ,OQ=true, OUTPUT=$(inputs.metrics_filename)]

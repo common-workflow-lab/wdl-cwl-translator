@@ -1,0 +1,20 @@
+INFO	2021-05-28 13:42:03	CollectQualityYieldMetrics	
+
+********** NOTE: Picard's command line syntax is changing.
+**********
+********** For more information, please see:
+********** https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition)
+**********
+********** The command line looks like this in the new syntax:
+**********
+**********    CollectQualityYieldMetrics -INPUT /mnt/miniwdl_task_container/work/_miniwdl_inputs/0/insert_size_metrics_test.sam -OQ true -OUTPUT metrics_filename
+**********
+
+
+13:42:03.814 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/usr/picard/picard.jar!/com/intel/gkl/native/libgkl_compression.so
+[Fri May 28 13:42:03 UTC 2021] CollectQualityYieldMetrics USE_ORIGINAL_QUALITIES=true INPUT=/mnt/miniwdl_task_container/work/_miniwdl_inputs/0/insert_size_metrics_test.sam OUTPUT=metrics_filename    INCLUDE_SECONDARY_ALIGNMENTS=false INCLUDE_SUPPLEMENTAL_ALIGNMENTS=false ASSUME_SORTED=true STOP_AFTER=0 VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false GA4GH_CLIENT_SECRETS=client_secrets.json USE_JDK_DEFLATER=false USE_JDK_INFLATER=false
+May 28, 2021 1:42:04 PM shaded.cloud_nio.com.google.auth.oauth2.ComputeEngineCredentials runningOnComputeEngine
+INFO: Failed to detect whether we are running on Google Compute Engine.
+[Fri May 28 13:42:04 UTC 2021] Executing as root@fae5ae7a26bb on Linux 4.15.0-143-generic amd64; OpenJDK 64-Bit Server VM 1.8.0_222-b10; Deflater: Intel; Inflater: Intel; Provider GCS is available; Picard version: 2.23.8-SNAPSHOT
+[Fri May 28 13:42:04 UTC 2021] picard.analysis.CollectQualityYieldMetrics done. Elapsed time: 0.01 minutes.
+Runtime.totalMemory()=2010120192
