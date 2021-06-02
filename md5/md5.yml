@@ -1,3 +1,0 @@
-input_file:
-  class: File
-  path: test.txt
