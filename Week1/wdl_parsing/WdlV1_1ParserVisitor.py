@@ -42,7 +42,6 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by WdlV1_1Parser#unbound_decls.
     def visitUnbound_decls(self, ctx:WdlV1_1Parser.Unbound_declsContext):
         task_inputs.append(ctx.Identifier())
-        #print(ctx.Identifier())
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by WdlV1_1Parser#bound_decls.

@@ -20,16 +20,9 @@ def visit_tasks():
     for a in ast:
         EvaluateTaskVisitor().visit(a)
 
-'''def get_input():
-    
-    ast = WdlV1_1ParserVisitor().visitTask_input(tree2)
-    print(ast)'''
-
 def get_command():
     ast = WdlV1_1ParserVisitor().visitDocument(tree)
     
-    '''for a in ast:
-        print(a)'''
 
 get_command()
 #visit_tasks()
