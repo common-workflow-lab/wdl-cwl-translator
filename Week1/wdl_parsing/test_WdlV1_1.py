@@ -21,8 +21,8 @@ def visit_tasks():
         EvaluateTaskVisitor().visit(a)
 
 def get_command():
-    ast = WdlV1_1ParserVisitor().visitDocument(tree)
     
+    ast = WdlV1_1ParserVisitor().visitDocument(tree)
 
 get_command()
 #visit_tasks()
