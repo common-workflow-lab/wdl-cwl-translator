@@ -1,6 +1,5 @@
 # Generated from WdlV1_1Parser.g4 by ANTLR 4.7.2
 from antlr4 import *
-from WdlV1_1Ast import *
 if __name__ is not None and "." in __name__:
     from .WdlV1_1Parser import WdlV1_1Parser
 else:
@@ -8,10 +7,21 @@ else:
 
 # This class defines a complete generic visitor for a parse tree produced by WdlV1_1Parser.
 
-task_inputs = []
-task_outputs = []
-
 class WdlV1_1ParserVisitor(ParseTreeVisitor):
+
+    def __init__(self):
+        self.task_inputs = []
+        self.task_outputs = []
+        self.task_command = None
+        self.task_runtime = []
+        #checks are used to check the parent node
+        self.task_input_check = None
+        self.workflow_input_check = None
+        self.task_output_check = None
+
+    def walk_tree(self, tree):
+        self.visitDocument(tree)
+        return self
 
     # Visit a parse tree produced by WdlV1_1Parser#map_type.
     def visitMap_type(self, ctx:WdlV1_1Parser.Map_typeContext):
@@ -35,24 +45,30 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#wdl_type.
     def visitWdl_type(self, ctx:WdlV1_1Parser.Wdl_typeContext):
-        print(ctx.getText())
-        return self.visitChildren(ctx)
+        return ctx.getText()
+        #return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by WdlV1_1Parser#unbound_decls.
     def visitUnbound_decls(self, ctx:WdlV1_1Parser.Unbound_declsContext):
-        task_inputs.append(ctx.Identifier())
-        return self.visitChildren(ctx)
+        input_type = self.visitWdl_type(ctx.wdl_type())
+        return [input_type, ctx.Identifier()]
 
     # Visit a parse tree produced by WdlV1_1Parser#bound_decls.
     def visitBound_decls(self, ctx:WdlV1_1Parser.Bound_declsContext):
+        decl_type = self.visitWdl_type(ctx.wdl_type())
+        expression = self.visitExpr(ctx.expr())
+        if self.task_output_check:
+            self.task_outputs.append([decl_type, ctx.Identifier(), expression])
         return self.visitChildren(ctx)
-
-
+        
     # Visit a parse tree produced by WdlV1_1Parser#any_decls.
     def visitAny_decls(self, ctx:WdlV1_1Parser.Any_declsContext):
-        return self.visitChildren(ctx)
+        unbound_decls = self.visitUnbound_decls(ctx.unbound_decls())
+        if self.task_input_check:
+            self.task_inputs.append(unbound_decls)
 
+        return unbound_decls
 
     # Visit a parse tree produced by WdlV1_1Parser#number.
     def visitNumber(self, ctx:WdlV1_1Parser.NumberContext):
@@ -91,7 +107,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#expr.
     def visitExpr(self, ctx:WdlV1_1Parser.ExprContext):
-        return self.visitChildren(ctx)
+        return ctx.getText()
 
 
     # Visit a parse tree produced by WdlV1_1Parser#infix0.
@@ -341,22 +357,25 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#task_runtime_kv.
     def visitTask_runtime_kv(self, ctx:WdlV1_1Parser.Task_runtime_kvContext):
+        expression = self.visitExpr(ctx.expr())      
+        self.task_runtime.append([ctx.Identifier(), expression])
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by WdlV1_1Parser#task_runtime.
     def visitTask_runtime(self, ctx:WdlV1_1Parser.Task_runtimeContext):
-        node = TaskNode()
-        #return node
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by WdlV1_1Parser#task_input.
     def visitTask_input(self, ctx:WdlV1_1Parser.Task_inputContext):
+        self.task_input_check = 1
+        
         return self.visitChildren(ctx)
         
     # Visit a parse tree produced by WdlV1_1Parser#task_output.
     def visitTask_output(self, ctx:WdlV1_1Parser.Task_outputContext):
+        self.task_output_check = 1
         return self.visitChildren(ctx)
 
 
@@ -377,20 +396,18 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#task_command.
     def visitTask_command(self, ctx:WdlV1_1Parser.Task_commandContext):
+        self.task_command=(ctx.getText())
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by WdlV1_1Parser#task_element.
-    def visitTask_element(self, ctx:WdlV1_1Parser.Task_elementContext):      
+    def visitTask_element(self, ctx:WdlV1_1Parser.Task_elementContext):   
+        self.task_input_check = None
+        self.task_output_check = None
         return self.visitChildren(ctx)
 
-    #### CHANGED CODE HERE #######
     # Visit a parse tree produced by WdlV1_1Parser#task.
     def visitTask(self, ctx:WdlV1_1Parser.TaskContext):
-        
-        node = TaskNode()
-        node.task_name = ctx.Identifier()
-        #return node
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by WdlV1_1Parser#inner_workflow_element.
@@ -482,12 +499,10 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     def visitWorkflow(self, ctx:WdlV1_1Parser.WorkflowContext):
         return self.visitChildren(ctx)
 
-
     # Visit a parse tree produced by WdlV1_1Parser#document_element.
     def visitDocument_element(self, ctx:WdlV1_1Parser.Document_elementContext):
         return self.visitChildren(ctx)
 
-    #### CHANGED CODE HERE #######
     # Visit a parse tree produced by WdlV1_1Parser#document.
     def visitDocument(self, ctx:WdlV1_1Parser.DocumentContext):
         return self.visitChildren(ctx)
