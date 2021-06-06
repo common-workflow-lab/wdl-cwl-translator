@@ -1,3 +1,5 @@
+ANTLR runtime and generated code versions disagree: 4.9.2!=4.7.2
+ANTLR runtime and generated code versions disagree: 4.9.2!=4.7.2
 class: CommandLineTool
 id: CollectQualityYieldMetrics
 inputs:
@@ -5,6 +7,8 @@ inputs:
   type: File
 - id: metrics_filename
   type: string
+- id: preemptible_tries
+  type: int
 outputs:
 - id: quality_yield_metrics
   type: File
@@ -12,7 +16,7 @@ outputs:
     glob: $(inputs.metrics_filename)
 requirements:
 - class: DockerRequirement
-  dockerPull: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
+  dockerPull: '"us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"'
 hints:
 - class: ResourceRequirement
   ramMin: 3584
@@ -24,7 +28,7 @@ baseCommand:
 - /usr/picard/picard.jar
 - CollectQualityYieldMetrics
 arguments:
-- valueFrom: INPUT=$(inputs.input_bam.path)
+- valueFrom: INPUT=$(inputs.input_bam)
 - valueFrom: OQ=true
 - valueFrom: OUTPUT=$(inputs.metrics_filename)
 

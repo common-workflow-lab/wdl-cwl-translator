@@ -52,14 +52,14 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by WdlV1_1Parser#unbound_decls.
     def visitUnbound_decls(self, ctx:WdlV1_1Parser.Unbound_declsContext):
         input_type = self.visitWdl_type(ctx.wdl_type())
-        return [input_type, ctx.Identifier()]
+        return [input_type, str(ctx.Identifier())]
 
     # Visit a parse tree produced by WdlV1_1Parser#bound_decls.
     def visitBound_decls(self, ctx:WdlV1_1Parser.Bound_declsContext):
         decl_type = self.visitWdl_type(ctx.wdl_type())
         expression = self.visitExpr(ctx.expr())
         if self.task_output_check:
-            self.task_outputs.append([decl_type, ctx.Identifier(), expression])
+            self.task_outputs.append([decl_type, str(ctx.Identifier()), expression])
         return self.visitChildren(ctx)
         
     # Visit a parse tree produced by WdlV1_1Parser#any_decls.
@@ -358,7 +358,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by WdlV1_1Parser#task_runtime_kv.
     def visitTask_runtime_kv(self, ctx:WdlV1_1Parser.Task_runtime_kvContext):
         expression = self.visitExpr(ctx.expr())      
-        self.task_runtime.append([ctx.Identifier(), expression])
+        self.task_runtime.append([str(ctx.Identifier()), expression])
         return self.visitChildren(ctx)
 
 
