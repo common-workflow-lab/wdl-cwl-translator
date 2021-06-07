@@ -15,8 +15,7 @@ tree = parser.document()
 
 #create WdlV1_1ParserVisitor object and return all inputs, outputs, etc
 ast = WdlV1_1ParserVisitor()
-ast.walk_tree(tree)
-
+ast = ast.walk_tree(tree)
 
 #get input type and name
 def get_inputs(ast):
@@ -83,16 +82,12 @@ wdl_type = {
         "Boolean": "boolean",
     }
 
-###### Docker Requirement ##########
-docker_runtime = None
-ram_min = 0
-for i in range(0,len(ast.task_runtime)):
-    if ast.task_runtime[i][0] =="docker":
-        docker_runtime = ast.task_runtime[i][1].strip()
-    elif ast.task_runtime[i][0] =="memory":
-        ram_min = ast.task_runtime[i][1][ast.task_runtime[i][1].find("\"")+1:ast.task_runtime[i][1].find("GiB")]
-        ram_min = int(float(ram_min.strip())*1024)
-    
+#get memory requirement
+#only to handle values given in GiB
+def get_ram_min(ram_min):
+    ram_min = ram_min[ram_min.find("\"")+1:ram_min.find("GiB")]
+    return int(float(ram_min.strip())*1024)
+
 import cwl_utils.parser_v1_2 as cwl
 
 from ruamel import yaml
@@ -108,13 +103,13 @@ def main() -> None:
 
     docker_requirement = [
         cwl.DockerRequirement(
-            dockerPull=docker_runtime,
+            dockerPull=ast.task_runtime["docker"],
         )
     ]
 
     hints = [
         cwl.ResourceRequirement(
-            ramMin=ram_min,
+            ramMin=get_ram_min(ast.task_runtime["memory"]),
         )
     ]
 

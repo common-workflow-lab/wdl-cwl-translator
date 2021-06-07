@@ -13,7 +13,8 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         self.task_inputs = []
         self.task_outputs = []
         self.task_command = None
-        self.task_runtime = []
+        #self.task_runtime = []
+        self.task_runtime = {}
         #checks are used to check the parent node
         self.task_input_check = None
         self.workflow_input_check = None
@@ -358,7 +359,8 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by WdlV1_1Parser#task_runtime_kv.
     def visitTask_runtime_kv(self, ctx:WdlV1_1Parser.Task_runtime_kvContext):
         expression = self.visitExpr(ctx.expr())      
-        self.task_runtime.append([str(ctx.Identifier()), expression])
+        #self.task_runtime.append([str(ctx.Identifier()), expression])
+        self.task_runtime[str(ctx.Identifier())] = expression
         return self.visitChildren(ctx)
 
 
