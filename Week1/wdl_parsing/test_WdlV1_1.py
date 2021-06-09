@@ -7,6 +7,8 @@ from WdlV1_1Parser import WdlV1_1Parser
 from WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
 import cwl_utils.parser_v1_2 as cwl
 
+from ruamel import yaml
+
 text = InputStream(f.read())
 lexer = WdlV1_1Lexer(text)
 stream = CommonTokenStream(lexer)
@@ -15,35 +17,7 @@ tree = parser.document()
 
 #create WdlV1_1ParserVisitor object and return all inputs, outputs, etc
 ast = WdlV1_1ParserVisitor()
-ast = ast.walk_tree(tree)
-
-#get input type and name
-def get_inputs(ast):
-    print('TASK INPUTS')
-    for a in ast.task_inputs:
-        print(a[0], " ", a[1])
-
-#get runtime requirements
-def get_runtime(ast):
-    print('TASK RUNTIME')
-    for a in ast.task_runtime:
-        print(a[0]," ",a[1])
-
-#get output type, name, expression
-def get_outputs(ast):
-    print('TASK OUTPUT')
-    for a in ast.task_outputs:
-        print(a[0]," ",a[1]," ",a[2])
-
-#get command
-def get_command(ast):
-    print('TASK COMMAND')
-    print(ast.task_command)
-
-#get_inputs(ast)
-#get_runtime(ast)
-#get_outputs(ast)
-#get_command(ast)
+ast.walk_tree(tree)
 
 #returns the entire command including "command{........}"
 command = ast.task_command
@@ -55,7 +29,7 @@ command_arguments = []
 
 for a in command:
     #if it contains = , it's taken as an argument
-    if "=" in a:
+    if "=" in a or "~" in a:
         command_arguments.append(a.strip())
     #else add to base command
     else:
@@ -70,7 +44,10 @@ for i in command_arguments:
     if "~" in i:
         parameter_reference = i[i.find("~{")+2:i.find("}")] #finding the name of the parameter
         sub_str = i.strip().split("~")
-        command_arguments[index] = sub_str[0]+"$(inputs."+parameter_reference+")"
+        if "INPUT" not in sub_str[0]:
+            command_arguments[index] = sub_str[0]+"$(inputs."+parameter_reference+")"
+        else:
+            command_arguments[index] = sub_str[0]+"$(inputs."+parameter_reference+".path"")"
     index+=1
 
 ###### WDL-CWL Type Mappings #########
@@ -88,10 +65,6 @@ def get_ram_min(ram_min):
     ram_min = ram_min[ram_min.find("\"")+1:ram_min.find("GiB")]
     return int(float(ram_min.strip())*1024)
 
-import cwl_utils.parser_v1_2 as cwl
-
-from ruamel import yaml
-
 def main() -> None:
     """Generate a CWL object to match "cat-tool.cwl"."""
     
@@ -103,8 +76,8 @@ def main() -> None:
 
     docker_requirement = [
         cwl.DockerRequirement(
-            dockerPull=ast.task_runtime["docker"],
-        )
+            dockerPull=ast.task_runtime["docker"].replace('"', ''),
+        ),
     ]
 
     hints = [
@@ -138,7 +111,7 @@ def main() -> None:
     
 
     cat_tool = cwl.CommandLineTool(
-        id="CollectQualityYieldMetrics",
+        id=ast.task_name,
         inputs=inputs,
         requirements=docker_requirement,
         hints=hints,
@@ -146,9 +119,23 @@ def main() -> None:
         cwlVersion="v1.0",
         baseCommand=base_command,
         arguments=arguments,
+        
     )
 
-    print(yaml.main.round_trip_dump(cat_tool.save()))
+    if "preemptible" in ast.task_runtime:
+        print("----WARNING: SKIPPING REQUIREMENT PREEMPTIBLE----")
+
+    if "disks" in ast.task_runtime:
+        print("----WARNING: SKIPPING REQUIREMENT DISKS----")
+
+    if(len(ast.task_variables)>0):
+        for a in ast.task_variables:
+            print("----WARNING: SKIPPING VARIABLE "+str(a[1])+"----")
+
+    with open('result.cwl', 'w') as result:
+        result.write(yaml.main.round_trip_dump(cat_tool.save()))
+
+    #print(yaml.main.round_trip_dump(cat_tool.save()))
 
 if __name__ == "__main__":
     main()

@@ -13,6 +13,8 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         self.task_inputs = []
         self.task_outputs = []
         self.task_command = None
+        self.task_name = None
+        self.task_variables = []
         #self.task_runtime = []
         self.task_runtime = {}
         #checks are used to check the parent node
@@ -59,8 +61,11 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     def visitBound_decls(self, ctx:WdlV1_1Parser.Bound_declsContext):
         decl_type = self.visitWdl_type(ctx.wdl_type())
         expression = self.visitExpr(ctx.expr())
+        #need to add bound inputs later
         if self.task_output_check:
             self.task_outputs.append([decl_type, str(ctx.Identifier()), expression])
+        else:
+            self.task_variables.append([decl_type, str(ctx.Identifier()), expression])
         return self.visitChildren(ctx)
         
     # Visit a parse tree produced by WdlV1_1Parser#any_decls.
@@ -410,6 +415,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#task.
     def visitTask(self, ctx:WdlV1_1Parser.TaskContext):
+        self.task_name = str(ctx.Identifier())
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by WdlV1_1Parser#inner_workflow_element.

@@ -12,7 +12,7 @@ outputs:
     glob: $(inputs.metrics_filename)
 requirements:
 - class: DockerRequirement
-  dockerPull: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
+  dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
 hints:
 - class: ResourceRequirement
   ramMin: 3584
@@ -27,4 +27,3 @@ arguments:
 - valueFrom: INPUT=$(inputs.input_bam.path)
 - valueFrom: OQ=true
 - valueFrom: OUTPUT=$(inputs.metrics_filename)
-
