@@ -1,5 +1,3 @@
-f = open("Qc.wdl", "r")
-
 import sys
 from antlr4 import *
 from WdlV1_1Lexer import WdlV1_1Lexer
@@ -8,47 +6,6 @@ from WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
 import cwl_utils.parser_v1_2 as cwl
 
 from ruamel import yaml
-
-text = InputStream(f.read())
-lexer = WdlV1_1Lexer(text)
-stream = CommonTokenStream(lexer)
-parser = WdlV1_1Parser(stream)
-tree = parser.document()
-
-#create WdlV1_1ParserVisitor object and return all inputs, outputs, etc
-ast = WdlV1_1ParserVisitor()
-ast.walk_tree(tree)
-
-#returns the entire command including "command{........}"
-command = ast.task_command
-command = command[command.find("{")+1:-1] #removing the command{} part
-command = command.strip().split("\\") #split by '\'
-
-base_command = ""
-command_arguments = []
-
-for a in command:
-    #if it contains = , it's taken as an argument
-    if "=" in a or "~" in a:
-        command_arguments.append(a.strip())
-    #else add to base command
-    else:
-        base_command+=a
-
-#split the base command by spaces
-base_command = base_command.split()
-
-## get command arguments
-index = 0
-for i in command_arguments:
-    if "~" in i:
-        parameter_reference = i[i.find("~{")+2:i.find("}")] #finding the name of the parameter
-        sub_str = i.strip().split("~")
-        if "INPUT" not in sub_str[0]:
-            command_arguments[index] = sub_str[0]+"$(inputs."+parameter_reference+")"
-        else:
-            command_arguments[index] = sub_str[0]+"$(inputs."+parameter_reference+".path"")"
-    index+=1
 
 ###### WDL-CWL Type Mappings #########
 wdl_type = {
@@ -65,9 +22,51 @@ def get_ram_min(ram_min):
     ram_min = ram_min[ram_min.find("\"")+1:ram_min.find("GiB")]
     return int(float(ram_min.strip())*1024)
 
-def main() -> None:
+def main(argv) -> None:
     """Generate a CWL object to match "cat-tool.cwl"."""
     
+    f = open(argv[0], "r")
+    text = InputStream(f.read())
+    lexer = WdlV1_1Lexer(text)
+    stream = CommonTokenStream(lexer)
+    parser = WdlV1_1Parser(stream)
+    tree = parser.document()
+
+    #create WdlV1_1ParserVisitor object and return all inputs, outputs, etc
+    ast = WdlV1_1ParserVisitor()
+    ast.walk_tree(tree)
+
+    #returns the entire command including "command{........}"
+    command = ast.task_command
+    command = command[command.find("{")+1:-1] #removing the command{} part
+    command = command.strip().split("\\") #split by '\'
+
+    base_command = ""
+    command_arguments = []
+
+    for a in command:
+        #if it contains = , it's taken as an argument
+        if "=" in a or "~" in a:
+            command_arguments.append(a.strip())
+        #else add to base command
+        else:
+            base_command+=a
+
+    #split the base command by spaces
+    base_command = base_command.split()
+
+    ## get command arguments
+    index = 0
+    for i in command_arguments:
+        if "~" in i:
+            parameter_reference = i[i.find("~{")+2:i.find("}")] #finding the name of the parameter
+            sub_str = i.strip().split("~")
+            if "INPUT" not in sub_str[0]:
+                command_arguments[index] = sub_str[0]+"$(inputs."+parameter_reference+")"
+            else:
+                command_arguments[index] = sub_str[0]+"$(inputs."+parameter_reference+".path"")"
+        index+=1
+
     inputs = []
     for i in ast.task_inputs:
         input_type = wdl_type[i[0]]
@@ -135,10 +134,11 @@ def main() -> None:
     with open('result.cwl', 'w') as result:
         result.write(yaml.main.round_trip_dump(cat_tool.save()))
 
+    #print(yaml.main.round_trip_dump(cat_tool.save()))
     return yaml.main.round_trip_dump(cat_tool.save())
-
+    
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
 
 
 '''python create_cwl_from_objects.py > result.cwl
