@@ -4,7 +4,7 @@ import filecmp
 import sys
 sys.path.append("..")
 
-from wdlcwltranslator.wdl2cwl import WdlV1_1 as wdl
+from .. import WdlV1_1 as wdl
 
 from subprocess import call
 
