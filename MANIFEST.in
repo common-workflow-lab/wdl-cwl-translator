@@ -1,0 +1,2 @@
+include wdl2cwl/tests/wdl_files/*.wdl
+include wdl2cwl/tests/cwl_files/*.cwl

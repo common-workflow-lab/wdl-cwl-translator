@@ -131,16 +131,7 @@ def main(argv) -> None:
         for a in ast.task_variables:
             print("----WARNING: SKIPPING VARIABLE "+str(a[1])+"----")
 
-    with open('result.cwl', 'w') as result:
-        result.write(yaml.main.round_trip_dump(cat_tool.save()))
-
-    #print(yaml.main.round_trip_dump(cat_tool.save()))
     return yaml.main.round_trip_dump(cat_tool.save())
     
 if __name__ == "__main__":
     main(sys.argv[1:])
-
-
-'''python create_cwl_from_objects.py > result.cwl
-cwltool --validate result.cwl'''
-
