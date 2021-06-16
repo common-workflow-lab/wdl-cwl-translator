@@ -69,21 +69,28 @@ def main(argv) -> None:
 
     inputs = []
     for i in ast.task_inputs:
-        input_type = wdl_type[i[0]]
+        input_type = wdl_type[i[0].replace('?','')]
         input_name = i[1]
         inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))  
 
-    docker_requirement = [
-        cwl.DockerRequirement(
-            dockerPull=ast.task_runtime["docker"].replace('"', ''),
-        ),
-    ]
+    for i in ast.task_inputs_bound:
+        input_type = wdl_type[i[0].replace('?','')]
+        input_name = i[1]
+        input_expression = i[2].replace('"','')
+        inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type, 
+        default=input_expression,))  
 
-    hints = [
-        cwl.ResourceRequirement(
-            ramMin=get_ram_min(ast.task_runtime["memory"]),
-        )
-    ]
+    docker_requirement = []
+    if ast.task_runtime:
+        docker_requirement.append(cwl.DockerRequirement(
+                dockerPull=ast.task_runtime["docker"].replace('"', '')
+            ))
+
+    hints = []
+    if ast.task_runtime:
+        hints.append(cwl.ResourceRequirement(
+                ramMin=get_ram_min(ast.task_runtime["memory"]),
+            ))   
 
     outputs = []
 
@@ -92,8 +99,11 @@ def main(argv) -> None:
         output_name = i[1]
         output_glob = ""
         if "~" in i[2]:
-            output_glob = i[2][i[2].find("~{")+2:i[2].find("}")]
-            output_glob = "$(inputs."+output_glob+")"
+            start_index = i[2].find("~{")
+            end_index = i[2].find("}")
+            output_glob = i[2][0:start_index]+"$(inputs."+i[2][start_index+2:end_index]+")"+i[2][end_index+1:]
+            output_glob = output_glob.replace('"','')
+            
         else:
             output_glob = i[2]
 
@@ -112,8 +122,8 @@ def main(argv) -> None:
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,
         inputs=inputs,
-        requirements=docker_requirement,
-        hints=hints,
+        requirements=docker_requirement if docker_requirement else None,
+        hints=hints if hints else None,
         outputs=outputs,
         cwlVersion="v1.0",
         baseCommand=base_command,
@@ -131,6 +141,9 @@ def main(argv) -> None:
         for a in ast.task_variables:
             print("----WARNING: SKIPPING VARIABLE "+str(a[1])+"----")
 
+    with open('result.cwl', 'w') as result:
+        result.write(yaml.main.round_trip_dump(cat_tool.save()))
+        
     return yaml.main.round_trip_dump(cat_tool.save())
     
 if __name__ == "__main__":

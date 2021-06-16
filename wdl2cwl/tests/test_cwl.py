@@ -14,7 +14,7 @@ def get_file(path: str) -> str:
 class Test:
 
     def testCollectQualityYieldMetrics(self):
-        abc = wdl.main([get_file("wdl_files/Qc.wdl")])
+        abc = wdl.main([get_file("wdl_files/CollectQualityYieldMetrics.wdl")])
         testStr = ""
         with open(get_file('cwl_files/CollectQualityYieldMetrics.cwl'),'r') as file:
             testStr = file.read()
