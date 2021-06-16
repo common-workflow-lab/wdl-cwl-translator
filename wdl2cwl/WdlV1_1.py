@@ -1,8 +1,8 @@
 import sys
 from antlr4 import *
-from .WdlV1_1Lexer import WdlV1_1Lexer
-from .WdlV1_1Parser import WdlV1_1Parser
-from .WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
+from wdl2cwl.WdlV1_1Lexer import WdlV1_1Lexer
+from wdl2cwl.WdlV1_1Parser import WdlV1_1Parser
+from wdl2cwl.WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
 import cwl_utils.parser_v1_2 as cwl
 
 from ruamel import yaml
