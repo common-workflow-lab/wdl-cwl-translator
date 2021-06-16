@@ -157,7 +157,7 @@ mypy3: mypy
 mypy: $(filter-out setup.py wdl2cwl/WdlV1_1%,$(PYSOURCES))
 	mypy --exclude '\.tox.*' $^
 
-pyupgrade: $(PYSOURCES)
+pyupgrade: $(filter-out wdl2cwl/WdlV1_1%,$(PYSOURCES))
 	pyupgrade --exit-zero-even-if-changed --py36-plus $^
 
 release-test: FORCE

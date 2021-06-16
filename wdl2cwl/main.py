@@ -32,7 +32,7 @@ def get_ram_min(ram_min: str) -> int:
 
 def main(argv: List[str]) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
-    f = open(argv[0], "r")
+    f = open(argv[0])
     text = InputStream(f.read())
     lexer = WdlV1_1Lexer(text)
     stream = CommonTokenStream(lexer)
