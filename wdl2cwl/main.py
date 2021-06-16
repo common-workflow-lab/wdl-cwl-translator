@@ -1,11 +1,13 @@
 import sys
-from antlr4 import InputStream, CommonTokenStream
+from antlr4 import InputStream, CommonTokenStream  # type: ignore
 from wdl2cwl.WdlV1_1Lexer import WdlV1_1Lexer
 from wdl2cwl.WdlV1_1Parser import WdlV1_1Parser
 from wdl2cwl.WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
 import cwl_utils.parser_v1_2 as cwl
 
 from ruamel import yaml
+
+from typing import cast, List
 
 # WDL-CWL Type Mappings
 wdl_type = {
@@ -17,7 +19,7 @@ wdl_type = {
 }
 
 
-def get_ram_min(ram_min):
+def get_ram_min(ram_min: str) -> int:
     """
     Get memory requirement.
 
@@ -27,7 +29,7 @@ def get_ram_min(ram_min):
     return int(float(ram_min.strip()) * 1024)
 
 
-def main(argv) -> None:
+def main(argv: List[str]) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
 
     f = open(argv[0], "r")
@@ -35,18 +37,19 @@ def main(argv) -> None:
     lexer = WdlV1_1Lexer(text)
     stream = CommonTokenStream(lexer)
     parser = WdlV1_1Parser(stream)
-    tree = parser.document()
+    tree = parser.document()  # type: ignore
 
     # create WdlV1_1ParserVisitor object and return all inputs, outputs, etc
-    ast = WdlV1_1ParserVisitor()
-    ast.walk_tree(tree)
+    ast = WdlV1_1ParserVisitor()  # type: ignore
+    ast.walk_tree(tree)  # type: ignore
 
     # returns the entire command including "command{........}"
-    command = ast.task_command
-    command = command[command.find("{") + 1 : -1]  # removing the command{} part
-    command = command.strip().split("\\")  # split by '\'
+    raw_command: str = cast(str, ast.task_command)
+    raw_command = raw_command[raw_command.find("{") + 1 : -1]  # removing the command{} part
+    command: List[str] = raw_command.strip().split("\\")  # split by '\'
 
-    base_command = ""
+    raw_base_command = ""
+    base_command = []
     command_arguments = []
 
     for a in command:
@@ -55,10 +58,10 @@ def main(argv) -> None:
             command_arguments.append(a.strip())
         # else add to base command
         else:
-            base_command += a
+            raw_base_command += a
 
     # split the base command by spaces
-    base_command = base_command.split()
+    base_command = raw_base_command.split()
 
     # get command arguments
     index = 0
@@ -127,7 +130,7 @@ def main(argv) -> None:
         requirements=docker_requirement,
         hints=hints,
         outputs=outputs,
-        cwlVersion="v1.0",
+        cwlVersion="v1.2",
         baseCommand=base_command,
         arguments=arguments,
     )
@@ -142,7 +145,7 @@ def main(argv) -> None:
         for a in ast.task_variables:
             print("----WARNING: SKIPPING VARIABLE " + str(a[1]) + "----")
 
-    return yaml.main.round_trip_dump(cat_tool.save())
+    return cast(str, yaml.main.round_trip_dump(cat_tool.save()))
 
 
 if __name__ == "__main__":

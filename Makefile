@@ -155,7 +155,7 @@ list-author-emails:
 
 mypy3: mypy
 mypy: $(filter-out setup.py wdl2cwl/WdlV1_1%,$(PYSOURCES))
-	mypy $^
+	mypy --exclude '\.tox.*' $^
 
 pyupgrade: $(PYSOURCES)
 	pyupgrade --exit-zero-even-if-changed --py36-plus $^
