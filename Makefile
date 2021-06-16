@@ -77,10 +77,10 @@ clean: FORCE
 
 # Linting and code style related targets
 ## sorting imports using isort: https://github.com/timothycrosley/isort
-sort_imports: $(PYSOURCES)
+sort_imports: $(filter-out wdl2cwl/WdlV1_1%,$(PYSOURCES))
 	isort $^
 
-remove_unused_imports: $(PYSOURCES)
+remove_unused_imports: $(filter-out wdl2cwl/WdlV1_1%,$(PYSOURCES))
 	autoflake --in-place --remove-all-unused-imports $^
 
 pep257: pydocstyle

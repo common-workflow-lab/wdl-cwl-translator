@@ -1,8 +1,5 @@
-import pytest
-import filecmp
-
 import os.path
-import sys
+
 
 from .. import main as wdl
 

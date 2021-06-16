@@ -1,13 +1,13 @@
 import sys
-from antlr4 import InputStream, CommonTokenStream  # type: ignore
+from typing import List, cast
+
+import cwl_utils.parser_v1_2 as cwl
+from antlr4 import CommonTokenStream, InputStream  # type: ignore
+from ruamel import yaml
+
 from wdl2cwl.WdlV1_1Lexer import WdlV1_1Lexer
 from wdl2cwl.WdlV1_1Parser import WdlV1_1Parser
 from wdl2cwl.WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
-import cwl_utils.parser_v1_2 as cwl
-
-from ruamel import yaml
-
-from typing import cast, List
 
 # WDL-CWL Type Mappings
 wdl_type = {
@@ -45,7 +45,9 @@ def main(argv: List[str]) -> str:
 
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
-    raw_command = raw_command[raw_command.find("{") + 1 : -1]  # removing the command{} part
+    raw_command = raw_command[
+        raw_command.find("{") + 1 : -1
+    ]  # removing the command{} part
     command: List[str] = raw_command.strip().split("\\")  # split by '\'
 
     raw_base_command = ""

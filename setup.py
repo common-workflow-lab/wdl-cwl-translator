@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 needs_pytest = {"pytest", "test", "ptr"}.intersection(sys.argv)
 pytest_runner = ["pytest < 7", "pytest-runner"] if needs_pytest else []
