@@ -3,14 +3,23 @@ import sys
 
 from setuptools import setup, find_packages
 
-setup(name="wdl2cwl", packages=find_packages())
-
 needs_pytest = {"pytest", "test", "ptr"}.intersection(sys.argv)
 pytest_runner = ["pytest < 7", "pytest-runner"] if needs_pytest else []
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
-    install_requires = [
+    name="wdl2cwl",
+    url="https://github.com/common-workflow-lab/wdl-cwl-translator",
+    version="0.0.1",
+    author="Dinithi Wickramaratne",
+    author_email="diniwick124@gmail.com",
+    long_description_content_type="text/markdown",
+    packages=find_packages(),
+    setup_requires=[] + pytest_runner,
+    install_requires=[
         "cwl-utils",
         "antlr4-python3-runtime",
-    ]
+    ],
 )
