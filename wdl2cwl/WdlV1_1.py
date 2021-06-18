@@ -14,6 +14,7 @@ wdl_type = {
         "Int": "int",
         "Float": "float",
         "Boolean": "boolean",
+        "?": "null"
     }
 
 #get memory requirement
@@ -21,6 +22,48 @@ wdl_type = {
 def get_ram_min(ram_min):
     ram_min = ram_min[ram_min.find("\"")+1:ram_min.find("GiB")]
     return int(float(ram_min.strip())*1024)
+
+def get_command(command,unbound,bound):
+    index = 0
+    new_command = ""
+    start_index = 0
+    end_index = 0
+
+    input_types = []
+    input_names = []
+    
+    for i in unbound:
+        input_types.append(i[0])
+        input_names.append(i[1])
+
+    for i in bound:
+        input_types.append(i[0])
+        input_names.append(i[1])
+   
+    while index<len(command):
+        if command[index]!="\n":
+            new_command+=command[index]
+        if command[index] is "~" and command[index+1] is "{":
+            start_index = index+2
+            while 1:
+                if command[index] is "}":
+                    end_index = index
+                    index+=1
+                    break
+                else:
+                    index+=1
+            sub_str = command[start_index:end_index]
+            data_type = input_types[input_names.index(sub_str)] if sub_str in input_names else ""
+            append_str = ""
+            if data_type == "File":
+                append_str = "$(inputs."+sub_str+".path)"
+            else:
+                append_str = "$(inputs."+sub_str+")"
+            new_command=new_command[:-1]+append_str
+        index+=1
+    return new_command
+    
+
 
 def main(argv) -> None:
     """Generate a CWL object to match "cat-tool.cwl"."""
@@ -38,8 +81,12 @@ def main(argv) -> None:
 
     #returns the entire command including "command{........}"
     command = ast.task_command
+    
     command = command[command.find("{")+1:-1] #removing the command{} part
-    command = command.strip().split("\\") #split by '\'
+    command = get_command(command,ast.task_inputs,ast.task_inputs_bound)
+    command = command.strip("\n")
+
+    '''command = command.strip().split("\\") #split by '\'
 
     base_command = ""
     command_arguments = []
@@ -66,25 +113,31 @@ def main(argv) -> None:
             else:
                 command_arguments[index] = sub_str[0]+"$(inputs."+parameter_reference+".path"")"
         index+=1
+    '''
+
+    base_command = ["sh", "example.sh"]
 
     inputs = []
     for i in ast.task_inputs:
-        input_type = wdl_type[i[0].replace('?','')]
+        input_type = wdl_type[i[0]] if '?' not in i[0] else [ wdl_type[i[0].replace('?','')], wdl_type["?"] ]
         input_name = i[1]
         inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))  
 
     for i in ast.task_inputs_bound:
-        input_type = wdl_type[i[0].replace('?','')]
+        input_type = wdl_type[i[0]] if '?' not in i[0] else [ wdl_type[i[0].replace('?','')], wdl_type["?"].replace('"','') ]
         input_name = i[1]
         input_expression = i[2].replace('"','')
         inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type, 
         default=input_expression,))  
 
-    docker_requirement = []
+    requirements = []
     if ast.task_runtime:
-        docker_requirement.append(cwl.DockerRequirement(
+        requirements.append(cwl.DockerRequirement(
                 dockerPull=ast.task_runtime["docker"].replace('"', '')
             ))
+    
+    requirements.append(
+        cwl.InitialWorkDirRequirement(listing=cwl.Dirent(entry=command,entryname="example.sh")))
 
     hints = []
     if ast.task_runtime:
@@ -113,21 +166,21 @@ def main(argv) -> None:
             outputBinding=cwl.CommandOutputBinding(glob=output_glob),
         ))
 
-    arguments = []
+    '''arguments = []
 
     for i in command_arguments:
-        arguments.append(cwl.CommandLineBinding(valueFrom=i))
+        arguments.append(cwl.CommandLineBinding(valueFrom=i))'''
     
 
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,
         inputs=inputs,
-        requirements=docker_requirement if docker_requirement else None,
+        requirements=requirements if requirements else None,
         hints=hints if hints else None,
         outputs=outputs,
         cwlVersion="v1.0",
         baseCommand=base_command,
-        arguments=arguments,
+        #arguments=arguments,
         
     )
 
