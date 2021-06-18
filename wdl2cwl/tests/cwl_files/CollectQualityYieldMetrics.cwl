@@ -18,7 +18,7 @@ requirements:
 hints:
 - class: ResourceRequirement
   ramMin: 3584
-cwlVersion: v1.0
+cwlVersion: v1.2
 baseCommand:
 - java
 - -Xms2000m
