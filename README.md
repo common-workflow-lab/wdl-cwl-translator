@@ -30,25 +30,3 @@ program that uses the ANTLR grammar for WDL.
 For some discussion comparing the two languages (mainly from the perspective of translating in the other direction, CWL to WDL), see this document:
 
 https://github.com/dnanexus/dxCompiler/blob/main/doc/CWL_v1.2.0_to_WDL_v1.md
-
-# For Outreachy contributors
-
-Applicants can demonstrate their technical ability to contribute to
-the project by doing the following:
-
-1. Get the ANTLR grammar for WDL 1.1 from https://github.com/openwdl/wdl
-2. Generate Python3 parser code from the grammar using the ANTLR tool
-https://www.antlr.org/index.html The command for this will be something like:
-`antlr4 -Dlanguage=Python -o . grammar.g4`
-3. Using the generated parser code, write a simple program that prints
-out the names of the ‘tasks’ from
-https://github.com/broadinstitute/warp/blob/develop/tasks/broad/Utilities.wdl
-This article discusses how to get started with ANTLR and Python:
-https://medium.com/@raguiar2/building-a-working-calculator-in-python-with-antlr-d879e2ea9058
-and the official documentation for the ANTLR Python target is here https://github.com/antlr/antlr4/blob/master/doc/python-target.md
-4. Using
-   [cwl-utils](https://github.com/common-workflow-language/cwl-utils)
-   write a simple program that starts with `cwl_utils.parser_v1_2.CommandLineTool` and constructs a CWL data structure that corresponds to this file:
-   https://github.com/common-workflow-language/cwl-utils/blob/main/testdata/md5sum.cwl
-   then saves it to a `.cwl` file.
-5. Make a pull request against this repository with your sample programs
