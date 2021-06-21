@@ -28,7 +28,8 @@ def get_ram_min(ram_min: str) -> int:
 
     Only handles value given in GiB.
     """
-    ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find("GiB")]
+    unit = " ".join(re.findall("[a-zA-Z]+", ram_min))
+    ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
     return int(float(ram_min.strip()) * 1024)
 
 #Does not handle cases like ~{true="-2 " false="" twoPassMode}  yet
@@ -57,7 +58,6 @@ def get_command(command,unbound,bound):
             while 1:
                 if command[index] is "}":
                     end_index = index
-                    index+=1
                     break
                 else:
                     index+=1
@@ -100,11 +100,13 @@ def main(argv: List[str]) -> str:
         raw_command[i] = raw_command[i].strip()
         if "\\" in raw_command[i]:
             command+=raw_command[i]
+        elif "#" in raw_command[i] or "\n" is raw_command[i]: #skip comments
+            continue
         else:
             command+=raw_command[i]+" "
-
+        
     command = get_command(command,ast.task_inputs,ast.task_inputs_bound)
-
+    
     base_command = ["sh", "example.sh"]
 
     inputs = []
@@ -125,11 +127,39 @@ def main(argv: List[str]) -> str:
             )
         )
 
+    #requirements_keys = list(ast.task_runtime.keys())
+    
     requirements = []
-    if ast.task_runtime:
+    if "docker" in ast.task_runtime:
+        dockerPull = ""
+
+        #might have cases like "~{dockerimage}" > not handled
+        if '"' not in ast.task_runtime["docker"]:
+            for sublist in ast.task_inputs_bound:
+                if ast.task_runtime["docker"] in sublist[1]:
+                    dockerPull = sublist[2]
+
+        elif '"' in ast.task_runtime["docker"] and "~{" in ast.task_runtime["docker"]:
+            start_index = ast.task_runtime["docker"].find("~{")
+            end_index = ast.task_runtime["docker"].find("}")
+            dockerInput = (
+                ast.task_runtime["docker"][0:start_index]
+                + "$(inputs."
+                + ast.task_runtime["docker"][start_index + 2 : end_index]
+                + ")"
+                + ast.task_runtime["docker"][end_index + 1 :]
+            )
+
+            for sublist in ast.task_inputs_bound:
+                if dockerInput in sublist[1]:
+                    dockerPull = sublist[2]
+
+        else:
+            dockerPull = ast.task_runtime["docker"]
+        
         requirements.append(
             cwl.DockerRequirement(
-                dockerPull=ast.task_runtime["docker"].replace('"', "")
+                dockerPull=dockerPull.replace('"', "") 
             )
         )
 
@@ -137,10 +167,19 @@ def main(argv: List[str]) -> str:
         cwl.InitialWorkDirRequirement(listing=[cwl.Dirent(entry=command,entryname="example.sh")]))
 
     hints = []
-    if ast.task_runtime:
+    if "memory" in ast.task_runtime:
+        memory = ""
+
+        if '"' not in ast.task_runtime["memory"]:
+            for sublist in ast.task_inputs_bound:
+                if sublist[1] in ast.task_runtime["memory"]:
+                    memory = sublist[2]
+        else:
+            memory = ast.task_runtime["memory"]
+
         hints.append(
             cwl.ResourceRequirement(
-                ramMin=get_ram_min(ast.task_runtime["memory"]),
+                ramMin=get_ram_min(memory),
             )
         )
 
@@ -189,9 +228,15 @@ def main(argv: List[str]) -> str:
     if "disks" in ast.task_runtime:
         print("----WARNING: SKIPPING REQUIREMENT DISKS----")
 
+    if "time_minutes" in ast.task_runtime:
+        print("----WARNING: SKIPPING REQUIREMENT TIME_MINUTES----")
+
     if len(ast.task_variables) > 0:
         for a in ast.task_variables:
             print("----WARNING: SKIPPING VARIABLE " + str(a[1]) + "----")
+
+    with open('result.cwl', 'w') as result:
+        result.write(yaml.main.round_trip_dump(cat_tool.save()))
 
     return cast(str, yaml.main.round_trip_dump(cat_tool.save()))
 
