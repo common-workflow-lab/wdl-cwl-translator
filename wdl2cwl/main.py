@@ -189,6 +189,8 @@ def main(argv: List[str]) -> str:
         output_type = wdl_type[i[0]]
         output_name = i[1]
         output_glob = ""
+
+        #for parameter references
         if "~" in i[2]:
             start_index = i[2].find("~{")
             end_index = i[2].find("}")
@@ -201,6 +203,24 @@ def main(argv: List[str]) -> str:
             )
             output_glob = output_glob.replace('"', "")
 
+        #For a string concatenation
+        elif "+" in i[2]:
+            split_str = i[2].split("+")
+            
+            input_names = []
+            for i in ast.task_inputs_bound:
+                input_names.append(i[1])
+            for i in ast.task_inputs:
+                input_names.append(i[1])
+
+            for i in split_str:
+                if i in input_names:
+                    output_glob+="$(inputs."+i+")"
+                else:
+                    output_glob+=i
+
+            output_glob = output_glob.replace('"', "")
+       
         else:
             output_glob = i[2]
 
@@ -221,6 +241,9 @@ def main(argv: List[str]) -> str:
         cwlVersion="v1.2",
         baseCommand=base_command,
     )
+
+    if ast.task_parameter_meta_check:
+        print("----WARNING: SKIPPING PARAMETER_META----")
 
     if "preemptible" in ast.task_runtime:
         print("----WARNING: SKIPPING REQUIREMENT PREEMPTIBLE----")
