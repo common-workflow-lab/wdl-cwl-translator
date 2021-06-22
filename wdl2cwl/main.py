@@ -33,42 +33,59 @@ def get_ram_min(ram_min: str) -> int:
     return int(float(ram_min.strip()) * 1024)
 
 #Does not handle cases like ~{true="-2 " false="" twoPassMode}  yet
-def get_command(command,unbound,bound):
+def get_command(command,unbound,bound,input_types,input_names):
     
     index = 0
     new_command = ""
     start_index = 0
     end_index = 0
-
-    input_types = []
-    input_names = []
-    
-    for i in unbound:
-        input_types.append(i[0])
-        input_names.append(i[1])
-
-    for i in bound:
-        input_types.append(i[0])
-        input_names.append(i[1])
    
+   #continue till the end of the string
     while index<len(command):
         
+        #if you have ~{
         if command[index] is "~" and command[index+1] is "{":
             start_index = index+2
+
+            #while loop to find index of }
             while 1:
                 if command[index] is "}":
                     end_index = index
                     break
                 else:
                     index+=1
+
+            #sub string containing everything inside ~{ and }
             sub_str = command[start_index:end_index]
-            data_type = input_types[input_names.index(sub_str)] if sub_str in input_names else ""
-            append_str = ""
-            if data_type == "File":
-                append_str = "$(inputs."+sub_str+".path)"
-            else:
-                append_str = "$(inputs."+sub_str+")"
-            new_command=new_command+append_str
+            
+            #### NEED to add Expression Placeholder Options
+            #if sub string has a concatenation
+            if "+" in sub_str:
+                split_str = sub_str.split("+")
+                
+                for i in split_str:
+                    if i in input_names:
+                        index = input_names.index(i)
+                        data_type = input_types[index] #get the data type of the input
+
+                        if data_type == "File":
+                            new_command+="$(inputs."+i+".path)"
+                        else:
+                            new_command+="$(inputs."+i+")"
+                    else:
+                        new_command+=i.replace('"','')
+
+            #if sub string has only the input/ variable name
+            else:               
+                data_type = input_types[input_names.index(sub_str)] if sub_str in input_names else ""
+                append_str = ""
+                if data_type == "File":
+                    append_str = "$(inputs."+sub_str+".path)"
+                else:
+                    append_str = "$(inputs."+sub_str+")"
+
+                new_command=new_command+append_str
+
             index=(end_index+1)
         else:
             new_command+=command[index]
@@ -88,6 +105,20 @@ def main(argv: List[str]) -> str:
     ast = WdlV1_1ParserVisitor()  # type: ignore
     ast.walk_tree(tree)  # type: ignore
 
+    input_types = []
+    input_names = []
+    input_values = []
+
+    for i in ast.task_inputs:
+        input_types.append(i[0])
+        input_names.append(i[1])
+        input_values.append(None)
+
+    for i in ast.task_inputs_bound:
+        input_types.append(i[0])
+        input_names.append(i[1])
+        input_values.append(i[2])
+
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
     raw_command = raw_command[
@@ -105,7 +136,7 @@ def main(argv: List[str]) -> str:
         else:
             command+=raw_command[i]+" "
         
-    command = get_command(command,ast.task_inputs,ast.task_inputs_bound)
+    command = get_command(command,ast.task_inputs,ast.task_inputs_bound,input_types,input_names)
     
     base_command = ["sh", "example.sh"]
 
@@ -127,13 +158,10 @@ def main(argv: List[str]) -> str:
             )
         )
 
-    #requirements_keys = list(ast.task_runtime.keys())
-    
     requirements = []
     if "docker" in ast.task_runtime:
         dockerPull = ""
 
-        #might have cases like "~{dockerimage}" > not handled
         if '"' not in ast.task_runtime["docker"]:
             for sublist in ast.task_inputs_bound:
                 if ast.task_runtime["docker"] in sublist[1]:
@@ -142,17 +170,11 @@ def main(argv: List[str]) -> str:
         elif '"' in ast.task_runtime["docker"] and "~{" in ast.task_runtime["docker"]:
             start_index = ast.task_runtime["docker"].find("~{")
             end_index = ast.task_runtime["docker"].find("}")
-            dockerInput = (
-                ast.task_runtime["docker"][0:start_index]
-                + "$(inputs."
-                + ast.task_runtime["docker"][start_index + 2 : end_index]
-                + ")"
-                + ast.task_runtime["docker"][end_index + 1 :]
-            )
+            sub_str = ast.task_runtime["docker"][start_index+2:end_index]
 
-            for sublist in ast.task_inputs_bound:
-                if dockerInput in sublist[1]:
-                    dockerPull = sublist[2]
+            if sub_str in input_names:
+                index = input_names.index(sub_str)
+                dockerPull = input_values[index]
 
         else:
             dockerPull = ast.task_runtime["docker"]
@@ -206,12 +228,6 @@ def main(argv: List[str]) -> str:
         #For a string concatenation
         elif "+" in i[2]:
             split_str = i[2].split("+")
-            
-            input_names = []
-            for i in ast.task_inputs_bound:
-                input_names.append(i[1])
-            for i in ast.task_inputs:
-                input_names.append(i[1])
 
             for i in split_str:
                 if i in input_names:
