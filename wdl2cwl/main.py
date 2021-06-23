@@ -58,7 +58,6 @@ def get_command(command,unbound,bound,input_types,input_names):
             #sub string containing everything inside ~{ and }
             sub_str = command[start_index:end_index]
             
-            #### NEED to add Expression Placeholder Options
             #if sub string has a concatenation
             if "+" in sub_str:
                 split_str = sub_str.split("+")
@@ -74,7 +73,17 @@ def get_command(command,unbound,bound,input_types,input_names):
                             new_command+="$(inputs."+i+")"
                     else:
                         new_command+=i.replace('"','')
-
+           
+           #to handle Expression Placeholder Options
+           #might have to change later
+            elif ("true" and "false") in sub_str:
+                sub= sub_str.split("=")
+                true_value =  (sub[1].split('"'))[1]
+                false_value = (sub[2].split('"'))[1]
+                input_name = (sub[2].split('"'))[2]
+                append_str = "$(if ['${inputs."+input_name+"}' eq 'true' ] then echo"+ true_value+" else echo"+ false_value+" fi )"
+                new_command+=append_str
+                    
             #if sub string has only the input/ variable name
             else:               
                 data_type = input_types[input_names.index(sub_str)] if sub_str in input_names else ""
@@ -137,7 +146,8 @@ def main(argv: List[str]) -> str:
             command+=raw_command[i]+" "
         
     command = get_command(command,ast.task_inputs,ast.task_inputs_bound,input_types,input_names)
-    
+    print(command)
+
     base_command = ["sh", "example.sh"]
 
     inputs = []
