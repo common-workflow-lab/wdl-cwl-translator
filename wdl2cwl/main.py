@@ -32,7 +32,6 @@ def get_ram_min(ram_min: str) -> int:
     ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
     return int(float(ram_min.strip()) * 1024)
 
-#Does not handle cases like ~{true="-2 " false="" twoPassMode}  yet
 def get_command(command,unbound,bound,input_types,input_names):
     
     index = 0
@@ -81,7 +80,7 @@ def get_command(command,unbound,bound,input_types,input_names):
                 true_value =  (sub[1].split('"'))[1]
                 false_value = (sub[2].split('"'))[1]
                 input_name = (sub[2].split('"'))[2]
-                append_str = "$(if ['${inputs."+input_name+"}' eq 'true' ] then echo"+ true_value+" else echo"+ false_value+" fi )"
+                append_str = "$(if ['${inputs."+input_name+"}' eq 'true' ] then echo "+ true_value+" else echo "+ false_value+" fi )"
                 new_command+=append_str
                     
             #if sub string has only the input/ variable name
@@ -100,6 +99,52 @@ def get_command(command,unbound,bound,input_types,input_names):
             new_command+=command[index]
             index+=1
     return new_command
+
+def get_workflow(ast):
+
+    inputs = []
+    outputs = []
+    steps = []
+    cat_tool = cwl.Workflow(
+        inputs = inputs,
+        outputs = outputs,
+        steps = steps,
+        cwlVersion= "v1.2",
+    )
+    
+    return cast(str, yaml.main.round_trip_dump(cat_tool.save()))
+
+def get_expression_placeholder(expression, input_names):
+    expression_value = ""
+    #for parameter references
+    if "~" in expression:
+        start_index = expression.find("~{")
+        end_index = expression.find("}")
+        expression_value = (
+            expression[0:start_index]
+             + "$(inputs."
+            + expression[start_index + 2 : end_index]
+            + ")"
+            + expression[end_index + 1 :]
+        )
+        expression_value = expression_value.replace('"', "")
+
+    #For a string concatenation
+    elif "+" in expression:
+        split_str = expression.split("+")
+
+        for i in split_str:
+            if i in input_names:
+                expression_value+="$(inputs."+i+")"
+            else:
+                expression_value+=i
+
+        expression_value = expression_value.replace('"', "")
+        
+    else:
+        expression_value = expression
+
+    return expression_value
 
 def main(argv: List[str]) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
@@ -151,22 +196,47 @@ def main(argv: List[str]) -> str:
     base_command = ["sh", "example.sh"]
 
     inputs = []
-    for i in ast.task_inputs:
-        input_type = wdl_type[i[0].replace("?", "")]
-        input_name = i[1]
-        inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+    for i in ast.task_inputs:           
+        if "Array" in i[0]:
+            input_type = i[0][i[0].find('[')+1:-1].replace('"',"")
+            input_name = i[1]
+            inputs.append(
+                cwl.CommandInputParameter(
+                    id=input_name, 
+                    type=[cwl.CommandInputArraySchema(
+                        items=input_type, type="array"
+                    )]
+                )
+            )
+        else:
+            input_type = wdl_type[i[0].replace("?", "")]
+            input_name = i[1]
+            inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+
 
     for i in ast.task_inputs_bound:
-        input_type = wdl_type[i[0].replace("?", "")]
-        input_name = i[1]
-        input_expression = i[2].replace('"', "")
-        inputs.append(
-            cwl.CommandInputParameter(
-                id=input_name,
-                type=input_type,
-                default=input_expression,
+        if "Array" in i[0]:
+            input_type = i[0][i[0].find('[')+1:-1].replace('"',"")
+            input_name = i[1]
+            inputs.append(
+                cwl.CommandInputParameter(
+                    id=input_name, 
+                    type=[cwl.CommandInputArraySchema
+                        (items=input_type, type="array")], 
+                    default=i[2]
+                )
             )
-        )
+        else:
+            input_type = wdl_type[i[0].replace("?", "")]
+            input_name = i[1]
+            input_expression = i[2].replace('"', "")
+            inputs.append(
+                cwl.CommandInputParameter(
+                    id=input_name,
+                    type=input_type,
+                    default=input_expression,
+                )
+            )
 
     requirements = []
     if "docker" in ast.task_runtime:
@@ -198,6 +268,10 @@ def main(argv: List[str]) -> str:
     requirements.append(
         cwl.InitialWorkDirRequirement(listing=[cwl.Dirent(entry=command,entryname="example.sh")]))
 
+    requirements.append(
+        cwl.InlineJavascriptRequirement()
+    )
+
     hints = []
     if "memory" in ast.task_runtime:
         memory = ""
@@ -218,45 +292,32 @@ def main(argv: List[str]) -> str:
     outputs = []
 
     for i in ast.task_outputs:
-        output_type = wdl_type[i[0]]
-        output_name = i[1]
-        output_glob = ""
 
-        #for parameter references
-        if "~" in i[2]:
-            start_index = i[2].find("~{")
-            end_index = i[2].find("}")
-            output_glob = (
-                i[2][0:start_index]
-                + "$(inputs."
-                + i[2][start_index + 2 : end_index]
-                + ")"
-                + i[2][end_index + 1 :]
+        if "Array" in i[0]:
+            output_name = i[1]
+            output_type = i[0][i[0].find('[')+1:-1].replace('"',"")
+            output_glob = get_expression_placeholder(i[2], input_names)
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=[cwl.CommandOutputArraySchema(
+                        items=output_type, type="array"
+                    )],
+                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
             )
-            output_glob = output_glob.replace('"', "")
-
-        #For a string concatenation
-        elif "+" in i[2]:
-            split_str = i[2].split("+")
-
-            for i in split_str:
-                if i in input_names:
-                    output_glob+="$(inputs."+i+")"
-                else:
-                    output_glob+=i
-
-            output_glob = output_glob.replace('"', "")
-       
         else:
-            output_glob = i[2]
+            output_type = wdl_type[i[0]]
+            output_name = i[1]
+            output_glob = get_expression_placeholder(i[2],input_names)
 
-        outputs.append(
-            cwl.CommandOutputParameter(
-                id=output_name,
-                type=output_type,
-                outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=output_type,
+                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
             )
-        )
 
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,
@@ -271,6 +332,9 @@ def main(argv: List[str]) -> str:
     if ast.task_parameter_meta_check:
         print("----WARNING: SKIPPING PARAMETER_META----")
 
+    if ast.task_meta_check:
+        print("----WARNING: SKIPPING META----")
+        
     if "preemptible" in ast.task_runtime:
         print("----WARNING: SKIPPING REQUIREMENT PREEMPTIBLE----")
 

@@ -36,6 +36,7 @@ requirements:
   - entryname: example.sh
     entry: 'set -e mkdir -p $(inputs.outputDir) smoove call \--outdir $(inputs.outputDir)
       \--name $(inputs.sample) \--fasta $(inputs.referenceFasta.path) \$(inputs.bamFile.path) '
+- class: InlineJavascriptRequirement
 hints:
 - class: ResourceRequirement
   ramMin: 15360
