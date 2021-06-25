@@ -17,14 +17,24 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         self.task_name = None
         self.task_variables = []
         self.task_runtime = {}
+
         #checks are used to check the parent node
         self.task_input_check = None
-        self.workflow_input_check = None
         self.task_output_check = None
         self.task_parameter_meta_check = None
         self.task_meta_check = None
 
         self.workflow_name = None
+        self.workflow_inputs_unbound = []
+        self.workflow_inputs_bound = []
+        self.workflow_outputs = []
+        self.workflow_variables = []
+
+        self.workflow_input_check = None
+        self.workflow_parameter_meta_check = None
+        self.workflow_meta_check = None
+
+
 
     def walk_tree(self, tree):
         self.visitDocument(tree)
@@ -61,6 +71,8 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         input_type = self.visitWdl_type(ctx.wdl_type())
         if self.task_input_check:
             self.task_inputs.append([input_type, str(ctx.Identifier())])
+        elif self.workflow_input_check:
+            self.workflow_inputs_unbound.append([input_type, str(ctx.Identifier())])
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by WdlV1_1Parser#bound_decls.
@@ -74,6 +86,8 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
             self.task_outputs.append([decl_type, str(ctx.Identifier()), expression])
         elif self.task_input_check:
             self.task_inputs_bound.append([decl_type, str(ctx.Identifier()), expression])
+        elif self.workflow_input_check:
+            self.workflow_inputs_bound.append([decl_type, str(ctx.Identifier()), expression])
         else:
             self.task_variables.append([decl_type, str(ctx.Identifier()), expression])
         #return [decl_type, str(ctx.Identifier()), expression]
@@ -430,6 +444,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     def visitTask_element(self, ctx:WdlV1_1Parser.Task_elementContext):   
         self.task_input_check = None
         self.task_output_check = None
+        self.workflow_input_check = None #TODO Check whether necessary
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by WdlV1_1Parser#task.
@@ -439,6 +454,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#inner_workflow_element.
     def visitInner_workflow_element(self, ctx:WdlV1_1Parser.Inner_workflow_elementContext):
+        self.workflow_input_check = None
         return self.visitChildren(ctx)
 
 
@@ -469,6 +485,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#call_name.
     def visitCall_name(self, ctx:WdlV1_1Parser.Call_nameContext):
+        print(str(ctx.Identifier()))
         return self.visitChildren(ctx)
 
 
@@ -489,6 +506,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#workflow_input.
     def visitWorkflow_input(self, ctx:WdlV1_1Parser.Workflow_inputContext):
+        self.workflow_input_check = True
         return self.visitChildren(ctx)
 
 

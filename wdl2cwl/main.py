@@ -100,20 +100,109 @@ def get_command(command,unbound,bound,input_types,input_names):
             index+=1
     return new_command
 
+def get_input(inputs,unbound_input,bound_input,task_check=None,workflow_check=None):
+
+    for i in unbound_input:      
+
+        if "Array" in i[0]:
+            temp_type = wdl_type[i[0][i[0].find('[')+1:i[0].find(']')].replace('"',"")]
+            input_type = temp_type if '?' not in i[0] else [temp_type, wdl_type["?"]]
+            input_name = i[1]
+
+            if task_check:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name, 
+                        type=[cwl.CommandInputArraySchema(
+                            items=input_type, type="array"
+                        )]
+                    )
+                )
+            else:
+                inputs.append(
+                    cwl.WorkflowInputParameter(
+                        id=input_name, 
+                        type=[cwl.CommandInputArraySchema(
+                            items=input_type, type="array"
+                        )]
+                    )
+                )
+        else:
+            input_type = wdl_type[i[0]] if '?' not in i[0] else [wdl_type[i[0].replace('?','')], wdl_type["?"] ]
+            input_name = i[1]
+
+            if task_check:
+                inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+            else:
+                inputs.append(cwl.WorkflowInputParameter(id=input_name, type=input_type))
+
+
+    for i in bound_input:
+        if "Array" in i[0]:
+            temp_type = wdl_type[i[0][i[0].find('[')+1:i[0].find(']')].replace('"',"")]
+            input_type = temp_type if '?' not in i[0] else [temp_type, wdl_type["?"]]
+            input_name = i[1]
+
+            if task_check:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name, 
+                        type=[cwl.CommandInputArraySchema
+                            (items=input_type, type="array")], 
+                        default=i[2]
+                    )
+                )
+            else:
+                inputs.append(
+                    cwl.WorkflowInputParameter(
+                        id=input_name, 
+                        type=[cwl.CommandInputArraySchema
+                            (items=input_type, type="array")], 
+                        default=i[2]
+                    )
+                )
+        else:
+            input_type = wdl_type[i[0]] if '?' not in i[0] else [wdl_type[i[0].replace('?','')], wdl_type["?"] ]
+            input_name = i[1]
+            input_expression = i[2].replace('"', "")
+
+            if task_check:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name,
+                        type=input_type,
+                        default=input_expression,
+                    )
+                )
+            else:
+                inputs.append(
+                    cwl.WorkflowInputParameter(
+                        id=input_name,
+                        type=input_type,
+                        default=input_expression,
+                    )
+                )
+
+    return inputs
+
 def get_workflow(ast):
 
     inputs = []
     outputs = []
     steps = []
     cat_tool = cwl.Workflow(
-        inputs = inputs,
-        outputs = outputs,
-        steps = steps,
+        id=ast.workflow_name,
         cwlVersion= "v1.2",
+        steps=steps,
+        inputs=inputs,
+        outputs=outputs,
     )
-    
-    return cast(str, yaml.main.round_trip_dump(cat_tool.save()))
 
+    for i in inputs:
+        print(i)
+    #yaml.main.round_trip_dump(cat_tool.save())
+
+#Need to add 
 def get_expression_placeholder(expression, input_names):
     expression_value = ""
     #for parameter references
@@ -159,6 +248,9 @@ def main(argv: List[str]) -> str:
     ast = WdlV1_1ParserVisitor()  # type: ignore
     ast.walk_tree(tree)  # type: ignore
 
+    if ast.workflow_name:
+        get_workflow(ast)
+
     input_types = []
     input_names = []
     input_values = []
@@ -196,47 +288,7 @@ def main(argv: List[str]) -> str:
     base_command = ["sh", "example.sh"]
 
     inputs = []
-    for i in ast.task_inputs:           
-        if "Array" in i[0]:
-            input_type = i[0][i[0].find('[')+1:-1].replace('"',"")
-            input_name = i[1]
-            inputs.append(
-                cwl.CommandInputParameter(
-                    id=input_name, 
-                    type=[cwl.CommandInputArraySchema(
-                        items=input_type, type="array"
-                    )]
-                )
-            )
-        else:
-            input_type = wdl_type[i[0].replace("?", "")]
-            input_name = i[1]
-            inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
-
-
-    for i in ast.task_inputs_bound:
-        if "Array" in i[0]:
-            input_type = i[0][i[0].find('[')+1:-1].replace('"',"")
-            input_name = i[1]
-            inputs.append(
-                cwl.CommandInputParameter(
-                    id=input_name, 
-                    type=[cwl.CommandInputArraySchema
-                        (items=input_type, type="array")], 
-                    default=i[2]
-                )
-            )
-        else:
-            input_type = wdl_type[i[0].replace("?", "")]
-            input_name = i[1]
-            input_expression = i[2].replace('"', "")
-            inputs.append(
-                cwl.CommandInputParameter(
-                    id=input_name,
-                    type=input_type,
-                    default=input_expression,
-                )
-            )
+    inputs = get_input(inputs,ast.task_inputs,ast.task_inputs_bound,True,None)
 
     requirements = []
     if "docker" in ast.task_runtime:
