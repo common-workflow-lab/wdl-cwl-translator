@@ -168,7 +168,7 @@ def main(argv: List[str]) -> str:
         input_name = i[1]
         inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
-    requirements = []
+    requirements: List[cwl.ProcessRequirement] = []
 
     requirements.append(
         cwl.DockerRequirement(
