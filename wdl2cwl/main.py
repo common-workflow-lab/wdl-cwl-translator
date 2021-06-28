@@ -42,12 +42,12 @@ def get_command(command:str, unbound:List[str], bound:List[str], input_types: Li
     while index < len(command):
 
         # if you have ~{
-        if command[index] is "~" and command[index + 1] is "{":
+        if command[index] == "~" and command[index + 1] == "{":
             start_index = index + 2
 
             # while loop to find index of }
             while 1:
-                if command[index] is "}":
+                if command[index] == "}":
                     end_index = index
                     break
                 else:
@@ -150,7 +150,7 @@ def main(argv: List[str]) -> str:
         split_command[i] = split_command[i].strip()
         if "\\" in split_command[i]:
             command += split_command[i]
-        elif "#" in split_command[i] or "\n" is split_command[i]:  # skip comments
+        elif "#" in split_command[i] or "\n" == split_command[i]:  # skip comments
             continue
         else:
             command += split_command[i] + " "
