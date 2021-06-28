@@ -30,6 +30,74 @@ def get_ram_min(ram_min: str) -> int:
     return int(float(ram_min.strip()) * 1024)
 
 
+#need to add sep= and default= for expression placeholders
+def get_command(command,unbound,bound,input_types,input_names):
+    
+    index = 0
+    new_command = ""
+    start_index = 0
+    end_index = 0
+   
+   #continue till the end of the string
+    while index<len(command):
+        
+        #if you have ~{
+        if command[index] is "~" and command[index+1] is "{":
+            start_index = index+2
+
+            #while loop to find index of }
+            while 1:
+                if command[index] is "}":
+                    end_index = index
+                    break
+                else:
+                    index+=1
+
+            #sub string containing everything inside ~{ and }
+            sub_str = command[start_index:end_index]
+            
+            #if sub string has a concatenation
+            if "+" in sub_str:
+                split_str = sub_str.split("+")
+                
+                for i in split_str:
+                    if i in input_names:
+                        index = input_names.index(i)
+                        data_type = input_types[index] #get the data type of the input
+
+                        if data_type == "File":
+                            new_command+="$(inputs."+i+".path)"
+                        else:
+                            new_command+="$(inputs."+i+")"
+                    else:
+                        new_command+=i.replace('"','')
+           
+           #to handle Expression Placeholder Options
+            elif ("true" and "false") in sub_str:
+                sub= sub_str.split("=")
+                true_value =  (sub[1].split('"'))[1]
+                false_value = (sub[2].split('"'))[1]
+                input_name = (sub[2].split('"'))[2]
+                append_str = "$(if ['${inputs."+input_name+"}' eq 'true' ] then echo "+ true_value+" else echo "+ false_value+" fi )"
+                new_command+=append_str    
+
+            #if sub string has only the input/ variable name
+            else:               
+                data_type = input_types[input_names.index(sub_str)] if sub_str in input_names else ""
+                append_str = ""
+                if data_type == "File":
+                    append_str = "$(inputs."+sub_str+".path)"
+                else:
+                    append_str = "$(inputs."+sub_str+")"
+
+                new_command=new_command+append_str
+
+            index=(end_index+1)
+        else:
+            new_command+=command[index]
+            index+=1
+    return new_command
+
 def main(argv: List[str]) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
     f = open(argv[0])
@@ -43,45 +111,41 @@ def main(argv: List[str]) -> str:
     ast = WdlV1_1ParserVisitor()  # type: ignore
     ast.walk_tree(tree)  # type: ignore
 
+    input_types = []
+    input_names = []
+    input_values = []
+
+    for i in ast.task_inputs:
+        input_types.append(i[0])
+        input_names.append(i[1])
+        input_values.append(None)
+
+    for i in ast.task_inputs_bound:
+        input_types.append(i[0])
+        input_names.append(i[1])
+        input_values.append(i[2])
+
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
     raw_command = raw_command[
         raw_command.find("{") + 1 : -1
     ]  # removing the command{} part
-    command: List[str] = raw_command.strip().split("\\")  # split by '\'
 
-    raw_base_command = ""
-    base_command = []
-    command_arguments = []
-
-    for a in command:
-        # if it contains = , it's taken as an argument
-        if "=" in a or "~" in a:
-            command_arguments.append(a.strip())
-        # else add to base command
+    raw_command = raw_command.strip().split('\n')
+    command = ""
+    for i in range(0,len(raw_command)):
+        raw_command[i] = raw_command[i].strip()
+        if "\\" in raw_command[i]:
+            command+=raw_command[i]
+        elif "#" in raw_command[i] or "\n" is raw_command[i]: #skip comments
+            continue
         else:
-            raw_base_command += a
+            command+=raw_command[i]+" "
+        
+    command = get_command(command,ast.task_inputs,ast.task_inputs_bound,input_types,input_names)
+    print(command)
 
-    # split the base command by spaces
-    base_command = raw_base_command.split()
-
-    # get command arguments
-    index = 0
-    for i in command_arguments:
-        if "~" in i:
-            parameter_reference = i[
-                i.find("~{") + 2 : i.find("}")
-            ]  # finding the name of the parameter
-            sub_str = i.strip().split("~")
-            if "INPUT" not in sub_str[0]:
-                command_arguments[index] = (
-                    sub_str[0] + "$(inputs." + parameter_reference + ")"
-                )
-            else:
-                command_arguments[index] = (
-                    sub_str[0] + "$(inputs." + parameter_reference + ".path" ")"
-                )
-        index += 1
+    base_command = ["sh", "example.sh"]
 
     inputs = []
     for i in ast.task_inputs:
@@ -89,11 +153,18 @@ def main(argv: List[str]) -> str:
         input_name = i[1]
         inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
-    docker_requirement = [
-        cwl.DockerRequirement(
+    requirements = []
+    
+    requirements.append(cwl.DockerRequirement(
             dockerPull=ast.task_runtime["docker"].replace('"', ""),
-        ),
-    ]
+        ))
+
+    requirements.append(
+        cwl.InitialWorkDirRequirement(listing=[cwl.Dirent(entry=command,entryname="example.sh")]))
+
+    requirements.append(
+        cwl.InlineJavascriptRequirement()
+    )
 
     hints = [
         cwl.ResourceRequirement(
@@ -121,20 +192,14 @@ def main(argv: List[str]) -> str:
             )
         )
 
-    arguments = []
-
-    for i in command_arguments:
-        arguments.append(cwl.CommandLineBinding(valueFrom=i))
-
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,
         inputs=inputs,
-        requirements=docker_requirement,
+        requirements=requirements,
         hints=hints,
         outputs=outputs,
         cwlVersion="v1.2",
         baseCommand=base_command,
-        arguments=arguments,
     )
 
     if "preemptible" in ast.task_runtime:
