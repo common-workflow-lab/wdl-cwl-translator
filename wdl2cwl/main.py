@@ -31,7 +31,13 @@ def get_ram_min(ram_min: str) -> int:
 
 
 # need to add sep= and default= for expression placeholders
-def get_command(command:str, unbound:List[str], bound:List[str], input_types: List[str], input_names:List[str]) -> str:
+def get_command(
+    command: str,
+    unbound: List[str],
+    bound: List[str],
+    input_types: List[str],
+    input_names: List[str],
+) -> str:
 
     index = 0
     new_command = ""
