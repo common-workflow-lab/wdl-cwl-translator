@@ -7,6 +7,7 @@ from .. import main as wdl
 def get_file(path: str) -> str:
     return os.path.join(os.path.dirname(__file__), path)
 
+
 @pytest.mark.parametrize(
     "wdl_path,cwl_path",
     [
