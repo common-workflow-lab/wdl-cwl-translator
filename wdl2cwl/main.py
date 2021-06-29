@@ -65,37 +65,19 @@ def get_command(
             # sub string containing everything inside ~{ and }
             sub_str = command[start_index:end_index]
 
-            # if sub string has a concatenation
-            if "+" in sub_str:
-                split_str = sub_str.split("+")
-
-                for i in split_str:
-                    if i in input_names:
-                        index = input_names.index(i)
-                        data_type = input_types[index]  # get the data type of the input
-
-                        if data_type == "File":
-                            new_command += "$(inputs." + i + ".path)"
-                        else:
-                            new_command += "$(inputs." + i + ")"
-                    else:
-                        new_command += i.replace('"', "")
-
             # if sub string has only the input/ variable name
+            data_type = (
+                input_types[input_names.index(sub_str)]
+                if sub_str in input_names
+                else ""
+            )
+            append_str = ""
+            if data_type == "File":
+                append_str = "$(inputs." + sub_str + ".path)"
             else:
-                data_type = (
-                    input_types[input_names.index(sub_str)]
-                    if sub_str in input_names
-                    else ""
-                )
-                append_str = ""
-                if data_type == "File":
-                    append_str = "$(inputs." + sub_str + ".path)"
-                else:
-                    append_str = "$(inputs." + sub_str + ")"
+                append_str = "$(inputs." + sub_str + ")"
 
-                new_command = new_command + append_str
-
+            new_command = new_command + append_str
             index = end_index + 1
         else:
             if command[index] != "\\":
