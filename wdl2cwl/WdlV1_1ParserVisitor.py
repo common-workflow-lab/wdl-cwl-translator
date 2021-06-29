@@ -81,17 +81,6 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         
     # Visit a parse tree produced by WdlV1_1Parser#any_decls.
     def visitAny_decls(self, ctx:WdlV1_1Parser.Any_declsContext):
-        '''if ctx.unbound_decls():
-            unbound_decls = self.visitUnbound_decls(ctx.unbound_decls())
-            for i in unbound_decls:
-                print(i)'''
-        #bound_decls = self.visitBound_decls(ctx.bound_decls())
-        '''print('bound decls')
-        for i in bound_decls:
-            print(i[1])'''
-        '''if self.task_input_check:
-            self.task_inputs.append(unbound_decls)'''
-
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by WdlV1_1Parser#number.

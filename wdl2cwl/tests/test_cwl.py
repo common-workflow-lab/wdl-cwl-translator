@@ -18,7 +18,7 @@ def get_file(path: str) -> str:
         ),
     ],
 )
-def test_wdls(wdl_path, cwl_path: str) -> None:
+def test_wdls(wdl_path: str, cwl_path: str) -> None:
     """Test WDL to CWL conversion."""
     convertedStr = wdl.main([get_file(wdl_path)])
     testStr = ""
