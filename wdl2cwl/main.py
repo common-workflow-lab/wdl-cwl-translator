@@ -30,7 +30,6 @@ def get_ram_min(ram_min: str) -> int:
     return int(float(ram_min.strip()) * 1024)
 
 
-# need to add sep= and default= for expression placeholders
 def get_command(
     command: str,
     unbound: List[str],
@@ -39,6 +38,11 @@ def get_command(
     input_names: List[str],
 ) -> str:
 
+    """
+    Get command to be used in the bash script.
+
+    Need to add sep= and default= for expression placeholders
+    """
     index = 0
     new_command = ""
     start_index = 0
