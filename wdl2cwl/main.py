@@ -179,11 +179,12 @@ def main(argv: List[str]) -> str:
 
     requirements: List[cwl.ProcessRequirement] = []
 
-    requirements.append(
-        cwl.DockerRequirement(
-            dockerPull=ast.task_runtime["docker"].replace('"', ""),
+    if "docker" in ast.task_runtime:
+        requirements.append(
+            cwl.DockerRequirement(
+                dockerPull=ast.task_runtime["docker"].replace('"', ""),
+            )
         )
-    )
 
     requirements.append(
         cwl.InitialWorkDirRequirement(
@@ -193,11 +194,13 @@ def main(argv: List[str]) -> str:
 
     requirements.append(cwl.InlineJavascriptRequirement())
 
-    hints = [
-        cwl.ResourceRequirement(
-            ramMin=get_ram_min(ast.task_runtime["memory"]),
-        )
-    ]
+    hints = []
+    if "memory" in ast.task_runtime:
+        hints = [
+            cwl.ResourceRequirement(
+                ramMin=get_ram_min(ast.task_runtime["memory"]),
+            )
+        ]
 
     outputs = []
 
@@ -222,12 +225,18 @@ def main(argv: List[str]) -> str:
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,
         inputs=inputs,
-        requirements=requirements,
-        hints=hints,
-        outputs=outputs,
+        requirements=requirements if requirements else None,
+        hints=hints if hints else None,
+        outputs=outputs if outputs else None,
         cwlVersion="v1.2",
         baseCommand=base_command,
     )
+
+    if ast.task_parameter_meta_check:
+        print("----WARNING: SKIPPING PARAMETER_META----")
+
+    if ast.task_meta_check:
+        print("----WARNING: SKIPPING META----")
 
     if "preemptible" in ast.task_runtime:
         print("----WARNING: SKIPPING REQUIREMENT PREEMPTIBLE----")
