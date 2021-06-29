@@ -15,17 +15,15 @@ outputs:
 requirements:
 - class: DockerRequirement
   dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
+- class: InitialWorkDirRequirement
+  listing:
+  - entryname: example.sh
+    entry: 'java -Xms2000m -jar /usr/picard/picard.jar  CollectQualityYieldMetrics  INPUT=$(inputs.input_bam.path)  OQ=true  OUTPUT=$(inputs.metrics_filename) '
+- class: InlineJavascriptRequirement
 hints:
 - class: ResourceRequirement
   ramMin: 3584
 cwlVersion: v1.2
 baseCommand:
-- java
-- -Xms2000m
-- -jar
-- /usr/picard/picard.jar
-- CollectQualityYieldMetrics
-arguments:
-- valueFrom: INPUT=$(inputs.input_bam.path)
-- valueFrom: OQ=true
-- valueFrom: OUTPUT=$(inputs.metrics_filename)
+- sh
+- example.sh

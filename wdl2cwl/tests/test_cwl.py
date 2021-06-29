@@ -10,7 +10,7 @@ def get_file(path: str) -> str:
 
 def testCollectQualityYieldMetrics() -> None:
     """Test a single WDL to CWL conversion."""
-    abc = wdl.main([get_file("wdl_files/Qc.wdl")])
+    abc = wdl.main([get_file("wdl_files/CollectQualityYieldMetrics.wdl")])
     testStr = ""
     with open(get_file("cwl_files/CollectQualityYieldMetrics.cwl")) as file:
         testStr = file.read()

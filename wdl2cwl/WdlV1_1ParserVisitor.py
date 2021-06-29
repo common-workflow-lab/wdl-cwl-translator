@@ -11,12 +11,13 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     def __init__(self):
         self.task_inputs = []
+        self.task_inputs_bound = []
         self.task_outputs = []
         self.task_command = None
         self.task_name = None
         self.task_variables = []
-        #self.task_runtime = []
         self.task_runtime = {}
+
         #checks are used to check the parent node
         self.task_input_check = None
         self.workflow_input_check = None
@@ -64,6 +65,8 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         #need to add bound inputs later
         if self.task_output_check:
             self.task_outputs.append([decl_type, str(ctx.Identifier()), expression])
+        elif self.task_input_check:
+            self.task_inputs_bound.append([decl_type, str(ctx.Identifier()), expression])
         else:
             self.task_variables.append([decl_type, str(ctx.Identifier()), expression])
         return self.visitChildren(ctx)

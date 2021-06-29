@@ -30,6 +30,65 @@ def get_ram_min(ram_min: str) -> int:
     return int(float(ram_min.strip()) * 1024)
 
 
+def get_command(
+    command: str,
+    unbound: List[str],
+    bound: List[str],
+    input_types: List[str],
+    input_names: List[str],
+) -> str:
+    """
+    Get command to be used in the bash script.
+
+    Need to add sep= and default= for expression placeholders
+    """
+    index = 0
+    new_command = ""
+    start_index = 0
+    end_index = 0
+
+    # continue till the end of the string
+    while index < len(command):
+
+        # if you have ~{
+        if command[index] == "~" and command[index + 1] == "{":
+            start_index = index + 2
+
+            # while loop to find index of }
+            while 1:
+                if command[index] == "}":
+                    end_index = index
+                    break
+                else:
+                    index += 1
+
+            # sub string containing everything inside ~{ and }
+            sub_str = command[start_index:end_index]
+
+            # if sub string has only the input/ variable name
+            data_type = (
+                input_types[input_names.index(sub_str)]
+                if sub_str in input_names
+                else ""
+            )
+            append_str = ""
+            if data_type == "File":
+                append_str = "$(inputs." + sub_str + ".path)"
+            else:
+                append_str = "$(inputs." + sub_str + ")"
+
+            new_command = new_command + append_str
+            index = end_index + 1
+        else:
+            if command[index] != "\\":
+                new_command += command[index]
+                index += 1
+            else:
+                new_command += " "
+                index += 1
+    return new_command
+
+
 def main(argv: List[str]) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
     f = open(argv[0])
@@ -43,45 +102,38 @@ def main(argv: List[str]) -> str:
     ast = WdlV1_1ParserVisitor()  # type: ignore
     ast.walk_tree(tree)  # type: ignore
 
+    input_types: List[str] = []
+    input_names: List[str] = []
+    input_values: List[str] = []
+
+    for i in ast.task_inputs:
+        input_types.append(i[0])
+        input_names.append(i[1])
+        input_values.append("None")
+
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
     raw_command = raw_command[
         raw_command.find("{") + 1 : -1
     ]  # removing the command{} part
-    command: List[str] = raw_command.strip().split("\\")  # split by '\'
 
-    raw_base_command = ""
-    base_command = []
-    command_arguments = []
-
-    for a in command:
-        # if it contains = , it's taken as an argument
-        if "=" in a or "~" in a:
-            command_arguments.append(a.strip())
-        # else add to base command
+    split_command: List[str] = raw_command.strip().split("\n")
+    command = ""
+    for i in range(0, len(split_command)):
+        split_command[i] = split_command[i].strip()
+        if "\\" in split_command[i]:
+            command += split_command[i]
+        elif "#" in split_command[i] or "\n" == split_command[i]:  # skip comments
+            continue
         else:
-            raw_base_command += a
+            command += split_command[i] + " "
 
-    # split the base command by spaces
-    base_command = raw_base_command.split()
+    command = get_command(
+        command, ast.task_inputs, ast.task_inputs_bound, input_types, input_names
+    )
+    print(command)
 
-    # get command arguments
-    index = 0
-    for i in command_arguments:
-        if "~" in i:
-            parameter_reference = i[
-                i.find("~{") + 2 : i.find("}")
-            ]  # finding the name of the parameter
-            sub_str = i.strip().split("~")
-            if "INPUT" not in sub_str[0]:
-                command_arguments[index] = (
-                    sub_str[0] + "$(inputs." + parameter_reference + ")"
-                )
-            else:
-                command_arguments[index] = (
-                    sub_str[0] + "$(inputs." + parameter_reference + ".path" ")"
-                )
-        index += 1
+    base_command = ["sh", "example.sh"]
 
     inputs = []
     for i in ast.task_inputs:
@@ -89,11 +141,21 @@ def main(argv: List[str]) -> str:
         input_name = i[1]
         inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
-    docker_requirement = [
+    requirements: List[cwl.ProcessRequirement] = []
+
+    requirements.append(
         cwl.DockerRequirement(
             dockerPull=ast.task_runtime["docker"].replace('"', ""),
-        ),
-    ]
+        )
+    )
+
+    requirements.append(
+        cwl.InitialWorkDirRequirement(
+            listing=[cwl.Dirent(entry=command, entryname="example.sh")]
+        )
+    )
+
+    requirements.append(cwl.InlineJavascriptRequirement())
 
     hints = [
         cwl.ResourceRequirement(
@@ -121,20 +183,14 @@ def main(argv: List[str]) -> str:
             )
         )
 
-    arguments = []
-
-    for i in command_arguments:
-        arguments.append(cwl.CommandLineBinding(valueFrom=i))
-
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,
         inputs=inputs,
-        requirements=docker_requirement,
+        requirements=requirements,
         hints=hints,
         outputs=outputs,
         cwlVersion="v1.2",
         baseCommand=base_command,
-        arguments=arguments,
     )
 
     if "preemptible" in ast.task_runtime:
