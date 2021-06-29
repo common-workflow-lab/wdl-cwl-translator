@@ -37,7 +37,6 @@ def get_command(
     input_types: List[str],
     input_names: List[str],
 ) -> str:
-
     """
     Get command to be used in the bash script.
 
