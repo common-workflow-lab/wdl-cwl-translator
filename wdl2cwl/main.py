@@ -65,58 +65,27 @@ def get_command(
             # sub string containing everything inside ~{ and }
             sub_str = command[start_index:end_index]
 
-            # if sub string has a concatenation
-            if "+" in sub_str:
-                split_str = sub_str.split("+")
-
-                for i in split_str:
-                    if i in input_names:
-                        index = input_names.index(i)
-                        data_type = input_types[index]  # get the data type of the input
-
-                        if data_type == "File":
-                            new_command += "$(inputs." + i + ".path)"
-                        else:
-                            new_command += "$(inputs." + i + ")"
-                    else:
-                        new_command += i.replace('"', "")
-
-            # to handle Expression Placeholder Options
-            elif ("true" and "false") in sub_str:
-                sub = sub_str.split("=")
-                true_value = (sub[1].split('"'))[1]
-                false_value = (sub[2].split('"'))[1]
-                input_name = (sub[2].split('"'))[2]
-                append_str = (
-                    "$(if ['${inputs."
-                    + input_name
-                    + "}' eq 'true' ] then echo "
-                    + true_value
-                    + " else echo "
-                    + false_value
-                    + " fi )"
-                )
-                new_command += append_str
-
             # if sub string has only the input/ variable name
+            data_type = (
+                input_types[input_names.index(sub_str)]
+                if sub_str in input_names
+                else ""
+            )
+            append_str = ""
+            if data_type == "File":
+                append_str = "$(inputs." + sub_str + ".path)"
             else:
-                data_type = (
-                    input_types[input_names.index(sub_str)]
-                    if sub_str in input_names
-                    else ""
-                )
-                append_str = ""
-                if data_type == "File":
-                    append_str = "$(inputs." + sub_str + ".path)"
-                else:
-                    append_str = "$(inputs." + sub_str + ")"
-
-                new_command = new_command + append_str
+                append_str = "$(inputs." + sub_str + ")"
+            new_command = new_command + append_str
 
             index = end_index + 1
         else:
-            new_command += command[index]
-            index += 1
+            if command[index] != "\\":
+                new_command += command[index]
+                index += 1
+            else:
+                new_command += " "
+                index += 1
     return new_command
 
 

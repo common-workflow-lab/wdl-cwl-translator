@@ -15,8 +15,8 @@ requirements:
 - class: InitialWorkDirRequirement
   listing:
   - entryname: example.sh
-    entry: 'set -e mkdir -p $(inputs.outputDir) smoove call \--outdir $(inputs.outputDir)
-      \--name $(inputs.sample) \--fasta $(inputs.referenceFasta.path) \$(inputs.bamFile.path) '
+    entry: 'set -e mkdir -p $(inputs.outputDir) smoove call  --outdir $(inputs.outputDir)  --name
+      $(inputs.sample)  --fasta $(inputs.referenceFasta.path)  $(inputs.bamFile.path) '
 - class: InlineJavascriptRequirement
 cwlVersion: v1.2
 baseCommand:
