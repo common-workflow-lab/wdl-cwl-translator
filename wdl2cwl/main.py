@@ -76,8 +76,9 @@ def get_command(
                 append_str = "$(inputs." + sub_str + ".path)"
             else:
                 append_str = "$(inputs." + sub_str + ")"
-            new_command = new_command + append_str
 
+            new_command = new_command + append_str
+            
             index = end_index + 1
         else:
             if command[index] != "\\":
@@ -110,7 +111,7 @@ def main(argv: List[str]) -> str:
         input_types.append(i[0])
         input_names.append(i[1])
         input_values.append("None")
-
+        
     for i in ast.task_inputs_bound:
         input_types.append(i[0])
         input_names.append(i[1])
@@ -147,7 +148,7 @@ def main(argv: List[str]) -> str:
         inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
     requirements: List[cwl.ProcessRequirement] = []
-
+      
     if "docker" in ast.task_runtime:
         requirements.append(
             cwl.DockerRequirement(
