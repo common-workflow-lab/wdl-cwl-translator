@@ -1,6 +1,8 @@
 """Main entrypoint for WDL2CWL."""
 import sys
 from typing import List, cast
+import re
+import textwrap
 
 import cwl_utils.parser_v1_2 as cwl
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
@@ -123,16 +125,7 @@ def main(argv: List[str]) -> str:
         raw_command.find("{") + 1 : -1
     ]  # removing the command{} part
 
-    split_command: List[str] = raw_command.strip().split("\n")
-    command = ""
-    for i in range(0, len(split_command)):
-        split_command[i] = split_command[i].strip()
-        if "\\" in split_command[i]:
-            command += split_command[i]
-        elif "#" in split_command[i] or "\n" == split_command[i]:  # skip comments
-            continue
-        else:
-            command += split_command[i] + " "
+    command = textwrap.dedent(raw_command)
 
     command = get_command(
         command, ast.task_inputs, ast.task_inputs_bound, input_types, input_names
