@@ -87,7 +87,7 @@ def get_command(
                 new_command += command[index]
                 index += 1
             else:
-                new_command += " "
+                # new_command += " "
                 index += 1
     return new_command
 
