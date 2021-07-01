@@ -197,9 +197,6 @@ def main(argv: List[str]) -> str:
     if ast.task_parameter_meta_check:
         print("----WARNING: SKIPPING PARAMETER_META----")
 
-    if ast.task_meta_check:
-        print("----WARNING: SKIPPING META----")
-
     if "preemptible" in ast.task_runtime:
         print("----WARNING: SKIPPING REQUIREMENT PREEMPTIBLE----")
 
