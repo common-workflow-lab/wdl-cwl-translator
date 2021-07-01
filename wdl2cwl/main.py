@@ -1,5 +1,6 @@
 """Main entrypoint for WDL2CWL."""
 import sys
+from io import StringIO
 from typing import List, cast
 from io import StringIO
 import textwrap
@@ -219,7 +220,6 @@ def main(argv: List[str]) -> str:
     # ^ converts multine line strings to nice multiline YAML
     yaml.dump(cwl_result, result_stream)
     yaml.dump(cwl_result, sys.stdout)
-
     return result_stream.getvalue()
 
 
