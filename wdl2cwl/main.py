@@ -1,10 +1,12 @@
 """Main entrypoint for WDL2CWL."""
 import sys
+from io import StringIO
 from typing import List, cast
 
 import cwl_utils.parser_v1_2 as cwl
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
-from ruamel import yaml
+from ruamel.yaml import scalarstring
+from ruamel.yaml.main import YAML
 
 from wdl2cwl.WdlV1_1Lexer import WdlV1_1Lexer
 from wdl2cwl.WdlV1_1Parser import WdlV1_1Parser
@@ -203,7 +205,17 @@ def main(argv: List[str]) -> str:
         for a in ast.task_variables:
             print("----WARNING: SKIPPING VARIABLE " + str(a[1]) + "----")
 
-    return cast(str, yaml.main.round_trip_dump(cat_tool.save()))
+    yaml = YAML()
+    yaml.default_flow_style = False
+    yaml.indent = 4
+    yaml.block_seq_indent = 2
+    result_stream = StringIO()
+    cwl_result = cat_tool.save()
+    scalarstring.walk_tree(cwl_result)
+    # ^ converts multine line strings to nice multiline YAML
+    yaml.dump(cwl_result, result_stream)
+    yaml.dump(cwl_result, sys.stdout)
+    return result_stream.getvalue()
 
 
 if __name__ == "__main__":
