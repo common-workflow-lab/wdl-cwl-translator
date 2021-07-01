@@ -83,12 +83,8 @@ def get_command(
 
             index = end_index + 1
         else:
-            if command[index] != "\\":
-                new_command += command[index]
-                index += 1
-            else:
-                # new_command += " "
-                index += 1
+            new_command += command[index]
+            index += 1
     return new_command
 
 
