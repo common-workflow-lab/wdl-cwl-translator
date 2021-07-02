@@ -223,7 +223,7 @@ def convert(workflow: str) -> str:
 
 
 def main() -> None:
-    """Command-line parsing"""
+    """Command-line parsing."""
     parser = argparse.ArgumentParser()
     parser.add_argument("workflow", help="WDL workflow")
     parser.add_argument("-d", "--directory", help="Directory to store CWL files")
