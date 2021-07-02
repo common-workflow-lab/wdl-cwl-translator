@@ -18,7 +18,13 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
-        entry: 'java -Xms2000m -jar /usr/picard/picard.jar  CollectQualityYieldMetrics  INPUT=$(inputs.input_bam.path)  OQ=true  OUTPUT=$(inputs.metrics_filename) '
+        entry: |4
+
+            java -Xms2000m -jar /usr/picard/picard.jar \
+              CollectQualityYieldMetrics \
+              INPUT=$(inputs.input_bam.path) \
+              OQ=true \
+              OUTPUT=$(inputs.metrics_filename)
   - class: InlineJavascriptRequirement
 hints:
   - class: ResourceRequirement

@@ -22,6 +22,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         self.task_input_check = None
         self.workflow_input_check = None
         self.task_output_check = None
+        self.task_parameter_meta_check = None
 
     def walk_tree(self, tree):
         self.visitDocument(tree)
@@ -50,19 +51,19 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by WdlV1_1Parser#wdl_type.
     def visitWdl_type(self, ctx:WdlV1_1Parser.Wdl_typeContext):
         return ctx.getText()
-        #return self.visitChildren(ctx)
-
 
     # Visit a parse tree produced by WdlV1_1Parser#unbound_decls.
     def visitUnbound_decls(self, ctx:WdlV1_1Parser.Unbound_declsContext):
         input_type = self.visitWdl_type(ctx.wdl_type())
-        return [input_type, str(ctx.Identifier())]
+        if self.task_input_check:
+            self.task_inputs.append([input_type, str(ctx.Identifier())])
+        return self.visitChildren(ctx)
 
     # Visit a parse tree produced by WdlV1_1Parser#bound_decls.
     def visitBound_decls(self, ctx:WdlV1_1Parser.Bound_declsContext):
         decl_type = self.visitWdl_type(ctx.wdl_type())
         expression = self.visitExpr(ctx.expr())
-        #need to add bound inputs later
+        
         if self.task_output_check:
             self.task_outputs.append([decl_type, str(ctx.Identifier()), expression])
         elif self.task_input_check:
@@ -73,11 +74,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         
     # Visit a parse tree produced by WdlV1_1Parser#any_decls.
     def visitAny_decls(self, ctx:WdlV1_1Parser.Any_declsContext):
-        unbound_decls = self.visitUnbound_decls(ctx.unbound_decls())
-        if self.task_input_check:
-            self.task_inputs.append(unbound_decls)
-
-        return unbound_decls
+        return self.visitChildren(ctx)
 
     # Visit a parse tree produced by WdlV1_1Parser#number.
     def visitNumber(self, ctx:WdlV1_1Parser.NumberContext):
@@ -356,7 +353,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#parameter_meta.
     def visitParameter_meta(self, ctx:WdlV1_1Parser.Parameter_metaContext):
-        return self.visitChildren(ctx)
+        self.task_parameter_meta_check = 1
 
 
     # Visit a parse tree produced by WdlV1_1Parser#meta.
@@ -367,7 +364,6 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by WdlV1_1Parser#task_runtime_kv.
     def visitTask_runtime_kv(self, ctx:WdlV1_1Parser.Task_runtime_kvContext):
         expression = self.visitExpr(ctx.expr())      
-        #self.task_runtime.append([str(ctx.Identifier()), expression])
         self.task_runtime[str(ctx.Identifier())] = expression
         return self.visitChildren(ctx)
 
