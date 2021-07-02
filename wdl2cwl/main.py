@@ -93,9 +93,9 @@ def get_command(
     return new_command
 
 
-def convert(args: Namespace) -> str:
+def convert(workflow: str) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
-    f = open(args.workflow)
+    f = open(workflow)
     text = InputStream(f.read())
     lexer = WdlV1_1Lexer(text)
     stream = CommonTokenStream(lexer)
@@ -219,20 +219,20 @@ def convert(args: Namespace) -> str:
     yaml.dump(cwl_result, result_stream)
     yaml.dump(cwl_result, sys.stdout)
 
-    if args.directory:
-        with open(args.directory, "w") as result:
-            result.write(str(result_stream.getvalue()))
-
     return result_stream.getvalue()
 
 
 def main() -> None:
-
+    """Command-line parsing"""
     parser = argparse.ArgumentParser()
     parser.add_argument("workflow", help="WDL workflow")
     parser.add_argument("-d", "--directory", help="Directory to store CWL files")
     args = parser.parse_args()
-    convert(args)
+    convert(args.workflow)
+
+    if args.directory:
+        with open(args.directory, "w") as result:
+            result.write(str(convert(args.workflow)))
 
 
 if __name__ == "__main__":
