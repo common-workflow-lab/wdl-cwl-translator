@@ -228,7 +228,6 @@ def main() -> None:
     parser.add_argument("workflow", help="WDL workflow")
     parser.add_argument("-d", "--directory", help="Directory to store CWL files")
     args = parser.parse_args()
-    convert(args.workflow)
 
     if args.directory:
         with open(args.directory, "w") as result:
