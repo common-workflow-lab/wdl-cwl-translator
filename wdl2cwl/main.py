@@ -222,16 +222,18 @@ def convert(workflow: str) -> str:
     return result_stream.getvalue()
 
 
-def main() -> None:
+def main() -> str:
     """Command-line parsing."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("workflow", help="WDL workflow")
-    parser.add_argument("-d", "--directory", help="Directory to store CWL files")
+    parser.add_argument("workflow", help="Path to WDL workflow")
+    parser.add_argument("-o", "--output", help="Name of resultant CWL file")
     args = parser.parse_args()
 
-    if args.directory:
-        with open(args.directory, "w") as result:
+    if args.output:
+        with open(args.output, "w") as result:
             result.write(str(convert(args.workflow)))
+
+    return str(convert(args.workflow))
 
 
 if __name__ == "__main__":

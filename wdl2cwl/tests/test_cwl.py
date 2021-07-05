@@ -18,9 +18,16 @@ def get_file(path: str) -> str:
         ),
     ],
 )
-def test_wdls(wdl_path: str, cwl_path: str) -> None:
+def test_wdls(monkeypatch, wdl_path: str, cwl_path: str) -> None:
     """Test WDL to CWL conversion."""
-    convertedStr = wdl.convert(get_file(wdl_path))
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "python",
+            get_file(wdl_path),
+        ],
+    )
+    convertedStr = wdl.main()
     testStr = ""
     with open(get_file(cwl_path)) as file:
         testStr = file.read()
