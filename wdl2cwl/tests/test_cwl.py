@@ -18,7 +18,7 @@ def get_file(path: str) -> str:
         ),
     ],
 )
-def test_wdls(monkeypatch, wdl_path: str, cwl_path: str) -> None:
+def test_wdls(monkeypatch: pytest.MonkeyPatch, wdl_path: str, cwl_path: str) -> None:
     """Test WDL to CWL conversion."""
     monkeypatch.setattr(
         "sys.argv",
