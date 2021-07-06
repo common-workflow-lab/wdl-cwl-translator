@@ -8,18 +8,6 @@ def get_file(path: str) -> str:
     return os.path.join(os.path.dirname(__file__), path)
 
 
-@pytest.fixture(autouse=True)
-def mock_args(monkeypatch: pytest.MonkeyPatch, wdl_path: str) -> None:
-    """Patch sys.argv to all tests."""
-    monkeypatch.setattr(
-        "sys.argv",
-        [
-            "python",
-            get_file(wdl_path),
-        ],
-    )
-
-
 @pytest.mark.parametrize(
     "wdl_path,cwl_path",
     [
@@ -30,11 +18,30 @@ def mock_args(monkeypatch: pytest.MonkeyPatch, wdl_path: str) -> None:
         ),
     ],
 )
-def test_wdls(wdl_path: str, cwl_path: str) -> None:
-    """Test WDL to CWL conversion."""
-    convertedStr = wdl.main()
-    testStr = ""
-    with open(get_file(cwl_path)) as file:
-        testStr = file.read()
+class TestParametrized:
+    def test_wdls(self, wdl_path: str, cwl_path: str) -> None:
+        """Test WDL to CWL conversion."""
+        convertedStr = wdl.convert(get_file(wdl_path))
+        testStr = ""
+        with open(get_file(cwl_path)) as file:
+            testStr = file.read()
 
-    assert convertedStr == testStr
+        assert convertedStr == testStr
+
+    def test_wdls_patch(
+        self, monkeypatch: pytest.MonkeyPatch, wdl_path: str, cwl_path: str
+    ) -> None:
+        """Test WDL to CWL conversion."""
+        monkeypatch.setattr(
+            "sys.argv",
+            [
+                "python",
+                get_file(wdl_path),
+            ],
+        )
+        convertedStr = wdl.main()
+        testStr = ""
+        with open(get_file(cwl_path)) as file:
+            testStr = file.read()
+
+        assert convertedStr == testStr
