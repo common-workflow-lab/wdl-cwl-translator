@@ -19,6 +19,7 @@ def get_file(path: str) -> str:
     ],
 )
 class TestParametrized:
+    """Contains the test functions for WDL to CWL conversion."""
     def test_wdls(self, wdl_path: str, cwl_path: str) -> None:
         """Test WDL to CWL conversion."""
         convertedStr = wdl.convert(get_file(wdl_path))
@@ -31,7 +32,7 @@ class TestParametrized:
     def test_wdls_patch(
         self, monkeypatch: pytest.MonkeyPatch, wdl_path: str, cwl_path: str
     ) -> None:
-        """Test WDL to CWL conversion."""
+        """Test WDL to CWL conversion with patch."""
         monkeypatch.setattr(
             "sys.argv",
             [
