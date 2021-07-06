@@ -10,6 +10,7 @@ def get_file(path: str) -> str:
 
 @pytest.fixture(autouse=True)
 def mock_args(monkeypatch: pytest.MonkeyPatch, wdl_path: str) -> None:
+    """Patch sys.argv to all tests."""
     monkeypatch.setattr(
         "sys.argv",
         [
