@@ -90,25 +90,24 @@ def get_command(
             index += 1
     return new_command
 
-def get_input(inputs,unbound_input,bound_input):
+
+def get_input(inputs, unbound_input, bound_input):
     """Get bound and unbound inputs."""
     for i in unbound_input:
         input_type = wdl_type[i[0]]
         input_name = i[1]
-        inputs.append(
-            cwl.CommandInputParameter(
-                id=input_name, 
-                type=input_type
-                )
-            )
+        inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
     for i in bound_input:
         input_type = wdl_type[i[0]]
         input_name = i[1]
-        input_value = i[2].replace('"',"")
+        input_value = i[2].replace('"', "")
 
-        if input_type=='boolean':
-            input_value = bool(input_value)
+        if input_type == "boolean":
+            input_value = input_value.lower() == "true"
+
+        if input_type == "int":
+            input_value = int(input_value)
 
         inputs.append(
             cwl.CommandInputParameter(
@@ -117,8 +116,9 @@ def get_input(inputs,unbound_input,bound_input):
                 default=input_value,
             )
         )
-    
+
     return inputs
+
 
 def main(argv: List[str]) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
@@ -162,7 +162,7 @@ def main(argv: List[str]) -> str:
     base_command = ["sh", "example.sh"]
 
     inputs = []
-    inputs = get_input(inputs,ast.task_inputs,ast.task_inputs_bound)
+    inputs = get_input(inputs, ast.task_inputs, ast.task_inputs_bound)
 
     requirements: List[cwl.ProcessRequirement] = []
 
@@ -242,9 +242,6 @@ def main(argv: List[str]) -> str:
     # ^ converts multine line strings to nice multiline YAML
     yaml.dump(cwl_result, result_stream)
     yaml.dump(cwl_result, sys.stdout)
-
-    with open('result.cwl', 'w') as result:
-        result.write(result_stream.getvalue())
 
     return result_stream.getvalue()
 

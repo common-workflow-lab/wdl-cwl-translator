@@ -16,6 +16,7 @@ def get_file(path: str) -> str:
             "wdl_files/CollectQualityYieldMetrics.wdl",
             "cwl_files/CollectQualityYieldMetrics.cwl",
         ),
+        ("wdl_files/seqtk.wdl", "cwl_files/seqtk.cwl"),
     ],
 )
 def test_wdls(wdl_path: str, cwl_path: str) -> None:

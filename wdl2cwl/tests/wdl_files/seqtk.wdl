@@ -38,11 +38,11 @@ task Sample {
         mkdir -p "$(dirname ~{outFilePath})"
         ~{preCommand}
         seqtk sample \
-        #~{"-s " + seed} \
-        #~{true="-2 " false="" twoPassMode} \
+        ~{"-s " + seed} \
+        ~{true="-2 " false="" twoPassMode} \
         ~{sequenceFile} \
         ~{fractionOrNumber} \
-        #~{true="| gzip" false="" zip} \
+        ~{true="| gzip" false="" zip} \
         >  ~{outFilePath}
     }
 
