@@ -91,7 +91,11 @@ def get_command(
     return new_command
 
 
-def get_input(inputs, unbound_input, bound_input):
+def get_input(
+    inputs: List[cwl.CommandInputParameter],
+    unbound_input: List[str],
+    bound_input: List[str],
+) -> List[cwl.CommandInputParameter]:
     """Get bound and unbound inputs."""
     for i in unbound_input:
         input_type = wdl_type[i[0]]
@@ -101,10 +105,11 @@ def get_input(inputs, unbound_input, bound_input):
     for i in bound_input:
         input_type = wdl_type[i[0]]
         input_name = i[1]
-        input_value = i[2].replace('"', "")
+        input_value = i[2]
 
         if input_type == "boolean":
-            input_value = input_value.lower() == "true"
+            input_value = bool(input_value.lower() == "true")
+            #input_value = temp_input_value
 
         if input_type == "int":
             input_value = int(input_value)
@@ -161,7 +166,7 @@ def main(argv: List[str]) -> str:
 
     base_command = ["sh", "example.sh"]
 
-    inputs = []
+    inputs: List[cwl.CommandInputParameter] = []
     inputs = get_input(inputs, ast.task_inputs, ast.task_inputs_bound)
 
     requirements: List[cwl.ProcessRequirement] = []
