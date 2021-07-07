@@ -1,7 +1,7 @@
 """Main entrypoint for WDL2CWL."""
 import sys
 from io import StringIO
-from typing import List, cast
+from typing import List, cast, Any
 from io import StringIO
 import textwrap
 import re
@@ -105,12 +105,10 @@ def get_input(
     for i in bound_input:
         input_type = wdl_type[i[0]]
         input_name = i[1]
-        input_value = i[2]
+        input_value: Any = i[2].replace('"', "")
 
         if input_type == "boolean":
             input_value = bool(input_value.lower() == "true")
-            #input_value = temp_input_value
-
         if input_type == "int":
             input_value = int(input_value)
 
