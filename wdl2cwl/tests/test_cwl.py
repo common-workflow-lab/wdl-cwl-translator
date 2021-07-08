@@ -49,11 +49,11 @@ class TestParameterized:
                 "python",
                 get_file(wdl_path),
                 "--output",
-                p,
+                get_file(str(p)),
             ],
         )
 
-        p.write_text(wdl.convert(get_file(wdl_path)))
+        wdl.main()
 
         testStr = ""
         with open(get_file(cwl_path)) as file:
