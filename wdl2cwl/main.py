@@ -222,7 +222,7 @@ def convert(workflow: str) -> str:
     return result_stream.getvalue()
 
 
-def main() -> str:
+def main() -> None:
     """Command-line parsing."""
     parser = argparse.ArgumentParser()
     parser.add_argument("workflow", help="Path to WDL workflow")
@@ -232,8 +232,6 @@ def main() -> str:
     if args.output:
         with open(args.output, "w") as result:
             result.write(str(convert(args.workflow)))
-
-    return str(convert(args.workflow))
 
 
 if __name__ == "__main__":
