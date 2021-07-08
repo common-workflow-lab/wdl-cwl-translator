@@ -197,8 +197,6 @@ def main(argv: List[str]) -> str:
             for sublist in ast.task_inputs_bound:
                 if sublist[1] in ast.task_runtime["time_minutes"]:
                     time_minutes = sublist[2]
-        else:
-            time_minutes = ast.task_runtime["time_minutes"]
 
         hints.append(
             cwl.ToolTimeLimit(
