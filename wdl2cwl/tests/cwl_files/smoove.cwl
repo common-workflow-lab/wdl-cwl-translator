@@ -12,6 +12,8 @@ inputs:
   - id: sample
     type: string
 requirements:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/smoove:0.2.5--0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
@@ -25,6 +27,11 @@ requirements:
             --fasta $(inputs.referenceFasta.path) \
             $(inputs.bamFile.path)
   - class: InlineJavascriptRequirement
+hints:
+  - class: ResourceRequirement
+    ramMin: 15360
+  - class: ToolTimeLimit
+    timelimit: 86400
 cwlVersion: v1.2
 baseCommand:
   - sh

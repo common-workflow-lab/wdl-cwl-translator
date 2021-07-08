@@ -1,7 +1,7 @@
 """Main entrypoint for WDL2CWL."""
 import sys
 from io import StringIO
-from typing import List, cast
+from typing import List, cast, Any
 from io import StringIO
 import textwrap
 import re
@@ -31,8 +31,14 @@ def get_ram_min(ram_min: str) -> int:
 
     Only handles value given in GiB.
     """
-    ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find("GiB")]
+    unit = " ".join(re.findall("[a-zA-Z]+", ram_min))
+    ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
     return int(float(ram_min.strip()) * 1024)
+
+
+def get_time_minutes(time_minutes: str) -> int:
+    """Convert minutes to seconds."""
+    return int(float(time_minutes.strip()) * 60)
 
 
 def get_command(
@@ -142,10 +148,20 @@ def main(argv: List[str]) -> str:
     requirements: List[cwl.ProcessRequirement] = []
 
     if "docker" in ast.task_runtime:
+        dockerPull = ""
+
+        if '"' not in ast.task_runtime["docker"]:
+            # only searching for value in bound inputs.
+            # value could be a bound declaration which is not handled
+            for sublist in ast.task_inputs_bound:
+                if ast.task_runtime["docker"] in sublist[1]:
+                    dockerPull = sublist[2]
+
+        else:
+            dockerPull = ast.task_runtime["docker"]
+
         requirements.append(
-            cwl.DockerRequirement(
-                dockerPull=ast.task_runtime["docker"].replace('"', ""),
-            )
+            cwl.DockerRequirement(dockerPull=dockerPull.replace('"', ""))
         )
 
     requirements.append(
@@ -156,13 +172,39 @@ def main(argv: List[str]) -> str:
 
     requirements.append(cwl.InlineJavascriptRequirement())
 
-    hints = []
+    hints: List[cwl.ProcessRequirement] = []
+
     if "memory" in ast.task_runtime:
-        hints = [
+        memory: Any = ""
+
+        if '"' not in ast.task_runtime["memory"]:
+            for sublist in ast.task_inputs_bound:
+                if sublist[1] in ast.task_runtime["memory"]:
+                    memory = sublist[2]
+        else:
+            memory = ast.task_runtime["memory"]
+
+        hints.append(
             cwl.ResourceRequirement(
-                ramMin=get_ram_min(ast.task_runtime["memory"]),
+                ramMin=get_ram_min(memory),
             )
-        ]
+        )
+
+    if "time_minutes" in ast.task_runtime:
+
+        time_minutes: Any = ""
+        if '"' not in ast.task_runtime["time_minutes"]:
+            for sublist in ast.task_inputs_bound:
+                if sublist[1] in ast.task_runtime["time_minutes"]:
+                    time_minutes = sublist[2]
+        else:
+            time_minutes = ast.task_runtime["time_minutes"]
+
+        hints.append(
+            cwl.ToolTimeLimit(
+                timelimit=get_time_minutes(time_minutes),
+            )
+        )
 
     outputs = []
 
@@ -217,6 +259,7 @@ def main(argv: List[str]) -> str:
     # ^ converts multine line strings to nice multiline YAML
     yaml.dump(cwl_result, result_stream)
     yaml.dump(cwl_result, sys.stdout)
+
     return result_stream.getvalue()
 
 

@@ -48,11 +48,11 @@ task Call {
     #    File smooveVcf = outputDir + "/" + sample + "-smoove.vcf.gz"
     #}
 
-    #runtime {
-    #    memory: memory
-    #    time_minutes: timeMinutes
-    #    docker: dockerImage
-    #}
+    runtime {
+        memory: memory
+        time_minutes: timeMinutes
+        docker: dockerImage
+    }
 
     parameter_meta {
         # inputs
