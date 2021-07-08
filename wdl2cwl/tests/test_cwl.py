@@ -39,7 +39,6 @@ class TestParameterized:
         cwl_path: str,
     ) -> None:
         """Test WDL to CWL conversion with patch."""
-
         d = tmp_path / "sub"
         d.mkdir()
         p = d / "result.cwl"
