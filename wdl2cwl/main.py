@@ -1,4 +1,6 @@
 """Main entrypoint for WDL2CWL."""
+import argparse
+from argparse import Namespace
 import sys
 from io import StringIO
 from typing import List, cast
@@ -91,9 +93,9 @@ def get_command(
     return new_command
 
 
-def main(argv: List[str]) -> str:
+def convert(workflow: str) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
-    f = open(argv[0])
+    f = open(workflow)
     text = InputStream(f.read())
     lexer = WdlV1_1Lexer(text)
     stream = CommonTokenStream(lexer)
@@ -129,7 +131,6 @@ def main(argv: List[str]) -> str:
     command = get_command(
         command, ast.task_inputs, ast.task_inputs_bound, input_types, input_names
     )
-    print(command)
 
     base_command = ["sh", "example.sh"]
 
@@ -217,8 +218,21 @@ def main(argv: List[str]) -> str:
     # ^ converts multine line strings to nice multiline YAML
     yaml.dump(cwl_result, result_stream)
     yaml.dump(cwl_result, sys.stdout)
+
     return result_stream.getvalue()
 
 
+def main() -> None:
+    """Command-line parsing."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("workflow", help="Path to WDL workflow")
+    parser.add_argument("-o", "--output", help="Name of resultant CWL file")
+    args = parser.parse_args()
+
+    if args.output:
+        with open(args.output, "w") as result:
+            result.write(str(convert(args.workflow)))
+
+
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
