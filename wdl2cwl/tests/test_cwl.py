@@ -1,6 +1,7 @@
 import os.path
 import pytest
 import pathlib
+import filecmp
 
 from .. import main as wdl
 
@@ -49,14 +50,10 @@ class TestParameterized:
                 "python",
                 get_file(wdl_path),
                 "--output",
-                get_file(str(p)),
+                str(p),
             ],
         )
 
         wdl.main()
 
-        testStr = ""
-        with open(get_file(cwl_path)) as file:
-            testStr = file.read()
-
-        assert p.read_text() == testStr
+        assert filecmp.cmp(p, get_file(cwl_path))
