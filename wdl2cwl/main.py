@@ -3,7 +3,7 @@ import argparse
 from argparse import Namespace
 import sys
 from io import StringIO
-from typing import List, cast, Any
+from typing import List, cast, Union
 from io import StringIO
 import textwrap
 import re
@@ -107,12 +107,15 @@ def get_input(
     for i in bound_input:
         input_type = wdl_type[i[0]]
         input_name = i[1]
-        input_value: Any = i[2].replace('"', "")
+        raw_input_value = i[2].replace('"', "")
+        input_value: Union[str, bool, int] = ""
 
         if input_type == "boolean":
-            input_value = bool(input_value.lower() == "true")
-        if input_type == "int":
-            input_value = int(input_value)
+            input_value = bool(raw_input_value.lower() == "true")
+        elif input_type == "int":
+            input_value = int(raw_input_value)
+        else:
+            input_value = raw_input_value
 
         inputs.append(
             cwl.CommandInputParameter(
