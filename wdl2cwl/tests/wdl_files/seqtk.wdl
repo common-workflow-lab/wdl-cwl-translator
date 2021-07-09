@@ -38,20 +38,17 @@ task Sample {
         mkdir -p "$(dirname ~{outFilePath})"
         ~{preCommand}
         seqtk sample \
-        ~{"-s " + seed} \
-        ~{true="-2 " false="" twoPassMode} \
         ~{sequenceFile} \
         ~{fractionOrNumber} \
-        ~{true="| gzip" false="" zip} \
         >  ~{outFilePath}
     }
 
-    #output {
-        #File subsampledReads = outFilePath
-    #}
-
     output {
-    	File quality_yield_metrics = "abc"
+        File subsampledReads = outFilePath
     }
+
+    #output {
+    	#File quality_yield_metrics = "abc"
+    #}
 
 }

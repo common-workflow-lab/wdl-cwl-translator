@@ -15,10 +15,10 @@ inputs:
     default: true
     type: boolean
 outputs:
-  - id: quality_yield_metrics
+  - id: subsampledReads
     type: File
     outputBinding:
-        glob: '"abc"'
+        glob: outFilePath
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -29,11 +29,8 @@ requirements:
             mkdir -p "$(dirname $(inputs.outFilePath))"
             $(inputs.preCommand)
             seqtk sample \
-            $(inputs."-s "+seed) \
-            $(inputs.true="-2 "false=""twoPassMode) \
             $(inputs.sequenceFile.path) \
             $(inputs.fractionOrNumber) \
-            $(inputs.true="| gzip"false=""zip) \
             >  $(inputs.outFilePath)
   - class: InlineJavascriptRequirement
 cwlVersion: v1.2
