@@ -26,7 +26,7 @@ requirements:
         entry: |4
 
             set -e -o pipefail
-            mkdir -p "$(dirname $(inputs.outFilePath))"
+            mkdir -p "\$(dirname $(inputs.outFilePath))"
             $(inputs.preCommand)
             seqtk sample \
             $(inputs.sequenceFile.path) \

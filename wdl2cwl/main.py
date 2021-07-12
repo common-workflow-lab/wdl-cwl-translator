@@ -87,6 +87,11 @@ def get_command(
             new_command = new_command + append_str
 
             index = end_index + 1
+        elif (command[index] == "$" and command[index + 1] == "(") or (
+            command[index] == "$" and command[index + 1] == "("
+        ):
+            new_command += "\\" + command[index]
+            index += 1
         else:
             new_command += command[index]
             index += 1
