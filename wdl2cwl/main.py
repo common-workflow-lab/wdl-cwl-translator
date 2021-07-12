@@ -38,11 +38,6 @@ def get_ram_min(ram_min: str) -> int:
     return int(float(ram_min.strip()) * 1024)
 
 
-def get_time_minutes(time_minutes: str) -> int:
-    """Convert minutes to seconds."""
-    return int(float(time_minutes.strip()) * 60)
-
-
 def get_command(
     command: str,
     unbound: List[str],
@@ -193,15 +188,13 @@ def convert(workflow: str) -> str:
 
     if "time_minutes" in ast.task_runtime:
 
-        time_minutes: Any = ""
+        time_minutes = ""
         if '"' not in ast.task_runtime["time_minutes"]:
-            for sublist in ast.task_inputs_bound:
-                if sublist[1] in ast.task_runtime["time_minutes"]:
-                    time_minutes = sublist[2]
+            time_minutes = "$(inputs."+ast.task_runtime["time_minutes"]+"* 60)"
 
-        hints.append(
+        requirements.append(
             cwl.ToolTimeLimit(
-                timelimit=get_time_minutes(time_minutes),
+                timelimit=time_minutes.replace('"',""),
             )
         )
 
