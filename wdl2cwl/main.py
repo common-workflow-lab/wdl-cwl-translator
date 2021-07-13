@@ -168,10 +168,8 @@ def convert(workflow: str) -> str:
 
     requirements.append(cwl.InlineJavascriptRequirement())
 
-    hints: List[cwl.ProcessRequirement] = []
-
     if "memory" in ast.task_runtime:
-        memory: Any = ""
+        memory = ""
 
         if '"' not in ast.task_runtime["memory"]:
             for sublist in ast.task_inputs_bound:
@@ -180,7 +178,7 @@ def convert(workflow: str) -> str:
         else:
             memory = ast.task_runtime["memory"]
 
-        hints.append(
+        requirements.append(
             cwl.ResourceRequirement(
                 ramMin=get_ram_min(memory),
             )
@@ -190,11 +188,11 @@ def convert(workflow: str) -> str:
 
         time_minutes = ""
         if '"' not in ast.task_runtime["time_minutes"]:
-            time_minutes = "$(inputs."+ast.task_runtime["time_minutes"]+"* 60)"
+            time_minutes = "$(inputs." + ast.task_runtime["time_minutes"] + "* 60)"
 
         requirements.append(
             cwl.ToolTimeLimit(
-                timelimit=time_minutes.replace('"',""),
+                timelimit=time_minutes.replace('"', ""),
             )
         )
 
@@ -222,7 +220,6 @@ def convert(workflow: str) -> str:
         id=ast.task_name,
         inputs=inputs,
         requirements=requirements if requirements else None,
-        hints=hints if hints else None,
         outputs=outputs if outputs else None,
         cwlVersion="v1.2",
         baseCommand=base_command,

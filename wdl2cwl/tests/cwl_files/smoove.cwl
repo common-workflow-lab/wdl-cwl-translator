@@ -27,11 +27,10 @@ requirements:
             --fasta $(inputs.referenceFasta.path) \
             $(inputs.bamFile.path)
   - class: InlineJavascriptRequirement
-hints:
   - class: ResourceRequirement
     ramMin: 15360
   - class: ToolTimeLimit
-    timelimit: 86400
+    timelimit: $(inputs.timeMinutes* 60)
 cwlVersion: v1.2
 baseCommand:
   - sh
