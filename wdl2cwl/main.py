@@ -105,12 +105,20 @@ def get_input(
 ) -> List[cwl.CommandInputParameter]:
     """Get bound and unbound inputs."""
     for i in unbound_input:
-        input_type = wdl_type[i[0]]
+        input_type = (
+            wdl_type[i[0]]
+            if "?" not in i[0]
+            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+        )
         input_name = i[1]
         inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
     for i in bound_input:
-        input_type = wdl_type[i[0]]
+        input_type = (
+            wdl_type[i[0]]
+            if "?" not in i[0]
+            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+        )
         input_name = i[1]
         raw_input_value = i[2].replace('"', "")
         input_value: Union[str, bool, int] = ""

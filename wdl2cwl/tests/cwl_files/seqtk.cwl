@@ -5,6 +5,14 @@ inputs:
     type: File
   - id: fractionOrNumber
     type: float
+  - id: preCommand
+    type:
+      - string
+      - 'null'
+  - id: seed
+    type:
+      - int
+      - 'null'
   - id: outFilePath
     default: subsampledReads.fq.gz
     type: string

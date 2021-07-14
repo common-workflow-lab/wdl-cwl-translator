@@ -29,8 +29,8 @@ task Sample {
         Float fractionOrNumber # When above 1.0 is the number of reads, otherwise it's a fraction.
         Boolean zip = true
 
-        #String? preCommand
-        #Int? seed
+        String? preCommand
+        Int? seed
     }
 
     command {
@@ -46,9 +46,5 @@ task Sample {
     output {
         File subsampledReads = outFilePath
     }
-
-    #output {
-    	#File quality_yield_metrics = "abc"
-    #}
 
 }
