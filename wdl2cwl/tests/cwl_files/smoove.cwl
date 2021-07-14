@@ -11,6 +11,11 @@ inputs:
     type: File
   - id: sample
     type: string
+outputs:
+  - id: smooveVcf
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir)/$(inputs.sample)-smoove.vcf.gz
 requirements:
   - class: InitialWorkDirRequirement
     listing:
