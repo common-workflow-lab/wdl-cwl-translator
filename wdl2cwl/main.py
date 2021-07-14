@@ -3,7 +3,7 @@ import argparse
 from argparse import Namespace
 import sys
 from io import StringIO
-from typing import List, cast
+from typing import List, cast, Union
 from io import StringIO
 import textwrap
 import re
@@ -87,10 +87,50 @@ def get_command(
             new_command = new_command + append_str
 
             index = end_index + 1
+        elif (command[index] == "$" and command[index + 1] == "(") or (
+            command[index] == "$" and command[index + 1] == "("
+        ):
+            new_command += "\\" + command[index]
+            index += 1
         else:
             new_command += command[index]
             index += 1
     return new_command
+
+
+def get_input(
+    inputs: List[cwl.CommandInputParameter],
+    unbound_input: List[str],
+    bound_input: List[str],
+) -> List[cwl.CommandInputParameter]:
+    """Get bound and unbound inputs."""
+    for i in unbound_input:
+        input_type = wdl_type[i[0]]
+        input_name = i[1]
+        inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+
+    for i in bound_input:
+        input_type = wdl_type[i[0]]
+        input_name = i[1]
+        raw_input_value = i[2].replace('"', "")
+        input_value: Union[str, bool, int] = ""
+
+        if input_type == "boolean":
+            input_value = bool(raw_input_value.lower() == "true")
+        elif input_type == "int":
+            input_value = int(raw_input_value)
+        else:
+            input_value = raw_input_value
+
+        inputs.append(
+            cwl.CommandInputParameter(
+                id=input_name,
+                type=input_type,
+                default=input_value,
+            )
+        )
+
+    return inputs
 
 
 def convert(workflow: str) -> str:
@@ -134,11 +174,8 @@ def convert(workflow: str) -> str:
 
     base_command = ["sh", "example.sh"]
 
-    inputs = []
-    for i in ast.task_inputs:
-        input_type = wdl_type[i[0]]
-        input_name = i[1]
-        inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+    inputs: List[cwl.CommandInputParameter] = []
+    inputs = get_input(inputs, ast.task_inputs, ast.task_inputs_bound)
 
     requirements: List[cwl.ProcessRequirement] = []
 
