@@ -11,6 +11,18 @@ inputs:
     type: File
   - id: sample
     type: string
+  - id: outputDir
+    default: ./smoove
+    type: string
+  - id: memory
+    default: 15G
+    type: string
+  - id: timeMinutes
+    default: 1440
+    type: int
+  - id: dockerImage
+    default: quay.io/biocontainers/smoove:0.2.5--0
+    type: string
 outputs:
   - id: smooveVcf
     type: File
