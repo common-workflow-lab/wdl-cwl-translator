@@ -5,6 +5,10 @@ inputs:
     type: File
   - id: fractionOrNumber
     type: float
+  - id: preCommand
+    type: string
+  - id: seed
+    type: int
   - id: outFilePath
     default: subsampledReads.fq.gz
     type: string
@@ -25,13 +29,14 @@ requirements:
       - entryname: example.sh
         entry: |4
 
-            set -e -o pipefail
-            mkdir -p "\$(dirname $(inputs.outFilePath))"
-            $(inputs.preCommand)
-            seqtk sample \
-            $(inputs.sequenceFile.path) \
-            $(inputs.fractionOrNumber) \
-            >  $(inputs.outFilePath)
+                    set -e -o pipefail
+                    mkdir -p "\$(dirname $(inputs.outFilePath))"
+                    $(inputs.preCommand)
+                    seqtk sample \
+            	    -s $(inputs.seed) \
+                    $(inputs.sequenceFile.path) \
+                    $(inputs.fractionOrNumber) \
+                    >  $(inputs.outFilePath)
   - class: InlineJavascriptRequirement
 cwlVersion: v1.2
 baseCommand:
