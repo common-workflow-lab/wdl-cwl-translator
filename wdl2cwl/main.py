@@ -105,38 +105,68 @@ def get_input(
 ) -> List[cwl.CommandInputParameter]:
     """Get bound and unbound inputs."""
     for i in unbound_input:
-        input_type = (
-            wdl_type[i[0]]
-            if "?" not in i[0]
-            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
-        )
+
         input_name = i[1]
-        inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+        if "Array" in i[0]:
+            temp_type = wdl_type[
+                i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
+            ]
+            input_type = temp_type if "?" not in i[0] else [temp_type, wdl_type["?"]]
+            inputs.append(
+                cwl.CommandInputParameter(
+                    id=input_name,
+                    type=[cwl.CommandInputArraySchema(items=input_type, type="array")],
+                )
+            )
+        else:
+            input_type = (
+                wdl_type[i[0]]
+                if "?" not in i[0]
+                else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+            )
+
+            inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
     for i in bound_input:
-        input_type = (
-            wdl_type[i[0]]
-            if "?" not in i[0]
-            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
-        )
+
         input_name = i[1]
-        raw_input_value = i[2].replace('"', "")
-        input_value: Union[str, bool, int] = ""
 
-        if input_type == "boolean":
-            input_value = bool(raw_input_value.lower() == "true")
-        elif input_type == "int":
-            input_value = int(raw_input_value)
-        else:
-            input_value = raw_input_value
-
-        inputs.append(
-            cwl.CommandInputParameter(
-                id=input_name,
-                type=input_type,
-                default=input_value,
+        if "Array" in i[0]:
+            temp_type = wdl_type[
+                i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
+            ]
+            input_type = temp_type if "?" not in i[0] else [temp_type, wdl_type["?"]]
+            inputs.append(
+                cwl.CommandInputParameter(
+                    id=input_name,
+                    type=[cwl.CommandInputArraySchema(items=input_type, type="array")],
+                    default=i[2],
+                )
             )
-        )
+        else:
+            input_type = (
+                wdl_type[i[0]]
+                if "?" not in i[0]
+                else [wdl_type[i[0].replace("?", "")], wdl_type["?"]]
+            )
+            input_name = i[1]
+            raw_input_value = i[2].replace('"', "")
+            input_value: Union[str, bool, int] = ""
+
+            if input_type == "boolean":
+                input_value = bool(raw_input_value.lower() == "true")
+            elif input_type == "int":
+                input_value = int(raw_input_value)
+            else:
+                input_value = raw_input_value
+
+            inputs.append(
+                cwl.CommandInputParameter(
+                    id=input_name,
+                    type=input_type,
+                    default=input_value,
+                )
+            )
 
     return inputs
 
