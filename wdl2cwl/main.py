@@ -98,6 +98,43 @@ def get_command(
     return new_command
 
 
+def get_output(expression: str, input_names: List[str]) -> str:
+    """Get expression for outputs."""
+    output_value = ""
+
+    # for parameter references
+    # might have to change, In case there's more than one ~{}
+    if "~" in expression:
+        start_index = expression.find("~{")
+        end_index = expression.find("}")
+        output_value = (
+            expression[0:start_index]
+            + "$(inputs."
+            + expression[start_index + 2 : end_index]
+            + ")"
+            + expression[end_index + 1 :]
+        )
+        output_value = output_value.replace('"', "")
+
+    # For a string concatenation
+    elif "+" in expression:
+        split_str = expression.split("+")
+
+        for i in split_str:
+            if i in input_names:
+                output_value += "$(inputs." + i + ")"
+            else:
+                output_value += i
+
+        output_value = output_value.replace('"', "")
+
+    elif '"' not in expression:
+        if expression.replace('"', "") in input_names:
+            output_value = "$(inputs." + expression + ")"
+        output_value = output_value.replace('"', "")
+    return output_value
+
+
 def get_input(
     inputs: List[cwl.CommandInputParameter],
     unbound_input: List[str],
@@ -207,12 +244,7 @@ def convert(workflow: str) -> str:
     for i in ast.task_outputs:
         output_type = wdl_type[i[0]]
         output_name = i[1]
-        output_glob = ""
-        if "~" in i[2]:
-            output_glob = i[2][i[2].find("~{") + 2 : i[2].find("}")]
-            output_glob = "$(inputs." + output_glob + ")"
-        else:
-            output_glob = i[2]
+        output_glob = get_output(i[2], input_names)
 
         outputs.append(
             cwl.CommandOutputParameter(
