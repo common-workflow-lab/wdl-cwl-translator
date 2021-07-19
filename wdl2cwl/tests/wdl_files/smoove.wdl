@@ -44,9 +44,9 @@ task Call {
         ~{bamFile}
     }
 
-    #output {
-    #    File smooveVcf = outputDir + "/" + sample + "-smoove.vcf.gz"
-    #}
+    output {
+        File smooveVcf = outputDir + "/" + sample + "-smoove.vcf.gz"
+    }
 
     #runtime {
     #    memory: memory
