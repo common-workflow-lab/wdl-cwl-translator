@@ -22,7 +22,7 @@ outputs:
   - id: subsampledReads
     type: File
     outputBinding:
-        glob: outFilePath
+        glob: $(inputs.outFilePath)
 requirements:
   - class: InitialWorkDirRequirement
     listing:
