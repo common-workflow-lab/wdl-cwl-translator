@@ -82,10 +82,7 @@ def get_command(
                     else:
                         index = input_names.index(i)
                         data_type = input_types[index]  # get the data type of the input
-
-                        if data_type == "File":
-                            new_command += "$(inputs." + i + ".path)"
-                        else:
+                        if data_type != "File":
                             new_command += "$(inputs." + i + ")"
             # if sub string has only the input/ variable name
             else:
