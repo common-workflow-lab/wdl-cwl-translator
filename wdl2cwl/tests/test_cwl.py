@@ -19,7 +19,6 @@ def get_file(path: str) -> str:
             "cwl_files/CollectQualityYieldMetrics.cwl",
         ),
         ("wdl_files/seqtk.wdl", "cwl_files/seqtk.cwl"),
-        ("wdl_files/format.wdl", "cwl_files/format.cwl"),
     ],
 )
 class TestParameterized:
