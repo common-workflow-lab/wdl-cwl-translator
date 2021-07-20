@@ -38,6 +38,7 @@ task Sample {
         mkdir -p "$(dirname ~{outFilePath})"
         ~{preCommand}
         seqtk sample \
+	    ~{"-s " + seed} \
         ~{sequenceFile} \
         ~{fractionOrNumber} \
         >  ~{outFilePath}
