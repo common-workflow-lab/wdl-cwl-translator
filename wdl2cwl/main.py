@@ -33,9 +33,23 @@ def get_ram_min(ram_min: str) -> int:
 
     Only handles value given in GiB.
     """
-    ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find("GiB")]
+    unit = " ".join(re.findall("[a-zA-Z]+", ram_min))
+    ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
     return int(float(ram_min.strip()) * 1024)
 
+def get_ram_min_js(ram_min:str) -> str:
+    
+    """
+    var inputs = {memory: "15GiB"}
+    var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
+    var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+    var memory = "";
+
+    if(unit==="GiB"){
+        memory = value*1024;
+    }
+    """
+    return ""
 
 def get_command(
     command: str,
@@ -246,11 +260,23 @@ def convert(workflow: str) -> str:
 
     hints = []
     if "memory" in ast.task_runtime:
-        hints = [
+
+        ram_min = ""
+        if '"' in ast.task_runtime["memory"]:
+            ram_min = get_ram_min(ast.task_runtime["memory"])
+            #convert value here
+        else:
+            ram_min = get_ram_min_js(ast.task_runtime["memory"])
+        
+        requirements.append(
+            cwl.ResourceRequirement(
+                ramMin=ram_min,
+            ))
+        '''hints = [
             cwl.ResourceRequirement(
                 ramMin=get_ram_min(ast.task_runtime["memory"]),
             )
-        ]
+        ]'''
 
     outputs = []
 
