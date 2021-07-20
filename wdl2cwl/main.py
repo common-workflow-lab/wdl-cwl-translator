@@ -73,19 +73,32 @@ def get_command(
             # sub string containing everything inside ~{ and }
             sub_str = command[start_index:end_index]
 
-            # if sub string has only the input/ variable name
-            data_type = (
-                input_types[input_names.index(sub_str)]
-                if sub_str in input_names
-                else ""
-            )
-            append_str = ""
-            if data_type == "File":
-                append_str = "$(inputs." + sub_str + ".path)"
-            else:
-                append_str = "$(inputs." + sub_str + ")"
+            # if sub string has a concatenation
+            if "+" in sub_str:
+                split_str = sub_str.split("+")
 
-            new_command = new_command + append_str
+                for i in split_str:
+                    if '"' in i:
+                        new_command += i.replace('"', "")
+                    else:
+                        index = input_names.index(i)
+                        data_type = input_types[index]  # get the data type of the input
+                        if data_type != "File":
+                            new_command += "$(inputs." + i + ")"
+            # if sub string has only the input/ variable name
+            else:
+                data_type = (
+                    input_types[input_names.index(sub_str)]
+                    if sub_str in input_names
+                    else ""
+                )
+                append_str = ""
+                if data_type == "File":
+                    append_str = "$(inputs." + sub_str + ".path)"
+                else:
+                    append_str = "$(inputs." + sub_str + ")"
+
+                new_command = new_command + append_str
 
             index = end_index + 1
         elif (command[index] == "$" and command[index + 1] == "(") or (
@@ -97,6 +110,43 @@ def get_command(
             new_command += command[index]
             index += 1
     return new_command
+
+
+def get_output(expression: str, input_names: List[str]) -> str:
+    """Get expression for outputs."""
+    output_value = ""
+
+    # for parameter references
+    # might have to change, In case there's more than one ~{}
+    if "~" in expression:
+        start_index = expression.find("~{")
+        end_index = expression.find("}")
+        output_value = (
+            expression[0:start_index]
+            + "$(inputs."
+            + expression[start_index + 2 : end_index]
+            + ")"
+            + expression[end_index + 1 :]
+        )
+        output_value = output_value.replace('"', "")
+
+    # For a string concatenation
+    elif "+" in expression:
+        split_str = expression.split("+")
+
+        for i in split_str:
+            if i in input_names:
+                output_value += "$(inputs." + i + ")"
+            else:
+                output_value += i
+
+        output_value = output_value.replace('"', "")
+
+    elif '"' not in expression:
+        if expression.replace('"', "") in input_names:
+            output_value = "$(inputs." + expression + ")"
+        output_value = output_value.replace('"', "")
+    return output_value
 
 
 def get_input(
@@ -238,12 +288,7 @@ def convert(workflow: str) -> str:
     for i in ast.task_outputs:
         output_type = wdl_type[i[0]]
         output_name = i[1]
-        output_glob = ""
-        if "~" in i[2]:
-            output_glob = i[2][i[2].find("~{") + 2 : i[2].find("}")]
-            output_glob = "$(inputs." + output_glob + ")"
-        else:
-            output_glob = i[2]
+        output_glob = get_output(i[2], input_names)
 
         outputs.append(
             cwl.CommandOutputParameter(

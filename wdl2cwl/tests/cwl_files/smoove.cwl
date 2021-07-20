@@ -23,6 +23,11 @@ inputs:
   - id: dockerImage
     default: quay.io/biocontainers/smoove:0.2.5--0
     type: string
+outputs:
+  - id: smooveVcf
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir)/$(inputs.sample)-smoove.vcf.gz
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/smoove:0.2.5--0
