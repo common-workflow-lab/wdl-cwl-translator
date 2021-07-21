@@ -29,6 +29,8 @@ outputs:
     outputBinding:
         glob: $(inputs.outputDir)/$(inputs.sample)-smoove.vcf.gz
 requirements:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/smoove:0.2.5--0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
@@ -42,6 +44,10 @@ requirements:
             --fasta $(inputs.referenceFasta.path) \
             $(inputs.bamFile.path)
   - class: InlineJavascriptRequirement
+  - class: ResourceRequirement
+    ramMin: 15360
+  - class: ToolTimeLimit
+    timelimit: $(inputs.timeMinutes* 60)
 cwlVersion: v1.2
 baseCommand:
   - sh
