@@ -44,26 +44,14 @@ def get_ram_min(ram_min: str) -> int:
 
 def get_ram_min_js(ram_min: str) -> str:
 
-    temp_str = (
-        '$(var unit = inputs["'
+    js_str = (
+        '${var unit = inputs["'
         + ram_min
-        + '"].match(/[a-zA-Z]+/g).join("");\n var value = parseInt(inputs["'
+        + '"].match(/[a-zA-Z]+/g).join("");\nvar value = parseInt(inputs["'
         + ram_min
-        + '"].match(/[0-9]+/g));\n'
+        + '"].match(/[0-9]+/g));\nvar memory = "";\nif(unit==="GiB"){\n\tmemory = value*1024;\n}\nreturn memory;\n}'
     )
-    print(temp_str)
-
-    """
-    var inputs = {memory: "15GiB"}
-    var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-    var value = parseInt(inputs["memory"].match(/[0-9]+/g));
-    var memory = "";
-
-    if(unit==="GiB"){
-        memory = value*1024;
-    }
-    """
-    return ""
+    return js_str
 
 
 def get_command(
@@ -256,14 +244,23 @@ def convert(workflow: str) -> str:
     inputs: List[cwl.CommandInputParameter] = []
     inputs = get_input(inputs, ast.task_inputs, ast.task_inputs_bound)
 
-    get_ram_min_js("output_name")
     requirements: List[cwl.ProcessRequirement] = []
 
     if "docker" in ast.task_runtime:
+        dockerPull = ""
+
+        if '"' not in ast.task_runtime["docker"]:
+            # only searching for value in bound inputs.
+            # value could be a bound declaration which is not handled
+            for sublist in ast.task_inputs_bound:
+                if ast.task_runtime["docker"] in sublist[1]:
+                    dockerPull = sublist[2]
+
+        else:
+            dockerPull = ast.task_runtime["docker"]
+
         requirements.append(
-            cwl.DockerRequirement(
-                dockerPull=ast.task_runtime["docker"].replace('"', ""),
-            )
+            cwl.DockerRequirement(dockerPull=dockerPull.replace('"', ""))
         )
 
     requirements.append(
@@ -276,10 +273,9 @@ def convert(workflow: str) -> str:
 
     if "memory" in ast.task_runtime:
 
-        ram_min = ""
+        ram_min: Union[str, int] = ""
         if '"' in ast.task_runtime["memory"]:
             ram_min = get_ram_min(ast.task_runtime["memory"])
-            # convert value here
         else:
             ram_min = get_ram_min_js(ast.task_runtime["memory"])
 
@@ -288,11 +284,18 @@ def convert(workflow: str) -> str:
                 ramMin=ram_min,
             )
         )
-        """hints = [
-            cwl.ResourceRequirement(
-                ramMin=get_ram_min(ast.task_runtime["memory"]),
+
+    if "time_minutes" in ast.task_runtime:
+
+        time_minutes = ""
+        if '"' not in ast.task_runtime["time_minutes"]:
+            time_minutes = "$(inputs." + ast.task_runtime["time_minutes"] + "* 60)"
+
+        requirements.append(
+            cwl.ToolTimeLimit(
+                timelimit=time_minutes.replace('"', ""),
             )
-        ]"""
+        )
 
     outputs = []
 
