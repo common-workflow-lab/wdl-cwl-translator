@@ -43,7 +43,7 @@ def get_ram_min(ram_min: str) -> int:
 
 
 def get_ram_min_js(ram_min: str) -> str:
-
+    """Get memory requirement for user input."""
     js_str = (
         '${var unit = inputs["'
         + ram_min
