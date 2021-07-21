@@ -33,12 +33,26 @@ def get_ram_min(ram_min: str) -> int:
 
     Only handles value given in GiB.
     """
-    unit = " ".join(re.findall("[a-zA-Z]+", ram_min))
+    unit = " ".join(re.findall("[a-zA-Z]+", ram_min)).replace(" ", "")
     ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
-    return int(float(ram_min.strip()) * 1024)
+    ram_value = 0
+    # Add more units
+    if unit == "GiB":
+        ram_value = int(float(ram_min.strip()) * 1024)
+    return ram_value
 
-def get_ram_min_js(ram_min:str) -> str:
-    
+
+def get_ram_min_js(ram_min: str) -> str:
+
+    temp_str = (
+        '$(var unit = inputs["'
+        + ram_min
+        + '"].match(/[a-zA-Z]+/g).join("");\n var value = parseInt(inputs["'
+        + ram_min
+        + '"].match(/[0-9]+/g));\n'
+    )
+    print(temp_str)
+
     """
     var inputs = {memory: "15GiB"}
     var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
@@ -50,6 +64,7 @@ def get_ram_min_js(ram_min:str) -> str:
     }
     """
     return ""
+
 
 def get_command(
     command: str,
@@ -241,6 +256,7 @@ def convert(workflow: str) -> str:
     inputs: List[cwl.CommandInputParameter] = []
     inputs = get_input(inputs, ast.task_inputs, ast.task_inputs_bound)
 
+    get_ram_min_js("output_name")
     requirements: List[cwl.ProcessRequirement] = []
 
     if "docker" in ast.task_runtime:
@@ -258,25 +274,25 @@ def convert(workflow: str) -> str:
 
     requirements.append(cwl.InlineJavascriptRequirement())
 
-    hints = []
     if "memory" in ast.task_runtime:
 
         ram_min = ""
         if '"' in ast.task_runtime["memory"]:
             ram_min = get_ram_min(ast.task_runtime["memory"])
-            #convert value here
+            # convert value here
         else:
             ram_min = get_ram_min_js(ast.task_runtime["memory"])
-        
+
         requirements.append(
             cwl.ResourceRequirement(
                 ramMin=ram_min,
-            ))
-        '''hints = [
+            )
+        )
+        """hints = [
             cwl.ResourceRequirement(
                 ramMin=get_ram_min(ast.task_runtime["memory"]),
             )
-        ]'''
+        ]"""
 
     outputs = []
 
@@ -297,7 +313,6 @@ def convert(workflow: str) -> str:
         id=ast.task_name,
         inputs=inputs,
         requirements=requirements if requirements else None,
-        hints=hints if hints else None,
         outputs=outputs if outputs else None,
         cwlVersion="v1.2",
         baseCommand=base_command,
