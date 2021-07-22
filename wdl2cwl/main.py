@@ -93,13 +93,13 @@ def get_command(
                 false_value = (sub[2].split('"'))[1]
                 input_name = (sub[2].split('"'))[2]
                 append_str = (
-                    '${var value="";\nif(inputs["'
+                    '$(inputs["'
                     + input_name
-                    + '"]){\nvalue="'
+                    + '"] ? "'
                     + true_value
-                    + '";\n}\nelse{\nvalue="'
+                    + '" : "'
                     + false_value
-                    + '";\n}\nreturn value;}'
+                    + '")'
                 )
                 new_command += append_str
 
