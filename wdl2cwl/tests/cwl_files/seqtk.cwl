@@ -34,8 +34,24 @@ requirements:
                     $(inputs.preCommand)
                     seqtk sample \
             	    -s $(inputs.seed) \
+                    ${var value="";
+            if(inputs["twoPassMode"]){
+            value="-2 ";
+            }
+            else{
+            value="";
+            }
+            return value;} \
                     $(inputs.sequenceFile.path) \
                     $(inputs.fractionOrNumber) \
+                    ${var value="";
+            if(inputs["zip"]){
+            value="| gzip";
+            }
+            else{
+            value="";
+            }
+            return value;} \
                     >  $(inputs.outFilePath)
   - class: InlineJavascriptRequirement
 cwlVersion: v1.2

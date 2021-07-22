@@ -86,6 +86,23 @@ def get_command(
                         if data_type != "File":
                             new_command += "$(inputs." + i + ")"
             # if sub string has only the input/ variable name
+
+            elif ("true" and "false") in sub_str:
+                sub = sub_str.split("=")
+                true_value = (sub[1].split('"'))[1]
+                false_value = (sub[2].split('"'))[1]
+                input_name = (sub[2].split('"'))[2]
+                append_str = (
+                    '${var value="";\nif(inputs["'
+                    + input_name
+                    + '"]){\nvalue="'
+                    + true_value
+                    + '";\n}\nelse{\nvalue="'
+                    + false_value
+                    + '";\n}\nreturn value;}'
+                )
+                new_command += append_str
+
             else:
                 data_type = (
                     input_types[input_names.index(sub_str)]
