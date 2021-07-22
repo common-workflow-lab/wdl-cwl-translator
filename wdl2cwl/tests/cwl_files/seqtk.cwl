@@ -34,13 +34,13 @@ requirements:
         entry: |4
 
                     set -e -o pipefail
-                    mkdir -p "\$(dirname $(inputs.outFilePath))"
-                    $(inputs.preCommand)
+                    mkdir -p "\$(dirname $(inputs["outFilePath"]===null?"":inputs["outFilePath"]["class"]==="File"? "$(inputs.outFilePath.path)": "$(inputs.outFilePath)"))"
+                    $(inputs["preCommand"]===null?"":inputs["preCommand"]["class"]==="File"? "$(inputs.preCommand.path)": "$(inputs.preCommand)")
                     seqtk sample \
             	    -s $(inputs.seed) \
-                    $(inputs.sequenceFile.path) \
-                    $(inputs.fractionOrNumber) \
-                    >  $(inputs.outFilePath)
+                    $(inputs["sequenceFile"]===null?"":inputs["sequenceFile"]["class"]==="File"? "$(inputs.sequenceFile.path)": "$(inputs.sequenceFile)") \
+                    $(inputs["fractionOrNumber"]===null?"":inputs["fractionOrNumber"]["class"]==="File"? "$(inputs.fractionOrNumber.path)": "$(inputs.fractionOrNumber)") \
+                    >  $(inputs["outFilePath"]===null?"":inputs["outFilePath"]["class"]==="File"? "$(inputs.outFilePath.path)": "$(inputs.outFilePath)")
   - class: InlineJavascriptRequirement
 cwlVersion: v1.2
 baseCommand:

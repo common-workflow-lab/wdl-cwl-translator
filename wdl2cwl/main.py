@@ -88,27 +88,17 @@ def get_command(
             # if sub string has only the input/ variable name
             else:
                 append_str = (
-                    '${var value="";\nif(inputs["'
+                    '$(inputs["'
                     + sub_str
-                    + '"]===null){\nvalue=" ";\n}else if(inputs["'
+                    + '"]===null?"":inputs["'
                     + sub_str
-                    + '"]["class"]==="File"){\nvalue="$(inputs.'
+                    + '"]["class"]==="File"? "$(inputs.'
                     + sub_str
-                    + '.path)";\n}else{value="$(inputs.'
+                    + '.path)": "$(inputs.'
                     + sub_str
-                    + ')";}return value;}'
+                    + ')")'
                 )
-                data_type = (
-                    input_types[input_names.index(sub_str)]
-                    if sub_str in input_names
-                    else ""
-                )
-                """append_str = ""
-                if data_type == "File":
-                    append_str = "$(inputs." + sub_str + ".path)"
-                else:
-                    append_str = "$(inputs." + sub_str + ")"
-                """
+
                 new_command = new_command + append_str
 
             index = end_index + 1

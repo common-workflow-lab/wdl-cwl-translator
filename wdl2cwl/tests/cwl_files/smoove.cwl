@@ -37,12 +37,12 @@ requirements:
         entry: |4
 
             set -e
-            mkdir -p $(inputs.outputDir)
+            mkdir -p $(inputs["outputDir"]===null?"":inputs["outputDir"]["class"]==="File"? "$(inputs.outputDir.path)": "$(inputs.outputDir)")
             smoove call \
-            --outdir $(inputs.outputDir) \
-            --name $(inputs.sample) \
-            --fasta $(inputs.referenceFasta.path) \
-            $(inputs.bamFile.path)
+            --outdir $(inputs["outputDir"]===null?"":inputs["outputDir"]["class"]==="File"? "$(inputs.outputDir.path)": "$(inputs.outputDir)") \
+            --name $(inputs["sample"]===null?"":inputs["sample"]["class"]==="File"? "$(inputs.sample.path)": "$(inputs.sample)") \
+            --fasta $(inputs["referenceFasta"]===null?"":inputs["referenceFasta"]["class"]==="File"? "$(inputs.referenceFasta.path)": "$(inputs.referenceFasta)") \
+            $(inputs["bamFile"]===null?"":inputs["bamFile"]["class"]==="File"? "$(inputs.bamFile.path)": "$(inputs.bamFile)")
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: 15360
