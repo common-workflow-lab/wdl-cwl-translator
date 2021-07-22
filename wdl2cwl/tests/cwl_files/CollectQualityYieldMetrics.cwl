@@ -26,7 +26,6 @@ requirements:
               OQ=true \
               OUTPUT=$(inputs.metrics_filename)
   - class: InlineJavascriptRequirement
-hints:
   - class: ResourceRequirement
     ramMin: 3584
 cwlVersion: v1.2

@@ -33,7 +33,8 @@ def get_ram_min(ram_min: str) -> int:
 
     Only handles value given in GiB.
     """
-    ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find("GiB")]
+    unit = " ".join(re.findall("[a-zA-Z]+", ram_min))
+    ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
     return int(float(ram_min.strip()) * 1024)
 
 
@@ -72,19 +73,43 @@ def get_command(
             # sub string containing everything inside ~{ and }
             sub_str = command[start_index:end_index]
 
-            # if sub string has only the input/ variable name
-            data_type = (
-                input_types[input_names.index(sub_str)]
-                if sub_str in input_names
-                else ""
-            )
-            append_str = ""
-            if data_type == "File":
-                append_str = "$(inputs." + sub_str + ".path)"
-            else:
-                append_str = "$(inputs." + sub_str + ")"
+            # if sub string has a concatenation
+            if "+" in sub_str:
+                split_str = sub_str.split("+")
 
-            new_command = new_command + append_str
+                for i in split_str:
+                    if '"' in i:
+                        new_command += i.replace('"', "")
+                    else:
+                        index = input_names.index(i)
+                        data_type = input_types[index]  # get the data type of the input
+                        if data_type != "File":
+                            new_command += "$(inputs." + i + ")"
+            # if sub string has only the input/ variable name
+            else:
+                append_str = (
+                    '${var value="";\nif(inputs["'
+                    + sub_str
+                    + '"]===null){\nvalue=" ";\n}else if(inputs["'
+                    + sub_str
+                    + '"]["class"]==="File"){\nvalue="$(inputs.'
+                    + sub_str
+                    + '.path)";\n}else{value="$(inputs.'
+                    + sub_str
+                    + ')";}return value;}'
+                )
+                data_type = (
+                    input_types[input_names.index(sub_str)]
+                    if sub_str in input_names
+                    else ""
+                )
+                """append_str = ""
+                if data_type == "File":
+                    append_str = "$(inputs." + sub_str + ".path)"
+                else:
+                    append_str = "$(inputs." + sub_str + ")"
+                """
+                new_command = new_command + append_str
 
             index = end_index + 1
         elif (command[index] == "$" and command[index + 1] == "(") or (
@@ -229,10 +254,20 @@ def convert(workflow: str) -> str:
     requirements: List[cwl.ProcessRequirement] = []
 
     if "docker" in ast.task_runtime:
+        dockerPull = ""
+
+        if '"' not in ast.task_runtime["docker"]:
+            # only searching for value in bound inputs.
+            # value could be a bound declaration which is not handled
+            for sublist in ast.task_inputs_bound:
+                if ast.task_runtime["docker"] in sublist[1]:
+                    dockerPull = sublist[2]
+
+        else:
+            dockerPull = ast.task_runtime["docker"]
+
         requirements.append(
-            cwl.DockerRequirement(
-                dockerPull=ast.task_runtime["docker"].replace('"', ""),
-            )
+            cwl.DockerRequirement(dockerPull=dockerPull.replace('"', ""))
         )
 
     requirements.append(
@@ -243,13 +278,33 @@ def convert(workflow: str) -> str:
 
     requirements.append(cwl.InlineJavascriptRequirement())
 
-    hints = []
     if "memory" in ast.task_runtime:
-        hints = [
+        memory = ""
+
+        if '"' not in ast.task_runtime["memory"]:
+            for sublist in ast.task_inputs_bound:
+                if sublist[1] in ast.task_runtime["memory"]:
+                    memory = sublist[2]
+        else:
+            memory = ast.task_runtime["memory"]
+
+        requirements.append(
             cwl.ResourceRequirement(
-                ramMin=get_ram_min(ast.task_runtime["memory"]),
+                ramMin=get_ram_min(memory),
             )
-        ]
+        )
+
+    if "time_minutes" in ast.task_runtime:
+
+        time_minutes = ""
+        if '"' not in ast.task_runtime["time_minutes"]:
+            time_minutes = "$(inputs." + ast.task_runtime["time_minutes"] + "* 60)"
+
+        requirements.append(
+            cwl.ToolTimeLimit(
+                timelimit=time_minutes.replace('"', ""),
+            )
+        )
 
     outputs = []
 
@@ -270,7 +325,6 @@ def convert(workflow: str) -> str:
         id=ast.task_name,
         inputs=inputs,
         requirements=requirements if requirements else None,
-        hints=hints if hints else None,
         outputs=outputs if outputs else None,
         cwlVersion="v1.2",
         baseCommand=base_command,
