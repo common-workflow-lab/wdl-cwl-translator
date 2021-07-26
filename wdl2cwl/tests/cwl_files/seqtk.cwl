@@ -6,10 +6,12 @@ inputs:
   - id: fractionOrNumber
     type: float
   - id: preCommand
+    default: ''
     type:
       - string
       - 'null'
   - id: seed
+    default: ''
     type:
       - int
       - 'null'
@@ -34,13 +36,15 @@ requirements:
         entry: |4
 
                     set -e -o pipefail
-                    mkdir -p "\$(dirname $(inputs["outFilePath"]===null?"":inputs["outFilePath"]["class"]==="File"? "$(inputs.outFilePath.path)": "$(inputs.outFilePath)"))"
-                    $(inputs["preCommand"]===null?"":inputs["preCommand"]["class"]==="File"? "$(inputs.preCommand.path)": "$(inputs.preCommand)")
+                    mkdir -p "\$(dirname $(inputs.outFilePath))"
+                    $(inputs.preCommand)
                     seqtk sample \
             	    -s $(inputs.seed) \
-                    $(inputs["sequenceFile"]===null?"":inputs["sequenceFile"]["class"]==="File"? "$(inputs.sequenceFile.path)": "$(inputs.sequenceFile)") \
-                    $(inputs["fractionOrNumber"]===null?"":inputs["fractionOrNumber"]["class"]==="File"? "$(inputs.fractionOrNumber.path)": "$(inputs.fractionOrNumber)") \
-                    >  $(inputs["outFilePath"]===null?"":inputs["outFilePath"]["class"]==="File"? "$(inputs.outFilePath.path)": "$(inputs.outFilePath)")
+                    $(inputs["twoPassMode"] ? "-2 " : "") \
+                    $(inputs.sequenceFile.path) \
+                    $(inputs.fractionOrNumber) \
+                    $(inputs["zip"] ? "| gzip" : "") \
+                    >  $(inputs.outFilePath)
   - class: InlineJavascriptRequirement
 cwlVersion: v1.2
 baseCommand:

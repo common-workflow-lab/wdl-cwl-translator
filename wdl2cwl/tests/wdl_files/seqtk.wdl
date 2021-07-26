@@ -39,8 +39,10 @@ task Sample {
         ~{preCommand}
         seqtk sample \
 	    ~{"-s " + seed} \
+        ~{true="-2 " false="" twoPassMode} \
         ~{sequenceFile} \
         ~{fractionOrNumber} \
+        ~{true="| gzip" false="" zip} \
         >  ~{outFilePath}
     }
 

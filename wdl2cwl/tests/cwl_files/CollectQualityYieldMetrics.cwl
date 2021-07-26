@@ -22,9 +22,9 @@ requirements:
 
             java -Xms2000m -jar /usr/picard/picard.jar \
               CollectQualityYieldMetrics \
-              INPUT=$(inputs["input_bam"]===null?"":inputs["input_bam"]["class"]==="File"? "$(inputs.input_bam.path)": "$(inputs.input_bam)") \
+              INPUT=$(inputs.input_bam.path) \
               OQ=true \
-              OUTPUT=$(inputs["metrics_filename"]===null?"":inputs["metrics_filename"]["class"]==="File"? "$(inputs.metrics_filename.path)": "$(inputs.metrics_filename)")
+              OUTPUT=$(inputs.metrics_filename)
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: 3584
