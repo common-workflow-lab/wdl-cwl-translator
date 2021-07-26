@@ -6,9 +6,15 @@ inputs:
   - id: fractionOrNumber
     type: float
   - id: preCommand
-    type: string
+    default: ''
+    type:
+      - string
+      - 'null'
   - id: seed
-    type: int
+    default: ''
+    type:
+      - int
+      - 'null'
   - id: outFilePath
     default: subsampledReads.fq.gz
     type: string
