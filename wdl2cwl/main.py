@@ -102,18 +102,36 @@ def get_command(
                         if data_type != "File":
                             new_command += "$(inputs." + i + ")"
             # if sub string has only the input/ variable name
+
+            elif ("true" and "false") in sub_str:
+                sub = sub_str.split("=")
+                true_value = (sub[1].split('"'))[1]
+                false_value = (sub[2].split('"'))[1]
+                input_name = (sub[2].split('"'))[2]
+                append_str = (
+                    '$(inputs["'
+                    + input_name
+                    + '"] ? "'
+                    + true_value
+                    + '" : "'
+                    + false_value
+                    + '")'
+                )
+                new_command += append_str
+
             else:
+
                 data_type = (
                     input_types[input_names.index(sub_str)]
                     if sub_str in input_names
                     else ""
                 )
+
                 append_str = ""
                 if data_type == "File":
                     append_str = "$(inputs." + sub_str + ".path)"
                 else:
                     append_str = "$(inputs." + sub_str + ")"
-
                 new_command = new_command + append_str
 
             index = end_index + 1
@@ -172,12 +190,29 @@ def get_input(
 ) -> List[cwl.CommandInputParameter]:
     """Get bound and unbound inputs."""
     for i in unbound_input:
-        input_type = wdl_type[i[0]]
+
         input_name = i[1]
-        inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+        input_type = (
+            wdl_type[i[0]]
+            if "?" not in i[0]
+            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+        )
+
+        if "?" in i[0]:
+            inputs.append(
+                cwl.CommandInputParameter(id=input_name, type=input_type, default="")
+            )
+        else:
+            inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
     for i in bound_input:
-        input_type = wdl_type[i[0]]
+
+        input_name = i[1]
+        input_type = (
+            wdl_type[i[0]]
+            if "?" not in i[0]
+            else [wdl_type[i[0].replace("?", "")], wdl_type["?"]]
+        )
         input_name = i[1]
         raw_input_value = i[2].replace('"', "")
         input_value: Union[str, bool, int] = ""

@@ -29,8 +29,8 @@ task Sample {
         Float fractionOrNumber # When above 1.0 is the number of reads, otherwise it's a fraction.
         Boolean zip = true
 
-        String preCommand
-        Int seed
+        String? preCommand
+        Int? seed
     }
 
     command {
@@ -39,8 +39,10 @@ task Sample {
         ~{preCommand}
         seqtk sample \
 	    ~{"-s " + seed} \
+        ~{true="-2 " false="" twoPassMode} \
         ~{sequenceFile} \
         ~{fractionOrNumber} \
+        ~{true="| gzip" false="" zip} \
         >  ~{outFilePath}
     }
 
