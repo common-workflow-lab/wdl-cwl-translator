@@ -45,12 +45,24 @@ def get_ram_min(ram_min: str) -> int:
 def get_ram_min_js(ram_min: str) -> str:
     """Get memory requirement for user input."""
     js_str = (
-        '${var unit = inputs["'
+        '${\nvar unit = inputs["'
         + ram_min
         + '"].match(/[a-zA-Z]+/g).join("");\nvar value = parseInt(inputs["'
         + ram_min
-        + '"].match(/[0-9]+/g));\nvar memory = "";\nif(unit==="GiB"){\n\tmemory = value*1024;\n}\nreturn memory;\n}'
+        + '"].match(/[0-9]+/g));\n'
+        + 'var memory = "";\n'
+        + 'if(unit==="KiB") memory = value/1024;\n'
+        + 'else if(unit==="MiB") memory = value;\n'
+        + 'else if(unit==="GiB") memory = value*1024;\n'
+        + 'else if(unit==="TiB") memory = value*1024*1024;\n'
+        + 'else if(unit==="B") memory = value/(1024*1024);\n'
+        + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024**2);\n'
+        + 'else if(unit==="MB" || unit==="M") memory = (value*(1000**2))/(1024**2);\n'
+        + 'else if(unit==="GB" || unit==="G") memory = (value*(1000**3))/(1024**2);\n'
+        + 'else if(unit==="TB" || unit==="T") memory = (value*(1000**4))/(1024**2);\n'
+        + "return memory;\n}"
     )
+
     return js_str
 
 

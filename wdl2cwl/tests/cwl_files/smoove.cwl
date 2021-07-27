@@ -46,12 +46,19 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-
-        ${var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
+        ${
+        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
         var value = parseInt(inputs["memory"].match(/[0-9]+/g));
         var memory = "";
-        if(unit==="GiB"){
-        	memory = value*1024;
-        }
+        if(unit==="KiB") memory = value/1024;
+        else if(unit==="MiB") memory = value;
+        else if(unit==="GiB") memory = value*1024;
+        else if(unit==="TiB") memory = value*1024*1024;
+        else if(unit==="B") memory = value/(1024*1024);
+        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024**2);
+        else if(unit==="MB" || unit==="M") memory = (value*(1000**2))/(1024**2);
+        else if(unit==="GB" || unit==="G") memory = (value*(1000**3))/(1024**2);
+        else if(unit==="TB" || unit==="T") memory = (value*(1000**4))/(1024**2);
         return memory;
         }
   - class: ToolTimeLimit
