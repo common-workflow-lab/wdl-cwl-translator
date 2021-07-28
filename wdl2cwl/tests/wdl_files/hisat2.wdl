@@ -1,4 +1,5 @@
 version 1.0
+# Source: https://github.com/biowdl/tasks/blob/develop/hisat2.wdl
 
 # Copyright (c) 2017 Leiden University Medical Center
 #
