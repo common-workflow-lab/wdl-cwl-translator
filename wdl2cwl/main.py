@@ -344,6 +344,18 @@ def convert(workflow: str) -> str:
             )
         )
 
+    if "cpu" in ast.task_runtime:
+
+        cpu = ""
+        if '"' not in ast.task_runtime["cpu"]:
+            cpu = "$(inputs." + ast.task_runtime["cpu"] + ")"
+
+        requirements.append(
+            cwl.ResourceRequirement(
+                coresMin=cpu,
+            )
+        )
+
     outputs = []
 
     for i in ast.task_outputs:
