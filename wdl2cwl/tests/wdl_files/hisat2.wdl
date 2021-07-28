@@ -57,7 +57,7 @@ task Hisat2 {
         mkdir -p "$(dirname ~{outputBam})"
         hisat2 \
         -p ~{threads} \
-        -x ~{sub(indexFiles[0], "\.[0-9]\.ht2", "")} \
+        
         ~{true="-1" false="-U" defined(inputR2)} ~{inputR1} \
         ~{"-2" + inputR2} \
         --rg-id ~{readgroup} \
@@ -77,7 +77,7 @@ task Hisat2 {
 
     output {
         File bamFile = outputBam
-        File summaryFile = summaryFilePath
+        #File summaryFile = summaryFilePath
     }
 
     runtime {

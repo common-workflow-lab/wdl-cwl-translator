@@ -53,10 +53,6 @@ outputs:
     type: File
     outputBinding:
         glob: $(inputs.outputBam)
-  - id: summaryFile
-    type: File
-    outputBinding:
-        glob: ''
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0
@@ -69,7 +65,7 @@ requirements:
             mkdir -p "\$(dirname $(inputs.outputBam))"
             hisat2 \
             -p $(inputs.threads) \
-            -x $(inputs.sub(indexFiles[0],"\.[0-9]\.ht2","")) \
+
             $(inputs["defined(inputR2)"] ? "-1" : "-U") $(inputs.inputR1.path) \
             -2$(inputs.inputR2) \
             --rg-id $(inputs.readgroup) \
