@@ -336,7 +336,7 @@ def convert(workflow: str) -> str:
 
         time_minutes = ""
         if '"' not in ast.task_runtime["time_minutes"]:
-            if ast.task_runtime["time_minutes"].replace('"',"") in input_names:
+            if ast.task_runtime["time_minutes"].replace('"', "") in input_names:
                 time_minutes = "$(inputs." + ast.task_runtime["time_minutes"] + "* 60)"
 
         requirements.append(
@@ -349,7 +349,7 @@ def convert(workflow: str) -> str:
 
         cpu = ""
         if '"' not in ast.task_runtime["cpu"]:
-            if ast.task_runtime["cpu"].replace('"',"") in input_names:
+            if ast.task_runtime["cpu"].replace('"', "") in input_names:
                 cpu = "$(inputs." + ast.task_runtime["cpu"] + ")"
 
         requirements.append(

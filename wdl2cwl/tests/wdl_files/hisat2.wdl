@@ -1,4 +1,5 @@
 version 1.0
+# Source: https://github.com/biowdl/tasks/blob/bc1bacf11498d2d30b85591cfccdcf71ef0966a5/hisat2.wdl
 
 # Copyright (c) 2017 Leiden University Medical Center
 #
@@ -51,13 +52,13 @@ task Hisat2 {
     Int estimatedSortThreads = if threads == 1 then 1 else 1 + ceil(threads / 4.0)
     Int totalSortThreads = select_first([sortThreads, estimatedSortThreads])
     Int estimatedMemoryGb = 1 + ceil(size(indexFiles, "G") * 1.2) + sortMemoryPerThreadGb * totalSortThreads
-
+    ### NOTE: The following is not a valid command for Hisat2. 
     command {
         set -e -o pipefail
         mkdir -p "$(dirname ~{outputBam})"
         hisat2 \
         -p ~{threads} \
-        
+        -x  \
         ~{true="-1" false="-U" defined(inputR2)} ~{inputR1} \
         ~{"-2" + inputR2} \
         --rg-id ~{readgroup} \
@@ -68,7 +69,7 @@ task Hisat2 {
         --new-summary \
         --summary-file ~{summaryFilePath} \
         | samtools sort \
-        
+        "-@ " \
         -m ~{sortMemoryPerThreadGb}G \
         -l ~{compressionLevel} \
         - \
@@ -83,7 +84,7 @@ task Hisat2 {
     runtime {
         cpu: threads
         #memory: "~{select_first([memoryGb, estimatedMemoryGb])}G"
-        time_minutes: timeMinutes
+        #time_minutes: timeMinutes
         docker: dockerImage
     }
 
@@ -112,4 +113,3 @@ task Hisat2 {
         summaryFile: {description: "Alignment summary file."}
     }
 }
-

@@ -61,7 +61,7 @@ requirements:
             mkdir -p "\$(dirname $(inputs.outputBam))"
             hisat2 \
             -p $(inputs.threads) \
-
+            -x  \
             $(inputs["defined(inputR2)"] ? "-1" : "-U") $(inputs.inputR1.path) \
             -2$(inputs.inputR2) \
             --rg-id $(inputs.readgroup) \
@@ -72,14 +72,12 @@ requirements:
             --new-summary \
             --summary-file $(inputs.summaryFilePath) \
             | samtools sort \
-
+            "-@ " \
             -m $(inputs.sortMemoryPerThreadGb)G \
             -l $(inputs.compressionLevel) \
             - \
             -o $(inputs.outputBam)
   - class: InlineJavascriptRequirement
-  - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes* 60)
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
 cwlVersion: v1.2
