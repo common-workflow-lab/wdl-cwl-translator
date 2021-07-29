@@ -82,8 +82,8 @@ requirements:
             - \
             -o $(inputs.outputBam)
   - class: InlineJavascriptRequirement
-  - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes* 60)
+  - class: ResourceRequirement
+    coresMin: $(inputs.threads)
 cwlVersion: v1.2
 baseCommand:
   - sh
