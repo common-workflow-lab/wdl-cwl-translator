@@ -25,11 +25,7 @@ task Hisat2 {
     input {
         File inputR1
         File? inputR2
-<<<<<<< HEAD
-        #Array[File]+ indexFiles
-=======
         Array[File]+ indexFiles
->>>>>>> 2a2a6ce182716cddc2014e3bbc36dc51538654ac
         String outputBam
         String sample
         String library

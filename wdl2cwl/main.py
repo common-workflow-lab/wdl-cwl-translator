@@ -358,23 +358,31 @@ def convert(workflow: str) -> str:
 
     if "time_minutes" in ast.task_runtime:
 
-        time_minutes = ""
+        time_minutes: Union[str, int] = ""
         if '"' not in ast.task_runtime["time_minutes"]:
             if ast.task_runtime["time_minutes"].replace('"', "") in input_names:
-                time_minutes = "$(inputs." + ast.task_runtime["time_minutes"] + "* 60)"
+                time_minutes = (
+                    "$(inputs."
+                    + ast.task_runtime["time_minutes"]
+                    + "* 60)".replace('"', "")
+                )
+            if ast.task_runtime["time_minutes"].replace('"', "").isnumeric():
+                time_minutes = int(ast.task_runtime["time_minutes"]) * 60
 
         requirements.append(
             cwl.ToolTimeLimit(
-                timelimit=time_minutes.replace('"', ""),
+                timelimit=time_minutes,
             )
         )
 
     if "cpu" in ast.task_runtime:
 
-        cpu = ""
+        cpu: Union[str, int] = ""
         if '"' not in ast.task_runtime["cpu"]:
             if ast.task_runtime["cpu"].replace('"', "") in input_names:
-                cpu = "$(inputs." + ast.task_runtime["cpu"] + ")"
+                cpu = "$(inputs." + ast.task_runtime["cpu"] + ")".replace('"', "")
+            if ast.task_runtime["cpu"].replace('"', "").isnumeric():
+                cpu = int(ast.task_runtime["cpu"])
 
         requirements.append(
             cwl.ResourceRequirement(
