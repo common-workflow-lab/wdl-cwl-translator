@@ -30,3 +30,13 @@ program that uses the ANTLR grammar for WDL.
 For some discussion comparing the two languages (mainly from the perspective of translating in the other direction, CWL to WDL), see this document:
 
 https://github.com/dnanexus/dxCompiler/blob/main/doc/CWL_v1.2.0_to_WDL_v1.md
+
+### Adding Test Cases
+
+1. Find a WDL workflow. Given below are some links that can be used to find these workflows: 
+    i. https://github.com/broadinstitute/warp
+    ii. https://github.com/broadinstitute/viral-pipelines/tree/master/pipes/WDL
+    iii. https://github.com/biowdl/tasks
+2. Run the workflow using the translator and save the result to a .cwl file at a specified location. ```python wdl2cwl/main.py  path_to_wdl_file -o specified_location```.
+3. Add the WDL workflow to ```wdl2cwl/tests/wdl_files``` and the resultant CWL file to ```wdl2cwl/tests/wdl_files```. 
+4. Add the paths of the added WDL and CWL files to ```wdl2cwl/tests/test_cwl.py``` as an argument under the @pytest.mark.parametrize() function.
