@@ -34,9 +34,11 @@ https://github.com/dnanexus/dxCompiler/blob/main/doc/CWL_v1.2.0_to_WDL_v1.md
 ### Adding Test Cases
 
 1. Find a WDL workflow. Given below are some links that can be used to find these workflows: 
-    i. https://github.com/broadinstitute/warp
-    ii. https://github.com/broadinstitute/viral-pipelines/tree/master/pipes/WDL
-    iii. https://github.com/biowdl/tasks
-2. Run the workflow using the translator and save the result to a .cwl file at a specified location. ```python wdl2cwl/main.py  path_to_wdl_file -o specified_location```.
-3. Add the WDL workflow to ```wdl2cwl/tests/wdl_files``` and the resultant CWL file to ```wdl2cwl/tests/wdl_files```. 
-4. Add the paths of the added WDL and CWL files to ```wdl2cwl/tests/test_cwl.py``` as an argument under the @pytest.mark.parametrize() function.
+    1. https://github.com/broadinstitute/warp
+    2. https://github.com/broadinstitute/viral-pipelines/tree/master/pipes/WDL
+    3. https://github.com/biowdl/tasks
+2. Use the translator to convert the WDL file and save the result to a .cwl file at a specified location. ```python wdl2cwl/main.py  path_to_wdl_file -o specified_location```.
+3. If a problem is encountered during the translation or if the WDL workflow has a feature that has not been implemented yet, submit a new issue with a description of the issue at https://github.com/common-workflow-lab/wdl-cwl-translator/issues
+4. Check whether the outputs of the WDL workflow and the resultant CWL file are equivalent upon giving the required inputs. The WDL workflow can be run using a workflow runner like miniwdl. (Refer the documentation https://github.com/chanzuckerberg/miniwdl) The CWL file can be run using cwltool (Refer the documentation https://github.com/common-workflow-language/cwltool)
+5. Add the WDL workflow to ```wdl2cwl/tests/wdl_files``` and the resultant CWL file to ```wdl2cwl/tests/wdl_files```. Include the licence and the original location of the WDL file as a comment at the beginning of the document. 
+6. Add the paths of the added WDL and CWL files to ```wdl2cwl/tests/test_cwl.py``` as an argument under the @pytest.mark.parametrize() function.
