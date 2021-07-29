@@ -204,28 +204,52 @@ def get_input(
     for i in unbound_input:
 
         input_name = i[1]
-        input_type = (
-            wdl_type[i[0]]
-            if "?" not in i[0]
-            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
-        )
 
-        if "?" in i[0]:
-            inputs.append(
-                cwl.CommandInputParameter(id=input_name, type=input_type, default="")
+        if "Array" in i[0]:
+            temp_type = wdl_type[
+                i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
+            ]
+            input_type = (
+                temp_type if "?" not in i[0] else [temp_type, "null".replace("'", "")]
             )
+            input_name = i[1]
+
+            if "?" not in i[0]:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name,
+                        type=[
+                            cwl.CommandInputArraySchema(items=input_type, type="array")
+                        ],
+                    )
+                )
+
         else:
-            inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+            input_type = (
+                wdl_type[i[0]]
+                if "?" not in i[0]
+                else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+            )
+
+            if "?" in i[0]:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name, type=input_type, default=""
+                    )
+                )
+            else:
+                inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
     for i in bound_input:
 
         input_name = i[1]
+
         input_type = (
             wdl_type[i[0]]
             if "?" not in i[0]
             else [wdl_type[i[0].replace("?", "")], wdl_type["?"]]
         )
-        input_name = i[1]
+
         raw_input_value = i[2].replace('"', "")
         input_value: Union[str, bool, int] = ""
 

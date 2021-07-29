@@ -25,7 +25,11 @@ task Hisat2 {
     input {
         File inputR1
         File? inputR2
+<<<<<<< HEAD
         #Array[File]+ indexFiles
+=======
+        Array[File]+ indexFiles
+>>>>>>> 2a2a6ce182716cddc2014e3bbc36dc51538654ac
         String outputBam
         String sample
         String library
@@ -58,7 +62,7 @@ task Hisat2 {
         mkdir -p "$(dirname ~{outputBam})"
         hisat2 \
         -p ~{threads} \
-        -x  \
+        -x ~{indexFiles[0]} \
         ~{true="-1" false="-U" defined(inputR2)} ~{inputR1} \
         ~{"-2" + inputR2} \
         --rg-id ~{readgroup} \

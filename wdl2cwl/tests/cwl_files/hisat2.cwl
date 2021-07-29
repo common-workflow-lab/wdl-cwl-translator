@@ -8,6 +8,10 @@ inputs:
     type:
       - File
       - 'null'
+  - id: indexFiles
+    type:
+      - items: File
+        type: array
   - id: outputBam
     type: string
   - id: sample
@@ -61,7 +65,7 @@ requirements:
             mkdir -p "\$(dirname $(inputs.outputBam))"
             hisat2 \
             -p $(inputs.threads) \
-            -x  \
+            -x $(inputs.indexFiles[0]) \
             $(inputs["defined(inputR2)"] ? "-1" : "-U") $(inputs.inputR1.path) \
             -2$(inputs.inputR2) \
             --rg-id $(inputs.readgroup) \
