@@ -33,9 +33,37 @@ def get_ram_min(ram_min: str) -> int:
 
     Only handles value given in GiB.
     """
-    unit = " ".join(re.findall("[a-zA-Z]+", ram_min))
+    unit = " ".join(re.findall("[a-zA-Z]+", ram_min)).replace(" ", "")
     ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
-    return int(float(ram_min.strip()) * 1024)
+    ram_value = 0
+    # Add more units
+    if unit == "GiB":
+        ram_value = int(float(ram_min.strip()) * 1024)
+    return ram_value
+
+
+def get_ram_min_js(ram_min: str) -> str:
+    """Get memory requirement for user input."""
+    js_str = (
+        '${\nvar unit = inputs["'
+        + ram_min
+        + '"].match(/[a-zA-Z]+/g).join("");\nvar value = parseInt(inputs["'
+        + ram_min
+        + '"].match(/[0-9]+/g));\n'
+        + 'var memory = "";\n'
+        + 'if(unit==="KiB") memory = value/1024;\n'
+        + 'else if(unit==="MiB") memory = value;\n'
+        + 'else if(unit==="GiB") memory = value*1024;\n'
+        + 'else if(unit==="TiB") memory = value*1024*1024;\n'
+        + 'else if(unit==="B") memory = value/(1024*1024);\n'
+        + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024**2);\n'
+        + 'else if(unit==="MB" || unit==="M") memory = (value*(1000**2))/(1024**2);\n'
+        + 'else if(unit==="GB" || unit==="G") memory = (value*(1000**3))/(1024**2);\n'
+        + 'else if(unit==="TB" || unit==="T") memory = (value*(1000**4))/(1024**2);\n'
+        + "return memory;\n}"
+    )
+
+    return js_str
 
 
 def get_command(
@@ -176,28 +204,52 @@ def get_input(
     for i in unbound_input:
 
         input_name = i[1]
-        input_type = (
-            wdl_type[i[0]]
-            if "?" not in i[0]
-            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
-        )
 
-        if "?" in i[0]:
-            inputs.append(
-                cwl.CommandInputParameter(id=input_name, type=input_type, default="")
+        if "Array" in i[0]:
+            temp_type = wdl_type[
+                i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
+            ]
+            input_type = (
+                temp_type if "?" not in i[0] else [temp_type, "null".replace("'", "")]
             )
+            input_name = i[1]
+
+            if "?" not in i[0]:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name,
+                        type=[
+                            cwl.CommandInputArraySchema(items=input_type, type="array")
+                        ],
+                    )
+                )
+
         else:
-            inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+            input_type = (
+                wdl_type[i[0]]
+                if "?" not in i[0]
+                else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+            )
+
+            if "?" in i[0]:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name, type=input_type, default=""
+                    )
+                )
+            else:
+                inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
     for i in bound_input:
 
         input_name = i[1]
+
         input_type = (
             wdl_type[i[0]]
             if "?" not in i[0]
             else [wdl_type[i[0].replace("?", "")], wdl_type["?"]]
         )
-        input_name = i[1]
+
         raw_input_value = i[2].replace('"', "")
         input_value: Union[str, bool, int] = ""
 
@@ -291,18 +343,16 @@ def convert(workflow: str) -> str:
     requirements.append(cwl.InlineJavascriptRequirement())
 
     if "memory" in ast.task_runtime:
-        memory = ""
 
-        if '"' not in ast.task_runtime["memory"]:
-            for sublist in ast.task_inputs_bound:
-                if sublist[1] in ast.task_runtime["memory"]:
-                    memory = sublist[2]
+        ram_min: Union[str, int] = ""
+        if '"' in ast.task_runtime["memory"]:
+            ram_min = get_ram_min(ast.task_runtime["memory"])
         else:
-            memory = ast.task_runtime["memory"]
+            ram_min = get_ram_min_js(ast.task_runtime["memory"])
 
         requirements.append(
             cwl.ResourceRequirement(
-                ramMin=get_ram_min(memory),
+                ramMin=ram_min,
             )
         )
 
