@@ -116,20 +116,25 @@ def get_command(
             # if sub string has only the input/ variable name
 
             elif ("true" and "false") in sub_str:
-                sub = sub_str.split("=")
-                true_value = (sub[1].split('"'))[1]
-                false_value = (sub[2].split('"'))[1]
-                input_name = (sub[2].split('"'))[2]
-                append_str = (
-                    '$(inputs["'
-                    + input_name
-                    + '"] ? "'
-                    + true_value
-                    + '" : "'
-                    + false_value
-                    + '")'
-                )
-                new_command += append_str
+
+                true_value = sub_str[
+                    sub_str.find("true") + 5 : sub_str.find("false")
+                ].strip()
+                temp = sub_str.split("false=")
+                false_value = temp[1].split(temp[1][0])[1]
+                input_name = temp[1].split(temp[1][0])[2]
+
+                if input_name in input_names:
+                    append_str = (
+                        '$(inputs["'
+                        + input_name
+                        + '"] ? '
+                        + true_value
+                        + ' : "'
+                        + false_value
+                        + '")'
+                    )
+                    new_command += append_str
 
             else:
 

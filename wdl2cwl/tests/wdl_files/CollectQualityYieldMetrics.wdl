@@ -1,5 +1,7 @@
 version 1.0
 
+## Source: https://github.com/broadinstitute/warp/blob/9ea4dc8ad4eca794ed336451fa8b23367132a820/tasks/broad/Qc.wdl#L19
+##
 ## Copyright Broad Institute, 2018
 ##
 ## This WDL defines tasks used for QC of human whole-genome or exome sequencing data.

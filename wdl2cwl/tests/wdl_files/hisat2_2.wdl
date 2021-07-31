@@ -1,6 +1,7 @@
 version 1.0
-# Source: https://github.com/biowdl/tasks/blob/bc1bacf11498d2d30b85591cfccdcf71ef0966a5/hisat2.wdl
 
+# Source: https://github.com/biowdl/tasks/blob/bc1bacf11498d2d30b85591cfccdcf71ef0966a5/hisat2.wdl
+#
 # Copyright (c) 2017 Leiden University Medical Center
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -59,7 +60,7 @@ task Hisat2 {
         hisat2 \
         -p ~{threads} \
         -x ~{indexFiles[0]} \
-        ~{true="-1" false="-U" defined(inputR2)} ~{inputR1} \
+        ~{true="-1" false="-U" inputR2} ~{inputR1} \
         ~{"-2" + inputR2} \
         --rg-id ~{readgroup} \
         --rg 'SM:~{sample}' \

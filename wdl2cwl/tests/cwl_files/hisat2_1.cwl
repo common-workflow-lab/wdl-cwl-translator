@@ -66,7 +66,7 @@ requirements:
             hisat2 \
             -p $(inputs.threads) \
             -x $(inputs.indexFiles[0]) \
-            $(inputs["defined(inputR2)"] ? "-1" : "-U") $(inputs.inputR1.path) \
+            $(inputs["inputR2"] ? "-1" : "-U") $(inputs.inputR1.path) \
             -2$(inputs.inputR2) \
             --rg-id $(inputs.readgroup) \
             --rg 'SM:$(inputs.sample)' \
