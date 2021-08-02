@@ -21,6 +21,10 @@ def get_file(path: str) -> str:
         ("wdl_files/seqtk.wdl", "cwl_files/seqtk.cwl"),
         ("wdl_files/hisat2_1.wdl", "cwl_files/hisat2_1.cwl"),
         ("wdl_files/hisat2_2.wdl", "cwl_files/hisat2_2.cwl"),
+        (
+            "wdl_files/CollectReadgroupBamQualityMetrics.wdl",
+            "cwl_files/CollectReadgroupBamQualityMetrics.cwl",
+        ),
     ],
 )
 class TestParameterized:

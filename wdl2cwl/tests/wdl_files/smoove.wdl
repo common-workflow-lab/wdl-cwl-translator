@@ -1,5 +1,7 @@
 version 1.0
 
+# Source: https://github.com/biowdl/tasks/blob/bc1bacf11498d2d30b85591cfccdcf71ef0966a5/smoove.wdl
+#
 # Copyright (c) 2020 Leiden University Medical Center
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
