@@ -56,11 +56,11 @@ def get_ram_min_js(ram_min: str) -> str:
         + 'else if(unit==="GiB") memory = value*1024;\n'
         + 'else if(unit==="TiB") memory = value*1024*1024;\n'
         + 'else if(unit==="B") memory = value/(1024*1024);\n'
-        + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024**2);\n'
-        + 'else if(unit==="MB" || unit==="M") memory = (value*(1000**2))/(1024**2);\n'
-        + 'else if(unit==="GB" || unit==="G") memory = (value*(1000**3))/(1024**2);\n'
-        + 'else if(unit==="TB" || unit==="T") memory = (value*(1000**4))/(1024**2);\n'
-        + "return memory;\n}"
+        + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);\n'
+        + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
+        + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
+        + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
+        + "return parseInt(memory);\n}"
     )
 
     return js_str
