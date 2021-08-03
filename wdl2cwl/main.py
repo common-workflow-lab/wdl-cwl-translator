@@ -194,9 +194,9 @@ def get_output(expression: str, input_names: List[str]) -> str:
         output_value = output_value.replace('"', "")
 
     elif '"' not in expression:
-        if expression.replace('"', "") in input_names:
+        if expression in input_names:
             output_value = "$(inputs." + expression + ")"
-        output_value = output_value.replace('"', "")
+        output_value = output_value
 
     elif '"' in expression:
         output_value = expression.replace('"', "")
