@@ -136,6 +136,19 @@ def get_command(
                     )
                     new_command += append_str
 
+                elif "defined(" in input_name:
+                    sub_str = input_name[input_name.find("(") + 1 : -1]
+                    append_str = (
+                        '$(inputs["'
+                        + sub_str
+                        + '"] ? '
+                        + true_value
+                        + ' : "'
+                        + false_value
+                        + '")'
+                    )
+                    new_command += append_str
+
             else:
 
                 data_type = (
