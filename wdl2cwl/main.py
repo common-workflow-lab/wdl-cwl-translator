@@ -219,6 +219,7 @@ def get_output(expression: str, input_names: List[str]) -> str:
         if expression.replace('"', "") in input_names:
             output_value = "$(inputs." + expression + ")"
         output_value = output_value.replace('"', "")
+
     return output_value
 
 
@@ -437,14 +438,15 @@ def convert(workflow: str) -> str:
         baseCommand=base_command,
     )
 
+    # implemented runtime requirements
+    runtime_requirements = ["docker", "memory", "time_minutes", "cpu"]
+
+    for i in ast.task_runtime:
+        if i not in runtime_requirements:
+            print("----WARNING: SKIPPING REQUIREMENT " + i + "----")
+
     if ast.task_parameter_meta_check:
         print("----WARNING: SKIPPING PARAMETER_META----")
-
-    if "preemptible" in ast.task_runtime:
-        print("----WARNING: SKIPPING REQUIREMENT PREEMPTIBLE----")
-
-    if "disks" in ast.task_runtime:
-        print("----WARNING: SKIPPING REQUIREMENT DISKS----")
 
     if len(ast.task_variables) > 0:
         for a in ast.task_variables:
