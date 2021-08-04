@@ -137,7 +137,6 @@ def get_command(
                     new_command += append_str
 
             elif "sep=" in sub_str:
-                """~{sep=' 'inputFiles}"""
                 temp = sub_str[sub_str.find("sep=") + 4]
                 separator = sub_str.split(temp)[1]
                 input_name = sub_str.split(temp)[2]
