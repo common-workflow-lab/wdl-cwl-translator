@@ -137,9 +137,9 @@ def get_command(
                     new_command += append_str
 
             elif "sep=" in sub_str:
-                temp = sub_str[sub_str.find("sep=") + 4]
-                separator = sub_str.split(temp)[1]
-                input_name = sub_str.split(temp)[2]
+                split_str = sub_str.split(sub_str[4])
+                separator = split_str[1]
+                input_name = split_str[2]
 
                 if input_name in input_names:
                     append_str = (
@@ -156,7 +156,6 @@ def get_command(
                         + "}"
                     )
                     new_command += append_str
-                    print(append_str)
             else:
 
                 data_type = (
