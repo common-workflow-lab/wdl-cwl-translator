@@ -306,9 +306,13 @@ def convert(workflow: str) -> str:
 
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
-    raw_command = raw_command[
-        raw_command.find("{") + 1 : -1
-    ]  # removing the command{} part
+
+    if "<<<" in raw_command:
+        raw_command = raw_command[raw_command.find("<<<") + 3 : -3]
+    else:
+        raw_command = raw_command[
+            raw_command.find("{") + 1 : -1
+        ]  # removing the command{} part
 
     command = textwrap.dedent(raw_command)
 
