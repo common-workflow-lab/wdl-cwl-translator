@@ -23,6 +23,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
         self.workflow_input_check = None
         self.task_output_check = None
         self.task_parameter_meta_check = None
+        self.task_meta_check = None
 
     def walk_tree(self, tree):
         self.visitDocument(tree)
@@ -358,7 +359,7 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#meta.
     def visitMeta(self, ctx:WdlV1_1Parser.MetaContext):
-        return self.visitChildren(ctx)
+        self.task_meta_check = 1
 
 
     # Visit a parse tree produced by WdlV1_1Parser#task_runtime_kv.

@@ -426,6 +426,9 @@ def convert(workflow: str) -> str:
     if ast.task_parameter_meta_check:
         print("----WARNING: SKIPPING PARAMETER_META----")
 
+    if ast.task_meta_check:
+        print("----WARNING: SKIPPING META----")
+
     if len(ast.task_variables) > 0:
         for a in ast.task_variables:
             print("----WARNING: SKIPPING VARIABLE " + str(a[1]) + "----")
