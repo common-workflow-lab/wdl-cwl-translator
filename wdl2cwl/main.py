@@ -87,9 +87,7 @@ def get_command(
     while index < len(command):
 
         # if you have ~{
-        if (command[index] == "~" and command[index + 1] == "{") or (
-            command[index] == "$" and command[index + 1] == "{"
-        ):
+        if command[index] == "~" and command[index + 1] == "{":
             start_index = index + 2
 
             # while loop to find index of }
