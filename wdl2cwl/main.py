@@ -136,6 +136,20 @@ def get_command(
                     )
                     new_command += append_str
 
+            elif "sub(" in sub_str:
+                temp = sub_str.split(",")
+                append_str = ""
+                if len(temp) == 3:
+                    append_str = (
+                        '$(return inputs["'
+                        + temp[0]
+                        + '"].replace('
+                        + temp[1]
+                        + ","
+                        + temp[2][:-1]
+                        + ");)"
+                    )
+                new_command += append_str
             else:
 
                 data_type = (
