@@ -194,9 +194,12 @@ def get_output(expression: str, input_names: List[str]) -> str:
         output_value = output_value.replace('"', "")
 
     elif '"' not in expression:
-        if expression.replace('"', "") in input_names:
+        if expression in input_names:
             output_value = "$(inputs." + expression + ")"
-        output_value = output_value.replace('"', "")
+        output_value = output_value
+
+    elif '"' in expression:
+        output_value = expression.replace('"', "")
 
     return output_value
 
@@ -306,9 +309,13 @@ def convert(workflow: str) -> str:
 
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
-    raw_command = raw_command[
-        raw_command.find("{") + 1 : -1
-    ]  # removing the command{} part
+
+    if "<<<" in raw_command:
+        raw_command = raw_command[raw_command.find("<<<") + 3 : -3]
+    else:
+        raw_command = raw_command[
+            raw_command.find("{") + 1 : -1
+        ]  # removing the command{} part
 
     command = textwrap.dedent(raw_command)
 
