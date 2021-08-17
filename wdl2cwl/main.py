@@ -412,6 +412,18 @@ def convert(workflow: str) -> str:
                 cpu = "$(inputs." + ast.task_runtime["cpu"] + ")"
             elif ast.task_runtime["cpu"].isnumeric():
                 cpu = int(ast.task_runtime["cpu"])
+            elif "+" in ast.task_runtime["cpu"]:
+                temp = ast.task_runtime["cpu"].split("+")
+                append_str = "$("
+                for i in range(0, len(temp)):
+                    if temp[i] in input_names:
+                        append_str += "inputs." + temp[i]
+                    elif temp[i].isnumeric():
+                        append_str += temp[i]
+                    if i != len(temp) - 1:
+                        append_str += " + "
+                append_str += ")"
+                cpu = append_str
 
         requirements.append(
             cwl.ResourceRequirement(
