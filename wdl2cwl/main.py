@@ -200,9 +200,12 @@ def get_output(expression: str, input_names: List[str]) -> str:
         output_value = output_value.replace('"', "")
 
     elif '"' not in expression:
-        if expression.replace('"', "") in input_names:
+        if expression in input_names:
             output_value = "$(inputs." + expression + ")"
-        output_value = output_value.replace('"', "")
+        output_value = output_value
+
+    elif '"' in expression:
+        output_value = expression.replace('"', "")
 
     return output_value
 
@@ -312,9 +315,13 @@ def convert(workflow: str) -> str:
 
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
-    raw_command = raw_command[
-        raw_command.find("{") + 1 : -1
-    ]  # removing the command{} part
+
+    if "<<<" in raw_command:
+        raw_command = raw_command[raw_command.find("<<<") + 3 : -3]
+    else:
+        raw_command = raw_command[
+            raw_command.find("{") + 1 : -1
+        ]  # removing the command{} part
 
     command = textwrap.dedent(raw_command)
 
@@ -403,6 +410,18 @@ def convert(workflow: str) -> str:
                 cpu = "$(inputs." + ast.task_runtime["cpu"] + ")"
             elif ast.task_runtime["cpu"].isnumeric():
                 cpu = int(ast.task_runtime["cpu"])
+            elif "+" in ast.task_runtime["cpu"]:
+                temp = ast.task_runtime["cpu"].split("+")
+                append_str = "$("
+                for i in range(0, len(temp)):
+                    if temp[i] in input_names:
+                        append_str += "inputs." + temp[i]
+                    elif temp[i].isnumeric():
+                        append_str += temp[i]
+                    if i != len(temp) - 1:
+                        append_str += " + "
+                append_str += ")"
+                cpu = append_str
 
         requirements.append(
             cwl.ResourceRequirement(
