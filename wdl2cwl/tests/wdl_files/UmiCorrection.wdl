@@ -1,14 +1,35 @@
-## Source: https://github.com/broadinstitute/warp/blob/8988d9a490ba026fc2470d40886d9f50ac7920d0/tasks/skylab/UmiCorrection.wdl
-##
-## LICENSING :
-## This script is released under the WDL source code license (BSD-3) (see LICENSE in
-## https://github.com/broadinstitute/wdl). Note however that the programs it calls may
-## be subject to different licenses. Users are responsible for checking that they are
-## authorized to run all programs before running this script. Please see the docker
-## page at https://hub.docker.com/r/broadinstitute/genomes-in-the-cloud/ for detailed
-## licensing information pertaining to the included programs.
-
 version 1.0
+
+# Source: https://github.com/broadinstitute/warp/blob/11e9f8e6a4288dd3d8b23f60f7785a67ef1cbe31/tasks/skylab/UmiCorrection.wdl
+#
+# BSD 3-Clause License
+# Copyright (c) 2021, Broad Institute
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 task CorrectUMItools {
     input {
@@ -41,12 +62,11 @@ task CorrectUMItools {
         preemptible: "(optional) if non-zero, request a pre-emptible instance and allow for this number of preemptions before running the task on a non preemptible machine"
     }
 
-    ### NOTE: The following is not a valid command for CorrectUMItools
     command {
         set -e
 
-        
-        
+        mv ${bam_input} input.bam
+        mv ${bam_index} input.bam.bai
 
         touch input.bam
         touch input.bam.bai
@@ -65,13 +85,14 @@ task CorrectUMItools {
             --cell-tag CB \
             --gene-tag GE \
             --no-sort-output \
+            --group-out ${groupout_filename} \
              \
             --umi-group-tag UB
 
        getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam
 
        rm input.bam input.bam.bai
-       samtools cat -o  duplicate_marked.bam untagged.bam
+       samtools cat -o ${output_bam_filename} duplicate_marked.bam untagged.bam
 
     }
 

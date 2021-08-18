@@ -78,6 +78,7 @@ def get_command(
     bound: List[str],
     input_types: List[str],
     input_names: List[str],
+    command_check: bool,
 ) -> str:
     """
     Get command to be used in the bash script.
@@ -93,7 +94,9 @@ def get_command(
     while index < len(command):
 
         # if you have ~{
-        if command[index] == "~" and command[index + 1] == "{":
+        if (command[index] == "~" and command[index + 1] == "{") or (
+            command[index] == "$" and command[index + 1] == "{" and command_check
+        ):
             start_index = index + 2
 
             # while loop to find index of }
@@ -316,8 +319,11 @@ def convert(workflow: str) -> str:
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
 
+    # variable to check the syntax of the command { or <<<
+    command_check = True
     if "<<<" in raw_command:
         raw_command = raw_command[raw_command.find("<<<") + 3 : -3]
+        command_check = False
     else:
         raw_command = raw_command[
             raw_command.find("{") + 1 : -1
@@ -326,7 +332,12 @@ def convert(workflow: str) -> str:
     command = textwrap.dedent(raw_command)
 
     command = get_command(
-        command, ast.task_inputs, ast.task_inputs_bound, input_types, input_names
+        command,
+        ast.task_inputs,
+        ast.task_inputs_bound,
+        input_types,
+        input_names,
+        command_check,
     )
 
     base_command = ["sh", "example.sh"]

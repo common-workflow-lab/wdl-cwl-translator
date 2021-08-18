@@ -33,8 +33,8 @@ requirements:
 
              set -e
 
-
-
+             mv $(inputs.bam_input.path) input.bam
+             mv $(inputs.bam_index.path) input.bam.bai
 
              touch input.bam
              touch input.bam.bai
@@ -53,13 +53,14 @@ requirements:
                  --cell-tag CB \
                  --gene-tag GE \
                  --no-sort-output \
+                 --group-out $(inputs.groupout_filename) \
                   \
                  --umi-group-tag UB
 
             getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam
 
             rm input.bam input.bam.bai
-            samtools cat -o  duplicate_marked.bam untagged.bam
+            samtools cat -o $(inputs.output_bam_filename) duplicate_marked.bam untagged.bam
 
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
