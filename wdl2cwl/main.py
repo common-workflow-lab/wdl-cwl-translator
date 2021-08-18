@@ -42,12 +42,18 @@ def get_ram_min(ram_min: str) -> int:
     return ram_value
 
 
-def get_ram_min_js(ram_min: str) -> str:
+def get_ram_min_js(ram_min: str, unit: str) -> str:
     """Get memory requirement for user input."""
+    append_str: str = ""
+    if unit:
+        append_str = '${\nvar unit = "' + unit + '";'
+    else:
+        append_str = (
+            '${\nvar unit = inputs["' + ram_min + '"].match(/[a-zA-Z]+/g).join("");'
+        )
     js_str = (
-        '${\nvar unit = inputs["'
-        + ram_min
-        + '"].match(/[a-zA-Z]+/g).join("");\nvar value = parseInt(inputs["'
+        append_str
+        + '\nvar value = parseInt(inputs["'
         + ram_min
         + '"].match(/[0-9]+/g));\n'
         + 'var memory = "";\n'
@@ -358,10 +364,22 @@ def convert(workflow: str) -> str:
     if "memory" in ast.task_runtime:
 
         ram_min: Union[str, int] = ""
+
         if '"' in ast.task_runtime["memory"]:
-            ram_min = get_ram_min(ast.task_runtime["memory"])
+            if "${" in ast.task_runtime["memory"]:
+                input_name = ast.task_runtime["memory"][
+                    ast.task_runtime["memory"].find("${")
+                    + 2 : ast.task_runtime["memory"].find("}")
+                ]
+                temp = ast.task_runtime["memory"].index("}")  # index of }
+                if len(ast.task_runtime["memory"]) != temp + 1:
+                    unit = ast.task_runtime["memory"][temp + 1 : -1].strip()
+                    if input_name in input_names:
+                        ram_min = get_ram_min_js(input_name, unit)
+            else:
+                ram_min = get_ram_min(ast.task_runtime["memory"])
         else:
-            ram_min = get_ram_min_js(ast.task_runtime["memory"])
+            ram_min = get_ram_min_js(ast.task_runtime["memory"], "")
 
         requirements.append(
             cwl.ResourceRequirement(
