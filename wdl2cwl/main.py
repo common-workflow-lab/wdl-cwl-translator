@@ -72,6 +72,7 @@ def get_command(
     bound: List[str],
     input_types: List[str],
     input_names: List[str],
+    command_check: bool,
 ) -> str:
     """
     Get command to be used in the bash script.
@@ -88,7 +89,7 @@ def get_command(
 
         # if you have ~{
         if (command[index] == "~" and command[index + 1] == "{") or (
-            command[index] == "$" and command[index + 1] == "{"
+            command[index] == "$" and command[index + 1] == "{" and command_check
         ):
             start_index = index + 2
 
@@ -196,9 +197,12 @@ def get_output(expression: str, input_names: List[str]) -> str:
         output_value = output_value.replace('"', "")
 
     elif '"' not in expression:
-        if expression.replace('"', "") in input_names:
+        if expression in input_names:
             output_value = "$(inputs." + expression + ")"
-        output_value = output_value.replace('"', "")
+        output_value = output_value
+
+    elif '"' in expression:
+        output_value = expression.replace('"', "")
 
     return output_value
 
@@ -308,14 +312,26 @@ def convert(workflow: str) -> str:
 
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
-    raw_command = raw_command[
-        raw_command.find("{") + 1 : -1
-    ]  # removing the command{} part
+
+    # variable to check the syntax of the command { or <<<
+    command_check = True
+    if "<<<" in raw_command:
+        raw_command = raw_command[raw_command.find("<<<") + 3 : -3]
+        command_check = False
+    else:
+        raw_command = raw_command[
+            raw_command.find("{") + 1 : -1
+        ]  # removing the command{} part
 
     command = textwrap.dedent(raw_command)
 
     command = get_command(
-        command, ast.task_inputs, ast.task_inputs_bound, input_types, input_names
+        command,
+        ast.task_inputs,
+        ast.task_inputs_bound,
+        input_types,
+        input_names,
+        command_check,
     )
 
     base_command = ["sh", "example.sh"]
@@ -387,6 +403,18 @@ def convert(workflow: str) -> str:
                 cpu = "$(inputs." + ast.task_runtime["cpu"] + ")"
             elif ast.task_runtime["cpu"].isnumeric():
                 cpu = int(ast.task_runtime["cpu"])
+            elif "+" in ast.task_runtime["cpu"]:
+                temp = ast.task_runtime["cpu"].split("+")
+                append_str = "$("
+                for i in range(0, len(temp)):
+                    if temp[i] in input_names:
+                        append_str += "inputs." + temp[i]
+                    elif temp[i].isnumeric():
+                        append_str += temp[i]
+                    if i != len(temp) - 1:
+                        append_str += " + "
+                append_str += ")"
+                cpu = append_str
 
         requirements.append(
             cwl.ResourceRequirement(

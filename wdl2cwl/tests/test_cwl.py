@@ -26,6 +26,12 @@ def get_file(path: str) -> str:
             "cwl_files/CollectReadgroupBamQualityMetrics.cwl",
         ),
         ("wdl_files/UmiCorrection.wdl", "cwl_files/UmiCorrection.cwl"),
+        ("wdl_files/vardict.wdl", "cwl_files/vardict.cwl"),
+        ("wdl_files/rtg_2.wdl", "cwl_files/rtg_2.cwl"),
+        ("wdl_files/pbmm2.wdl", "cwl_files/pbmm2.cwl"),
+        ("wdl_files/isoseq3.wdl", "cwl_files/isoseq3.cwl"),
+        ("wdl_files/TrimAdapters.wdl", "cwl_files/TrimAdapters.cwl"),
+        ("wdl_files/vt.wdl", "cwl_files/vt.cwl"),
     ],
 )
 class TestParameterized:
