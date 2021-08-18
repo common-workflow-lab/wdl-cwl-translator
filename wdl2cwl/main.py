@@ -145,6 +145,35 @@ def get_command(
                     )
                     new_command += append_str
 
+            elif "sub(" in sub_str:
+                temp = sub_str.split(",")
+                search_index = re.search(r"\[[0-9]\]", temp[0])
+
+                append_str_sub = ""
+                if search_index:
+                    append_str_sub = (
+                        '$(return inputs["'
+                        + re.sub(r"\[[0-9]\]", "", temp[0].replace("sub(", ""))
+                        + '"]'
+                        + temp[0][temp[0].find("[") :]
+                    )
+                else:
+                    append_str_sub = (
+                        '$(return inputs["' + temp[0].replace("sub(", "") + '"]'
+                    )
+
+                append_str = ""
+                if len(temp) == 3:
+                    append_str = (
+                        append_str_sub
+                        + ".replace("
+                        + temp[1]
+                        + ","
+                        + temp[2][:-1]
+                        + ");)"
+                    )
+
+                new_command += append_str
             else:
 
                 data_type = (
