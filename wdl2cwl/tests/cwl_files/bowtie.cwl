@@ -73,8 +73,8 @@ requirements:
             --threads $(inputs.threads) \
             --sam-RG '$(inputs.samRG) \
             $(return inputs["indexFiles"][0].replace("(\.rev)?\.[0-9]\.ebwt$","");) \
-            $(inputs.sep=","readsUpstream) \
-            $(inputs.sep=","readsDownstream) \
+            $(inputs.readsUpstream) \
+            $(inputs.readsDownstream) \
             | picard -Xmx$(inputs.picardXmx) SortSam \
             INPUT=/dev/stdin \
             OUTPUT=$(inputs.outputPath) \
