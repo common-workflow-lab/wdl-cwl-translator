@@ -86,6 +86,7 @@ task CorrectUMItools {
             --gene-tag GE \
             --no-sort-output \
             --group-out ${groupout_filename} \
+             \
             --umi-group-tag UB
 
        getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam
@@ -97,7 +98,7 @@ task CorrectUMItools {
 
     runtime {
         docker: docker
-        #memory: "${machine_mem_mb} MiB"
+        memory: "${machine_mem_mb} MiB"
         disks: "local-disk ${disk} HDD"
         cpu: cpu
         preemptible: preemptible

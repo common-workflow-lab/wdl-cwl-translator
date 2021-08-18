@@ -54,6 +54,7 @@ requirements:
                  --gene-tag GE \
                  --no-sort-output \
                  --group-out $(inputs.groupout_filename) \
+                  \
                  --umi-group-tag UB
 
             getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam
@@ -62,6 +63,23 @@ requirements:
             samtools cat -o $(inputs.output_bam_filename) duplicate_marked.bam untagged.bam
 
   - class: InlineJavascriptRequirement
+  - class: ResourceRequirement
+    ramMin: |-
+        ${
+        var unit = "MiB";
+        var value = parseInt(inputs["machine_mem_mb"].match(/[0-9]+/g));
+        var memory = "";
+        if(unit==="KiB") memory = value/1024;
+        else if(unit==="MiB") memory = value;
+        else if(unit==="GiB") memory = value*1024;
+        else if(unit==="TiB") memory = value*1024*1024;
+        else if(unit==="B") memory = value/(1024*1024);
+        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+        else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+        else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+        else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+        return parseInt(memory);
+        }
   - class: ResourceRequirement
     coresMin: $(inputs.cpu)
 cwlVersion: v1.2
