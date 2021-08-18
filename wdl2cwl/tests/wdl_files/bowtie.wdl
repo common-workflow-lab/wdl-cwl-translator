@@ -27,7 +27,7 @@ task Bowtie {
         #Array[File]+ readsUpstream
         #Array[File] readsDownstream = []
         String outputPath = "mapped.bam"
-        #Array[File]+ indexFiles
+        Array[File]+ indexFiles
         Boolean best = false
         Boolean strata = false
         Boolean allowContain = false

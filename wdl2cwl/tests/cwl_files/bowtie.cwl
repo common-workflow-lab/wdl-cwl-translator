@@ -1,6 +1,10 @@
 class: CommandLineTool
 id: Bowtie
 inputs:
+  - id: indexFiles
+    type:
+      - items: File
+        type: array
   - id: seedmms
     default: ''
     type:
@@ -68,7 +72,7 @@ requirements:
             $(inputs["allowContain"] ? "--allow-contain" : "") \
             --threads $(inputs.threads) \
             --sam-RG '$(inputs.samRG) \
-            $(return inputs["sub(indexFiles[0]"].replace("(\.rev)?\.[0-9]\.ebwt$","");) \
+            $(return inputs["indexFiles"][0].replace("(\.rev)?\.[0-9]\.ebwt$","");) \
             $(inputs.sep=","readsUpstream) \
             $(inputs.sep=","readsDownstream) \
             | picard -Xmx$(inputs.picardXmx) SortSam \
