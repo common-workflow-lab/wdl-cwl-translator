@@ -1,48 +1,48 @@
 class: CommandLineTool
-id: Call
+id: Normalize
 inputs:
-  - id: bamFile
+  - id: inputVCF
     type: File
-  - id: bamIndex
+  - id: inputVCFIndex
     type: File
   - id: referenceFasta
     type: File
   - id: referenceFastaFai
     type: File
-  - id: sample
-    type: string
-  - id: outputDir
-    default: ./smoove
+  - id: ignoreMaskedRef
+    default: false
+    type: boolean
+  - id: outputPath
+    default: ./vt/normalized_decomposed.vcf
     type: string
   - id: memory
-    default: 15G
+    default: 4G
     type: string
   - id: timeMinutes
-    default: 1440
+    default: 30
     type: int
   - id: dockerImage
-    default: quay.io/biocontainers/smoove:0.2.5--0
+    default: quay.io/biocontainers/vt:0.57721--hdf88d34_2
     type: string
 outputs:
-  - id: smooveVcf
+  - id: outputVcf
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/$(inputs.sample)-smoove.vcf.gz
+        glob: $(inputs.outputPath)
 requirements:
   - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/smoove:0.2.5--0
+    dockerPull: quay.io/biocontainers/vt:0.57721--hdf88d34_2
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
         entry: |4
 
-            set -e
-            mkdir -p $(inputs.outputDir)
-            smoove call \
-            --outdir $(inputs.outputDir) \
-            --name $(inputs.sample) \
-            --fasta $(inputs.referenceFasta.path) \
-            $(inputs.bamFile.path)
+            set -eo pipefail
+            mkdir -p "\$(dirname $(inputs.outputPath))"
+            vt normalize $(inputs.inputVCF.path) \
+            -r $(inputs.referenceFasta.path) \
+            $(inputs["ignoreMaskedRef"] ? "-m " : "") \
+            | vt decompose -s - -o $(inputs.outputPath)
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-

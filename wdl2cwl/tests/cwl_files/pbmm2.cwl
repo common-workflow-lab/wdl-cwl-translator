@@ -1,48 +1,51 @@
 class: CommandLineTool
-id: Call
+id: Mapping
 inputs:
-  - id: bamFile
-    type: File
-  - id: bamIndex
-    type: File
-  - id: referenceFasta
-    type: File
-  - id: referenceFastaFai
-    type: File
+  - id: presetOption
+    type: string
   - id: sample
     type: string
-  - id: outputDir
-    default: ./smoove
-    type: string
-  - id: memory
-    default: 15G
-    type: string
-  - id: timeMinutes
-    default: 1440
+  - id: referenceMMI
+    type: File
+  - id: queryFile
+    type: File
+  - id: sort
+    default: true
+    type: boolean
+  - id: cores
+    default: 4
     type: int
+  - id: memory
+    default: 30G
+    type: string
   - id: dockerImage
-    default: quay.io/biocontainers/smoove:0.2.5--0
+    default: quay.io/biocontainers/pbmm2:1.3.0--h56fc30b_1
     type: string
 outputs:
-  - id: smooveVcf
+  - id: outputAlignmentFile
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/$(inputs.sample)-smoove.vcf.gz
+        glob: $(inputs.sample).align.bam
+  - id: outputIndexFile
+    type: File
+    outputBinding:
+        glob: $(inputs.sample).align.bam.bai
 requirements:
   - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/smoove:0.2.5--0
+    dockerPull: quay.io/biocontainers/pbmm2:1.3.0--h56fc30b_1
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
         entry: |4
 
-            set -e
-            mkdir -p $(inputs.outputDir)
-            smoove call \
-            --outdir $(inputs.outputDir) \
-            --name $(inputs.sample) \
-            --fasta $(inputs.referenceFasta.path) \
-            $(inputs.bamFile.path)
+            pbmm2 align \
+            --preset $(inputs.presetOption) \
+            $(inputs["sort"] ? "--sort" : "") \
+            -j $(inputs.cores) \
+            $(inputs.referenceMMI.path) \
+            $(inputs.queryFile.path) \
+            --sample $(inputs.sample) \
+            $(inputs.sample).align.bam
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-
@@ -61,8 +64,8 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes* 60)
+  - class: ResourceRequirement
+    coresMin: $(inputs.cores)
 cwlVersion: v1.2
 baseCommand:
   - sh
