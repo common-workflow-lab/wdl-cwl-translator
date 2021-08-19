@@ -71,7 +71,7 @@ requirements:
             $(inputs["strata"] ? "--strata" : "") \
             $(inputs["allowContain"] ? "--allow-contain" : "") \
             --threads $(inputs.threads) \
-            --sam-RG '$(inputs.samRG) \
+            --sam-RG '$(inputs.samRG)$(inputs["samRG"] === "" ? "": "'") \
             $(return inputs["indexFiles"][0].replace("(\.rev)?\.[0-9]\.ebwt$","");) \
             $(inputs.readsUpstream) \
             $(inputs.readsDownstream) \

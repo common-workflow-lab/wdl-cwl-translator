@@ -145,6 +145,22 @@ def get_command(
                     )
                     new_command += append_str
 
+                elif "defined(" in input_name:
+                    sub_str = input_name[input_name.find("(") + 1 : -1]
+                    append_str = (
+                        '$(inputs["'
+                        + sub_str
+                        + '"] === '
+                        + '"" ? '
+                        + '"'
+                        + false_value
+                        + '"'
+                        + ": "
+                        + true_value
+                        + ")"
+                    )
+                    new_command += append_str
+
             elif "sub(" in sub_str:
                 temp = sub_str.split(",")
                 search_index = re.search(r"\[[0-9]\]", temp[0])
