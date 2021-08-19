@@ -60,7 +60,7 @@ task Hisat2 {
         hisat2 \
         -p ~{threads} \
         -x ~{indexFiles[0]} \
-        ~{true="-1" false="-U" inputR2} ~{inputR1} \
+        ~{true="-1" false="-U" defined(inputR2)} ~{inputR1} \
         ~{"-2" + inputR2} \
         --rg-id ~{readgroup} \
         --rg 'SM:~{sample}' \

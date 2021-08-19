@@ -42,12 +42,18 @@ def get_ram_min(ram_min: str) -> int:
     return ram_value
 
 
-def get_ram_min_js(ram_min: str) -> str:
+def get_ram_min_js(ram_min: str, unit: str) -> str:
     """Get memory requirement for user input."""
+    append_str: str = ""
+    if unit:
+        append_str = '${\nvar unit = "' + unit + '";'
+    else:
+        append_str = (
+            '${\nvar unit = inputs["' + ram_min + '"].match(/[a-zA-Z]+/g).join("");'
+        )
     js_str = (
-        '${\nvar unit = inputs["'
-        + ram_min
-        + '"].match(/[a-zA-Z]+/g).join("");\nvar value = parseInt(inputs["'
+        append_str
+        + '\nvar value = parseInt(inputs["'
         + ram_min
         + '"].match(/[0-9]+/g));\n'
         + 'var memory = "";\n'
@@ -72,6 +78,7 @@ def get_command(
     bound: List[str],
     input_types: List[str],
     input_names: List[str],
+    command_check: bool,
 ) -> str:
     """
     Get command to be used in the bash script.
@@ -87,7 +94,9 @@ def get_command(
     while index < len(command):
 
         # if you have ~{
-        if command[index] == "~" and command[index + 1] == "{":
+        if (command[index] == "~" and command[index + 1] == "{") or (
+            command[index] == "$" and command[index + 1] == "{" and command_check
+        ):
             start_index = index + 2
 
             # while loop to find index of }
@@ -136,6 +145,22 @@ def get_command(
                     )
                     new_command += append_str
 
+                elif "defined(" in input_name:
+                    sub_str = input_name[input_name.find("(") + 1 : -1]
+                    append_str = (
+                        '$(inputs["'
+                        + sub_str
+                        + '"] === '
+                        + '"" ? '
+                        + '"'
+                        + false_value
+                        + '"'
+                        + ": "
+                        + true_value
+                        + ")"
+                    )
+                    new_command += append_str
+
             elif "sep=" in sub_str:
                 split_str = sub_str.split(sub_str[4])
                 separator = split_str[1]
@@ -156,6 +181,36 @@ def get_command(
                         + "}"
                     )
                     new_command += append_str
+
+            elif "sub(" in sub_str:
+                temp = sub_str.split(",")
+                search_index = re.search(r"\[[0-9]\]", temp[0])
+
+                append_str_sub = ""
+                if search_index:
+                    append_str_sub = (
+                        '$(return inputs["'
+                        + re.sub(r"\[[0-9]\]", "", temp[0].replace("sub(", ""))
+                        + '"]'
+                        + temp[0][temp[0].find("[") :]
+                    )
+                else:
+                    append_str_sub = (
+                        '$(return inputs["' + temp[0].replace("sub(", "") + '"]'
+                    )
+
+                append_str = ""
+                if len(temp) == 3:
+                    append_str = (
+                        append_str_sub
+                        + ".replace("
+                        + temp[1]
+                        + ","
+                        + temp[2][:-1]
+                        + ");)"
+                    )
+
+                new_command += append_str
             else:
 
                 data_type = (
@@ -330,8 +385,11 @@ def convert(workflow: str) -> str:
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
 
+    # variable to check the syntax of the command { or <<<
+    command_check = True
     if "<<<" in raw_command:
         raw_command = raw_command[raw_command.find("<<<") + 3 : -3]
+        command_check = False
     else:
         raw_command = raw_command[
             raw_command.find("{") + 1 : -1
@@ -340,7 +398,12 @@ def convert(workflow: str) -> str:
     command = textwrap.dedent(raw_command)
 
     command = get_command(
-        command, ast.task_inputs, ast.task_inputs_bound, input_types, input_names
+        command,
+        ast.task_inputs,
+        ast.task_inputs_bound,
+        input_types,
+        input_names,
+        command_check,
     )
 
     base_command = ["sh", "example.sh"]
@@ -378,10 +441,22 @@ def convert(workflow: str) -> str:
     if "memory" in ast.task_runtime:
 
         ram_min: Union[str, int] = ""
+
         if '"' in ast.task_runtime["memory"]:
-            ram_min = get_ram_min(ast.task_runtime["memory"])
+            if "${" in ast.task_runtime["memory"]:
+                input_name = ast.task_runtime["memory"][
+                    ast.task_runtime["memory"].find("${")
+                    + 2 : ast.task_runtime["memory"].find("}")
+                ]
+                temp = ast.task_runtime["memory"].index("}")  # index of }
+                if len(ast.task_runtime["memory"]) != temp + 1:
+                    unit = ast.task_runtime["memory"][temp + 1 : -1].strip()
+                    if input_name in input_names:
+                        ram_min = get_ram_min_js(input_name, unit)
+            else:
+                ram_min = get_ram_min(ast.task_runtime["memory"])
         else:
-            ram_min = get_ram_min_js(ast.task_runtime["memory"])
+            ram_min = get_ram_min_js(ast.task_runtime["memory"], "")
 
         requirements.append(
             cwl.ResourceRequirement(
