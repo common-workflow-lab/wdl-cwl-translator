@@ -43,12 +43,12 @@ task Format {
     }
 
     output {
-        File sdf = outputPath
+        Array[File]+ sdf = glob("~{outputPath}/*")
     }
 
     runtime {
         memory: memory
-        time_minutes: timeMinutes
+        #time_minutes: timeMinutes
         docker: dockerImage
     }
 

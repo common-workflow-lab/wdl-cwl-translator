@@ -22,9 +22,11 @@ inputs:
     type: string
 outputs:
   - id: sdf
-    type: File
+    type: 
+      - items: File
+        type: array
     outputBinding:
-        glob: $(inputs.outputPath)
+        glob: "$(inputs.outputPath)/*"
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
@@ -39,7 +41,7 @@ requirements:
             -o $(inputs.outputPath) \
             ${
             var text = "";
-            for(let i=0;i<inputs["inputFiles"].length;i++) 
+            for(var i=0;i<inputs["inputFiles"].length;i++) 
               text+= inputs["inputFiles"][i]+" ";
             return text;
             }
@@ -61,8 +63,6 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ToolTimeLimit
-    timelimit: ''
 cwlVersion: v1.2
 baseCommand:
   - sh
