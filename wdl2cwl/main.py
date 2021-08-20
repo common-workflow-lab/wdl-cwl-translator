@@ -256,6 +256,17 @@ def get_output(expression: str, input_names: List[str]) -> str:
         )
         output_value = output_value.replace('"', "")
 
+    elif "${" in expression:
+        start_index = expression.find("${")
+        end_index = expression.find("}")
+        output_value = (
+            expression[0:start_index]
+            + "$(inputs."
+            + expression[start_index + 2 : end_index]
+            + ")"
+            + expression[end_index + 1 :]
+        )
+        output_value = output_value.replace('"', "")
     # For a string concatenation
     elif "+" in expression:
         split_str = expression.split("+")
