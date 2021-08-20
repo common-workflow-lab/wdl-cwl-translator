@@ -63,7 +63,6 @@ requirements:
                  --gene-tag GE \
                  --no-sort-output \
                  --group-out $(inputs.groupout_filename) \
-                  \
                  --umi-group-tag UB
 
             getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam

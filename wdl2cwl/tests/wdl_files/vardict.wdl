@@ -54,7 +54,7 @@ task VarDict {
         Int timeMinutes = 300
         String dockerImage = "quay.io/biocontainers/vardict-java:1.5.8--1"
     }
-    ### NOTE: The following is not a valid command for VarDict
+    
     command {
         set -e -o pipefail
         export JAVA_OPTS="-Xmx~{javaXmx} -XX:ParallelGCThreads=1"
@@ -63,16 +63,16 @@ task VarDict {
         -G ~{referenceFasta} \
         -N ~{tumorSampleName} \
         -b "~{tumorBam}~{"|" + normalBam}" \
-        ~{true="" false="-z" normalBam} \
+        ~{true="" false="-z" defined(normalBam)} \
         -c ~{chromosomeColumn} \
         -S ~{startColumn} \
         -E ~{endColumn} \
         -g ~{geneColumn} \
         ~{bedFile} | \
-        ~{true="testsomatic.R" false="teststrandbias.R" normalBam} | \
-        ~{true="var2vcf_paired.pl" false="var2vcf_valid.pl" normalBam} \
+        ~{true="testsomatic.R" false="teststrandbias.R" defined(normalBam)} | \
+        ~{true="var2vcf_paired.pl" false="var2vcf_valid.pl" defined(normalBam)} \
         -N "~{tumorSampleName}~{"|" + normalSampleName}" \
-        ~{true="" false="-E" normalBam} \
+        ~{true="" false="-E" defined(normalBam)} \
         ~{true="-M" false="" outputCandidateSomaticOnly} \
         ~{true="-A" false="" outputAllVariantsAtSamePosition} \
         -Q ~{mappingQuality} \
