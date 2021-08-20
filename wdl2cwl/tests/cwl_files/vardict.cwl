@@ -37,7 +37,7 @@ inputs:
     default: true
     type: boolean
   - id: mappingQuality
-    default: '20'
+    default: 20.0
     type: float
   - id: minimumTotalDepth
     default: 8
@@ -46,7 +46,7 @@ inputs:
     default: 4
     type: int
   - id: minimumAlleleFrequency
-    default: '0.02'
+    default: 0.02
     type: float
   - id: chromosomeColumn
     default: 1

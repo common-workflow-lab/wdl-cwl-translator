@@ -338,12 +338,14 @@ def get_input(
         )
 
         raw_input_value = i[2].replace('"', "")
-        input_value: Union[str, bool, int] = ""
+        input_value: Union[str, bool, int, float] = ""
 
         if input_type == "boolean":
             input_value = bool(raw_input_value.lower() == "true")
         elif input_type == "int":
             input_value = int(raw_input_value)
+        elif input_type == "float":
+            input_value = float(raw_input_value)
         else:
             input_value = raw_input_value
 
