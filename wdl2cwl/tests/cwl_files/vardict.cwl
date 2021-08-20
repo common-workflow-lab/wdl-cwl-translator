@@ -95,16 +95,16 @@ requirements:
             -G $(inputs.referenceFasta.path) \
             -N $(inputs.tumorSampleName) \
             -b "$(inputs.tumorBam.path)|$(inputs.normalBam)" \
-            $(inputs["normalBam"] ? "" : "-z") \
+            $(inputs["normalBam"] === "" ? "-z": "") \
             -c $(inputs.chromosomeColumn) \
             -S $(inputs.startColumn) \
             -E $(inputs.endColumn) \
             -g $(inputs.geneColumn) \
             $(inputs.bedFile.path) | \
-            $(inputs["normalBam"] ? "testsomatic.R" : "teststrandbias.R") | \
-            $(inputs["normalBam"] ? "var2vcf_paired.pl" : "var2vcf_valid.pl") \
+            $(inputs["normalBam"] === "" ? "teststrandbias.R": "testsomatic.R") | \
+            $(inputs["normalBam"] === "" ? "var2vcf_valid.pl": "var2vcf_paired.pl") \
             -N "$(inputs.tumorSampleName)|$(inputs.normalSampleName)" \
-            $(inputs["normalBam"] ? "" : "-E") \
+            $(inputs["normalBam"] === "" ? "-E": "") \
             $(inputs["outputCandidateSomaticOnly"] ? "-M" : "") \
             $(inputs["outputAllVariantsAtSamePosition"] ? "-A" : "") \
             -Q $(inputs.mappingQuality) \
