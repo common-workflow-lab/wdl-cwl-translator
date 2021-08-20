@@ -22,11 +22,11 @@ inputs:
     type: string
 outputs:
   - id: sdf
-    type: 
+    type:
       - items: File
         type: array
     outputBinding:
-        glob: "$(inputs.outputPath)/*"
+        glob: $(inputs.outputPath)/*
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0

@@ -169,7 +169,7 @@ def get_command(
                 if input_name in input_names:
                     append_str = (
                         '${\nvar text = "";\n'
-                        + 'for(let i=0;i<inputs["'
+                        + 'for(var i=0;i<inputs["'
                         + input_name
                         + '"].length;i++) \n'
                         + '  text+= inputs["'
@@ -244,7 +244,7 @@ def get_output(expression: str, input_names: List[str]) -> str:
 
     # for parameter references
     # might have to change, In case there's more than one ~{}
-    if "~" in expression:
+    if "~" in expression and "glob(" not in expression:
         start_index = expression.find("~{")
         end_index = expression.find("}")
         output_value = (
@@ -256,6 +256,17 @@ def get_output(expression: str, input_names: List[str]) -> str:
         )
         output_value = output_value.replace('"', "")
 
+    elif "${" in expression:
+        start_index = expression.find("${")
+        end_index = expression.find("}")
+        output_value = (
+            expression[0:start_index]
+            + "$(inputs."
+            + expression[start_index + 2 : end_index]
+            + ")"
+            + expression[end_index + 1 :]
+        )
+        output_value = output_value.replace('"', "")
     # For a string concatenation
     elif "+" in expression:
         split_str = expression.split("+")
@@ -266,6 +277,19 @@ def get_output(expression: str, input_names: List[str]) -> str:
             else:
                 output_value += i
 
+        output_value = output_value.replace('"', "")
+
+    elif "glob(" in expression and "~{" in expression:
+        sub_expression = expression.replace("glob(", "")[:-1]
+        start_index = sub_expression.find("~{")
+        end_index = sub_expression.find("}")
+        output_value = (
+            sub_expression[0:start_index]
+            + "$(inputs."
+            + sub_expression[start_index + 2 : end_index]
+            + ")"
+            + sub_expression[end_index + 1 :]
+        )
         output_value = output_value.replace('"', "")
 
     elif '"' not in expression:
@@ -335,12 +359,14 @@ def get_input(
         )
 
         raw_input_value = i[2].replace('"', "")
-        input_value: Union[str, bool, int] = ""
+        input_value: Union[str, bool, int, float] = ""
 
         if input_type == "boolean":
             input_value = bool(raw_input_value.lower() == "true")
         elif input_type == "int":
             input_value = int(raw_input_value)
+        elif input_type == "float":
+            input_value = float(raw_input_value)
         else:
             input_value = raw_input_value
 
@@ -509,17 +535,36 @@ def convert(workflow: str) -> str:
     outputs = []
 
     for i in ast.task_outputs:
-        output_type = wdl_type[i[0]]
         output_name = i[1]
         output_glob = get_output(i[2], input_names)
 
-        outputs.append(
-            cwl.CommandOutputParameter(
-                id=output_name,
-                type=output_type,
-                outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+        if "Array" in i[0]:
+            # output_type = ""
+            temp_type = wdl_type[
+                i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
+            ]
+            output_type = (
+                temp_type if "?" not in i[0] else [temp_type, "null".replace("'", "")]
             )
-        )
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=[
+                        cwl.CommandOutputArraySchema(items=output_type, type="array")
+                    ],
+                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
+            )
+
+        else:
+            output_type = wdl_type[i[0]]
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=output_type,
+                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
+            )
 
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,

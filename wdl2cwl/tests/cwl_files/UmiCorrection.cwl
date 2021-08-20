@@ -23,6 +23,15 @@ inputs:
   - id: preemptible
     default: 3
     type: int
+outputs:
+  - id: bam_output
+    type: File
+    outputBinding:
+        glob: $(inputs.output_bam_filename)
+  - id: group_output
+    type: File
+    outputBinding:
+        glob: $(inputs.groupout_filename)
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/humancellatlas/secondary-analysis-umitools:0.0.1
@@ -54,7 +63,6 @@ requirements:
                  --gene-tag GE \
                  --no-sort-output \
                  --group-out $(inputs.groupout_filename) \
-                  \
                  --umi-group-tag UB
 
             getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam

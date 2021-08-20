@@ -86,7 +86,6 @@ task CorrectUMItools {
             --gene-tag GE \
             --no-sort-output \
             --group-out ${groupout_filename} \
-             \
             --umi-group-tag UB
 
        getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam
@@ -105,8 +104,8 @@ task CorrectUMItools {
     }
 
     output {
-        #File bam_output = "${output_bam_filename}"
-        #File group_output = "${groupout_filename}"
+        File bam_output = "${output_bam_filename}"
+        File group_output = "${groupout_filename}"
     }
 
 }
