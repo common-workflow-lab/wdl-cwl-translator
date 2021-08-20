@@ -39,7 +39,7 @@ task Format {
         mkdir -p $(dirname ~{outputPath})
         rtg RTG_MEM=~{rtgMem} format -f ~{format} \
         -o ~{outputPath} \
-        
+        ~{sep=' ' inputFiles}
     }
 
     output {

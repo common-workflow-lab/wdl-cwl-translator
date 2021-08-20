@@ -33,13 +33,18 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
-        entry: |4+
+        entry: |4
 
             set -e
             mkdir -p \$(dirname $(inputs.outputPath))
             rtg RTG_MEM=$(inputs.rtgMem) format -f $(inputs.format) \
             -o $(inputs.outputPath) \
-
+            ${
+            var text = "";
+            for(var i=0;i<inputs["inputFiles"].length;i++) 
+              text+= inputs["inputFiles"][i]+" ";
+            return text;
+            }
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-

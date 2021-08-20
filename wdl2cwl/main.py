@@ -161,6 +161,27 @@ def get_command(
                     )
                     new_command += append_str
 
+            elif "sep=" in sub_str:
+                split_str = sub_str.split(sub_str[4])
+                separator = split_str[1]
+                input_name = split_str[2]
+
+                if input_name in input_names:
+                    append_str = (
+                        '${\nvar text = "";\n'
+                        + 'for(var i=0;i<inputs["'
+                        + input_name
+                        + '"].length;i++) \n'
+                        + '  text+= inputs["'
+                        + input_name
+                        + '"][i]+"'
+                        + separator
+                        + '";\n'
+                        + "return text;\n"
+                        + "}"
+                    )
+                    new_command += append_str
+
             elif "sub(" in sub_str:
                 temp = sub_str.split(",")
                 search_index = re.search(r"\[[0-9]\]", temp[0])

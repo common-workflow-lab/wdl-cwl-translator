@@ -25,6 +25,7 @@ def get_file(path: str) -> str:
             "wdl_files/CollectReadgroupBamQualityMetrics.wdl",
             "cwl_files/CollectReadgroupBamQualityMetrics.cwl",
         ),
+        ("wdl_files/rtg.wdl", "cwl_files/rtg.cwl"),
         ("wdl_files/bowtie_1.wdl", "cwl_files/bowtie_1.cwl"),
         ("wdl_files/bowtie_2.wdl", "cwl_files/bowtie_2.cwl"),
         ("wdl_files/UmiCorrection.wdl", "cwl_files/UmiCorrection.cwl"),
