@@ -10,7 +10,7 @@ def get_file(path: str) -> str:
     return os.path.join(os.path.dirname(__file__), path)
 
 
-def test_meta(capsys: pytest.CaptureFixture):
+def test_meta(capsys: pytest.CaptureFixture) -> None:
     wdl.convert(get_file("wdl_files/UmiCorrection.wdl"))
     assert "----WARNING: SKIPPING META----" in capsys.readouterr().err
 
@@ -30,7 +30,17 @@ def test_meta(capsys: pytest.CaptureFixture):
             "wdl_files/CollectReadgroupBamQualityMetrics.wdl",
             "cwl_files/CollectReadgroupBamQualityMetrics.cwl",
         ),
+        ("wdl_files/rtg.wdl", "cwl_files/rtg.cwl"),
+        ("wdl_files/bowtie_1.wdl", "cwl_files/bowtie_1.cwl"),
+        ("wdl_files/bowtie_2.wdl", "cwl_files/bowtie_2.cwl"),
         ("wdl_files/UmiCorrection.wdl", "cwl_files/UmiCorrection.cwl"),
+        ("wdl_files/vardict.wdl", "cwl_files/vardict.cwl"),
+        ("wdl_files/rtg.wdl", "cwl_files/rtg.cwl"),
+        ("wdl_files/rtg_2.wdl", "cwl_files/rtg_2.cwl"),
+        ("wdl_files/pbmm2.wdl", "cwl_files/pbmm2.cwl"),
+        ("wdl_files/isoseq3.wdl", "cwl_files/isoseq3.cwl"),
+        ("wdl_files/TrimAdapters.wdl", "cwl_files/TrimAdapters.cwl"),
+        ("wdl_files/vt.wdl", "cwl_files/vt.cwl"),
     ],
 )
 class TestParameterized:

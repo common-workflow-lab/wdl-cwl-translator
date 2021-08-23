@@ -23,6 +23,15 @@ inputs:
   - id: preemptible
     default: 3
     type: int
+outputs:
+  - id: bam_output
+    type: File
+    outputBinding:
+        glob: $(inputs.output_bam_filename)
+  - id: group_output
+    type: File
+    outputBinding:
+        glob: $(inputs.groupout_filename)
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/humancellatlas/secondary-analysis-umitools:0.0.1
@@ -32,6 +41,9 @@ requirements:
         entry: |4+
 
              set -e
+
+             mv $(inputs.bam_input.path) input.bam
+             mv $(inputs.bam_index.path) input.bam.bai
 
              touch input.bam
              touch input.bam.bai
@@ -50,15 +62,32 @@ requirements:
                  --cell-tag CB \
                  --gene-tag GE \
                  --no-sort-output \
-                 --group-out \
+                 --group-out $(inputs.groupout_filename) \
                  --umi-group-tag UB
 
             getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam
 
             rm input.bam input.bam.bai
-            samtools cat -o duplicate_marked.bam untagged.bam
+            samtools cat -o $(inputs.output_bam_filename) duplicate_marked.bam untagged.bam
 
   - class: InlineJavascriptRequirement
+  - class: ResourceRequirement
+    ramMin: |-
+        ${
+        var unit = "MiB";
+        var value = parseInt(inputs["machine_mem_mb"].match(/[0-9]+/g));
+        var memory = "";
+        if(unit==="KiB") memory = value/1024;
+        else if(unit==="MiB") memory = value;
+        else if(unit==="GiB") memory = value*1024;
+        else if(unit==="TiB") memory = value*1024*1024;
+        else if(unit==="B") memory = value/(1024*1024);
+        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+        else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+        else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+        else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+        return parseInt(memory);
+        }
   - class: ResourceRequirement
     coresMin: $(inputs.cpu)
 cwlVersion: v1.2

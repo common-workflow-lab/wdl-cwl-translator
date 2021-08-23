@@ -42,12 +42,18 @@ def get_ram_min(ram_min: str) -> int:
     return ram_value
 
 
-def get_ram_min_js(ram_min: str) -> str:
+def get_ram_min_js(ram_min: str, unit: str) -> str:
     """Get memory requirement for user input."""
+    append_str: str = ""
+    if unit:
+        append_str = '${\nvar unit = "' + unit + '";'
+    else:
+        append_str = (
+            '${\nvar unit = inputs["' + ram_min + '"].match(/[a-zA-Z]+/g).join("");'
+        )
     js_str = (
-        '${\nvar unit = inputs["'
-        + ram_min
-        + '"].match(/[a-zA-Z]+/g).join("");\nvar value = parseInt(inputs["'
+        append_str
+        + '\nvar value = parseInt(inputs["'
         + ram_min
         + '"].match(/[0-9]+/g));\n'
         + 'var memory = "";\n'
@@ -72,6 +78,7 @@ def get_command(
     bound: List[str],
     input_types: List[str],
     input_names: List[str],
+    command_check: bool,
 ) -> str:
     """
     Get command to be used in the bash script.
@@ -87,7 +94,9 @@ def get_command(
     while index < len(command):
 
         # if you have ~{
-        if command[index] == "~" and command[index + 1] == "{":
+        if (command[index] == "~" and command[index + 1] == "{") or (
+            command[index] == "$" and command[index + 1] == "{" and command_check
+        ):
             start_index = index + 2
 
             # while loop to find index of }
@@ -136,6 +145,72 @@ def get_command(
                     )
                     new_command += append_str
 
+                elif "defined(" in input_name:
+                    sub_str = input_name[input_name.find("(") + 1 : -1]
+                    append_str = (
+                        '$(inputs["'
+                        + sub_str
+                        + '"] === '
+                        + '"" ? '
+                        + '"'
+                        + false_value
+                        + '"'
+                        + ": "
+                        + true_value
+                        + ")"
+                    )
+                    new_command += append_str
+
+            elif "sep=" in sub_str:
+                split_str = sub_str.split(sub_str[4])
+                separator = split_str[1]
+                input_name = split_str[2]
+
+                if input_name in input_names:
+                    append_str = (
+                        '${\nvar text = "";\n'
+                        + 'for(var i=0;i<inputs["'
+                        + input_name
+                        + '"].length;i++) \n'
+                        + '  text+= inputs["'
+                        + input_name
+                        + '"][i]+"'
+                        + separator
+                        + '";\n'
+                        + "return text;\n"
+                        + "}"
+                    )
+                    new_command += append_str
+
+            elif "sub(" in sub_str:
+                temp = sub_str.split(",")
+                search_index = re.search(r"\[[0-9]\]", temp[0])
+
+                append_str_sub = ""
+                if search_index:
+                    append_str_sub = (
+                        '$(return inputs["'
+                        + re.sub(r"\[[0-9]\]", "", temp[0].replace("sub(", ""))
+                        + '"]'
+                        + temp[0][temp[0].find("[") :]
+                    )
+                else:
+                    append_str_sub = (
+                        '$(return inputs["' + temp[0].replace("sub(", "") + '"]'
+                    )
+
+                append_str = ""
+                if len(temp) == 3:
+                    append_str = (
+                        append_str_sub
+                        + ".replace("
+                        + temp[1]
+                        + ","
+                        + temp[2][:-1]
+                        + ");)"
+                    )
+
+                new_command += append_str
             else:
 
                 data_type = (
@@ -169,7 +244,7 @@ def get_output(expression: str, input_names: List[str]) -> str:
 
     # for parameter references
     # might have to change, In case there's more than one ~{}
-    if "~" in expression:
+    if "~" in expression and "glob(" not in expression:
         start_index = expression.find("~{")
         end_index = expression.find("}")
         output_value = (
@@ -181,6 +256,17 @@ def get_output(expression: str, input_names: List[str]) -> str:
         )
         output_value = output_value.replace('"', "")
 
+    elif "${" in expression:
+        start_index = expression.find("${")
+        end_index = expression.find("}")
+        output_value = (
+            expression[0:start_index]
+            + "$(inputs."
+            + expression[start_index + 2 : end_index]
+            + ")"
+            + expression[end_index + 1 :]
+        )
+        output_value = output_value.replace('"', "")
     # For a string concatenation
     elif "+" in expression:
         split_str = expression.split("+")
@@ -193,10 +279,26 @@ def get_output(expression: str, input_names: List[str]) -> str:
 
         output_value = output_value.replace('"', "")
 
-    elif '"' not in expression:
-        if expression.replace('"', "") in input_names:
-            output_value = "$(inputs." + expression + ")"
+    elif "glob(" in expression and "~{" in expression:
+        sub_expression = expression.replace("glob(", "")[:-1]
+        start_index = sub_expression.find("~{")
+        end_index = sub_expression.find("}")
+        output_value = (
+            sub_expression[0:start_index]
+            + "$(inputs."
+            + sub_expression[start_index + 2 : end_index]
+            + ")"
+            + sub_expression[end_index + 1 :]
+        )
         output_value = output_value.replace('"', "")
+
+    elif '"' not in expression:
+        if expression in input_names:
+            output_value = "$(inputs." + expression + ")"
+        output_value = output_value
+
+    elif '"' in expression:
+        output_value = expression.replace('"', "")
 
     return output_value
 
@@ -257,12 +359,14 @@ def get_input(
         )
 
         raw_input_value = i[2].replace('"', "")
-        input_value: Union[str, bool, int] = ""
+        input_value: Union[str, bool, int, float] = ""
 
         if input_type == "boolean":
             input_value = bool(raw_input_value.lower() == "true")
         elif input_type == "int":
             input_value = int(raw_input_value)
+        elif input_type == "float":
+            input_value = float(raw_input_value)
         else:
             input_value = raw_input_value
 
@@ -306,14 +410,26 @@ def convert(workflow: str) -> str:
 
     # returns the entire command including "command{........}"
     raw_command: str = cast(str, ast.task_command)
-    raw_command = raw_command[
-        raw_command.find("{") + 1 : -1
-    ]  # removing the command{} part
+
+    # variable to check the syntax of the command { or <<<
+    command_check = True
+    if "<<<" in raw_command:
+        raw_command = raw_command[raw_command.find("<<<") + 3 : -3]
+        command_check = False
+    else:
+        raw_command = raw_command[
+            raw_command.find("{") + 1 : -1
+        ]  # removing the command{} part
 
     command = textwrap.dedent(raw_command)
 
     command = get_command(
-        command, ast.task_inputs, ast.task_inputs_bound, input_types, input_names
+        command,
+        ast.task_inputs,
+        ast.task_inputs_bound,
+        input_types,
+        input_names,
+        command_check,
     )
 
     base_command = ["sh", "example.sh"]
@@ -351,10 +467,22 @@ def convert(workflow: str) -> str:
     if "memory" in ast.task_runtime:
 
         ram_min: Union[str, int] = ""
+
         if '"' in ast.task_runtime["memory"]:
-            ram_min = get_ram_min(ast.task_runtime["memory"])
+            if "${" in ast.task_runtime["memory"]:
+                input_name = ast.task_runtime["memory"][
+                    ast.task_runtime["memory"].find("${")
+                    + 2 : ast.task_runtime["memory"].find("}")
+                ]
+                temp = ast.task_runtime["memory"].index("}")  # index of }
+                if len(ast.task_runtime["memory"]) != temp + 1:
+                    unit = ast.task_runtime["memory"][temp + 1 : -1].strip()
+                    if input_name in input_names:
+                        ram_min = get_ram_min_js(input_name, unit)
+            else:
+                ram_min = get_ram_min(ast.task_runtime["memory"])
         else:
-            ram_min = get_ram_min_js(ast.task_runtime["memory"])
+            ram_min = get_ram_min_js(ast.task_runtime["memory"], "")
 
         requirements.append(
             cwl.ResourceRequirement(
@@ -385,6 +513,18 @@ def convert(workflow: str) -> str:
                 cpu = "$(inputs." + ast.task_runtime["cpu"] + ")"
             elif ast.task_runtime["cpu"].isnumeric():
                 cpu = int(ast.task_runtime["cpu"])
+            elif "+" in ast.task_runtime["cpu"]:
+                temp = ast.task_runtime["cpu"].split("+")
+                append_str = "$("
+                for i in range(0, len(temp)):
+                    if temp[i] in input_names:
+                        append_str += "inputs." + temp[i]
+                    elif temp[i].isnumeric():
+                        append_str += temp[i]
+                    if i != len(temp) - 1:
+                        append_str += " + "
+                append_str += ")"
+                cpu = append_str
 
         requirements.append(
             cwl.ResourceRequirement(
@@ -395,17 +535,36 @@ def convert(workflow: str) -> str:
     outputs = []
 
     for i in ast.task_outputs:
-        output_type = wdl_type[i[0]]
         output_name = i[1]
         output_glob = get_output(i[2], input_names)
 
-        outputs.append(
-            cwl.CommandOutputParameter(
-                id=output_name,
-                type=output_type,
-                outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+        if "Array" in i[0]:
+            # output_type = ""
+            temp_type = wdl_type[
+                i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
+            ]
+            output_type = (
+                temp_type if "?" not in i[0] else [temp_type, "null".replace("'", "")]
             )
-        )
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=[
+                        cwl.CommandOutputArraySchema(items=output_type, type="array")
+                    ],
+                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
+            )
+
+        else:
+            output_type = wdl_type[i[0]]
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=output_type,
+                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
+            )
 
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,
