@@ -10,8 +10,7 @@ def get_file(path: str) -> str:
     return os.path.join(os.path.dirname(__file__), path)
 
 
-def test_meta(capsys: pytest.CaptureFixture) -> None:
-    """Test meta warning."""
+def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
     wdl.convert(get_file("wdl_files/UmiCorrection.wdl"))
     assert "----WARNING: SKIPPING META----" in capsys.readouterr().err
 
