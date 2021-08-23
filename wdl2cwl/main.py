@@ -421,17 +421,19 @@ def convert(workflow: str) -> str:
 
     for i in ast.task_runtime:
         if i not in runtime_requirements:
-            print("----WARNING: SKIPPING REQUIREMENT " + i + "----")
+            print("----WARNING: SKIPPING REQUIREMENT " + i + "----", file=sys.stderr)
 
     if ast.task_parameter_meta_check:
-        print("----WARNING: SKIPPING PARAMETER_META----")
+        print("----WARNING: SKIPPING PARAMETER_META----", file=sys.stderr)
 
     if ast.task_meta_check:
-        print("----WARNING: SKIPPING META----")
+        print("----WARNING: SKIPPING META----", file=sys.stderr)
 
     if len(ast.task_variables) > 0:
         for a in ast.task_variables:
-            print("----WARNING: SKIPPING VARIABLE " + str(a[1]) + "----")
+            print(
+                "----WARNING: SKIPPING VARIABLE " + str(a[1]) + "----", file=sys.stderr
+            )
 
     yaml = YAML()
     yaml.default_flow_style = False
