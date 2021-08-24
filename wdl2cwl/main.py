@@ -151,14 +151,15 @@ def get_command(
                     data_type = input_types[index]
                     check_str = ""
                     if "Array" in data_type:
-                        check_str=".length === 0 "
+                        check_str = ".length === 0 "
                     else:
-                        check_str=' === "" '
+                        check_str = ' === "" '
                     append_str = (
                         '$(inputs["'
                         + sub_str
-                        + '"]' 
-                        + check_str +'? '
+                        + '"]'
+                        + check_str
+                        + "? "
                         + '"'
                         + false_value
                         + '"'
