@@ -18,14 +18,14 @@ inputs:
   - id: referenceFastaDict
     type: File
   - id: intervalList
-    default: ''
+    default: []
     type:
       - items:
           - File
           - 'null'
         type: array
   - id: excludeIntervalList
-    default: ''
+    default: []
     type:
       - items:
           - File
@@ -111,13 +111,13 @@ requirements:
             return text;
             } \
             --sample-ploidy $(inputs.ploidy) \
-            $(inputs["intervalList"] === "" ? "": "-L") ${
+            $(inputs["intervalList"].length === 0 ? "": "-L") ${
             var text = "";
             for(var i=0;i<inputs["intervalList"].length;i++) 
               text+= inputs["intervalList"][i]+" -L ";
             return text;
             } \
-            $(inputs["excludeIntervalList"] === "" ? "": "-XL") ${
+            $(inputs["excludeIntervalList"].length === 0 ? "": "-XL") ${
             var text = "";
             for(var i=0;i<inputs["excludeIntervalList"].length;i++) 
               text+= inputs["excludeIntervalList"][i]+" -XL ";

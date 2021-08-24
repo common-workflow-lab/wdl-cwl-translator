@@ -147,11 +147,18 @@ def get_command(
 
                 elif "defined(" in input_name:
                     sub_str = input_name[input_name.find("(") + 1 : -1]
+                    index = input_names.index(sub_str)
+                    data_type = input_types[index]
+                    check_str = ""
+                    if "Array" in data_type:
+                        check_str=".length === 0 "
+                    else:
+                        check_str=' === "" '
                     append_str = (
                         '$(inputs["'
                         + sub_str
-                        + '"] === '
-                        + '"" ? '
+                        + '"]' 
+                        + check_str +'? '
                         + '"'
                         + false_value
                         + '"'
@@ -338,7 +345,7 @@ def get_input(
                         type=[
                             cwl.CommandInputArraySchema(items=input_type, type="array")
                         ],
-                        default="",
+                        default=[],
                     )
                 )
 
