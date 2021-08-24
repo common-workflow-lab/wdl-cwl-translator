@@ -555,7 +555,13 @@ def convert(workflow: str) -> str:
                     outputBinding=cwl.CommandOutputBinding(glob=output_glob),
                 )
             )
-
+        elif i[2] == "stdout()":
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type="stdout",
+                )
+            )
         else:
             output_type = wdl_type[i[0]]
             outputs.append(
