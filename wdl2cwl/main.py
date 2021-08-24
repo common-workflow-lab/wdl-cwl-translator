@@ -355,7 +355,7 @@ def get_input(
         input_type = (
             wdl_type[i[0]]
             if "?" not in i[0]
-            else [wdl_type[i[0].replace("?", "")], wdl_type["?"]]
+            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
         )
 
         raw_input_value = i[2].replace('"', "")
@@ -563,7 +563,12 @@ def convert(workflow: str) -> str:
                 )
             )
         else:
-            output_type = wdl_type[i[0]]
+            output_type = (
+                wdl_type[i[0]]
+                if "?" not in i[0]
+                else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+            )
+
             outputs.append(
                 cwl.CommandOutputParameter(
                     id=output_name,
