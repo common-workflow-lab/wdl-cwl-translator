@@ -322,12 +322,25 @@ def get_input(
             )
             input_name = i[1]
 
-            inputs.append(
-                cwl.CommandInputParameter(
-                    id=input_name,
-                    type=[cwl.CommandInputArraySchema(items=input_type, type="array")],
+            if "?" not in i[0]:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name,
+                        type=[
+                            cwl.CommandInputArraySchema(items=input_type, type="array")
+                        ],
+                    )
                 )
-            )
+            else:
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name,
+                        type=[
+                            cwl.CommandInputArraySchema(items=input_type, type="array")
+                        ],
+                        default="",
+                    )
+                )
 
         else:
             input_type = (

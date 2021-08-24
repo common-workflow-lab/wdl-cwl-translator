@@ -18,12 +18,14 @@ inputs:
   - id: referenceFastaDict
     type: File
   - id: intervalList
+    default: ''
     type:
       - items:
           - File
           - 'null'
         type: array
   - id: excludeIntervalList
+    default: ''
     type:
       - items:
           - File
