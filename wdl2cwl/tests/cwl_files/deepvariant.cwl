@@ -49,7 +49,7 @@ inputs:
       - string
       - 'null'
   - id: VCFStatsReport
-    default: 'true'
+    default: true
     type:
       - boolean
       - 'null'
@@ -71,6 +71,12 @@ outputs:
     type: File
     outputBinding:
         glob: $(inputs.outputVcf).tbi
+  - id: outputVCFStatsReport
+    type:
+      - items: File
+        type: array
+    outputBinding:
+        glob: '*.visual_report.html'
   - id: outputGVCF
     type:
       - File

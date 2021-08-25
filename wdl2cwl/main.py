@@ -279,17 +279,23 @@ def get_output(expression: str, input_names: List[str]) -> str:
 
         output_value = output_value.replace('"', "")
 
-    elif "glob(" in expression and "~{" in expression:
-        sub_expression = expression.replace("glob(", "")[:-1]
-        start_index = sub_expression.find("~{")
-        end_index = sub_expression.find("}")
-        output_value = (
-            sub_expression[0:start_index]
-            + "$(inputs."
-            + sub_expression[start_index + 2 : end_index]
-            + ")"
-            + sub_expression[end_index + 1 :]
-        )
+    elif "glob(" in expression:
+        if "~{" in expression:
+            sub_expression = expression.replace("glob(", "")[:-1]
+            start_index = sub_expression.find("~{")
+            end_index = sub_expression.find("}")
+            output_value = (
+                sub_expression[0:start_index]
+                + "$(inputs."
+                + sub_expression[start_index + 2 : end_index]
+                + ")"
+                + sub_expression[end_index + 1 :]
+            )
+
+        else:
+            sub_expression = expression.replace("glob(", "")[:-1]
+            output_value = sub_expression
+
         output_value = output_value.replace('"', "")
 
     elif '"' not in expression:
@@ -317,9 +323,7 @@ def get_input(
             temp_type = wdl_type[
                 i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
             ]
-            input_type = (
-                temp_type if "?" not in i[0] else [temp_type, "null".replace("'", "")]
-            )
+            input_type = temp_type if "?" not in i[0] else [temp_type, "null"]
             input_name = i[1]
 
             if "?" not in i[0]:
@@ -336,7 +340,7 @@ def get_input(
             input_type = (
                 wdl_type[i[0]]
                 if "?" not in i[0]
-                else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+                else [wdl_type[i[0].replace("?", "")], "null"]
             )
 
             if "?" in i[0]:
@@ -355,17 +359,17 @@ def get_input(
         input_type = (
             wdl_type[i[0]]
             if "?" not in i[0]
-            else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+            else [wdl_type[i[0].replace("?", "")], "null"]
         )
 
         raw_input_value = i[2].replace('"', "")
         input_value: Union[str, bool, int, float] = ""
 
-        if input_type == "boolean":
+        if "boolean" in input_type:
             input_value = bool(raw_input_value.lower() == "true")
-        elif input_type == "int":
+        elif "int" in input_type:
             input_value = int(raw_input_value)
-        elif input_type == "float":
+        elif "float" in input_type:
             input_value = float(raw_input_value)
         else:
             input_value = raw_input_value
@@ -543,9 +547,7 @@ def convert(workflow: str) -> str:
             temp_type = wdl_type[
                 i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
             ]
-            output_type = (
-                temp_type if "?" not in i[0] else [temp_type, "null".replace("'", "")]
-            )
+            output_type = temp_type if "?" not in i[0] else [temp_type, "null"]
             outputs.append(
                 cwl.CommandOutputParameter(
                     id=output_name,
@@ -566,7 +568,7 @@ def convert(workflow: str) -> str:
             output_type = (
                 wdl_type[i[0]]
                 if "?" not in i[0]
-                else [wdl_type[i[0].replace("?", "")], "null".replace("'", "")]
+                else [wdl_type[i[0].replace("?", "")], "null"]
             )
 
             outputs.append(
