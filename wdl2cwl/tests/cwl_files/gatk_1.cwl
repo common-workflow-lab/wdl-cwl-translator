@@ -107,20 +107,20 @@ requirements:
             -I ${
             var text = "";
             for(var i=0;i<inputs["inputBams"].length;i++) 
-              text+= inputs["inputBams"][i]+" -I ";
+              text+= inputs["inputBams"][i].path+" -I ";
             return text;
             } \
             --sample-ploidy $(inputs.ploidy) \
             $(inputs["intervalList"].length === 0 ? "": "-L") ${
             var text = "";
             for(var i=0;i<inputs["intervalList"].length;i++) 
-              text+= inputs["intervalList"][i]+" -L ";
+              text+= inputs["intervalList"][i].path+" -L ";
             return text;
             } \
             $(inputs["excludeIntervalList"].length === 0 ? "": "-XL") ${
             var text = "";
             for(var i=0;i<inputs["excludeIntervalList"].length;i++) 
-              text+= inputs["excludeIntervalList"][i]+" -XL ";
+              text+= inputs["excludeIntervalList"][i].path+" -XL ";
             return text;
             } \
             -D $(inputs.dbsnpVCF) \
