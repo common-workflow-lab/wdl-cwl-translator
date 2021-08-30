@@ -39,14 +39,7 @@ requirements:
             mkdir -p \$(dirname $(inputs.outputPath))
             rtg RTG_MEM=$(inputs.rtgMem) format -f $(inputs.format) \
             -o $(inputs.outputPath) \
-            ${
-            var text = "";
-            var arr_length = inputs["inputFiles"].length;
-            for(var i=0;i<arr_length-1;i++) 
-              text+= inputs["inputFiles"][i].path+" ";
-            text+= inputs["inputFiles"][arr_length-1].path;
-            return text;
-            }
+            $(" ".join(inputs["inputFiles"].map(function(el) { return el.path})))
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-

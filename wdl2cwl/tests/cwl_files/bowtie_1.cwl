@@ -77,14 +77,7 @@ requirements:
             --threads $(inputs.threads) \
             --sam-RG '$(inputs.samRG)$(inputs["samRG"] === "" ? "": "'") \
             $(return inputs["indexFiles"][0].replace("(\.rev)?\.[0-9]\.ebwt$","");) \
-            ${
-            var text = "";
-            var arr_length = inputs["readsUpstream"].length;
-            for(var i=0;i<arr_length-1;i++) 
-              text+= inputs["readsUpstream"][i].path+",";
-            text+= inputs["readsUpstream"][arr_length-1].path;
-            return text;
-            } \
+            $(",".join(inputs["readsUpstream"].map(function(el) { return el.path}))) \
             | picard -Xmx$(inputs.picardXmx) SortSam \
             INPUT=/dev/stdin \
             OUTPUT=$(inputs.outputPath) \

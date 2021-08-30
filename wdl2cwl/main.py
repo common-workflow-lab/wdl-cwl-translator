@@ -178,29 +178,11 @@ def get_command(
 
                 temp_append_str = ""
                 if "Array[File]" in data_type:
-                    temp_append_str = ".path"
+                    temp_append_str = ".map(function(el) { return el.path})"
 
                 if input_name in input_names:
                     append_str = (
-                        '${\nvar text = "";\n'
-                        + 'var arr_length = inputs["'
-                        + input_name
-                        + '"].length;\n'
-                        + "for(var i=0;i<arr_length-1;i++) \n"
-                        + '  text+= inputs["'
-                        + input_name
-                        + '"][i]'
-                        + temp_append_str
-                        + '+"'
-                        + separator
-                        + '";\n'
-                        + 'text+= inputs["'
-                        + input_name
-                        + '"][arr_length-1]'
-                        + temp_append_str
-                        + ";\n"
-                        + "return text;\n"
-                        + "}"
+                        f'$("{separator}".join(inputs["{input_name}"]{temp_append_str}))'
                     )
                     new_command += append_str
 

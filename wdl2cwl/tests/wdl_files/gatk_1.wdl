@@ -55,17 +55,17 @@ task HaplotypeCaller {
         set -e
         mkdir -p "$(dirname ~{outputPath})"
         mkdir wd
-        for FILE in ${sep(" ", inputBams)}; do ln -s $FILE wd/$(inputBams $FILE) ; done
-        for FILE in ${sep(" ", inputBamsIndex)}; do ln -s $FILE wd/$(inputBamsIndex $FILE) ; done
+        for FILE in ${sep=" " inputBams}; do ln -s $FILE wd/$(inputBams $FILE) ; done
+        for FILE in ${sep=" " inputBamsIndex}; do ln -s $FILE wd/$(inputBamsIndex $FILE) ; done
         mkdir wd2
-        ln -s ~{referenceFasta} wd2/~{basename(referenceFasta)}
-        ln -s ~{referenceFastaDict} wd2/~{basename(referenceFastaDict)}
-        ln -s ~{referenceFastaFai} wd2/~{basename(referenceFastaFai)}
+        ln -s ~{referenceFasta} wd2/$(basename ~{referenceFasta})
+        ln -s ~{referenceFastaDict} wd2/$(basename ~{referenceFastaDict})
+        ln -s ~{referenceFastaIndex} wd2/$(basename ~{referenceFastaIndex})
         gatk --java-options '-Xmx~{javaXmxMb}M -XX:ParallelGCThreads=1' \
         HaplotypeCaller \
-        -R wd2/~{basename(referenceFasta)} \
+        -R wd2/$(basename ~{referenceFasta}) \
         -O ~{outputPath} \
-        (for FILE in ${sep(" ", inputBams)}; do echo -- "-I wd/"$(basename $FILE); done)
+        (for FILE in ${sep=" " inputBams}; do echo -- "-I wd/"$(basename $FILE); done)
         ~{true="-L" false="" defined(intervalList)} ~{sep=' -L ' intervalList} \
         ~{true="-XL" false="" defined(excludeIntervalList)} ~{sep=' -XL ' excludeIntervalList} \
         ~{true="--dont-use-soft-clipped-bases" false="" dontUseSoftClippedBases} \
