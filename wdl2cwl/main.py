@@ -181,9 +181,7 @@ def get_command(
                     temp_append_str = ".map(function(el) { return el.path})"
 
                 if input_name in input_names:
-                    append_str = (
-                        f'$("{separator}".join(inputs["{input_name}"]{temp_append_str}))'
-                    )
+                    append_str = f'$("{separator}".join(inputs["{input_name}"]{temp_append_str}))'
                     new_command += append_str
 
             elif "sub(" in sub_str:
@@ -193,15 +191,13 @@ def get_command(
                 append_str_sub = ""
                 if search_index:
                     append_str_sub = (
-                        '$(return inputs["'
+                        '$(inputs["'
                         + re.sub(r"\[[0-9]\]", "", temp[0].replace("sub(", ""))
                         + '"]'
                         + temp[0][temp[0].find("[") :]
                     )
                 else:
-                    append_str_sub = (
-                        '$(return inputs["' + temp[0].replace("sub(", "") + '"]'
-                    )
+                    append_str_sub = '$(inputs["' + temp[0].replace("sub(", "") + '"]'
 
                 append_str = ""
                 if len(temp) == 3:
@@ -211,7 +207,7 @@ def get_command(
                         + temp[1]
                         + ","
                         + temp[2][:-1]
-                        + ");)"
+                        + "))"
                     )
 
                 new_command += append_str
