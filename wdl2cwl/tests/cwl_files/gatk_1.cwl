@@ -17,55 +17,6 @@ inputs:
     type: File
   - id: referenceFastaDict
     type: File
-  - id: intervalList
-    default: []
-    type:
-      - items:
-          - File
-          - 'null'
-        type: array
-  - id: excludeIntervalList
-    default: []
-    type:
-      - items:
-          - File
-          - 'null'
-        type: array
-  - id: contamination
-    default: ''
-    type:
-      - float
-      - 'null'
-  - id: dbsnpVCF
-    default: ''
-    type:
-      - File
-      - 'null'
-  - id: dbsnpVCFIndex
-    default: ''
-    type:
-      - File
-      - 'null'
-  - id: pedigree
-    default: ''
-    type:
-      - File
-      - 'null'
-  - id: ploidy
-    default: ''
-    type:
-      - int
-      - 'null'
-  - id: outputMode
-    default: ''
-    type:
-      - string
-      - 'null'
-  - id: standardMinConfidenceThresholdForCalling
-    default: ''
-    type:
-      - float
-      - 'null'
   - id: gvcf
     default: false
     type: boolean
@@ -96,13 +47,13 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
-        entry: |4
+        entry: |4+
 
             set -e
             mkdir -p "\$(dirname $(inputs.outputPath))"
             gatk --java-options '-Xmx$(inputs.javaXmxMb)M -XX:ParallelGCThreads=1' \
             HaplotypeCaller \
-            -R $(inputs.referenceFasta.path) \
+            -R wd2/$(inputs.basename(referenceFasta)) \
             -O $(inputs.outputPath) \
             -I ${
             var text = "";
@@ -110,26 +61,8 @@ requirements:
               text+= inputs["inputBams"][i].path+" -I ";
             return text;
             } \
-            --sample-ploidy $(inputs.ploidy) \
-            $(inputs["intervalList"].length === 0 ? "": "-L") ${
-            var text = "";
-            for(var i=0;i<inputs["intervalList"].length;i++) 
-              text+= inputs["intervalList"][i].path+" -L ";
-            return text;
-            } \
-            $(inputs["excludeIntervalList"].length === 0 ? "": "-XL") ${
-            var text = "";
-            for(var i=0;i<inputs["excludeIntervalList"].length;i++) 
-              text+= inputs["excludeIntervalList"][i].path+" -XL ";
-            return text;
-            } \
-            -D $(inputs.dbsnpVCF) \
-            --pedigree $(inputs.pedigree) \
-            --contamination-fraction-per-sample-file $(inputs.contamination) \
-            --output-mode $(inputs.outputMode) \
-            --emit-ref-confidence $(inputs.emitRefConfidence) \
             $(inputs["dontUseSoftClippedBases"] ? "--dont-use-soft-clipped-bases" : "") \
-            --standard-min-confidence-threshold-for-calling $(inputs.standardMinConfidenceThresholdForCalling)
+
   - class: InlineJavascriptRequirement
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes* 60)

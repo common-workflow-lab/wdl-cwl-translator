@@ -34,15 +34,15 @@ task HaplotypeCaller {
         #String emitRefConfidence = if gvcf then "GVCF" else "NONE"
         Boolean dontUseSoftClippedBases = false
 
-        Array[File]+? intervalList
-        Array[File]+? excludeIntervalList
-        Float? contamination
-        File? dbsnpVCF
-        File? dbsnpVCFIndex
-        File? pedigree
-        Int? ploidy
-        String? outputMode
-        Float? standardMinConfidenceThresholdForCalling
+        #Array[File]+? intervalList
+        #Array[File]+? excludeIntervalList
+        #Float? contamination
+        #File? dbsnpVCF
+        #File? dbsnpVCFIndex
+        #File? pedigree
+        #Int? ploidy
+        #String? outputMode
+        #Float? standardMinConfidenceThresholdForCalling
 
         Int javaXmxMb = 4096
         # Memory increases with time used. 4G should cover most use cases.
@@ -56,19 +56,11 @@ task HaplotypeCaller {
         mkdir -p "$(dirname ~{outputPath})"
         gatk --java-options '-Xmx~{javaXmxMb}M -XX:ParallelGCThreads=1' \
         HaplotypeCaller \
-        -R ~{referenceFasta} \
+        -R wd2/~{basename(referenceFasta)} \
         -O ~{outputPath} \
         -I ~{sep=" -I " inputBams} \
-        ~{"--sample-ploidy " + ploidy} \
-        ~{true="-L" false="" defined(intervalList)} ~{sep=' -L ' intervalList} \
-        ~{true="-XL" false="" defined(excludeIntervalList)} ~{sep=' -XL ' excludeIntervalList} \
-        ~{"-D " + dbsnpVCF} \
-        ~{"--pedigree " + pedigree} \
-        ~{"--contamination-fraction-per-sample-file " + contamination} \
-        ~{"--output-mode " + outputMode} \
-        --emit-ref-confidence ~{emitRefConfidence} \
         ~{true="--dont-use-soft-clipped-bases" false="" dontUseSoftClippedBases} \
-        ~{"--standard-min-confidence-threshold-for-calling " + standardMinConfidenceThresholdForCalling}
+        
     }
 
     output {
