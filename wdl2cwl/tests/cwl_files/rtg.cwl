@@ -41,8 +41,10 @@ requirements:
             -o $(inputs.outputPath) \
             ${
             var text = "";
-            for(var i=0;i<inputs["inputFiles"].length;i++) 
+            var arr_length = inputs["inputFiles"].length;
+            for(var i=0;i<arr_length-1;i++) 
               text+= inputs["inputFiles"][i].path+" ";
+            text+= inputs["inputFiles"][arr_length-1].path;
             return text;
             }
   - class: InlineJavascriptRequirement

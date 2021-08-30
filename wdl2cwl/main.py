@@ -183,9 +183,10 @@ def get_command(
                 if input_name in input_names:
                     append_str = (
                         '${\nvar text = "";\n'
-                        + 'for(var i=0;i<inputs["'
+                        + 'var arr_length = inputs["'
                         + input_name
-                        + '"].length;i++) \n'
+                        + '"].length;\n'
+                        + "for(var i=0;i<arr_length-1;i++) \n"
                         + '  text+= inputs["'
                         + input_name
                         + '"][i]'
@@ -193,6 +194,11 @@ def get_command(
                         + '+"'
                         + separator
                         + '";\n'
+                        + 'text+= inputs["'
+                        + input_name
+                        + '"][arr_length-1]'
+                        + temp_append_str
+                        + ";\n"
                         + "return text;\n"
                         + "}"
                     )
