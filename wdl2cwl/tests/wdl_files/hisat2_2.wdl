@@ -68,7 +68,6 @@ task Hisat2 {
         --rg 'PL:~{platform}' \
         ~{true="--dta" false="" downstreamTranscriptomeAssembly} \
         --new-summary \
-        --summary-file ~{summaryFilePath} \
         | samtools sort \
         "-@ " \
         -m ~{sortMemoryPerThreadGb}G \

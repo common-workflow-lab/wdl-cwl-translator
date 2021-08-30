@@ -74,7 +74,6 @@ requirements:
             --rg 'PL:$(inputs.platform)' \
             $(inputs["downstreamTranscriptomeAssembly"] ? "--dta" : "") \
             --new-summary \
-            --summary-file $(inputs.summaryFilePath) \
             | samtools sort \
             "-@ " \
             -m $(inputs.sortMemoryPerThreadGb)G \
