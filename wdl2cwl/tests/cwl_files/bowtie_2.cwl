@@ -1,6 +1,10 @@
 class: CommandLineTool
 id: Bowtie
 inputs:
+  - id: readsUpstream
+    type:
+      - items: File
+        type: array
   - id: indexFiles
     type:
       - items: File
@@ -73,31 +77,20 @@ requirements:
             --threads $(inputs.threads) \
             --sam-RG '$(inputs.samRG)$(inputs["samRG"] === "" ? "": "'") \
             $(return inputs["indexFiles"].replace("(\.rev)?\.[0-9]\.ebwt$","");) \
-            $(inputs.readsUpstream) \
-            $(inputs.readsDownstream) \
+            ${
+            var text = "";
+            var arr_length = inputs["readsUpstream"].length;
+            for(var i=0;i<arr_length-1;i++) 
+              text+= inputs["readsUpstream"][i].path+",";
+            text+= inputs["readsUpstream"][arr_length-1].path;
+            return text;
+            } \
             | picard -Xmx$(inputs.picardXmx) SortSam \
             INPUT=/dev/stdin \
             OUTPUT=$(inputs.outputPath) \
             SORT_ORDER=coordinate \
             CREATE_INDEX=true
   - class: InlineJavascriptRequirement
-  - class: ResourceRequirement
-    ramMin: |-
-        ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
-        var memory = "";
-        if(unit==="KiB") memory = value/1024;
-        else if(unit==="MiB") memory = value;
-        else if(unit==="GiB") memory = value*1024;
-        else if(unit==="TiB") memory = value*1024*1024;
-        else if(unit==="B") memory = value/(1024*1024);
-        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-        else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-        else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-        else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-        return parseInt(memory);
-        }
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
 cwlVersion: v1.2
