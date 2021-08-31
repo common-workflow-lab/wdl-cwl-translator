@@ -24,7 +24,7 @@ version 1.0
 
 task Bowtie {
     input {
-        #Array[File]+ readsUpstream
+        Array[File]+ readsUpstream
         #Array[File] readsDownstream = []
         String outputPath = "mapped.bam"
         Array[File]+ indexFiles
@@ -64,8 +64,7 @@ task Bowtie {
         ~{"--threads " + threads} \
         ~{"--sam-RG '" + samRG}~{true="'" false="" defined(samRG)} \
         ~{sub(indexFiles, "(\.rev)?\.[0-9]\.ebwt$", "")} \
-        ~{readsUpstream} \
-        ~{readsDownstream} \
+        ~{sep="," readsUpstream} \
         | picard -Xmx~{picardXmx} SortSam \
         INPUT=/dev/stdin \
         OUTPUT=~{outputPath} \
@@ -80,7 +79,7 @@ task Bowtie {
 
     runtime {
         cpu: threads
-        memory: memory
+        #memory: memory
         #time_minutes: timeMinutes
         docker: dockerImage
     }
@@ -88,7 +87,7 @@ task Bowtie {
     parameter_meta {
         # inputs
         readsUpstream: {description: "The first-/single-end fastq files.", category: "required"}
-        readsDownstream: {description: "The second-end fastq files.", category: "common"}
+        #readsDownstream: {description: "The second-end fastq files.", category: "common"}
         outputPath: {description: "The location the output BAM file should be written to.", category: "common"}
         indexFiles: {description: "The index files for bowtie.", category: "required"}
         best: {description: "Equivalent to bowtie's `--best` flag.", category: "advanced"}
@@ -101,11 +100,11 @@ task Bowtie {
         picardXmx: {description: "The maximum memory available to the picard (used for sorting the output). Should be lower than `memory` to accommodate JVM overhead and bowtie's memory usage.", category: "advanced"}
         threads: {description: "The number of threads to use.", category: "advanced"}
         memory: {description: "The amount of memory this job will use.", category: "advanced"}
-        timeMinutes: {description: "The maximum amount of time the job will run in minutes.", category: "advanced"}
+        #timeMinutes: {description: "The maximum amount of time the job will run in minutes.", category: "advanced"}
         dockerImage: {description: "The docker image used for this task. Changing this may result in errors which the developers may choose not to address.", category: "advanced"}
 
         # outputs
         outputBam: {description: "Output alignment file."}
-        outputBamIndex: {description: "Index of output alignment file."}
+        #outputBamIndex: {description: "Index of output alignment file."}
     }
 }
