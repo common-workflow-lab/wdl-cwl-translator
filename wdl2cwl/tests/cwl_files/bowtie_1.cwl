@@ -10,22 +10,18 @@ inputs:
       - items: File
         type: array
   - id: seedmms
-    default: ''
     type:
       - int
       - 'null'
   - id: seedlen
-    default: ''
     type:
       - int
       - 'null'
   - id: k
-    default: ''
     type:
       - int
       - 'null'
   - id: samRG
-    default: ''
     type:
       - string
       - 'null'
@@ -68,14 +64,14 @@ requirements:
             bowtie \
             -q \
             --sam \
-            --seedmms $(inputs.seedmms) \
-            --seedlen $(inputs.seedlen) \
-            -k $(inputs.k) \
+            --seedmms $(inputs["seedmms"] === null ? "" : inputs["seedmms"]) \
+            --seedlen $(inputs["seedlen"] === null ? "" : inputs["seedlen"]) \
+            -k $(inputs["k"] === null ? "" : inputs["k"]) \
             $(inputs["best"] ? "--best" : "") \
             $(inputs["strata"] ? "--strata" : "") \
             $(inputs["allowContain"] ? "--allow-contain" : "") \
             --threads $(inputs.threads) \
-            --sam-RG '$(inputs.samRG)$(inputs["samRG"] === "" ? "": "'") \
+            --sam-RG '$(inputs["samRG"] === null ? "" : inputs["samRG"])$(inputs["samRG"] === null ? "": "'") \
             $(inputs["indexFiles"][0].replace("(\.rev)?\.[0-9]\.ebwt$","")) \
             $(",".join(inputs["readsUpstream"].map(function(el) { return el.path}))) \
             | picard -Xmx$(inputs.picardXmx) SortSam \

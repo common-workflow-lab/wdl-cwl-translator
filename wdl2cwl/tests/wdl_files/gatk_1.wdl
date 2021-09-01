@@ -36,13 +36,13 @@ task HaplotypeCaller {
 
         Array[File]+? intervalList
         Array[File]+? excludeIntervalList
-        #Float? contamination
-        #File? dbsnpVCF
-        #File? dbsnpVCFIndex
-        #File? pedigree
-        #Int? ploidy
-        #String? outputMode
-        #Float? standardMinConfidenceThresholdForCalling
+        Float? contamination
+        File? dbsnpVCF
+        File? dbsnpVCFIndex
+        File? pedigree
+        Int? ploidy
+        String? outputMode
+        Float? standardMinConfidenceThresholdForCalling
 
         Int javaXmxMb = 4096
         # Memory increases with time used. 4G should cover most use cases.

@@ -14,37 +14,30 @@ inputs:
   - id: outputVcf
     type: string
   - id: postprocessVariantsExtraArgs
-    default: ''
     type:
       - string
       - 'null'
   - id: customizedModel
-    default: ''
     type:
       - File
       - 'null'
   - id: numShards
-    default: ''
     type:
       - int
       - 'null'
   - id: outputGVcf
-    default: ''
     type:
       - string
       - 'null'
   - id: outputGVcfIndex
-    default: ''
     type:
       - string
       - 'null'
   - id: regions
-    default: ''
     type:
       - File
       - 'null'
   - id: sampleName
-    default: ''
     type:
       - string
       - 'null'
@@ -103,12 +96,12 @@ requirements:
             --reads $(inputs.inputBam.path) \
             --model_type $(inputs.modelType) \
             --output_vcf $(inputs.outputVcf) \
-            --output_gvcf $(inputs.outputGVcf) \
-            --customized_model $(inputs.customizedModel) \
-            --num_shards $(inputs.numShards) \
-            --regions $(inputs.regions) \
-            --sample_name $(inputs.sampleName) \
-            --postprocess_variants_extra_args $(inputs.postprocessVariantsExtraArgs) \
+            --output_gvcf $(inputs["outputGVcf"] === null ? "" : inputs["outputGVcf"]) \
+            --customized_model $(inputs["customizedModel"] === null ? "" : inputs["customizedModel"].path) \
+            --num_shards $(inputs["numShards"] === null ? "" : inputs["numShards"]) \
+            --regions $(inputs["regions"] === null ? "" : inputs["regions"].path) \
+            --sample_name $(inputs["sampleName"] === null ? "" : inputs["sampleName"]) \
+            --postprocess_variants_extra_args $(inputs["postprocessVariantsExtraArgs"] === null ? "" : inputs["postprocessVariantsExtraArgs"]) \
             $(inputs["VCFStatsReport"] ? "--vcf_stats_report" : "--novcf_stats_report")
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement

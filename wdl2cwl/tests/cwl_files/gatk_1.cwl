@@ -18,19 +18,45 @@ inputs:
   - id: referenceFastaDict
     type: File
   - id: intervalList
-    default: []
     type:
       - items:
           - File
           - 'null'
         type: array
   - id: excludeIntervalList
-    default: []
     type:
       - items:
           - File
           - 'null'
         type: array
+  - id: contamination
+    type:
+      - float
+      - 'null'
+  - id: dbsnpVCF
+    type:
+      - File
+      - 'null'
+  - id: dbsnpVCFIndex
+    type:
+      - File
+      - 'null'
+  - id: pedigree
+    type:
+      - File
+      - 'null'
+  - id: ploidy
+    type:
+      - int
+      - 'null'
+  - id: outputMode
+    type:
+      - string
+      - 'null'
+  - id: standardMinConfidenceThresholdForCalling
+    type:
+      - float
+      - 'null'
   - id: gvcf
     default: false
     type: boolean
@@ -77,8 +103,8 @@ requirements:
             -R wd2/\$(basename $(inputs.referenceFasta.path)) \
             -O $(inputs.outputPath) \
             (for FILE in $(" ".join(inputs["inputBams"].map(function(el) { return el.path}))); do echo -- "-I wd/"\$(basename $FILE); done)
-            $(inputs["intervalList"].length === 0 ? "": "-L") $(" -L ".join(inputs["intervalList"].map(function(el) { return el.path}))) \
-            $(inputs["excludeIntervalList"].length === 0 ? "": "-XL") $(" -XL ".join(inputs["excludeIntervalList"].map(function(el) { return el.path}))) \
+            $(inputs["intervalList"].length === 0 ? "": "-L") $(inputs["intervalList"] === null ? "" : (" -L ".join(inputs["intervalList"].map(function(el) { return el.path}))) \
+            $(inputs["excludeIntervalList"].length === 0 ? "": "-XL") $(inputs["excludeIntervalList"] === null ? "" : (" -XL ".join(inputs["excludeIntervalList"].map(function(el) { return el.path}))) \
             $(inputs["dontUseSoftClippedBases"] ? "--dont-use-soft-clipped-bases" : "") \
 
   - class: InlineJavascriptRequirement
