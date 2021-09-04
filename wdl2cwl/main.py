@@ -182,39 +182,39 @@ def get_command(
                     index = input_names.index(input_name)
                     data_type = input_types[index]
 
-                    temp_str = ""
+                    
                     # true false, when the input is optional and there's no default value assigned
                     if "?" in data_type and input_name in unbound_input_names:
-                        if "Array" in data_type:
-                            temp_str = ".length === 0"
-                        else:
-                            temp_str = "=== null"
-                            if "File" in data_type:
-                                path_str = ".path"
+                        
+                            
+                        
+                        
+                            
+                                
                         append_str = (
                             '$(inputs["'
                             + input_name
-                            + '"]'
-                            + path_str
-                            + temp_str
-                            + " ? "
-                            + '"'
+                            + '"] === null ? "'
+
+                            
+                            
+                            
                             + false_value
                             + '"'
-                            + ": "
+                            + " : "
                             + true_value
                             + ")"
                         )
                         new_command += append_str
 
                     else:
-                        if "File" in data_type:
-                            path_str = ".path"
+                        
+                            
                         append_str = (
                             '$(inputs["'
                             + input_name
                             + '"]'
-                            + path_str
+                            
                             + " ? "
                             + true_value
                             + ' : "'
