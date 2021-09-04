@@ -63,8 +63,8 @@ requirements:
             hisat2 \
             -p $(inputs.threads) \
             -x $(inputs.indexFiles[0]) \
-            $(inputs["inputR2"] === null ? "-U": "-1") $(inputs.inputR1.path) \
-            -2$(inputs["inputR2"] === null ? "" : inputs["inputR2"].path) \
+            $(inputs["inputR2"].path === null ? "-U": "-1") $(inputs.inputR1.path) \
+            $(inputs["inputR2"].path === null ? "" : "-2inputs["inputR2"].path") \
             --rg-id $(inputs.readgroup) \
             --rg 'SM:$(inputs.sample)' \
             --rg 'LB:$(inputs.library)' \

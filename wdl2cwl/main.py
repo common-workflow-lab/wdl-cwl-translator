@@ -115,34 +115,58 @@ def get_command(
 
             # if sub string has a concatenation
             if "+" in sub_str:
+                optional_check = False
+                optional_inputs = []
                 split_str = sub_str.split("+")
 
                 for i in split_str:
-                    if '"' in i:
-                        new_command += i.replace('"', "")
-                    else:
+                    if '"' not in i:
                         index = input_names.index(i)
-                        data_type = input_types[index]  # get the data type of the input
+                        data_type = input_types[index]
 
                         if "?" in data_type and i in unbound_input_names:
-                            path_str = ""
+                            optional_inputs.append(i)
+                            optional_check = True
 
+                if optional_check:  # there is one or more optional variable
+                    temp_command = ""
+                    null_string = ""
+
+                    for i in split_str:
+                        if '"' in i:
+                            temp_command += i.replace('"', "")
+                        else:
+                            index = input_names.index(i)
+                            data_type = input_types[
+                                index
+                            ]  # get the data type of the input
+
+                            path_str = ""
                             if "File" in data_type:
                                 path_str = ".path"
 
-                            new_command += (
-                                '$(inputs["'
-                                + i
-                                + '"] === null ? "" : inputs["'
-                                + i
-                                + '"]'
-                                + path_str
-                                + ")"
-                            )
+                            if i in optional_inputs:
+                                null_string += 'inputs["' + i + '"]' + path_str + " ||"
+
+                            temp_command += 'inputs["' + i + '"]' + path_str
+
+                    new_command += (
+                        "$("
+                        + null_string[:-2]
+                        + '=== null ? "" : "'
+                        + temp_command
+                        + '")'
+                    )
+                else:
+                    for i in split_str:
+                        if '"' in i:
+                            new_command += i.replace('"', "")
                         else:
+                            index = input_names.index(i)
+                            data_type = input_types[index]
+
                             if data_type != "File":
                                 new_command += "$(inputs." + i + ")"
-            # if sub string has only the input/ variable name
 
             elif ("true" and "false") in sub_str:
                 true_value = sub_str[
@@ -154,6 +178,7 @@ def get_command(
 
                 if input_name in input_names:
 
+                    path_str = ""
                     index = input_names.index(input_name)
                     data_type = input_types[index]
 
@@ -164,10 +189,13 @@ def get_command(
                             temp_str = ".length === 0"
                         else:
                             temp_str = "=== null"
+                            if "File" in data_type:
+                                path_str = ".path"
                         append_str = (
                             '$(inputs["'
                             + input_name
                             + '"]'
+                            + path_str
                             + temp_str
                             + " ? "
                             + '"'
@@ -180,10 +208,14 @@ def get_command(
                         new_command += append_str
 
                     else:
+                        if "File" in data_type:
+                            path_str = ".path"
                         append_str = (
                             '$(inputs["'
                             + input_name
-                            + '"] ? '
+                            + '"]'
+                            + path_str
+                            + " ? "
                             + true_value
                             + ' : "'
                             + false_value
@@ -196,14 +228,18 @@ def get_command(
                     index = input_names.index(sub_str)
                     data_type = input_types[index]
                     check_str = ""
+                    path_str = ""
                     if "Array" in data_type:
                         check_str = ".length === 0 "
                     else:
                         check_str = " === null "
+                        if "File" in data_type:
+                            path_str = ".path"
                     append_str = (
                         '$(inputs["'
                         + sub_str
                         + '"]'
+                        + path_str
                         + check_str
                         + "? "
                         + '"'
@@ -318,11 +354,11 @@ def get_command(
                     append_str = (
                         '$(inputs["'
                         + sub_str
-                        + '"] === null ? "" : inputs["'
+                        + '"] === null ? "" : "inputs["'
                         + sub_str
                         + '"]'
                         + path_str
-                        + ")"
+                        + '")'
                     )
 
                 else:
