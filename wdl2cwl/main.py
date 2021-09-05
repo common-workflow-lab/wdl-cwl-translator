@@ -182,23 +182,13 @@ def get_command(
                     index = input_names.index(input_name)
                     data_type = input_types[index]
 
-                    
                     # true false, when the input is optional and there's no default value assigned
                     if "?" in data_type and input_name in unbound_input_names:
-                        
-                            
-                        
-                        
-                            
-                                
+
                         append_str = (
                             '$(inputs["'
                             + input_name
                             + '"] === null ? "'
-
-                            
-                            
-                            
                             + false_value
                             + '"'
                             + " : "
@@ -208,13 +198,11 @@ def get_command(
                         new_command += append_str
 
                     else:
-                        
-                            
+
                         append_str = (
                             '$(inputs["'
                             + input_name
                             + '"]'
-                            
                             + " ? "
                             + true_value
                             + ' : "'
@@ -319,8 +307,6 @@ def get_command(
                     check_str = ""
                     if "Array" in data_type:
                         check_str = ".length === 0 "
-                    else:
-                        check_str = " === null "
 
                     if "?" in data_type and input_name in unbound_input_names:
                         append_str = (
