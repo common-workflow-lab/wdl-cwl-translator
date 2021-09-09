@@ -340,11 +340,11 @@ def get_command(
                     append_str = (
                         '$(inputs["'
                         + sub_str
-                        + '"] === null ? "" : "inputs["'
+                        + '"] === null ? "" : inputs["'
                         + sub_str
                         + '"]'
                         + path_str
-                        + '")'
+                        + ')'
                     )
 
                 else:

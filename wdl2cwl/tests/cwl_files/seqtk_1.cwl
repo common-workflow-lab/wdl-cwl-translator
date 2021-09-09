@@ -35,7 +35,7 @@ requirements:
 
                     set -e -o pipefail
                     mkdir -p "\$(dirname $(inputs.outFilePath))"
-                    $(inputs["preCommand"] === null ? "" : "inputs["preCommand"]")
+                    $(inputs["preCommand"] === null ? "" : inputs["preCommand"])
                     seqtk sample \
             	    $(inputs["seed"] === null ? "" : "-s inputs["seed"]") \
                     $(inputs["twoPassMode"] ? "-2 " : "") \
