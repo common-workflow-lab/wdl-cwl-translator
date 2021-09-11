@@ -91,7 +91,7 @@ requirements:
             -th $(inputs.threads) \
             -G $(inputs.referenceFasta.path) \
             -N $(inputs.tumorSampleName) \
-            -b "$(inputs.tumorBam.path)$(inputs["normalBam"].path === null ? "" : "|inputs["normalBam"].path")" \
+            -b "$(inputs.tumorBam.path)$(inputs["normalBam"].path === null ? "" : "|" + inputs["normalBam"].path )" \
             $(inputs["normalBam"].path === null ? "-z": "") \
             -c $(inputs.chromosomeColumn) \
             -S $(inputs.startColumn) \
@@ -100,7 +100,7 @@ requirements:
             $(inputs.bedFile.path) | \
             $(inputs["normalBam"].path === null ? "teststrandbias.R": "testsomatic.R") | \
             $(inputs["normalBam"].path === null ? "var2vcf_valid.pl": "var2vcf_paired.pl") \
-            -N "$(inputs.tumorSampleName)$(inputs["normalSampleName"] === null ? "" : "|inputs["normalSampleName"]")" \
+            -N "$(inputs.tumorSampleName)$(inputs["normalSampleName"] === null ? "" : "|" + inputs["normalSampleName"] )" \
             $(inputs["normalBam"].path === null ? "-E": "") \
             $(inputs["outputCandidateSomaticOnly"] ? "-M" : "") \
             $(inputs["outputAllVariantsAtSamePosition"] ? "-A" : "") \

@@ -103,8 +103,8 @@ requirements:
             -R wd2/\$(basename $(inputs.referenceFasta.path)) \
             -O $(inputs.outputPath) \
             (for FILE in $(" ".join(inputs["inputBams"].map(function(el) { return el.path}))); do echo -- "-I wd/"\$(basename $FILE); done)
-            $(inputs["intervalList"].length === 0 ? "": "-L") $(inputs["intervalList"] === null ? "" : (" -L ".join(inputs["intervalList"].map(function(el) { return el.path}))) \
-            $(inputs["excludeIntervalList"].length === 0 ? "": "-XL") $(inputs["excludeIntervalList"] === null ? "" : (" -XL ".join(inputs["excludeIntervalList"].map(function(el) { return el.path}))) \
+            $(inputs["intervalList"].length === 0 ? "": "-L") $(inputs["intervalList"] === null ? "" : (" -L ".join(inputs["intervalList"].map(function(el) { return el.path})))) \
+            $(inputs["excludeIntervalList"].length === 0 ? "": "-XL") $(inputs["excludeIntervalList"] === null ? "" : (" -XL ".join(inputs["excludeIntervalList"].map(function(el) { return el.path})))) \
             $(inputs["dontUseSoftClippedBases"] ? "--dont-use-soft-clipped-bases" : "") \
 
   - class: InlineJavascriptRequirement

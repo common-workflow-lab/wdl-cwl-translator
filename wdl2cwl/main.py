@@ -134,7 +134,7 @@ def get_command(
 
                     for i in split_str:
                         if '"' in i:
-                            temp_command += i.replace('"', "")
+                            temp_command += i + " + "
                         else:
                             index = input_names.index(i)
                             data_type = input_types[
@@ -148,14 +148,14 @@ def get_command(
                             if i in optional_inputs:
                                 null_string += 'inputs["' + i + '"]' + path_str + " ||"
 
-                            temp_command += 'inputs["' + i + '"]' + path_str
+                            temp_command += 'inputs["' + i + '"]' + path_str + " + "
 
                     new_command += (
                         "$("
                         + null_string[:-2]
-                        + '=== null ? "" : "'
-                        + temp_command
-                        + '")'
+                        + '=== null ? "" : '
+                        + temp_command[:-2]
+                        + ")"
                     )
                 else:
                     for i in split_str:
@@ -252,7 +252,7 @@ def get_command(
 
                 if input_name in input_names:
                     append_str_sub = (
-                        f'("{separator}".join(inputs["{input_name}"]{temp_append_str})'
+                        f'("{separator}".join(inputs["{input_name}"]{temp_append_str}))'
                     )
 
                     if "?" in data_type and input_name in unbound_input_names:
@@ -295,13 +295,12 @@ def get_command(
 
                 if len(temp) == 3:
                     append_str_common = (
-                        "$("
-                        + append_str_sub
+                        append_str_sub
                         + ".replace("
                         + temp[1]
                         + ","
                         + temp[2][:-1]
-                        + "))"
+                        + ")"
                     )
 
                     check_str = ""
@@ -319,7 +318,7 @@ def get_command(
                             + ")"
                         )
                     else:
-                        append_str = append_str_common
+                        append_str = "$(" + append_str_common + ")"
 
                     new_command += append_str
             else:
@@ -344,7 +343,7 @@ def get_command(
                         + sub_str
                         + '"]'
                         + path_str
-                        + ')'
+                        + ")"
                     )
 
                 else:

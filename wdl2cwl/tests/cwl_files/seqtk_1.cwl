@@ -37,7 +37,7 @@ requirements:
                     mkdir -p "\$(dirname $(inputs.outFilePath))"
                     $(inputs["preCommand"] === null ? "" : inputs["preCommand"])
                     seqtk sample \
-            	    $(inputs["seed"] === null ? "" : "-s inputs["seed"]") \
+            	    $(inputs["seed"] === null ? "" : "-s " + inputs["seed"] ) \
                     $(inputs["twoPassMode"] ? "-2 " : "") \
                     $(inputs.sequenceFile.path) \
                     $(inputs.fractionOrNumber) \

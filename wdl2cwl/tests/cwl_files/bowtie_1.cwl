@@ -64,14 +64,14 @@ requirements:
             bowtie \
             -q \
             --sam \
-            $(inputs["seedmms"] === null ? "" : "--seedmms inputs["seedmms"]") \
-            $(inputs["seedlen"] === null ? "" : "--seedlen inputs["seedlen"]") \
-            $(inputs["k"] === null ? "" : "-k inputs["k"]") \
+            $(inputs["seedmms"] === null ? "" : "--seedmms " + inputs["seedmms"] ) \
+            $(inputs["seedlen"] === null ? "" : "--seedlen " + inputs["seedlen"] ) \
+            $(inputs["k"] === null ? "" : "-k " + inputs["k"] ) \
             $(inputs["best"] ? "--best" : "") \
             $(inputs["strata"] ? "--strata" : "") \
             $(inputs["allowContain"] ? "--allow-contain" : "") \
             --threads $(inputs.threads) \
-            $(inputs["samRG"] === null ? "" : "--sam-RG 'inputs["samRG"]")$(inputs["samRG"] === null ? "": "'") \
+            $(inputs["samRG"] === null ? "" : "--sam-RG '" + inputs["samRG"] )$(inputs["samRG"] === null ? "": "'") \
             $(inputs["indexFiles"][0].replace("(\.rev)?\.[0-9]\.ebwt$","")) \
             $(",".join(inputs["readsUpstream"].map(function(el) { return el.path}))) \
             | picard -Xmx$(inputs.picardXmx) SortSam \
