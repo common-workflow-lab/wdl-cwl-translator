@@ -71,13 +71,13 @@ requirements:
             --seedmms $(inputs.seedmms) \
             --seedlen $(inputs.seedlen) \
             -k $(inputs.k) \
-            $(inputs["best"] ? "--best" : "") \
-            $(inputs["strata"] ? "--strata" : "") \
-            $(inputs["allowContain"] ? "--allow-contain" : "") \
+            $(inputs.best ? "--best" : "") \
+            $(inputs.strata ? "--strata" : "") \
+            $(inputs.allowContain ? "--allow-contain" : "") \
             --threads $(inputs.threads) \
-            --sam-RG '$(inputs.samRG)$(inputs["samRG"] === "" ? "": "'") \
-            $(inputs["indexFiles"].replace("(\.rev)?\.[0-9]\.ebwt$","")) \
-            $(",".join(inputs["readsUpstream"].map(function(el) { return el.path}))) \
+            --sam-RG '$(inputs.samRG)$(inputs.samRG === "" ? "": ""'"") \
+            $(inputs.indexFiles.replace("(\.rev)?\.[0-9]\.ebwt$","")) \
+            $(",".join(inputs.readsUpstream.map(function(el) { return el.path}))) \
             | picard -Xmx$(inputs.picardXmx) SortSam \
             INPUT=/dev/stdin \
             OUTPUT=$(inputs.outputPath) \

@@ -95,18 +95,18 @@ requirements:
             -G $(inputs.referenceFasta.path) \
             -N $(inputs.tumorSampleName) \
             -b "$(inputs.tumorBam.path)|$(inputs.normalBam)" \
-            $(inputs["normalBam"] === "" ? "-z": "") \
+            $(inputs.normalBam === "" ? "-z": """") \
             -c $(inputs.chromosomeColumn) \
             -S $(inputs.startColumn) \
             -E $(inputs.endColumn) \
             -g $(inputs.geneColumn) \
             $(inputs.bedFile.path) | \
-            $(inputs["normalBam"] === "" ? "teststrandbias.R": "testsomatic.R") | \
-            $(inputs["normalBam"] === "" ? "var2vcf_valid.pl": "var2vcf_paired.pl") \
+            $(inputs.normalBam === "" ? "teststrandbias.R": ""testsomatic.R"") | \
+            $(inputs.normalBam === "" ? "var2vcf_valid.pl": ""var2vcf_paired.pl"") \
             -N "$(inputs.tumorSampleName)|$(inputs.normalSampleName)" \
-            $(inputs["normalBam"] === "" ? "-E": "") \
-            $(inputs["outputCandidateSomaticOnly"] ? "-M" : "") \
-            $(inputs["outputAllVariantsAtSamePosition"] ? "-A" : "") \
+            $(inputs.normalBam === "" ? "-E": """") \
+            $(inputs.outputCandidateSomaticOnly ? "-M" : "") \
+            $(inputs.outputAllVariantsAtSamePosition ? "-A" : "") \
             -Q $(inputs.mappingQuality) \
             -d $(inputs.minimumTotalDepth) \
             -v $(inputs.minimumVariantDepth) \
@@ -116,8 +116,8 @@ requirements:
   - class: ResourceRequirement
     ramMin: |-
         ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(inputs.memory.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -131,7 +131,7 @@ requirements:
         return parseInt(memory);
         }
   - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes* 60)
+    timelimit: $(inputs.timeMinutes * 60)
   - class: ResourceRequirement
     coresMin: $(inputs.threads + 2)
 cwlVersion: v1.2

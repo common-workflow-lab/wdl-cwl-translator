@@ -39,13 +39,13 @@ requirements:
             mkdir -p \$(dirname $(inputs.outputPath))
             rtg RTG_MEM=$(inputs.rtgMem) format -f $(inputs.format) \
             -o $(inputs.outputPath) \
-            $(" ".join(inputs["inputFiles"].map(function(el) { return el.path})))
+            $(" ".join(inputs.inputFiles.map(function(el) { return el.path})))
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-
         ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(inputs.memory.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
