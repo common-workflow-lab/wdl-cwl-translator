@@ -65,14 +65,14 @@ requirements:
             mkdir -p "\$(dirname $(inputs.outputBam))"
             hisat2 \
             -p $(inputs.threads) \
-            -x $(inputs.indexFiles[0]) \
-            $(inputs["inputR2"] === "" ? "-U": "-1") $(inputs.inputR1.path) \
+            -x $(inputs["indexFiles[0]"]) \
+            $(inputs.inputR2 === "" ? "-U": ""-1"") $(inputs.inputR1.path) \
             -2$(inputs.inputR2) \
             --rg-id $(inputs.readgroup) \
             --rg 'SM:$(inputs.sample)' \
             --rg 'LB:$(inputs.library)' \
             --rg 'PL:$(inputs.platform)' \
-            $(inputs["downstreamTranscriptomeAssembly"] ? "--dta" : "") \
+            $(inputs.downstreamTranscriptomeAssembly ? "--dta" : "") \
             --new-summary \
             | samtools sort \
             "-@ " \

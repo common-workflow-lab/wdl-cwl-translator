@@ -66,8 +66,8 @@ requirements:
             set -e
             mkdir -p "\$(dirname $(inputs.outputPath))"
             mkdir wd
-            for FILE in $(" ".join(inputs["inputBams"].map(function(el) { return el.path}))); do ln -s $FILE wd/\$(inputBams $FILE) ; done
-            for FILE in $(" ".join(inputs["inputBamsIndex"].map(function(el) { return el.path}))); do ln -s $FILE wd/\$(inputBamsIndex $FILE) ; done
+            for FILE in $(" ".join(inputs.inputBams.map(function(el) { return el.path}))); do ln -s $FILE wd/\$(inputBams $FILE) ; done
+            for FILE in $(" ".join(inputs.inputBamsIndex.map(function(el) { return el.path}))); do ln -s $FILE wd/\$(inputBamsIndex $FILE) ; done
             mkdir wd2
             ln -s $(inputs.referenceFasta.path) wd2/\$(basename $(inputs.referenceFasta.path))
             ln -s $(inputs.referenceFastaDict.path) wd2/\$(basename $(inputs.referenceFastaDict.path))
@@ -76,14 +76,14 @@ requirements:
             HaplotypeCaller \
             -R wd2/\$(basename $(inputs.referenceFasta.path)) \
             -O $(inputs.outputPath) \
-            (for FILE in $(" ".join(inputs["inputBams"].map(function(el) { return el.path}))); do echo -- "-I wd/"\$(basename $FILE); done)
-            $(inputs["intervalList"].length === 0 ? "": "-L") $(" -L ".join(inputs["intervalList"].map(function(el) { return el.path}))) \
-            $(inputs["excludeIntervalList"].length === 0 ? "": "-XL") $(" -XL ".join(inputs["excludeIntervalList"].map(function(el) { return el.path}))) \
-            $(inputs["dontUseSoftClippedBases"] ? "--dont-use-soft-clipped-bases" : "") \
+            (for FILE in $(" ".join(inputs.inputBams.map(function(el) { return el.path}))); do echo -- "-I wd/"\$(basename $FILE); done)
+            $(inputs.intervalList.length === 0 ? "": ""-L"") $(" -L ".join(inputs.intervalList.map(function(el) { return el.path}))) \
+            $(inputs.excludeIntervalList.length === 0 ? "": ""-XL"") $(" -XL ".join(inputs.excludeIntervalList.map(function(el) { return el.path}))) \
+            $(inputs.dontUseSoftClippedBases ? "--dont-use-soft-clipped-bases" : "") \
 
   - class: InlineJavascriptRequirement
   - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes* 60)
+    timelimit: $(inputs.timeMinutes * 60)
 cwlVersion: v1.2
 baseCommand:
   - sh

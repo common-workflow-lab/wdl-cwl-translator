@@ -8,6 +8,8 @@ from io import StringIO
 import textwrap
 import re
 
+import regex  # type: ignore
+
 import cwl_utils.parser_v1_2 as cwl
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
 from ruamel.yaml import scalarstring
@@ -25,6 +27,25 @@ wdl_type = {
     "Float": "float",
     "Boolean": "boolean",
 }
+
+valid_js_identifier = regex.compile(
+    r"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|null|this|true|"
+    r"void|with|break|catch|class|const|false|super|throw|while|yield|delete|export|"
+    r"import|public|return|static|switch|typeof|default|extends|finally|package|"
+    r"private|continue|debugger|function|arguments|interface|protected|implements|"
+    r"instanceof)$)(?:[$_\p{ID_Start}])(?:[$_\u200C\u200D\p{ID_Continue}])*$"
+)
+# ^^ is a combination of https://github.com/tc39/proposal-regexp-unicode-property-escapes#other-examples
+# and regex at the bottom of https://stackoverflow.com/a/9392578
+# double checked against https://262.ecma-international.org/5.1/#sec-7.6
+# eval is not on the official list of reserved words, but it is a built-in function
+
+
+def inputs(input_name: str) -> str:
+    """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
+    if valid_js_identifier.match(input_name):
+        return f"inputs.{input_name}"
+    return f'inputs["{input_name}"]'
 
 
 def get_ram_min(ram_min: str) -> int:
@@ -49,13 +70,13 @@ def get_ram_min_js(ram_min: str, unit: str) -> str:
         append_str = '${\nvar unit = "' + unit + '";'
     else:
         append_str = (
-            '${\nvar unit = inputs["' + ram_min + '"].match(/[a-zA-Z]+/g).join("");'
+            "${\nvar unit = " + inputs(ram_min) + '.match(/[a-zA-Z]+/g).join("");'
         )
     js_str = (
         append_str
-        + '\nvar value = parseInt(inputs["'
-        + ram_min
-        + '"].match(/[0-9]+/g));\n'
+        + "\nvar value = parseInt("
+        + inputs(ram_min)
+        + ".match(/[0-9]+/g));\n"
         + 'var memory = "";\n'
         + 'if(unit==="KiB") memory = value/1024;\n'
         + 'else if(unit==="MiB") memory = value;\n'
@@ -121,7 +142,7 @@ def get_command(
                         index = input_names.index(i)
                         data_type = input_types[index]  # get the data type of the input
                         if data_type != "File":
-                            new_command += "$(inputs." + i + ")"
+                            new_command += "$(" + inputs(i) + ")"
             # if sub string has only the input/ variable name
 
             elif ("true" and "false") in sub_str:
@@ -135,9 +156,9 @@ def get_command(
 
                 if input_name in input_names:
                     append_str = (
-                        '$(inputs["'
-                        + input_name
-                        + '"] ? '
+                        "$("
+                        + inputs(input_name)
+                        + " ? "
                         + true_value
                         + ' : "'
                         + false_value
@@ -155,17 +176,8 @@ def get_command(
                     else:
                         check_str = ' === "" '
                     append_str = (
-                        '$(inputs["'
-                        + sub_str
-                        + '"]'
-                        + check_str
-                        + "? "
-                        + '"'
-                        + false_value
-                        + '"'
-                        + ": "
-                        + true_value
-                        + ")"
+                        f"$({inputs(sub_str)}{check_str}? "
+                        f'"{false_value}": "{true_value}")'
                     )
                     new_command += append_str
 
@@ -181,7 +193,9 @@ def get_command(
                     temp_append_str = ".map(function(el) { return el.path})"
 
                 if input_name in input_names:
-                    append_str = f'$("{separator}".join(inputs["{input_name}"]{temp_append_str}))'
+                    append_str = (
+                        f'$("{separator}".join({inputs(input_name)}{temp_append_str}))'
+                    )
                     new_command += append_str
 
             elif "sub(" in sub_str:
@@ -191,13 +205,12 @@ def get_command(
                 append_str_sub = ""
                 if search_index:
                     append_str_sub = (
-                        '$(inputs["'
-                        + re.sub(r"\[[0-9]\]", "", temp[0].replace("sub(", ""))
-                        + '"]'
+                        "$("
+                        + inputs(re.sub(r"\[[0-9]\]", "", temp[0].replace("sub(", "")))
                         + temp[0][temp[0].find("[") :]
                     )
                 else:
-                    append_str_sub = '$(inputs["' + temp[0].replace("sub(", "") + '"]'
+                    append_str_sub = "$(" + inputs(temp[0].replace("sub(", ""))
 
                 append_str = ""
                 if len(temp) == 3:
@@ -221,9 +234,9 @@ def get_command(
 
                 append_str = ""
                 if data_type == "File":
-                    append_str = "$(inputs." + sub_str + ".path)"
+                    append_str = f"$({inputs(sub_str)}.path)"
                 else:
-                    append_str = "$(inputs." + sub_str + ")"
+                    append_str = f"$({inputs(sub_str)})"
                 new_command = new_command + append_str
 
             index = end_index + 1
@@ -249,8 +262,8 @@ def get_output(expression: str, input_names: List[str]) -> str:
         end_index = expression.find("}")
         output_value = (
             expression[0:start_index]
-            + "$(inputs."
-            + expression[start_index + 2 : end_index]
+            + "$("
+            + inputs(expression[start_index + 2 : end_index])
             + ")"
             + expression[end_index + 1 :]
         )
@@ -261,8 +274,8 @@ def get_output(expression: str, input_names: List[str]) -> str:
         end_index = expression.find("}")
         output_value = (
             expression[0:start_index]
-            + "$(inputs."
-            + expression[start_index + 2 : end_index]
+            + "$("
+            + inputs(expression[start_index + 2 : end_index])
             + ")"
             + expression[end_index + 1 :]
         )
@@ -273,7 +286,7 @@ def get_output(expression: str, input_names: List[str]) -> str:
 
         for i in split_str:
             if i in input_names:
-                output_value += "$(inputs." + i + ")"
+                output_value += f"$({inputs(i)})"
             else:
                 output_value += i
 
@@ -286,8 +299,8 @@ def get_output(expression: str, input_names: List[str]) -> str:
             end_index = sub_expression.find("}")
             output_value = (
                 sub_expression[0:start_index]
-                + "$(inputs."
-                + sub_expression[start_index + 2 : end_index]
+                + "$("
+                + inputs(sub_expression[start_index + 2 : end_index])
                 + ")"
                 + sub_expression[end_index + 1 :]
             )
@@ -300,7 +313,7 @@ def get_output(expression: str, input_names: List[str]) -> str:
 
     elif '"' not in expression:
         if expression in input_names:
-            output_value = "$(inputs." + expression + ")"
+            output_value = f"$({inputs(expression)})"
         output_value = output_value
 
     elif '"' in expression:
@@ -448,8 +461,8 @@ def convert(workflow: str) -> str:
 
     base_command = ["sh", "example.sh"]
 
-    inputs: List[cwl.CommandInputParameter] = []
-    inputs = get_input(inputs, ast.task_inputs, ast.task_inputs_bound)
+    cwl_inputs: List[cwl.CommandInputParameter] = []
+    cwl_inputs = get_input(cwl_inputs, ast.task_inputs, ast.task_inputs_bound)
 
     requirements: List[cwl.ProcessRequirement] = []
 
@@ -509,9 +522,14 @@ def convert(workflow: str) -> str:
         time_minutes: Union[str, int] = ""
         if '"' not in ast.task_runtime["time_minutes"]:
             if ast.task_runtime["time_minutes"] in input_names:
-                time_minutes = "$(inputs." + ast.task_runtime["time_minutes"] + "* 60)"
+                time_minutes = f"$({inputs(ast.task_runtime['time_minutes'])} * 60)"
             elif ast.task_runtime["time_minutes"].isnumeric():
                 time_minutes = int(ast.task_runtime["time_minutes"]) * 60
+        else:
+            print(
+                f"---- WARNING: SKIPPING REQUIREMENT time_minutes in  {ast.task_runtime} ----",
+                file=sys.stderr,
+            )
 
         requirements.append(
             cwl.ToolTimeLimit(
@@ -524,7 +542,7 @@ def convert(workflow: str) -> str:
         cpu: Union[str, int] = ""
         if '"' not in ast.task_runtime["cpu"]:
             if ast.task_runtime["cpu"] in input_names:
-                cpu = "$(inputs." + ast.task_runtime["cpu"] + ")"
+                cpu = f"$({inputs(ast.task_runtime['cpu'])})"
             elif ast.task_runtime["cpu"].isnumeric():
                 cpu = int(ast.task_runtime["cpu"])
             elif "+" in ast.task_runtime["cpu"]:
@@ -532,7 +550,7 @@ def convert(workflow: str) -> str:
                 append_str = "$("
                 for i in range(0, len(temp)):
                     if temp[i] in input_names:
-                        append_str += "inputs." + temp[i]
+                        append_str += inputs(temp[i])
                     elif temp[i].isnumeric():
                         append_str += temp[i]
                     if i != len(temp) - 1:
@@ -591,7 +609,7 @@ def convert(workflow: str) -> str:
 
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,
-        inputs=inputs,
+        inputs=cwl_inputs,
         requirements=requirements if requirements else None,
         outputs=outputs if outputs else None,
         cwlVersion="v1.2",

@@ -122,19 +122,19 @@ requirements:
             --bed-regions $(inputs.bedRegions) \
             --output $(inputs.outputDir) \
             --template $(inputs.template.path) \
-            $(inputs["allRecords"] ? "--all-records" : "") \
-            $(inputs["decompose"] ? "--decompose" : "") \
-            $(inputs["refOverlap"] ? "--ref-overlap" : "") \
+            $(inputs.allRecords ? "--all-records" : "") \
+            $(inputs.decompose ? "--decompose" : "") \
+            $(inputs.refOverlap ? "--ref-overlap" : "") \
             --sample $(inputs.sample) \
-            $(inputs["squashPloidy"] ? "--squash-ploidy" : "") \
+            $(inputs.squashPloidy ? "--squash-ploidy" : "") \
             --output-mode $(inputs.outputMode) \
             --threads $(inputs.threads)
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-
         ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(inputs.memory.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;

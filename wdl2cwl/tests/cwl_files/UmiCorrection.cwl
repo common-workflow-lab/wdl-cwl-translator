@@ -75,7 +75,7 @@ requirements:
     ramMin: |-
         ${
         var unit = "MiB";
-        var value = parseInt(inputs["machine_mem_mb"].match(/[0-9]+/g));
+        var value = parseInt(inputs.machine_mem_mb.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;

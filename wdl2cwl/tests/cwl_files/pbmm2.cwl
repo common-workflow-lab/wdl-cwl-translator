@@ -40,7 +40,7 @@ requirements:
 
             pbmm2 align \
             --preset $(inputs.presetOption) \
-            $(inputs["sort"] ? "--sort" : "") \
+            $(inputs.sort ? "--sort" : "") \
             -j $(inputs.cores) \
             $(inputs.referenceMMI.path) \
             $(inputs.queryFile.path) \
@@ -50,8 +50,8 @@ requirements:
   - class: ResourceRequirement
     ramMin: |-
         ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(inputs.memory.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;

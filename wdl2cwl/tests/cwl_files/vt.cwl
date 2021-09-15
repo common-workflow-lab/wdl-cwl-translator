@@ -41,14 +41,14 @@ requirements:
             mkdir -p "\$(dirname $(inputs.outputPath))"
             vt normalize $(inputs.inputVCF.path) \
             -r $(inputs.referenceFasta.path) \
-            $(inputs["ignoreMaskedRef"] ? "-m " : "") \
+            $(inputs.ignoreMaskedRef ? "-m " : "") \
             | vt decompose -s - -o $(inputs.outputPath)
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-
         ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(inputs.memory.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -62,7 +62,7 @@ requirements:
         return parseInt(memory);
         }
   - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes* 60)
+    timelimit: $(inputs.timeMinutes * 60)
 cwlVersion: v1.2
 baseCommand:
   - sh

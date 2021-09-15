@@ -56,7 +56,7 @@ requirements:
               ASSUME_SORTED=true \
               PROGRAM=null \
               PROGRAM=CollectAlignmentSummaryMetrics \
-              $(inputs["collect_gc_bias_metrics"] ? 'PROGRAM="CollectGcBiasMetrics"' : "") \
+              $(inputs.collect_gc_bias_metrics ? 'PROGRAM="CollectGcBiasMetrics"' : "") \
               METRIC_ACCUMULATION_LEVEL=null \
               METRIC_ACCUMULATION_LEVEL=READ_GROUP
   - class: InlineJavascriptRequirement

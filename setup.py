@@ -18,8 +18,5 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages(),
     setup_requires=[] + pytest_runner,
-    install_requires=[
-        "cwl-utils",
-        "antlr4-python3-runtime",
-    ],
+    install_requires=["cwl-utils", "antlr4-python3-runtime", "regex"],
 )
