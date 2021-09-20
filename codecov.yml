@@ -1,0 +1,2 @@
+ignore:
+  - "wdl2cwl/WdlV1_1Parser.py"

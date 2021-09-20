@@ -1,5 +1,7 @@
 # A WIP translator from [OpenWDL v1.1](https://github.com/openwdl/wdl/tree/main/versions/1.1) to [CWL v1.2](https://w3id.org/cwl/v1.2/)
 
+[![codecov](https://codecov.io/gh/common-workflow-lab/wdl-cwl-translator/branch/main/graph/badge.svg?token=lvcnJHP1hj)](https://codecov.io/gh/common-workflow-lab/wdl-cwl-translator)
+
 Workflow Definition Language (WDL) and Common Workflow Language (CWL)
 are high-level languages for describing how to run a sequence of
 programs to perform a data analysis task.  A workflow consists of a
