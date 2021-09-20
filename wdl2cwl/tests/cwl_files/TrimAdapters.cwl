@@ -4,7 +4,6 @@ inputs:
   - id: fastq1
     type: File
   - id: fastq2
-    default: ''
     type:
       - File
       - 'null'
@@ -44,7 +43,7 @@ requirements:
             fastq-mcf \
                -C 200000 $(inputs.adapter_list.path) \
                $(inputs.fastq1.path) \
-               $(inputs.fastq2) \
+               $(inputs.fastq2 === null ? "" : inputs.fastq2.path) \
                -o fastq_R1.trimmed.fastq.gz \
                -o fastq_R2.trimmed.fastq.gz
   - class: InlineJavascriptRequirement

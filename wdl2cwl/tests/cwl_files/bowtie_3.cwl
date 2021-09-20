@@ -7,7 +7,9 @@ inputs:
         type: array
   - id: indexFiles
     type:
-      - items: File
+      - items:
+          - File
+          - 'null'
         type: array
   - id: seedmms
     type:
@@ -72,7 +74,7 @@ requirements:
             $(inputs.allowContain ? "--allow-contain" : "") \
             --threads $(inputs.threads) \
             $(inputs.samRG === null ? "" : "--sam-RG '" + inputs.samRG )$(inputs.samRG === null  ? "" : "'") \
-            $(inputs.indexFiles.replace("(\.rev)?\.[0-9]\.ebwt$","")) \
+            $inputs.indexFiles.length === 0 ? "" :inputs.indexFiles.replace("(\.rev)?\.[0-9]\.ebwt$","")) \
             $(",".join(inputs.readsUpstream.map(function(el) { return el.path}))) \
             | picard -Xmx$(inputs.picardXmx) SortSam \
             INPUT=/dev/stdin \

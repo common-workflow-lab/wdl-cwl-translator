@@ -4,7 +4,6 @@ inputs:
   - id: inputR1
     type: File
   - id: inputR2
-    default: ''
     type:
       - File
       - 'null'
@@ -21,12 +20,10 @@ inputs:
   - id: readgroup
     type: string
   - id: sortThreads
-    default: ''
     type:
       - int
       - 'null'
   - id: memoryGb
-    default: ''
     type:
       - int
       - 'null'
@@ -65,9 +62,9 @@ requirements:
             mkdir -p "\$(dirname $(inputs.outputBam))"
             hisat2 \
             -p $(inputs.threads) \
-            -x $(inputs["indexFiles[0]"]) \
-            $(inputs.inputR2 === "" ? "-U": ""-1"") $(inputs.inputR1.path) \
-            -2$(inputs.inputR2) \
+            -x $(inputs.indexFiles[0]) \
+            $(inputs.inputR2 === null  ? "-U" : "-1") $(inputs.inputR1.path) \
+            $(inputs.inputR2 === null ? "" : "-2" + inputs.inputR2.path ) \
             --rg-id $(inputs.readgroup) \
             --rg 'SM:$(inputs.sample)' \
             --rg 'LB:$(inputs.library)' \

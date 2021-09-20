@@ -111,6 +111,9 @@ def get_command(
     start_index = 0
     end_index = 0
 
+    unbound_input_names = []
+    for i in unbound:
+        unbound_input_names.append(i[1])
     # continue till the end of the string
     while index < len(command):
 
@@ -133,20 +136,60 @@ def get_command(
 
             # if sub string has a concatenation
             if "+" in sub_str:
+                optional_check = False
+                optional_inputs = []
                 split_str = sub_str.split("+")
 
                 for i in split_str:
-                    if '"' in i:
-                        new_command += i.replace('"', "")
-                    else:
+                    if '"' not in i:
                         index = input_names.index(i)
-                        data_type = input_types[index]  # get the data type of the input
-                        if data_type != "File":
-                            new_command += "$(" + inputs(i) + ")"
-            # if sub string has only the input/ variable name
+                        data_type = input_types[index]
+
+                        if "?" in data_type and i in unbound_input_names:
+                            optional_inputs.append(i)
+                            optional_check = True
+
+                if optional_check:  # there is one or more optional variable
+                    temp_command = ""
+                    null_string = ""
+
+                    for i in split_str:
+                        if '"' in i:
+                            temp_command += i + " + "
+                        else:
+                            index = input_names.index(i)
+                            data_type = input_types[
+                                index
+                            ]  # get the data type of the input
+
+                            path_str = ""
+                            if "File" in data_type:
+                                path_str = ".path"
+
+                            if i in optional_inputs:
+                                null_string += inputs(i) + " ||"
+
+                            temp_command += inputs(i) + path_str + " + "
+
+                    new_command += (
+                        "$("
+                        + null_string[:-2]
+                        + '=== null ? "" : '
+                        + temp_command[:-2]
+                        + ")"
+                    )
+                else:
+                    for i in split_str:
+                        if '"' in i:
+                            new_command += i.replace('"', "")
+                        else:
+                            index = input_names.index(i)
+                            data_type = input_types[index]
+
+                            if data_type != "File":
+                                new_command += "$(" + inputs(i) + ")"
 
             elif ("true" and "false") in sub_str:
-
                 true_value = sub_str[
                     sub_str.find("true") + 5 : sub_str.find("false")
                 ].strip()
@@ -155,29 +198,52 @@ def get_command(
                 input_name = temp[1].split(temp[1][0])[2]
 
                 if input_name in input_names:
-                    append_str = (
-                        "$("
-                        + inputs(input_name)
-                        + " ? "
-                        + true_value
-                        + ' : "'
-                        + false_value
-                        + '")'
-                    )
-                    new_command += append_str
+
+                    index = input_names.index(input_name)
+                    data_type = input_types[index]
+
+                    # true false, when the input is optional and there's no default value assigned
+                    if "?" in data_type and input_name in unbound_input_names:
+
+                        append_str = (
+                            "$"
+                            + inputs(input_name)
+                            + ' === null ? "'
+                            + false_value
+                            + '"'
+                            + " : "
+                            + true_value
+                            + ")"
+                        )
+                        new_command += append_str
+
+                    else:
+
+                        append_str = (
+                            "$("
+                            + inputs(input_name)
+                            + " ? "
+                            + true_value
+                            + ' : "'
+                            + false_value
+                            + '")'
+                        )
+                        new_command += append_str
 
                 elif "defined(" in input_name:
                     sub_str = input_name[input_name.find("(") + 1 : -1]
                     index = input_names.index(sub_str)
                     data_type = input_types[index]
                     check_str = ""
+
                     if "Array" in data_type:
                         check_str = ".length === 0 "
                     else:
-                        check_str = ' === "" '
+                        check_str = " === null "
+
                     append_str = (
-                        f"$({inputs(sub_str)}{check_str}? "
-                        f'"{false_value}": "{true_value}")'
+                        f"$({inputs(sub_str)}{check_str} ? "
+                        f'"{false_value}" : {true_value})'
                     )
                     new_command += append_str
 
@@ -193,9 +259,15 @@ def get_command(
                     temp_append_str = ".map(function(el) { return el.path})"
 
                 if input_name in input_names:
-                    append_str = (
-                        f'$("{separator}".join({inputs(input_name)}{temp_append_str}))'
+                    append_str_sub = (
+                        f'("{separator}".join({inputs(input_name)}{temp_append_str}))'
                     )
+
+                    if "?" in data_type and input_name in unbound_input_names:
+                        append_str = f'$({inputs(input_name)} === null ? "" : {(append_str_sub)})'
+                    else:
+                        append_str = f'$("{separator}".join({inputs(input_name)}{temp_append_str}))'
+
                     new_command += append_str
 
             elif "sub(" in sub_str:
@@ -205,25 +277,50 @@ def get_command(
                 append_str_sub = ""
                 if search_index:
                     append_str_sub = (
-                        "$("
-                        + inputs(re.sub(r"\[[0-9]\]", "", temp[0].replace("sub(", "")))
+                        inputs(re.sub(r"\[[0-9]\]", "", temp[0].replace("sub(", "")))
                         + temp[0][temp[0].find("[") :]
                     )
                 else:
-                    append_str_sub = "$(" + inputs(temp[0].replace("sub(", ""))
+                    append_str_sub = inputs(temp[0].replace("sub(", ""))
+
+                input_name = ""
+                if search_index:
+                    input_name = temp[0][: temp[0].find("[")].replace("sub(", "")
+                else:
+                    input_name = temp[0].replace("sub(", "")
+
+                index = input_names.index(input_name)
+                data_type = input_types[index]
 
                 append_str = ""
+
                 if len(temp) == 3:
-                    append_str = (
+                    append_str_common = (
                         append_str_sub
                         + ".replace("
                         + temp[1]
                         + ","
                         + temp[2][:-1]
-                        + "))"
+                        + ")"
                     )
 
-                new_command += append_str
+                    check_str = ""
+                    if "Array" in data_type:
+                        check_str = ".length === 0 "
+
+                    if "?" in data_type and input_name in unbound_input_names:
+                        append_str = (
+                            "$"
+                            + inputs(input_name)
+                            + check_str
+                            + '? "" :'
+                            + append_str_common
+                            + ")"
+                        )
+                    else:
+                        append_str = "$(" + append_str_common + ")"
+
+                    new_command += append_str
             else:
 
                 data_type = (
@@ -233,10 +330,22 @@ def get_command(
                 )
 
                 append_str = ""
-                if data_type == "File":
-                    append_str = f"$({inputs(sub_str)}.path)"
+
+                if "?" in data_type and sub_str in unbound_input_names:
+                    if "File" in data_type:
+                        append_str = f'$({inputs(sub_str)} === null ? "" : {inputs(sub_str)}.path)'
+                    else:
+                        append_str = (
+                            f'$({inputs(sub_str)} === null ? "" : {inputs(sub_str)})'
+                        )
+
                 else:
-                    append_str = f"$({inputs(sub_str)})"
+
+                    if data_type == "File":
+                        append_str = f"$({inputs(sub_str)}.path)"
+                    else:
+                        append_str = "$(inputs." + sub_str + ")"
+
                 new_command = new_command + append_str
 
             index = end_index + 1
@@ -339,25 +448,12 @@ def get_input(
             input_type = temp_type if "?" not in i[0] else [temp_type, "null"]
             input_name = i[1]
 
-            if "?" not in i[0]:
-                inputs.append(
-                    cwl.CommandInputParameter(
-                        id=input_name,
-                        type=[
-                            cwl.CommandInputArraySchema(items=input_type, type="array")
-                        ],
-                    )
+            inputs.append(
+                cwl.CommandInputParameter(
+                    id=input_name,
+                    type=[cwl.CommandInputArraySchema(items=input_type, type="array")],
                 )
-            else:
-                inputs.append(
-                    cwl.CommandInputParameter(
-                        id=input_name,
-                        type=[
-                            cwl.CommandInputArraySchema(items=input_type, type="array")
-                        ],
-                        default=[],
-                    )
-                )
+            )
 
         else:
             input_type = (
@@ -366,14 +462,7 @@ def get_input(
                 else [wdl_type[i[0].replace("?", "")], "null"]
             )
 
-            if "?" in i[0]:
-                inputs.append(
-                    cwl.CommandInputParameter(
-                        id=input_name, type=input_type, default=""
-                    )
-                )
-            else:
-                inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+            inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
 
     for i in bound_input:
 

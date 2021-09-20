@@ -12,17 +12,14 @@ inputs:
   - id: template
     type: File
   - id: evaluationRegions
-    default: ''
     type:
       - File
       - 'null'
   - id: bedRegions
-    default: ''
     type:
       - File
       - 'null'
   - id: sample
-    default: ''
     type:
       - string
       - 'null'
@@ -118,14 +115,14 @@ requirements:
             rtg RTG_MEM=$(inputs.rtgMem) vcfeval \
             --baseline $(inputs.baseline.path) \
             --calls $(inputs.calls.path) \
-            --evaluation-regions $(inputs.evaluationRegions) \
-            --bed-regions $(inputs.bedRegions) \
+            $(inputs.evaluationRegions === null ? "" : "--evaluation-regions " + inputs.evaluationRegions.path ) \
+            $(inputs.bedRegions === null ? "" : "--bed-regions " + inputs.bedRegions.path ) \
             --output $(inputs.outputDir) \
             --template $(inputs.template.path) \
             $(inputs.allRecords ? "--all-records" : "") \
             $(inputs.decompose ? "--decompose" : "") \
             $(inputs.refOverlap ? "--ref-overlap" : "") \
-            --sample $(inputs.sample) \
+            $(inputs.sample === null ? "" : "--sample " + inputs.sample ) \
             $(inputs.squashPloidy ? "--squash-ploidy" : "") \
             --output-mode $(inputs.outputMode) \
             --threads $(inputs.threads)

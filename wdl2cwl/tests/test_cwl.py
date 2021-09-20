@@ -24,7 +24,8 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
             "wdl_files/CollectQualityYieldMetrics.wdl",
             "cwl_files/CollectQualityYieldMetrics.cwl",
         ),
-        ("wdl_files/seqtk.wdl", "cwl_files/seqtk.cwl"),
+        ("wdl_files/seqtk_1.wdl", "cwl_files/seqtk_1.cwl"),
+        ("wdl_files/seqtk_2.wdl", "cwl_files/seqtk_2.cwl"),
         ("wdl_files/hisat2_1.wdl", "cwl_files/hisat2_1.cwl"),
         ("wdl_files/hisat2_2.wdl", "cwl_files/hisat2_2.cwl"),
         (
@@ -34,6 +35,7 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
         ("wdl_files/rtg.wdl", "cwl_files/rtg.cwl"),
         ("wdl_files/bowtie_1.wdl", "cwl_files/bowtie_1.cwl"),
         ("wdl_files/bowtie_2.wdl", "cwl_files/bowtie_2.cwl"),
+        ("wdl_files/bowtie_3.wdl", "cwl_files/bowtie_3.cwl"),
         ("wdl_files/UmiCorrection.wdl", "cwl_files/UmiCorrection.cwl"),
         ("wdl_files/vardict.wdl", "cwl_files/vardict.cwl"),
         ("wdl_files/rtg.wdl", "cwl_files/rtg.cwl"),

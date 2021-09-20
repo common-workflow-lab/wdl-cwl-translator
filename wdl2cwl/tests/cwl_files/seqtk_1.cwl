@@ -6,12 +6,10 @@ inputs:
   - id: fractionOrNumber
     type: float
   - id: preCommand
-    default: ''
     type:
       - string
       - 'null'
   - id: seed
-    default: ''
     type:
       - int
       - 'null'
@@ -37,9 +35,9 @@ requirements:
 
                     set -e -o pipefail
                     mkdir -p "\$(dirname $(inputs.outFilePath))"
-                    $(inputs.preCommand)
+                    $(inputs.preCommand === null ? "" : inputs.preCommand)
                     seqtk sample \
-            	    -s $(inputs.seed) \
+            	    $(inputs.seed === null ? "" : "-s " + inputs.seed ) \
                     $(inputs.twoPassMode ? "-2 " : "") \
                     $(inputs.sequenceFile.path) \
                     $(inputs.fractionOrNumber) \

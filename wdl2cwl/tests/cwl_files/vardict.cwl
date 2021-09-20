@@ -16,17 +16,14 @@ inputs:
   - id: outputVcf
     type: string
   - id: normalSampleName
-    default: ''
     type:
       - string
       - 'null'
   - id: normalBam
-    default: ''
     type:
       - File
       - 'null'
   - id: normalBamIndex
-    default: ''
     type:
       - File
       - 'null'
@@ -94,17 +91,17 @@ requirements:
             -th $(inputs.threads) \
             -G $(inputs.referenceFasta.path) \
             -N $(inputs.tumorSampleName) \
-            -b "$(inputs.tumorBam.path)|$(inputs.normalBam)" \
-            $(inputs.normalBam === "" ? "-z": """") \
+            -b "$(inputs.tumorBam.path)$(inputs.normalBam === null ? "" : "|" + inputs.normalBam.path )" \
+            $(inputs.normalBam === null  ? "-z" : "") \
             -c $(inputs.chromosomeColumn) \
             -S $(inputs.startColumn) \
             -E $(inputs.endColumn) \
             -g $(inputs.geneColumn) \
             $(inputs.bedFile.path) | \
-            $(inputs.normalBam === "" ? "teststrandbias.R": ""testsomatic.R"") | \
-            $(inputs.normalBam === "" ? "var2vcf_valid.pl": ""var2vcf_paired.pl"") \
-            -N "$(inputs.tumorSampleName)|$(inputs.normalSampleName)" \
-            $(inputs.normalBam === "" ? "-E": """") \
+            $(inputs.normalBam === null  ? "teststrandbias.R" : "testsomatic.R") | \
+            $(inputs.normalBam === null  ? "var2vcf_valid.pl" : "var2vcf_paired.pl") \
+            -N "$(inputs.tumorSampleName)$(inputs.normalSampleName === null ? "" : "|" + inputs.normalSampleName )" \
+            $(inputs.normalBam === null  ? "-E" : "") \
             $(inputs.outputCandidateSomaticOnly ? "-M" : "") \
             $(inputs.outputAllVariantsAtSamePosition ? "-A" : "") \
             -Q $(inputs.mappingQuality) \
