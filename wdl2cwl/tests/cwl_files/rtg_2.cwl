@@ -115,23 +115,23 @@ requirements:
             rtg RTG_MEM=$(inputs.rtgMem) vcfeval \
             --baseline $(inputs.baseline.path) \
             --calls $(inputs.calls.path) \
-            $(inputs["evaluationRegions"].path === null ? "" : "--evaluation-regions " + inputs["evaluationRegions"].path ) \
-            $(inputs["bedRegions"].path === null ? "" : "--bed-regions " + inputs["bedRegions"].path ) \
+            $(inputs.evaluationRegions === null ? "" : "--evaluation-regions " + inputs.evaluationRegions.path ) \
+            $(inputs.bedRegions === null ? "" : "--bed-regions " + inputs.bedRegions.path ) \
             --output $(inputs.outputDir) \
             --template $(inputs.template.path) \
-            $(inputs["allRecords"] ? "--all-records" : "") \
-            $(inputs["decompose"] ? "--decompose" : "") \
-            $(inputs["refOverlap"] ? "--ref-overlap" : "") \
-            $(inputs["sample"] === null ? "" : "--sample " + inputs["sample"] ) \
-            $(inputs["squashPloidy"] ? "--squash-ploidy" : "") \
+            $(inputs.allRecords ? "--all-records" : "") \
+            $(inputs.decompose ? "--decompose" : "") \
+            $(inputs.refOverlap ? "--ref-overlap" : "") \
+            $(inputs.sample === null ? "" : "--sample " + inputs.sample ) \
+            $(inputs.squashPloidy ? "--squash-ploidy" : "") \
             --output-mode $(inputs.outputMode) \
             --threads $(inputs.threads)
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-
         ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(inputs.memory.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;

@@ -35,13 +35,13 @@ requirements:
 
                     set -e -o pipefail
                     mkdir -p "\$(dirname $(inputs.outFilePath))"
-                    $(inputs["preCommand"] === null ? "" : inputs["preCommand"])
+                    $(inputs.preCommand === null ? "" : inputs.preCommand)
                     seqtk sample \
-            	    $(inputs["seed"] === null ? "" : "-s " + inputs["seed"] ) \
-                    $(inputs["twoPassMode"] ? "-2 " : "") \
+            	    $(inputs.seed === null ? "" : "-s " + inputs.seed ) \
+                    $(inputs.twoPassMode ? "-2 " : "") \
                     $(inputs.sequenceFile.path) \
                     $(inputs.fractionOrNumber) \
-                    $(inputs["zip"] ? "| gzip" : "") \
+                    $(inputs.zip ? "| gzip" : "") \
                     >  $(inputs.outFilePath)
   - class: InlineJavascriptRequirement
 cwlVersion: v1.2

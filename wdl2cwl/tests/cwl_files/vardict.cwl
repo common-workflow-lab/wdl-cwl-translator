@@ -91,19 +91,19 @@ requirements:
             -th $(inputs.threads) \
             -G $(inputs.referenceFasta.path) \
             -N $(inputs.tumorSampleName) \
-            -b "$(inputs.tumorBam.path)$(inputs["normalBam"].path === null ? "" : "|" + inputs["normalBam"].path )" \
-            $(inputs["normalBam"].path === null ? "-z": "") \
+            -b "$(inputs.tumorBam.path)$(inputs.normalBam === null ? "" : "|" + inputs.normalBam.path )" \
+            $(inputs.normalBam === null  ? "-z" : "") \
             -c $(inputs.chromosomeColumn) \
             -S $(inputs.startColumn) \
             -E $(inputs.endColumn) \
             -g $(inputs.geneColumn) \
             $(inputs.bedFile.path) | \
-            $(inputs["normalBam"].path === null ? "teststrandbias.R": "testsomatic.R") | \
-            $(inputs["normalBam"].path === null ? "var2vcf_valid.pl": "var2vcf_paired.pl") \
-            -N "$(inputs.tumorSampleName)$(inputs["normalSampleName"] === null ? "" : "|" + inputs["normalSampleName"] )" \
-            $(inputs["normalBam"].path === null ? "-E": "") \
-            $(inputs["outputCandidateSomaticOnly"] ? "-M" : "") \
-            $(inputs["outputAllVariantsAtSamePosition"] ? "-A" : "") \
+            $(inputs.normalBam === null  ? "teststrandbias.R" : "testsomatic.R") | \
+            $(inputs.normalBam === null  ? "var2vcf_valid.pl" : "var2vcf_paired.pl") \
+            -N "$(inputs.tumorSampleName)$(inputs.normalSampleName === null ? "" : "|" + inputs.normalSampleName )" \
+            $(inputs.normalBam === null  ? "-E" : "") \
+            $(inputs.outputCandidateSomaticOnly ? "-M" : "") \
+            $(inputs.outputAllVariantsAtSamePosition ? "-A" : "") \
             -Q $(inputs.mappingQuality) \
             -d $(inputs.minimumTotalDepth) \
             -v $(inputs.minimumVariantDepth) \
@@ -113,8 +113,8 @@ requirements:
   - class: ResourceRequirement
     ramMin: |-
         ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(inputs.memory.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -128,7 +128,7 @@ requirements:
         return parseInt(memory);
         }
   - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes* 60)
+    timelimit: $(inputs.timeMinutes * 60)
   - class: ResourceRequirement
     coresMin: $(inputs.threads + 2)
 cwlVersion: v1.2

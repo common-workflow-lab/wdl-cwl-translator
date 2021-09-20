@@ -96,19 +96,19 @@ requirements:
             --reads $(inputs.inputBam.path) \
             --model_type $(inputs.modelType) \
             --output_vcf $(inputs.outputVcf) \
-            $(inputs["outputGVcf"] === null ? "" : "--output_gvcf " + inputs["outputGVcf"] ) \
-            $(inputs["customizedModel"].path === null ? "" : "--customized_model " + inputs["customizedModel"].path ) \
-            $(inputs["numShards"] === null ? "" : "--num_shards " + inputs["numShards"] ) \
-            $(inputs["regions"].path === null ? "" : "--regions " + inputs["regions"].path ) \
-            $(inputs["sampleName"] === null ? "" : "--sample_name " + inputs["sampleName"] ) \
-            $(inputs["postprocessVariantsExtraArgs"] === null ? "" : "--postprocess_variants_extra_args " + inputs["postprocessVariantsExtraArgs"] ) \
-            $(inputs["VCFStatsReport"] ? "--vcf_stats_report" : "--novcf_stats_report")
+            $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf ) \
+            $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path ) \
+            $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards ) \
+            $(inputs.regions === null ? "" : "--regions " + inputs.regions.path ) \
+            $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName ) \
+            $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs ) \
+            $(inputs.VCFStatsReport ? "--vcf_stats_report" : "--novcf_stats_report")
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement
     ramMin: |-
         ${
-        var unit = inputs["memory"].match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs["memory"].match(/[0-9]+/g));
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(inputs.memory.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -122,7 +122,7 @@ requirements:
         return parseInt(memory);
         }
   - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes* 60)
+    timelimit: $(inputs.timeMinutes * 60)
 cwlVersion: v1.2
 baseCommand:
   - sh
