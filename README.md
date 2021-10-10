@@ -23,11 +23,10 @@ Research Pipelines (WARP) Whole Genome Germline Single Sample
 workflow, run it on a scale-out, production CWL runner (such as
 Arvados or Toil), and show that the results are equivalent.
 
-There is a previous proof of concept called
-[wdl2cwl](https://github.com/common-workflow-lab/wdl2cwl), based on
-much older versions of WDL and CWL.  It should be used for
-inspiration, however we expect this project will involve writing a new
-program that uses the ANTLR grammar for WDL.
+More background reading on CWL:
+
+- A recent paper: https://arxiv.org/abs/2105.07028 ([Full PDF](https://arxiv.org/pdf/2105.07028.pdf)
+- https://www.commonwl.org/user_guide/
 
 For some discussion comparing the two languages (mainly from the perspective of translating in the other direction, CWL to WDL), see this document:
 
