@@ -33,6 +33,34 @@ For some discussion comparing the two languages (mainly from the perspective of 
 
 https://github.com/dnanexus/dxCompiler/blob/main/doc/CWL_v1.2.0_to_WDL_v1.md
 
+## Installation
+
+### Prequisites
+
+Python 3.6+
+
+### Instructions
+
+These instruction assume a Linux / macOS operating system.
+
+``` shell
+git clone https://github.com/common-workflow-lab/wdl-cwl-translator/
+cd wdl-cwl-translator
+python3 -m venv env
+source env/bin/activate
+pip install -U pip setuptools wheel
+pip install -e .
+```
+
+## Development
+
+### Running the tests
+
+```
+make install-dep
+make test
+```
+
 ### Adding Test Cases
 
 1. Find a WDL workflow. Given below are some links that can be used to find these workflows: 
