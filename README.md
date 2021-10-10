@@ -25,7 +25,7 @@ Arvados or Toil), and show that the results are equivalent.
 
 More background reading on CWL:
 
-- A recent paper: https://arxiv.org/abs/2105.07028 ([Full PDF](https://arxiv.org/pdf/2105.07028.pdf)
+- A recent paper: https://arxiv.org/abs/2105.07028 ([Full PDF](https://arxiv.org/pdf/2105.07028.pdf))
 - https://www.commonwl.org/user_guide/
 
 For some discussion comparing the two languages (mainly from the perspective of translating in the other direction, CWL to WDL), see this document:
