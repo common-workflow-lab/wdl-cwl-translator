@@ -662,9 +662,13 @@ def convert(workflow: str) -> str:
         if "String" in i[0]:
             outputs.append(
                 cwl.CommandOutputParameter(
-                    id=output_name, type="string", 
-                    outputBinding=cwl.CommandOutputBinding(glob="result.txt", 
-                    outputEval="$(self.contents.replace(/[\r\n]+$/, '')"))
+                    id=output_name,
+                    type="string",
+                    outputBinding=cwl.CommandOutputBinding(
+                        glob="result.txt",
+                        outputEval="$(self.contents.replace(/[\r\n]+$/, '')",
+                    ),
+                )
             )
             continue
 
@@ -756,7 +760,7 @@ def main() -> None:
 
     if args.output:
         with open(args.output, "w") as result:
-            result.write(str(convert(args.workflow))) 
+            result.write(str(convert(args.workflow)))
 
 
 if __name__ == "__main__":
