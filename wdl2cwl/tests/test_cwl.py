@@ -47,11 +47,22 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
         ("wdl_files/transcriptclean_1.wdl", "cwl_files/transcriptclean_1.cwl"),
         ("wdl_files/gatk_1.wdl", "cwl_files/gatk_1.cwl"),
         ("wdl_files/deepvariant.wdl", "cwl_files/deepvariant.cwl"),
-        ("wdl2cwl/tests/wdl_files/validateOptimus_1.wdl", "wdl2cwl/tests/cwl_files/validateOptimus_1.cwl")
-        ("wdl2cwl/tests/wdl_files/validateOptimus_2.wdl", "wdl2cwl/tests/cwl_files/validateOptimus_2.cwl")
-        ("wdl2cwl/tests/wdl_files/validateOptimus_3.wdl", "wdl2cwl/tests/cwl_files/validateOptimus_3.cwl")
-        ("wdl2cwl/tests/wdl_files/validateOptimus_4.wdl", "wdl2cwl/tests/cwl_files/validateOptimus_4.cwl")
-        ("wdl2cwl/tests/wdl_files/validateOptimus_5.wdl", "wdl2cwl/tests/cwl_files/validateOptimus_5.cwl")
+        (
+            "wdl2cwl/tests/wdl_files/validateOptimus_1.wdl",
+            "wdl2cwl/tests/cwl_files/validateOptimus_1.cwl",
+        )(
+            "wdl2cwl/tests/wdl_files/validateOptimus_2.wdl",
+            "wdl2cwl/tests/cwl_files/validateOptimus_2.cwl",
+        )(
+            "wdl2cwl/tests/wdl_files/validateOptimus_3.wdl",
+            "wdl2cwl/tests/cwl_files/validateOptimus_3.cwl",
+        )(
+            "wdl2cwl/tests/wdl_files/validateOptimus_4.wdl",
+            "wdl2cwl/tests/cwl_files/validateOptimus_4.cwl",
+        )(
+            "wdl2cwl/tests/wdl_files/validateOptimus_5.wdl",
+            "wdl2cwl/tests/cwl_files/validateOptimus_5.cwl",
+        ),
     ],
 )
 class TestParameterized:
