@@ -659,19 +659,6 @@ def convert(workflow: str) -> str:
         output_name = i[1]
         output_glob = get_output(i[2], input_names)
 
-        if "String" in i[0]:
-            outputs.append(
-                cwl.CommandOutputParameter(
-                    id=output_name,
-                    type="string",
-                    outputBinding=cwl.CommandOutputBinding(
-                        glob="result.txt",
-                        outputEval="$(self.contents.replace(/[\r\n]+$/, '')",
-                    ),
-                )
-            )
-            continue
-
         if "Array" in i[0]:
             # output_type = ""
             temp_type = wdl_type[
@@ -685,6 +672,17 @@ def convert(workflow: str) -> str:
                         cwl.CommandOutputArraySchema(items=output_type, type="array")
                     ],
                     outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
+            )
+        elif "read_string" in i[2]:
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type="string",
+                    outputBinding=cwl.CommandOutputBinding(
+                        glob=output_glob,
+                        outputEval="$(self.contents.replace(/[\r\n]+$/, '')",
+                    ),
                 )
             )
         elif i[2] == "stdout()":
