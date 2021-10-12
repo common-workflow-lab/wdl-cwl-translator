@@ -14,9 +14,7 @@ outputs:
     type: string
     outputBinding:
         glob: ''
-        outputEval: |-
-            $(self.contents.replace(/[
-            ]+$/, '')
+        outputEval: $(self.contents.replace(/[\r\n]+$/, ''))
   - id: new_reference_matrix
     type: File
     outputBinding:

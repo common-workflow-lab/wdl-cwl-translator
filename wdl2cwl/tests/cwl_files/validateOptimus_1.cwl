@@ -10,9 +10,7 @@ outputs:
     type: string
     outputBinding:
         glob: read_string(result.txt)
-        outputEval: |-
-            $(self.contents.replace(/[
-            ]+$/, '')
+        outputEval: $(self.contents.replace(/[\r\n]+$/, ''))
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6

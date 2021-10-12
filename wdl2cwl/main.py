@@ -674,14 +674,14 @@ def convert(workflow: str) -> str:
                     outputBinding=cwl.CommandOutputBinding(glob=output_glob),
                 )
             )
-        elif "read_string" in i[2]:
+        elif "read_string(" in i[2]:
             outputs.append(
                 cwl.CommandOutputParameter(
                     id=output_name,
                     type="string",
                     outputBinding=cwl.CommandOutputBinding(
                         glob=output_glob,
-                        outputEval="$(self.contents.replace(/[\r\n]+$/, '')",
+                        outputEval=r"$(self.contents.replace(/[\r\n]+$/, ''))",
                     ),
                 )
             )
@@ -711,7 +711,7 @@ def convert(workflow: str) -> str:
         id=ast.task_name,
         inputs=cwl_inputs,
         requirements=requirements if requirements else None,
-        outputs=outputs if outputs else None,
+        outputs=outputs if outputs else [],
         cwlVersion="v1.2",
         baseCommand=base_command,
     )

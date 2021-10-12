@@ -9,6 +9,7 @@ inputs:
     type: string
   - id: loom_validation_result
     type: string
+outputs: []
 requirements:
   - class: DockerRequirement
     dockerPull: ubuntu:18.04
