@@ -50,16 +50,20 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
         (
             "wdl2cwl/tests/wdl_files/validateOptimus_1.wdl",
             "wdl2cwl/tests/cwl_files/validateOptimus_1.cwl",
-        )(
+        ),
+        (
             "wdl2cwl/tests/wdl_files/validateOptimus_2.wdl",
             "wdl2cwl/tests/cwl_files/validateOptimus_2.cwl",
-        )(
+        ),
+        (
             "wdl2cwl/tests/wdl_files/validateOptimus_3.wdl",
             "wdl2cwl/tests/cwl_files/validateOptimus_3.cwl",
-        )(
+        ),
+        (
             "wdl2cwl/tests/wdl_files/validateOptimus_4.wdl",
             "wdl2cwl/tests/cwl_files/validateOptimus_4.cwl",
-        )(
+        ),
+        (
             "wdl2cwl/tests/wdl_files/validateOptimus_5.wdl",
             "wdl2cwl/tests/cwl_files/validateOptimus_5.cwl",
         ),
