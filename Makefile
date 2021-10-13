@@ -113,7 +113,7 @@ pylint_report.txt: $(PYSOURCES)
 diff_pylint_report: pylint_report.txt
 	diff-quality --violations=pylint pylint_report.txt
 
-.coverage: testcov
+.coverage:
 	pytest --cov --cov-config=.coveragerc --cov-report= -n auto
 
 coverage.xml: .coverage
@@ -135,8 +135,11 @@ diff-cover.html: coverage.xml
 	diff-cover $^ --html-report $@
 
 ## test        : run the ${MODULE} test suite
-test: $(PYSOURCES)
+test: $(PYSOURCES) cwltest
 	pytest
+
+cwltest: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
+	cd wdl2cwl/tests && cwltest --tool cwltool --test cwl_tests.yaml
 
 ## testcov     : run the ${MODULE} test suite and collect coverage
 testcov: $(PYSOURCES)
