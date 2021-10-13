@@ -9,6 +9,7 @@ outputs:
   - id: result
     type: string
     outputBinding:
+        loadContents: true
         glob: result.txt
         outputEval: $(self.contents.replace(/[\r\n]+$/, ''))
 requirements:
