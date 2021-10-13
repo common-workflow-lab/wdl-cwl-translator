@@ -138,8 +138,8 @@ diff-cover.html: coverage.xml
 test: $(PYSOURCES) cwltest
 	pytest
 
-cwltest: wdl2cwl/cwl_files/*.cwl wdl2cwl/tests/*
-	cwltest --test wdl2cwl/tests/cwl_tests.yaml
+cwltest: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
+	cd wdl2cwl/tests && cwltest --test cwl_tests.yaml
 
 ## testcov     : run the ${MODULE} test suite and collect coverage
 testcov: $(PYSOURCES)

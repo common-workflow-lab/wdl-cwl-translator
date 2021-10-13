@@ -1,6 +1,7 @@
 # This file is a cwltest format file
 # https://github.com/common-workflow-language/cwltest/blob/main/cwltest/cwltest-schema.yml
-- tool: cwl_files/validateOptimus_2.cwl
+- doc: validateOptimus_2
+  tool: cwl_files/validateOptimus_2.cwl
   job: inputs/validateOptimus_2.yaml
   output:
     result: PASS
