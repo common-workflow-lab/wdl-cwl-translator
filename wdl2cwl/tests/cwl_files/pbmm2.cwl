@@ -68,5 +68,5 @@ requirements:
     coresMin: $(inputs.cores)
 cwlVersion: v1.2
 baseCommand:
-  - sh
+  - bash
   - example.sh

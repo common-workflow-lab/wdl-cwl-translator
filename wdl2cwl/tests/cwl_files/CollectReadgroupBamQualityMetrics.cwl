@@ -64,5 +64,5 @@ requirements:
     ramMin: 7168
 cwlVersion: v1.2
 baseCommand:
-  - sh
+  - bash
   - example.sh

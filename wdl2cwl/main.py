@@ -548,7 +548,7 @@ def convert(workflow: str) -> str:
         command_check,
     )
 
-    base_command = ["sh", "example.sh"]
+    base_command = ["bash", "example.sh"]
 
     cwl_inputs: List[cwl.CommandInputParameter] = []
     cwl_inputs = get_input(cwl_inputs, ast.task_inputs, ast.task_inputs_bound)
