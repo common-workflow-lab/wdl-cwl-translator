@@ -64,5 +64,5 @@ requirements:
     coresMin: 1
 cwlVersion: v1.2
 baseCommand:
-  - sh
+  - bash
   - example.sh

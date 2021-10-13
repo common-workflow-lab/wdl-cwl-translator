@@ -135,8 +135,11 @@ diff-cover.html: coverage.xml
 	diff-cover $^ --html-report $@
 
 ## test        : run the ${MODULE} test suite
-test: $(PYSOURCES)
+test: $(PYSOURCES) cwltest
 	pytest
+
+cwltest: wdl2cwl/cwl_files/*.cwl wdl2cwl/tests/*
+	cwltest --test wdl2cwl/tests/cwl_tests.yaml
 
 ## testcov     : run the ${MODULE} test suite and collect coverage
 testcov: $(PYSOURCES)

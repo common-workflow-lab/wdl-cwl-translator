@@ -52,5 +52,5 @@ requirements:
     timelimit: $(inputs.timeMinutes * 60)
 cwlVersion: v1.2
 baseCommand:
-  - sh
+  - bash
   - example.sh
