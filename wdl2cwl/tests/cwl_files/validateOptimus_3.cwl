@@ -13,8 +13,9 @@ outputs:
   - id: result
     type: string
     outputBinding:
+        loadContents: true
         glob: ''
-        outputEval: $(self.contents.replace(/[\r\n]+$/, ''))
+        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
   - id: new_reference_matrix
     type: File
     outputBinding:

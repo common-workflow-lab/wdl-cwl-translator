@@ -11,7 +11,7 @@ outputs:
     outputBinding:
         loadContents: true
         glob: result.txt
-        outputEval: $(self.contents.replace(/[\r\n]+$/, ''))
+        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6
