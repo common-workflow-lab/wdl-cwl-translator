@@ -680,7 +680,7 @@ def convert(workflow: str) -> str:
                     id=output_name,
                     type="string",
                     outputBinding=cwl.CommandOutputBinding(
-                        glob=output_glob,
+                        glob=output_glob.replace("read_string(", "")[:-1],
                         outputEval=r"$(self.contents.replace(/[\r\n]+$/, ''))",
                     ),
                 )

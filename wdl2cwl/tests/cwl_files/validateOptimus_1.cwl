@@ -9,7 +9,7 @@ outputs:
   - id: result
     type: string
     outputBinding:
-        glob: read_string(result.txt)
+        glob: result.txt
         outputEval: $(self.contents.replace(/[\r\n]+$/, ''))
 requirements:
   - class: DockerRequirement
