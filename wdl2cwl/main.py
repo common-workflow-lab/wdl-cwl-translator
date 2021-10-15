@@ -189,6 +189,38 @@ def get_command(
                             if data_type != "File":
                                 new_command += "$(" + inputs(i) + ")"
 
+            elif "length(" in sub_str:
+
+                if ("true" and "false") in sub_str:
+                    true_value = sub_str[
+                        sub_str.find("true") + 5 : sub_str.find("false")
+                    ].strip()
+                    temp = sub_str.split("false=")
+                    false_value = temp[1].split(temp[1][0])[1]
+                    comparison_expression = temp[1].split(temp[1][0])[1]
+                    expression_split = comparison_expression.split()
+                    operator = expression_split[1]
+                    value_to_compare = expression_split[-1]
+                    length_function = expression_split[0]
+                    input_name = length_function[7:-1]
+
+                    # ${if (inputs.samples.length > 0) {return "--samples";} else {return "";}}
+
+                    append_str = (
+                        "$(if (inputs."
+                        + inputs(input_name)
+                        + ".length "
+                        + operator
+                        + " "
+                        + value_to_compare
+                        + ") {return '"
+                        + true_value
+                        + "';} else {return '"
+                        + false_value
+                        + "';})"
+                    )
+                    new_command += append_str
+
             elif ("true" and "false") in sub_str:
                 true_value = sub_str[
                     sub_str.find("true") + 5 : sub_str.find("false")
