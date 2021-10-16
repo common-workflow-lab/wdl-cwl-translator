@@ -1,0 +1,22 @@
+input_bam:
+  class: File
+  path: RP-929.NA12878.bam
+  doc: created from running https://github.com/mr-c/warp/blob/more_public_data/pipelines/broad/reprocessing/external/exome/test_inputs/Plumbing/RP-929.NA12878.json
+input_bam_index:
+  class: File
+  path: RP-929.NA12878.bai 
+  doc: created from running https://github.com/mr-c/warp/blob/more_public_data/pipelines/broad/reprocessing/external/exome/test_inputs/Plumbing/RP-929.NA12878.json
+output_bam_prefix: RP-929.NA12878.readgroup
+ref_dict:
+  class: File
+  location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
+ref_fasta:
+  class: File
+  path: Homo_sapiens_assembly38.fasta
+  location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
+ref_fasta_index:
+  class: File
+  path: Homo_sapiens_assembly38.fasta
+  location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+collect_gc_bias_metrics: False
+preemptible_tries: 3
