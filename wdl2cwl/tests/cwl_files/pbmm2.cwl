@@ -47,6 +47,8 @@ requirements:
             --sample $(inputs.sample) \
             $(inputs.sample).align.bam
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

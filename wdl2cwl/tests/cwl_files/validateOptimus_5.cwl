@@ -53,6 +53,8 @@ requirements:
             if [ "$fail" == "true" ]; then exit 1; fi
 
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: 0
   - class: ResourceRequirement
