@@ -71,6 +71,8 @@ requirements:
             samtools cat -o $(inputs.output_bam_filename) duplicate_marked.bam untagged.bam
 
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

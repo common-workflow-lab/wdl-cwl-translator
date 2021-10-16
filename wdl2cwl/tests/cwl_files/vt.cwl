@@ -44,6 +44,8 @@ requirements:
             $(inputs.ignoreMaskedRef ? "-m " : "") \
             | vt decompose -s - -o $(inputs.outputPath)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

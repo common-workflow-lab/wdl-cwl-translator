@@ -127,6 +127,8 @@ requirements:
             --output-mode $(inputs.outputMode) \
             --threads $(inputs.threads)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${
