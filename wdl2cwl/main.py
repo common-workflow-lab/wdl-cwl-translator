@@ -21,6 +21,7 @@ from wdl2cwl.WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
 
 # WDL-CWL Type Mappings
 wdl_type = {
+    "Array[String]": "string[]",
     "String": "string",
     "File": "File",
     "Int": "int",
@@ -197,25 +198,25 @@ def get_command(
                     ].strip()
                     temp = sub_str.split("false=")
                     false_value = temp[1].split(temp[1][0])[1]
-                    comparison_expression = temp[1].split(temp[1][0])[1]
-                    expression_split = comparison_expression.split()
-                    operator = expression_split[1]
-                    value_to_compare = expression_split[-1]
-                    length_function = expression_split[0]
-                    input_name = length_function[7:-1]
-
-                    # ${if (inputs.samples.length > 0) {return "--samples";} else {return "";}}
+                    comparison_expression = temp[1].split(temp[1][0])[2]
+                    comparison_expression = comparison_expression[7:]
+                    operator = ""
+                    for i in comparison_expression:
+                        if i in ">=!<":
+                            operator += i
+                    input_name = comparison_expression.split(operator)[0][:-1]
+                    value_to_compare = comparison_expression.split(operator)[1]
 
                     append_str = (
-                        "$(if (inputs."
+                        "$(if ("
                         + inputs(input_name)
                         + ".length "
                         + operator
                         + " "
                         + value_to_compare
-                        + ") {return '"
+                        + ") {return "
                         + true_value
-                        + "';} else {return '"
+                        + ";} else {return '"
                         + false_value
                         + "';})"
                     )
