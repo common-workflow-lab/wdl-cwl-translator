@@ -37,6 +37,8 @@ requirements:
                printf FAIL > result.txt
             fi
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: 0
   - class: ResourceRequirement

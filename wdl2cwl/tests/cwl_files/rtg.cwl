@@ -41,6 +41,8 @@ requirements:
             -o $(inputs.outputPath) \
             $(" ".join(inputs.inputFiles.map(function(el) { return el.path})))
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

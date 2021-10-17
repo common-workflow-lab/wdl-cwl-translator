@@ -59,6 +59,8 @@ requirements:
             fi
 
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: 0
   - class: ResourceRequirement
