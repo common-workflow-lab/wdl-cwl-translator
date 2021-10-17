@@ -61,6 +61,8 @@ requirements:
               METRIC_ACCUMULATION_LEVEL=READ_GROUP
             sed -i -e 1,5d "$(inputs.output_bam_prefix).alignment_summary_metrics"   # for reproducibility
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: 7168
 cwlVersion: v1.2

@@ -80,6 +80,8 @@ requirements:
             SORT_ORDER=coordinate \
             CREATE_INDEX=true
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
 cwlVersion: v1.2

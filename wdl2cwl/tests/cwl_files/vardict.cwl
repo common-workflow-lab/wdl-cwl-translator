@@ -110,6 +110,8 @@ requirements:
             -f $(inputs.minimumAlleleFrequency) \
             > $(inputs.outputVcf)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

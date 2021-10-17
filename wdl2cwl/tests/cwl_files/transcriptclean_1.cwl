@@ -31,6 +31,8 @@ requirements:
             $(inputs.inputSam.path) \
             $(inputs.outputPrefix)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

@@ -44,6 +44,8 @@ requirements:
                     $(inputs.zip ? "| gzip" : "") \
                     >  $(inputs.outFilePath)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
 cwlVersion: v1.2
 baseCommand:
   - bash

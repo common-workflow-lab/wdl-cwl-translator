@@ -27,6 +27,8 @@ requirements:
               OUTPUT=$(inputs.metrics_filename)
             sed -i -e 1,5d $(inputs.metrics_filename)  # for reproducibility
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: 3584
 cwlVersion: v1.2

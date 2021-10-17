@@ -78,6 +78,8 @@ requirements:
             - \
             -o $(inputs.outputBam)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ToolTimeLimit
     timelimit: 60
   - class: ResourceRequirement

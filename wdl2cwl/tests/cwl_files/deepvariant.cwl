@@ -108,6 +108,8 @@ requirements:
             $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs ) \
             $(inputs.VCFStatsReport ? "--vcf_stats_report" : "--novcf_stats_report")
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${
