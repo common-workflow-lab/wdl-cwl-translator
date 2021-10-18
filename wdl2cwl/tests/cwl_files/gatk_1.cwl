@@ -108,6 +108,8 @@ requirements:
             $(inputs.dontUseSoftClippedBases ? "--dont-use-soft-clipped-bases" : "") \
 
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)
 cwlVersion: v1.2

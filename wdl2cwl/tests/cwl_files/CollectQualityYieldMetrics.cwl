@@ -26,6 +26,8 @@ requirements:
               OQ=true \
               OUTPUT=$(inputs.metrics_filename)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: 3584
 cwlVersion: v1.2

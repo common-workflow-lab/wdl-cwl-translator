@@ -47,6 +47,8 @@ requirements:
                -o fastq_R1.trimmed.fastq.gz \
                -o fastq_R2.trimmed.fastq.gz
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     coresMin: $(inputs.cpu)
 cwlVersion: v1.2

@@ -612,6 +612,7 @@ def convert(workflow: str) -> str:
     )
 
     requirements.append(cwl.InlineJavascriptRequirement())
+    requirements.append(cwl.NetworkAccess(networkAccess=True))
 
     if "memory" in ast.task_runtime:
 

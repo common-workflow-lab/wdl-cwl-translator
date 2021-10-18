@@ -77,6 +77,8 @@ requirements:
             $(inputs.primerFile.path) \
             "$(inputs.outputDir)/$(inputs.outputNamePrefix).bam"
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

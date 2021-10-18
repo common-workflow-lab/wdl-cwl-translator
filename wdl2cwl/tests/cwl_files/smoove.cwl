@@ -44,6 +44,8 @@ requirements:
             --fasta $(inputs.referenceFasta.path) \
             $(inputs.bamFile.path)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

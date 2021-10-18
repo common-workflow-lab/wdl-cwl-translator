@@ -60,6 +60,8 @@ requirements:
               METRIC_ACCUMULATION_LEVEL=null \
               METRIC_ACCUMULATION_LEVEL=READ_GROUP
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: 7168
 cwlVersion: v1.2
