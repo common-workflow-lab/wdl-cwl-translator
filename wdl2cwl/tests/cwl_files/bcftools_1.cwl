@@ -126,6 +126,8 @@ requirements:
 
             $(inputs.ifcompressedthen'bcftools index --tbi ~{outputPath)'else''}
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${

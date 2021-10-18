@@ -139,6 +139,8 @@ requirements:
             $(inputs.verbose ? "--verbose" : "") \
             $(inputs.inputVcf.path) $(inputs.compareVcf === null ? "" : inputs.compareVcf.path) > $(inputs.outputPath)
   - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
   - class: ResourceRequirement
     ramMin: |-
         ${
