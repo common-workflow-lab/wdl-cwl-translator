@@ -68,12 +68,12 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
             "cwl_files/validateOptimus_5.cwl",
         ),
         (
-            "wdl_files/bcftools_1.wdl",
-            "cwl_files/bcftools_1.cwl",
+            "wdl_files/bcftools_annotate.wdl",
+            "cwl_files/bcftools_annotate.cwl",
         ),
         (
-            "wdl_files/bcftools_3.wdl",
-            "cwl_files/bcftools_3.cwl",
+            "wdl_files/bcftools_stats.wdl",
+            "cwl_files/bcftools_stats.cwl",
         ),
     ],
 )

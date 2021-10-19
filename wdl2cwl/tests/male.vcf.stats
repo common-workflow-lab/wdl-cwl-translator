@@ -1,3 +1,9 @@
+# This file was produced by bcftools stats (1.10.2+htslib-1.10.2) and can be plotted using plot-vcfstats.
+# The command line was:	bcftools stats  --fasta-ref /var/lib/cwl/stgb0c66930-4098-4570-a693-8e3f370b2004/reference.fasta --samples male --threads 0 /var/lib/cwl/stgaa844561-d1e4-4a41-a77a-fea026286f63/male.g.vcf.gz
+#
+# Definition of sets:
+# ID	[2]id	[3]tab-separated file names
+ID	0	/var/lib/cwl/stgaa844561-d1e4-4a41-a77a-fea026286f63/male.g.vcf.gz
 # SN, Summary numbers:
 #   number of records   .. number of data rows in the VCF
 #   number of no-ALTs   .. reference-only sites, ALT is either "." or identical to REF
