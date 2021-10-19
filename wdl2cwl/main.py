@@ -208,7 +208,7 @@ def get_command(
                     value_to_compare = comparison_expression.split(operator)[1]
 
                     append_str = (
-                        "$(if ("
+                        "${if ("
                         + inputs(input_name)
                         + ".length "
                         + operator
@@ -218,9 +218,11 @@ def get_command(
                         + true_value
                         + ";} else {return '"
                         + false_value
-                        + "';})"
+                        + "';}}"
                     )
                     new_command += append_str
+                else:
+                    raise ValueError("length function without the if...else keywords is currently not supported")
 
             elif ("true" and "false") in sub_str:
                 true_value = sub_str[

@@ -1,5 +1,7 @@
 version 1.0
 
+# Source: https://github.com/biowdl/tasks/blob/develop/bcftools.wdl
+#
 # Copyright (c) 2018 Leiden University Medical Center
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
