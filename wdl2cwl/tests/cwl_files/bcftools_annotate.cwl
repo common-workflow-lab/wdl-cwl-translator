@@ -106,7 +106,7 @@ requirements:
             -O  \
             $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path ) \
             $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse ) \
-            $(if (inputs.columns.length > 0) {return "--columns";} else {return '';}) $(",".join(inputs.columns)) \
+            ${if (inputs.columns.length > 0) {return "--columns";} else {return '';}} $(inputs.columns.join(",")) \
             $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude ) \
             $(inputs.force ? "--force" : "") \
             $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines.path ) \
@@ -118,10 +118,10 @@ requirements:
             $(inputs.regions === null ? "" : "--regions " + inputs.regions ) \
             $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path ) \
             $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs.path ) \
-            $(if (inputs.samples.length > 0) {return "--samples";} else {return '';}) $(",".join(inputs.samples)) \
+            ${if (inputs.samples.length > 0) {return "--samples";} else {return '';}} $(inputs.samples.join(",")) \
             $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path ) \
             $(inputs.singleOverlaps ? "--single-overlaps" : "") \
-            $(if (inputs.removeAnns.length > 0) {return "--remove";} else {return '';}) $(",".join(inputs.removeAnns)) \
+            ${if (inputs.removeAnns.length > 0) {return "--remove";} else {return '';}} $(inputs.removeAnns.join(",")) \
             $(inputs.inputFile.path)
 
             $(inputs.ifcompressedthen'bcftools index --tbi ~{outputPath)'else''}

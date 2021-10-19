@@ -130,7 +130,7 @@ requirements:
             $(inputs.splitByID ? "--split-by-ID" : "") \
             $(inputs.regions === null ? "" : "--regions " + inputs.regions ) \
             $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path ) \
-            $(if (inputs.samples.length > 0) {return "--samples";} else {return '';}) $(",".join(inputs.samples)) \
+            ${if (inputs.samples.length > 0) {return "--samples";} else {return '';}} $(inputs.samples.join(",")) \
             $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path ) \
             $(inputs.targets === null ? "" : "--targets " + inputs.targets ) \
             $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path ) \

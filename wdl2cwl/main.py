@@ -302,7 +302,6 @@ def get_command(
                         append_str = f'$({inputs(input_name)} === null ? "" : {(append_str_sub)})'
                     else:
                         append_str = f'$({inputs(input_name)}{temp_append_str}.join("{separator}"))'
-                    # inputs.samples.join("{separator}")
                     new_command += append_str
 
             elif "sub(" in sub_str:
