@@ -295,14 +295,14 @@ def get_command(
 
                 if input_name in input_names:
                     append_str_sub = (
-                        f'("{separator}".join({inputs(input_name)}{temp_append_str}))'
+                        f'({inputs(input_name)}{temp_append_str}.join("{separator}"))'
                     )
 
                     if "?" in data_type and input_name in unbound_input_names:
                         append_str = f'$({inputs(input_name)} === null ? "" : {(append_str_sub)})'
                     else:
-                        append_str = f'$("{separator}".join({inputs(input_name)}{temp_append_str}))'
-
+                        append_str = f'$({inputs(input_name)}{temp_append_str}.join("{separator}"))'
+                    # inputs.samples.join("{separator}")
                     new_command += append_str
 
             elif "sub(" in sub_str:
