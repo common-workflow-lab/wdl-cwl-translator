@@ -114,3 +114,21 @@ class TestParameterized:
         wdl.main()
 
         assert filecmp.cmp(p, get_file(cwl_path))
+
+
+@pytest.mark.parametrize(
+    "length_func_error_wdl_file, expected_error_message",
+    [
+        (
+            "wdl_files/length_function_error.wdl",
+            "Length function without the if...else keywords is currently not supported",
+        ),
+    ],
+)
+def test_length_function_error(
+    length_func_error_wdl_file: str, expected_error_message: str
+) -> None:
+    """Test error message raised when length function does not include the if...else keywords"""
+    with pytest.raises(ValueError) as info:
+        test_run = wdl.convert(get_file(length_func_error_wdl_file))
+    assert str(info.value) == expected_error_message

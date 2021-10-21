@@ -223,7 +223,7 @@ def get_command(
                     new_command += append_str
                 else:
                     raise ValueError(
-                        "length function without the if...else keywords is currently not supported"
+                        "Length function without the if...else keywords is currently not supported"
                     )
 
             elif ("true" and "false") in sub_str:
