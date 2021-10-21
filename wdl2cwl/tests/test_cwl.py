@@ -128,7 +128,7 @@ class TestParameterized:
 def test_length_function_error(
     length_func_error_wdl_file: str, expected_error_message: str
 ) -> None:
-    """Test error message raised when length function does not include the if...else keywords"""
+    """Test error message raised when length function does not include the if...else keywords."""
     with pytest.raises(ValueError) as info:
         test_run = wdl.convert(get_file(length_func_error_wdl_file))
     assert str(info.value) == expected_error_message
