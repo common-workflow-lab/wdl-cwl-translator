@@ -1,0 +1,88 @@
+generic-ordering:
+  - id
+  - label
+  - name
+  - doc
+  - class
+  - type
+  - format
+  - default
+  - secondaryFiles
+  - inputBinding
+  - prefix
+  - position
+  - valueFrom
+  - separate
+  - itemSeparator
+  - shellQuote
+  - outputBinding
+  - glob
+  - outputEval
+  - loadContents
+  - loadListing
+  - dockerPull
+
+  # Dirent
+  - entryname
+  - writable
+
+  # WorkflowStep
+  - in
+  - scatter
+  - scatterMethod
+  - run
+  - when
+  - out
+  - requirements
+  - hints
+
+  # WorkflowStepInput
+  - source
+  - outputSource
+  - linkMerge
+
+
+CommandLineTool:
+  - cwlVersion
+  - class
+  - label
+  - doc
+  - $namespaces
+  - requirements
+  - inputs
+  - outputs
+  - stdout
+  - stderr
+  - baseCommand
+  - arguments
+  - stdout
+  - stderr
+  - hints
+  - id
+
+
+ExpressionTool:
+  - cwlVersion
+  - class
+  - label
+  - doc
+  - requirements
+  - inputs
+  - outputs
+  - expression
+  - hints
+  - id
+
+
+Workflow:
+  - cwlVersion
+  - class
+  - label
+  - doc
+  - $namespaces
+  - requirements
+  - inputs
+  - outputs
+  - steps
+  - hints
+  - id

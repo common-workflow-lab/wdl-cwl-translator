@@ -1,0 +1,4 @@
+[console_scripts]
+cwl-explode = cwlformat.explode:main
+cwl-format = cwlformat.formatter:main
+
