@@ -28,6 +28,8 @@ More background reading on CWL:
 - A recent paper: https://arxiv.org/abs/2105.07028 ([Full PDF](https://arxiv.org/pdf/2105.07028.pdf))
 - https://www.commonwl.org/user_guide/
 
+This project uses the parser and object from [`cwl_utils.parser.cwl_v1_2`](https://cwl-utils.readthedocs.io/en/latest/autoapi/cwl_utils/parser/cwl_v1_2/index.html)
+
 For some discussion comparing the two languages (mainly from the perspective of translating in the other direction, CWL to WDL), see this document:
 
 https://github.com/dnanexus/dxCompiler/blob/main/doc/CWL_v1.2.0_to_WDL_v1.md
@@ -40,7 +42,7 @@ Python 3.6+
 
 ### Instructions
 
-These instruction assume a Linux / macOS operating system.
+These instructions assume a Linux / macOS operating system.
 
 ``` shell
 git clone https://github.com/common-workflow-lab/wdl-cwl-translator/

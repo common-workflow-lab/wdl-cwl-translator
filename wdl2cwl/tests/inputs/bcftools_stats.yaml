@@ -1,0 +1,17 @@
+dockerImage: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
+samples:
+  - male
+regionsFile: null
+fastaRefIndex:
+  class: File
+  path: bcftools/reference.fasta.fai
+fastaRef:
+  class: File
+  path: bcftools/reference.fasta
+outputPath: ./samples//male.vcf.stats
+inputVcfIndex:
+  class: File
+  path: bcftools/male.g.vcf.gz.tbi
+inputVcf: 
+  class: File
+  path: bcftools/male.g.vcf.gz

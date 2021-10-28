@@ -39,7 +39,7 @@ requirements:
             mkdir -p \$(dirname $(inputs.outputPath))
             rtg RTG_MEM=$(inputs.rtgMem) format -f $(inputs.format) \
             -o $(inputs.outputPath) \
-            $(" ".join(inputs.inputFiles.map(function(el) { return el.path})))
+            $(inputs.inputFiles.map(function(el) { return el.path}).join(" "))
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true

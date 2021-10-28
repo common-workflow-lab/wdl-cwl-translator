@@ -21,6 +21,7 @@ from wdl2cwl.WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
 
 # WDL-CWL Type Mappings
 wdl_type = {
+    "Array[String]": "string[]",
     "String": "string",
     "File": "File",
     "Int": "int",
@@ -189,6 +190,42 @@ def get_command(
                             if data_type != "File":
                                 new_command += "$(" + inputs(i) + ")"
 
+            elif "length(" in sub_str:
+
+                if ("true" and "false") in sub_str:
+                    true_value = sub_str[
+                        sub_str.find("true") + 5 : sub_str.find("false")
+                    ].strip()
+                    temp = sub_str.split("false=")
+                    false_value = temp[1].split(temp[1][0])[1]
+                    comparison_expression = temp[1].split(temp[1][0])[2]
+                    comparison_expression = comparison_expression[7:]
+                    operator = ""
+                    for i in comparison_expression:
+                        if i in ">=!<":
+                            operator += i
+                    input_name = comparison_expression.split(operator)[0][:-1]
+                    value_to_compare = comparison_expression.split(operator)[1]
+
+                    append_str = (
+                        "${if ("
+                        + inputs(input_name)
+                        + ".length "
+                        + operator
+                        + " "
+                        + value_to_compare
+                        + ") {return "
+                        + true_value
+                        + ";} else {return '"
+                        + false_value
+                        + "';}}"
+                    )
+                    new_command += append_str
+                else:
+                    raise ValueError(
+                        "Length function without the if...else keywords is currently not supported"
+                    )
+
             elif ("true" and "false") in sub_str:
                 true_value = sub_str[
                     sub_str.find("true") + 5 : sub_str.find("false")
@@ -260,14 +297,13 @@ def get_command(
 
                 if input_name in input_names:
                     append_str_sub = (
-                        f'("{separator}".join({inputs(input_name)}{temp_append_str}))'
+                        f'({inputs(input_name)}{temp_append_str}.join("{separator}"))'
                     )
 
                     if "?" in data_type and input_name in unbound_input_names:
                         append_str = f'$({inputs(input_name)} === null ? "" : {(append_str_sub)})'
                     else:
-                        append_str = f'$("{separator}".join({inputs(input_name)}{temp_append_str}))'
-
+                        append_str = f'$({inputs(input_name)}{temp_append_str}.join("{separator}"))'
                     new_command += append_str
 
             elif "sub(" in sub_str:
