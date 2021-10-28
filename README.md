@@ -42,7 +42,7 @@ Python 3.6+
 
 ### Instructions
 
-These instruction assume a Linux / macOS operating system.
+These instructions assume a Linux / macOS operating system.
 
 ``` shell
 git clone https://github.com/common-workflow-lab/wdl-cwl-translator/
