@@ -780,7 +780,7 @@ def convert(workflow: str) -> str:
     result_stream = StringIO()
     cwl_result = cat_tool.save()
     scalarstring.walk_tree(cwl_result)
-    # ^ converts multine line strings to nice multiline YAML
+    # ^ converts multiline strings to nice multiline YAML
     yaml.dump(cwl_result, result_stream)
     yaml.dump(cwl_result, sys.stdout)
 
