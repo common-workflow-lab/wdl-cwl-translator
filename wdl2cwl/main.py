@@ -1,8 +1,6 @@
 """Main entrypoint for WDL2CWL."""
 import argparse
-from argparse import Namespace
 import sys
-from io import StringIO
 from typing import List, cast, Union, Dict
 from io import StringIO
 import textwrap
