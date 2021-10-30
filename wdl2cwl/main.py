@@ -626,7 +626,7 @@ def convert(workflow: str) -> str:
 
     for s in ast.structs:
         schema = cwl.RecordSchema(
-            type=s.name,
+            type="record",
             fields=[cwl.RecordField(name=f[0], type=f[1]) for f in s.fields],
         )
         record_schemas[s.name] = schema

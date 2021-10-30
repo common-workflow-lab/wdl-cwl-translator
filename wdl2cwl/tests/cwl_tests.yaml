@@ -24,3 +24,9 @@
       basename: male.vcf.stats
       class: File
       size: 6060
+
+# Tests for doc: BuildIndices
+- doc: BuildIndices
+  tool: cwl_files/BuildIndices.cwl
+  job: inputs/BuildIndices-mouse_inputs.yaml
+  output:
