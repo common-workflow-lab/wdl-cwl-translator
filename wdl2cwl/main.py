@@ -3,7 +3,7 @@ import argparse
 from argparse import Namespace
 import sys
 from io import StringIO
-from typing import List, cast, Union
+from typing import List, cast, Union, Dict
 from io import StringIO
 import textwrap
 import re
@@ -17,7 +17,7 @@ from ruamel.yaml.main import YAML
 
 from wdl2cwl.WdlV1_1Lexer import WdlV1_1Lexer
 from wdl2cwl.WdlV1_1Parser import WdlV1_1Parser
-from wdl2cwl.WdlV1_1ParserVisitor import WdlV1_1ParserVisitor
+from wdl2cwl.WdlV1_1ParserVisitor import WdlV1_1ParserVisitor, Struct
 
 # WDL-CWL Type Mappings
 wdl_type = {
@@ -396,7 +396,7 @@ def get_command(
     return new_command
 
 
-def get_output(expression: str, input_names: List[str]) -> str:
+def get_expression_output(expression: str, input_names: List[str]) -> str:
     """Get expression for outputs."""
     output_value = ""
 
@@ -471,6 +471,7 @@ def get_input(
     inputs: List[cwl.CommandInputParameter],
     unbound_input: List[str],
     bound_input: List[str],
+    record_schemas: Dict[str, cwl.RecordSchema],
 ) -> List[cwl.CommandInputParameter]:
     """Get bound and unbound inputs."""
     for i in unbound_input:
@@ -489,6 +490,11 @@ def get_input(
                     id=input_name,
                     type=[cwl.CommandInputArraySchema(items=input_type, type="array")],
                 )
+            )
+
+        elif i[0] in record_schemas.keys():
+            inputs.append(
+                cwl.CommandInputParameter(id=input_name, type=record_schemas.get(i[0]))
             )
 
         else:
@@ -533,6 +539,75 @@ def get_input(
     return inputs
 
 
+def get_output(
+    outputs: List[cwl.CommandOutputParameter],
+    input_names: List[str],
+    task_outputs: List[List[str]],
+    record_schemas: Dict[str, cwl.RecordSchema],
+) -> List[cwl.CommandOutputParameter]:
+    """Get outputs."""
+    for i in task_outputs:
+        output_name = i[1]
+        output_glob = get_expression_output(i[2], input_names)
+
+        if "Array" in i[0]:
+            # output_type = ""
+            temp_type = wdl_type[
+                i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
+            ]
+            output_type = temp_type if "?" not in i[0] else [temp_type, "null"]
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=[
+                        cwl.CommandOutputArraySchema(items=output_type, type="array")
+                    ],
+                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
+            )
+        elif "read_string(" in i[2]:
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type="string",
+                    outputBinding=cwl.CommandOutputBinding(
+                        glob=output_glob.replace("read_string(", "")[:-1],
+                        loadContents=True,
+                        outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
+                    ),
+                )
+            )
+        elif i[2] == "stdout()":
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type="stdout",
+                )
+            )
+        elif i[0] in record_schemas.keys():
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name, type=record_schemas.get(i[0])
+                )
+            )
+        else:
+            output_type = (
+                wdl_type[i[0]]
+                if "?" not in i[0]
+                else [wdl_type[i[0].replace("?", "")], "null"]
+            )
+
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=output_type,
+                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
+                )
+            )
+
+    return outputs
+
+
 def convert(workflow: str) -> str:
     """Generate a CWL object to match "cat-tool.cwl"."""
     f = open(workflow)
@@ -546,9 +621,17 @@ def convert(workflow: str) -> str:
     ast = WdlV1_1ParserVisitor()  # type: ignore
     ast.walk_tree(tree)  # type: ignore
 
+    record_schemas: Dict[str, cwl.RecordSchema] = {}
     input_types: List[str] = []
     input_names: List[str] = []
     input_values: List[str] = []
+
+    for s in ast.structs:
+        schema = cwl.RecordSchema(
+            type=s.name,
+            fields=[cwl.RecordField(name=f[0], type=f[1]) for f in s.fields],
+        )
+        record_schemas[s.name] = schema
 
     for i in ast.task_inputs:
         input_types.append(i[0])
@@ -587,7 +670,9 @@ def convert(workflow: str) -> str:
     base_command = ["bash", "example.sh"]
 
     cwl_inputs: List[cwl.CommandInputParameter] = []
-    cwl_inputs = get_input(cwl_inputs, ast.task_inputs, ast.task_inputs_bound)
+    cwl_inputs = get_input(
+        cwl_inputs, ast.task_inputs, ast.task_inputs_bound, record_schemas
+    )
 
     requirements: List[cwl.ProcessRequirement] = []
 
@@ -690,60 +775,8 @@ def convert(workflow: str) -> str:
             )
         )
 
-    outputs = []
-
-    for i in ast.task_outputs:
-        output_name = i[1]
-        output_glob = get_output(i[2], input_names)
-
-        if "Array" in i[0]:
-            # output_type = ""
-            temp_type = wdl_type[
-                i[0][i[0].find("[") + 1 : i[0].find("]")].replace('"', "")
-            ]
-            output_type = temp_type if "?" not in i[0] else [temp_type, "null"]
-            outputs.append(
-                cwl.CommandOutputParameter(
-                    id=output_name,
-                    type=[
-                        cwl.CommandOutputArraySchema(items=output_type, type="array")
-                    ],
-                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
-                )
-            )
-        elif "read_string(" in i[2]:
-            outputs.append(
-                cwl.CommandOutputParameter(
-                    id=output_name,
-                    type="string",
-                    outputBinding=cwl.CommandOutputBinding(
-                        glob=output_glob.replace("read_string(", "")[:-1],
-                        loadContents=True,
-                        outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
-                    ),
-                )
-            )
-        elif i[2] == "stdout()":
-            outputs.append(
-                cwl.CommandOutputParameter(
-                    id=output_name,
-                    type="stdout",
-                )
-            )
-        else:
-            output_type = (
-                wdl_type[i[0]]
-                if "?" not in i[0]
-                else [wdl_type[i[0].replace("?", "")], "null"]
-            )
-
-            outputs.append(
-                cwl.CommandOutputParameter(
-                    id=output_name,
-                    type=output_type,
-                    outputBinding=cwl.CommandOutputBinding(glob=output_glob),
-                )
-            )
+    outputs: List[cwl.CommandOutputParameter] = []
+    outputs = get_output(outputs, input_names, ast.task_outputs, record_schemas)
 
     cat_tool = cwl.CommandLineTool(
         id=ast.task_name,

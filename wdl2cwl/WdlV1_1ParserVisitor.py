@@ -4,12 +4,27 @@ if __name__ is not None and "." in __name__:
     from .WdlV1_1Parser import WdlV1_1Parser
 else:
     from WdlV1_1Parser import WdlV1_1Parser
+from typing import List
 
 # This class defines a complete generic visitor for a parse tree produced by WdlV1_1Parser.
+
+class Struct:
+    """
+    A class to represent WDL's Struct's.
+    """
+
+    def __init__(self, name: str):
+        """
+        :param name: struct name.
+        """
+        self.name = name
+        self.fields: List[str] = []
+
 
 class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     def __init__(self):
+        self.structs = []
         self.task_inputs = []
         self.task_inputs_bound = []
         self.task_outputs = []
@@ -314,6 +329,11 @@ class WdlV1_1ParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by WdlV1_1Parser#struct.
     def visitStruct(self, ctx:WdlV1_1Parser.StructContext):
+        """Build a WDL struct to be used later when converting to CWL input/output records."""
+        struct = Struct(name=str(ctx.Identifier()))
+        for decl in ctx.unbound_decls():
+            struct.fields.append([str(decl.Identifier()), decl.wdl_type().getText()])
+        self.structs.append(struct)
         return self.visitChildren(ctx)
 
 
