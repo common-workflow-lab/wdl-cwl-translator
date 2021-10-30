@@ -9,21 +9,19 @@ from typing import List
 # This class defines a complete generic visitor for a parse tree produced by WdlV1_1Parser.
 
 class Struct:
-    """
-    A class to represent WDL's Struct's.
-    """
+    """A class to represent WDL's Struct's."""
 
     def __init__(self, name: str):
-        """
-        :param name: struct name.
-        """
+        """:param name: struct name."""
         self.name = name
         self.fields: List[str] = []
 
 
 class WdlV1_1ParserVisitor(ParseTreeVisitor):
+    """WDL parser AST visitor."""
 
     def __init__(self):
+        """Create a visitor."""
         self.structs = []
         self.task_inputs = []
         self.task_inputs_bound = []
