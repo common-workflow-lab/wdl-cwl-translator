@@ -59,6 +59,7 @@ requirements:
               $(inputs.collect_gc_bias_metrics ? 'PROGRAM="CollectGcBiasMetrics"' : "") \
               METRIC_ACCUMULATION_LEVEL=null \
               METRIC_ACCUMULATION_LEVEL=READ_GROUP
+            sed -i -e 1,5d "$(inputs.output_bam_prefix).alignment_summary_metrics"   # for reproducibility
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true

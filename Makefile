@@ -141,6 +141,9 @@ test: $(PYSOURCES) cwltest
 cwltest: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
 	cd wdl2cwl/tests && cwltest --tool cwltool --test cwl_tests.yaml
 
+cwltest_big: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
+	cd wdl2cwl/tests && cwltest --tool cwltool --test cwl_tests_big.yaml
+
 ## testcov     : run the ${MODULE} test suite and collect coverage
 testcov: $(PYSOURCES)
 	pytest --cov
