@@ -643,6 +643,33 @@ def convert(workflow: str) -> str:
             )
         )
 
+    if "disks" in ast.task_runtime:
+
+        outdir_min: Union[str, int] = ""
+        if '"' not in ast.task_runtime["disks"]:
+            if ast.task_runtime["disks"] in input_names:
+                disks = f"$({inputs(ast.task_runtime['disks'])})"
+            elif ast.task_runtime["disks"].isnumeric():
+                disks = int(ast.task_runtime["disks"])
+            elif "+" in ast.task_runtime["disks"]:
+                temp = ast.task_runtime["disks"].split("+")
+                append_str = "$("
+                for i in range(0, len(temp)):
+                    if temp[i] in input_names:
+                        append_str += inputs(temp[i])
+                    elif temp[i].isnumeric():
+                        append_str += temp[i]
+                    if i != len(temp) - 1:
+                        append_str += " + "
+                append_str += ")"
+                disks = append_str
+
+        requirements.append(
+            cwl.ResourceRequirement(
+                outdirMin=outdir_min,
+            )
+        )
+
     if "time_minutes" in ast.task_runtime:
 
         time_minutes: Union[str, int] = ""
@@ -755,7 +782,7 @@ def convert(workflow: str) -> str:
     )
 
     # implemented runtime requirements
-    runtime_requirements = ["docker", "memory", "time_minutes", "cpu"]
+    runtime_requirements = ["docker", "memory", "disks", "time_minutes", "cpu"]
 
     for i in ast.task_runtime:
         if i not in runtime_requirements:
