@@ -1,0 +1,22 @@
+referenceFasta:
+  class: File
+  path: deepvariant-testdata/ucsc.hg19.chr20.unittest.fasta
+  # location: https://storage.googleapis.com/deepvariant/quickstart-testdata/ucsc.hg19.chr20.unittest.fasta
+referenceFastaIndex:
+  class: File
+  path: deepvariant-testdata/ucsc.hg19.chr20.unittest.fasta.fai
+  # location: https://storage.googleapis.com/deepvariant/quickstart-testdata/ucsc.hg19.chr20.unittest.fasta.fai
+inputBam:
+  class: File
+  path: deepvariant-testdata/NA12878_S1.chr20.10_10p1mb.bam
+  # location: https://storage.googleapis.com/deepvariant/quickstart-testdata/NA12878_S1.chr20.10_10p1mb.bam
+inputBamIndex:
+  class: File
+  path: deepvariant-testdata/NA12878_S1.chr20.10_10p1mb.bam.bai
+  # location: https://storage.googleapis.com/deepvariant/quickstart-testdata/NA12878_S1.chr20.10_10p1mb.bam.bai
+modelType: WGS
+outputVcf: output.vcf.gz
+outputGVcf: output.g.vcf.gz
+regions: "chr20:10,000,000-10,010,000"
+  # from https://github.com/google/deepvariant/blob/r1.2/docs/deepvariant-quick-start.md#run-deepvariant-with-one-command
+numShards: 8

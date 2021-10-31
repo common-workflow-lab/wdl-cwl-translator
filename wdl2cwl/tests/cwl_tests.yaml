@@ -5,6 +5,15 @@
   job: inputs/validateOptimus_2.yaml
   output:
     result: PASS
+- doc: CollectQualityYieldMetrics
+  tool: cwl_files/CollectQualityYieldMetrics.cwl
+  job: inputs/CollectQualityYieldMatrics.yaml
+  output:
+    quality_yield_metrics:
+      basename: collect_quality_yield_metrics.quals.txt
+      checksum: sha1$870d2ec27fb38292079c8b135fdf864c03f32bfe
+      class: File
+      size: 261
 
 # Tests for doc: bcftools_stats
 - doc: bcftools_stats

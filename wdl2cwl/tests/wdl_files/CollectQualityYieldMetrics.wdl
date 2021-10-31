@@ -33,6 +33,7 @@ task CollectQualityYieldMetrics {
       INPUT=~{input_bam} \
       OQ=true \
       OUTPUT=~{metrics_filename}
+    sed -i -e 1,5d ~{metrics_filename}  # for reproducibility
   }
   
   runtime {

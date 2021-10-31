@@ -34,9 +34,7 @@ inputs:
       - string
       - 'null'
   - id: regions
-    type:
-      - File
-      - 'null'
+    type: string
   - id: sampleName
     type:
       - string
@@ -91,15 +89,21 @@ requirements:
         entry: |4
 
             set -e
+            mkdir reference_dir
+            ln -s $(inputs.referenceFasta.path) reference_dir/\$(basename $(inputs.referenceFasta.path))
+            ln -s $(inputs.referenceFastaIndex.path) reference_dir/\$(basename $(inputs.referenceFastaIndex.path))
+            mkdir bam_dir
+            ln -s $(inputs.inputBam.path) bam_dir/\$(basename $(inputs.inputBam.path))
+            ln -s $(inputs.inputBamIndex.path) bam_dir/\$(basename $(inputs.inputBamIndex.path))
             /opt/deepvariant/bin/run_deepvariant \
-            --ref $(inputs.referenceFasta.path) \
-            --reads $(inputs.inputBam.path) \
+            --ref reference_dir/\$(basename $(inputs.referenceFasta.path)) \
+            --reads bam_dir/\$(basename $(inputs.inputBam.path)) \
             --model_type $(inputs.modelType) \
             --output_vcf $(inputs.outputVcf) \
             $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf ) \
             $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path ) \
             $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards ) \
-            $(inputs.regions === null ? "" : "--regions " + inputs.regions.path ) \
+            --regions $(inputs.regions) \
             $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName ) \
             $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs ) \
             $(inputs.VCFStatsReport ? "--vcf_stats_report" : "--novcf_stats_report")

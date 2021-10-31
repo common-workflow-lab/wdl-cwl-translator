@@ -1,0 +1,9 @@
+input_bam:
+  class: File
+  path: valid.bam
+  doc: |
+    From https://github.com/broadinstitute/gatk/blob/7f96bf6677040851c6da3cb96d97f957f1df05bc/src/test/resources/org/broadinstitute/hellbender/metrics/analysis/CollectQualityYieldMetrics/valid.bam
+    Copyright 2021 Broad Institute, Inc.
+    Licensed under the Apache License, Version 2.0 (the "License")
+metrics_filename: collect_quality_yield_metrics.quals.txt
+preemptible_tries: 0
