@@ -75,6 +75,10 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
             "wdl_files/bcftools_stats.wdl",
             "cwl_files/bcftools_stats.cwl",
         ),
+        (
+            "wdl_files/minCores.wdl",
+            "cwl_files/minCores.cwl",
+        ),
         ("wdl_files/bwa.wdl", "cwl_files/bwa.cwl"),
     ],
 )
