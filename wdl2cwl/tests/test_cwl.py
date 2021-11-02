@@ -79,10 +79,7 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
             "wdl_files/minCores.wdl",
             "cwl_files/minCores.cwl",
         ),
-<<<<<<< HEAD
         ("wdl_files/bwa.wdl", "cwl_files/bwa.cwl"),
-=======
->>>>>>> main
     ],
 )
 class TestParameterized:
