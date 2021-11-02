@@ -77,9 +77,22 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    ramMin: ${[inputs.memoryGb].find(mem => mem !== null)}G
-  - class: ToolTimeLimit
-    timelimit: ''
+    ramMin: |-
+        ${
+        var unit = "G";
+        var value = parseInt(inputs.memoryGb.match(/[0-9]+/g));
+        var memory = "";
+        if(unit==="KiB") memory = value/1024;
+        else if(unit==="MiB") memory = value;
+        else if(unit==="GiB") memory = value*1024;
+        else if(unit==="TiB") memory = value*1024*1024;
+        else if(unit==="B") memory = value/(1024*1024);
+        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+        else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+        else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+        else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+        return parseInt(memory);
+        }
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
 cwlVersion: v1.2

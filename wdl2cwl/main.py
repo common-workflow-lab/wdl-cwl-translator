@@ -637,20 +637,17 @@ def convert(workflow: str) -> str:
                     ast.task_runtime["memory"].find("[")
                     + 1 : ast.task_runtime["memory"].find("]")
                 ]
+                unit = ast.task_runtime["memory"][
+                    ast.task_runtime["memory"].index("}") + 1 : -1
+                ].strip()
                 input_names_splitted = input_names_string.split(",")
                 only_given_input_names = [
                     input_name
                     for input_name in input_names_splitted
                     if input_name in input_names
                 ]
-                valid_identifiers_list = [
-                    inputs(input_name) for input_name in only_given_input_names
-                ]
-                ram_min = (
-                    "${["
-                    + ",".join(valid_identifiers_list)
-                    + "].find(mem => mem !== null)}G"
-                )
+
+                ram_min = get_ram_min_js(only_given_input_names[0], unit)
 
             else:
                 ram_min = get_ram_min(ast.task_runtime["memory"])
