@@ -25,6 +25,7 @@ requirements:
               INPUT=$(inputs.input_bam.path) \
               OQ=true \
               OUTPUT=$(inputs.metrics_filename)
+            sed -i -e 1,5d $(inputs.metrics_filename)  # for reproducibility
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
