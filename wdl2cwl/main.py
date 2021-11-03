@@ -737,23 +737,23 @@ def convert(workflow: str) -> str:
     if "cpu" in ast.task_runtime:
 
         cpu: Union[str, int] = ""
-        if '"' not in ast.task_runtime["cpu"]:
-            if ast.task_runtime["cpu"] in input_names:
-                cpu = f"$({inputs(ast.task_runtime['cpu'])})"
-            elif ast.task_runtime["cpu"].isnumeric():
-                cpu = int(ast.task_runtime["cpu"])
-            elif "+" in ast.task_runtime["cpu"]:
-                temp = ast.task_runtime["cpu"].split("+")
-                append_str = "$("
-                for i in range(0, len(temp)):
-                    if temp[i] in input_names:
-                        append_str += inputs(temp[i])
-                    elif temp[i].isnumeric():
-                        append_str += temp[i]
-                    if i != len(temp) - 1:
-                        append_str += " + "
-                append_str += ")"
-                cpu = append_str
+        cpu_value = ast.task_runtime["cpu"].strip("'\" ")
+        if cpu_value in input_names:
+            cpu = f"$({inputs(cpu_value)})"
+        elif cpu_value.isnumeric():
+            cpu = int(cpu_value)
+        elif "+" in cpu_value:
+            temp = cpu_value.split("+")
+            append_str = "$("
+            for i in range(0, len(temp)):
+                if temp[i] in input_names:
+                    append_str += inputs(temp[i])
+                elif temp[i].isnumeric():
+                    append_str += temp[i]
+                if i != len(temp) - 1:
+                    append_str += " + "
+            append_str += ")"
+            cpu = append_str
 
         requirements.append(
             cwl.ResourceRequirement(
