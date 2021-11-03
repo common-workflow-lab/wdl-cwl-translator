@@ -21,6 +21,8 @@ inputs:
     type:
       - int
       - 'null'
+  - id: estimatedMemoryGb
+    type: int
   - id: sixtyFour
     default: false
     type: boolean
