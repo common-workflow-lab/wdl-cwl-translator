@@ -116,7 +116,7 @@ def get_outdir_min_js(outdir_min: str, unit: str) -> str:
         append_str = '${\nvar unit = "' + unit + '";'
     else:
         append_str = (
-            "${\nvar unit = " + inputs(ram_min) + '.match(/[a-zA-Z]+/g).join("");'
+            "${\nvar unit = " + inputs(outdir_min) + '.match(/[a-zA-Z]+/g).join("");'
         )
     js_str = (
         append_str
