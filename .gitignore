@@ -4,5 +4,4 @@ env/
 .mypy_cache/
 .pytest_cache/
 wdl2cwl.egg-info/
-rammin.py*
-.coverage
+coverage.xml
