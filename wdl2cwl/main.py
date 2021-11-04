@@ -64,7 +64,7 @@ def get_ram_min(ram_min: str) -> int:
     return ram_value
 
 
-def get_outdir_min(outdir_min: int) -> int:
+def get_outdir_min(outdir_min: str) -> int:
     """
     Get disk requirement.
 
