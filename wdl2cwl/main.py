@@ -70,7 +70,7 @@ def get_outdir_min(outdir_min: str) -> int:
 
     Only handles value given in GiB.
     """
-    unit = " ".join(re.findall("[a-zA-Z]+", outdir_min)).replace(" ", "")  #"GiB" 
+    unit = " ".join(re.findall("[a-zA-Z]+", outdir_min)).replace(" ", "")
     outdir_min = outdir_min[outdir_min.find('"') + 1 : outdir_min.find(unit)]
     outdir_value = 0
     # Add more units
