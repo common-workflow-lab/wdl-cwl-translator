@@ -64,13 +64,13 @@ def get_ram_min(ram_min: str) -> int:
     return ram_value
 
 
-def get_outdir_min(outdir_min: str) -> int:
+def get_outdir_min(outdir_min: int) -> int:
     """
     Get disk requirement.
 
     Only handles value given in GiB.
     """
-    unit = " ".join(re.findall("[a-zA-Z]+", outdir_min)).replace(" ", "")
+    unit = " ".join(re.findall("[a-zA-Z]+", outdir_min)).replace(" ", "")  #"GiB" 
     outdir_min = outdir_min[outdir_min.find('"') + 1 : outdir_min.find(unit)]
     outdir_value = 0
     # Add more units
