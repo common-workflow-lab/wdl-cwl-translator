@@ -57,7 +57,6 @@ def get_ram_min(ram_min: str) -> int:
     """
     unit = " ".join(re.findall("[a-zA-Z]+", ram_min)).replace(" ", "")
     ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
-    print(ram_min)
     ram_value = 0
     # Add more units
     if unit == "GiB":
@@ -668,9 +667,9 @@ def convert(workflow: str) -> str:
                 outdirMin=outdir_min,
             )
         )
-    else:
+    elif "disks" not in ast.task_runtime:
         outdir_min: Union[str, int] = ""
-        outdir_min = get_outdir_min(1)
+        outdir_min = get_outdir_min(str(1))
 
         requirements.append(
             cwl.ResourceRequirement(
