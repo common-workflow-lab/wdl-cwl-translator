@@ -65,6 +65,8 @@ requirements:
     networkAccess: true
   - class: ResourceRequirement
     ramMin: 7168
+  - class: ResourceRequirement
+    outdirMin: 30720
 cwlVersion: v1.2
 baseCommand:
   - bash

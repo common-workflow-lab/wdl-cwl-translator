@@ -47,6 +47,8 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+  - class: ResourceRequirement
+    outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
   - bash
