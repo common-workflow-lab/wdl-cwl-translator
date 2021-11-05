@@ -667,15 +667,15 @@ def convert(workflow: str) -> str:
                 outdirMin=outdir_min,
             )
         )
-    elif "disks" not in ast.task_runtime:
-        outdir_min: Union[str, int] = ""
-        outdir_min = get_outdir_min(str(1))
+    # elif "disks" not in ast.task_runtime:
+    #     outdir_min: Union[str, int] = ""
+    #     outdir_min = get_outdir_min(str(1))
 
-        requirements.append(
-            cwl.ResourceRequirement(
-                outdirMin=outdir_min,
-            )
-        )
+    #     requirements.append(
+    #         cwl.ResourceRequirement(
+    #             outdirMin=outdir_min,
+    #         )
+    #     )
 
     if "time_minutes" in ast.task_runtime:
 
