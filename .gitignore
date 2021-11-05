@@ -5,3 +5,4 @@ env/
 .pytest_cache/
 wdl2cwl.egg-info/
 coverage.xml
+.coverage

@@ -657,7 +657,7 @@ def convert(workflow: str) -> str:
         )
 
     if "disks" in ast.task_runtime:
-    # get the outdirMin from runtime of disks
+        # get the outdirMin from runtime of disks
         outdir_min: Union[str, int] = ""
 
         outdir_min = get_outdir_min(ast.task_runtime["disks"])
