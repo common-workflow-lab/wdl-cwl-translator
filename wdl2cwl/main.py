@@ -57,6 +57,7 @@ def get_ram_min(ram_min: str) -> int:
     """
     unit = " ".join(re.findall("[a-zA-Z]+", ram_min)).replace(" ", "")
     ram_min = ram_min[ram_min.find('"') + 1 : ram_min.find(unit)]
+    print(ram_min)
     ram_value = 0
     # Add more units
     if unit == "GiB":
@@ -68,14 +69,12 @@ def get_outdir_min(outdir_min: str) -> int:
     """
     Get disk requirement.
 
-    Only handles value given in GiB.
+    Value is always given in GiB.
+    Covers an Int type input and a string input without suffix only.
     """
-    unit = " ".join(re.findall("[a-zA-Z]+", outdir_min)).replace(" ", "")
-    outdir_min = outdir_min[outdir_min.find('"') + 1 : outdir_min.find(unit)]
-    outdir_value = 0
-    # Add more units
-    if unit == "GiB":
-        outdir_value = int(float(outdir_min.strip()) * 1024)
+    if '"' in outdir_min:
+        outdir_min = outdir_min[outdir_min.find('"') + 1 : -1]
+    outdir_value = int(float(outdir_min.strip()) * 1024)
     return outdir_value
 
 
@@ -104,36 +103,6 @@ def get_ram_min_js(ram_min: str, unit: str) -> str:
         + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
         + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
         + "return parseInt(memory);\n}"
-    )
-
-    return js_str
-
-
-def get_outdir_min_js(outdir_min: str, unit: str) -> str:
-    """Get disk requirement for user input."""
-    append_str: str = ""
-    if unit:
-        append_str = '${\nvar unit = "' + unit + '";'
-    else:
-        append_str = (
-            "${\nvar unit = " + inputs(outdir_min) + '.match(/[a-zA-Z]+/g).join("");'
-        )
-    js_str = (
-        append_str
-        + "\nvar value = parseInt("
-        + inputs(outdir_min)
-        + ".match(/[0-9]+/g));\n"
-        + 'var disk = "";\n'
-        + 'if(unit==="KiB") disk = value/1024;\n'
-        + 'else if(unit==="MiB") disk = value;\n'
-        + 'else if(unit==="GiB") disk = value*1024;\n'
-        + 'else if(unit==="TiB") disk = value*1024*1024;\n'
-        + 'else if(unit==="B") disk = value/(1024*1024);\n'
-        + 'else if(unit==="KB" || unit==="K") disk = (value*1000)/(1024*1024);\n'
-        + 'else if(unit==="MB" || unit==="M") disk = (value*(1000*1000))/(1024*1024);\n'
-        + 'else if(unit==="GB" || unit==="G") disk = (value*(1000*1000*1000))/(1024*1024);\n'
-        + 'else if(unit==="TB" || unit==="T") disk = (value*(1000*1000*1000*1000))/(1024*1024);\n'
-        + "return parseInt(disk);\n}"
     )
 
     return js_str
@@ -689,24 +658,19 @@ def convert(workflow: str) -> str:
         )
 
     if "disks" in ast.task_runtime:
-
+    # get the outdirMin from runtime of disks
         outdir_min: Union[str, int] = ""
 
-        if '"' in ast.task_runtime["disks"]:
-            if "${" in ast.task_runtime["disks"]:
-                input_name = ast.task_runtime["disks"][
-                    ast.task_runtime["disks"].find("${")
-                    + 2 : ast.task_runtime["disks"].find("}")
-                ]
-                temp = ast.task_runtime["disks"].index("}")  # index of }
-                if len(ast.task_runtime["disks"]) != temp + 1:
-                    unit = ast.task_runtime["disks"][temp + 1 : -1].strip()
-                    if input_name in input_names:
-                        outdir_min = get_outdir_min_js(input_name, unit)
-            else:
-                outdir_min = get_outdir_min(ast.task_runtime["disks"])
-        else:
-            outdir_min = get_outdir_min_js(ast.task_runtime["disks"], "")
+        outdir_min = get_outdir_min(ast.task_runtime["disks"])
+
+        requirements.append(
+            cwl.ResourceRequirement(
+                outdirMin=outdir_min,
+            )
+        )
+    else:
+        outdir_min: Union[str, int] = ""
+        outdir_min = get_outdir_min(1)
 
         requirements.append(
             cwl.ResourceRequirement(

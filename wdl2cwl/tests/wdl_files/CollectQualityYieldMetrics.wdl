@@ -38,7 +38,7 @@ task CollectQualityYieldMetrics {
   
   runtime {
     docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    disks: "40 GiB"
+    disks: 40
     memory: "3.5 GiB"
     preemptible: preemptible_tries
   }
