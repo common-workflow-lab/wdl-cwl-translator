@@ -662,7 +662,7 @@ def convert(workflow: str) -> str:
                 outdirMin=get_outdir_min(ast.task_runtime["disks"]),
             )
         )
-    elif:
+    else:
         requirements.append(
             cwl.ResourceRequirement(
                 outdirMin=get_outdir_min("1"),
