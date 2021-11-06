@@ -58,6 +58,8 @@ requirements:
   - class: ResourceRequirement
     ramMin: 0
   - class: ResourceRequirement
+    outdirMin: 1024
+  - class: ResourceRequirement
     coresMin: 1
 cwlVersion: v1.2
 baseCommand:

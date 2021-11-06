@@ -110,6 +110,8 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+  - class: ResourceRequirement
+    outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)
 cwlVersion: v1.2

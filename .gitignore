@@ -1,0 +1,8 @@
+__pycache__/
+env/
+.tox/
+.mypy_cache/
+.pytest_cache/
+wdl2cwl.egg-info/
+coverage.xml
+.coverage

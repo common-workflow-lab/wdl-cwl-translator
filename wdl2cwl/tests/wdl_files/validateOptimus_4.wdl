@@ -70,7 +70,7 @@ task ValidateMetrics {
         docker: "ubuntu:18.04"
         cpu: 1
         memory: "1.00 GB"
-        disks: "local-disk ${required_disk} HDD"
+        #disks: "local-disk ${required_disk} HDD"
     }
 
     output { 
