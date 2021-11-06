@@ -64,6 +64,19 @@ def get_ram_min(ram_min: str) -> int:
     return ram_value
 
 
+def get_outdir_min(outdir_min: str) -> int:
+    """
+    Get disk requirement.
+
+    Value is always given in GiB.
+    Covers an Int type input and a string input without suffix only.
+    """
+    if '"' in outdir_min:
+        outdir_min = outdir_min[outdir_min.find('"') + 1 : -1]
+    outdir_value = int(float(outdir_min.strip()) * 1024)
+    return outdir_value
+
+
 def get_ram_min_js(ram_min: str, unit: str) -> str:
     """Get memory requirement for user input."""
     append_str: str = ""
@@ -643,6 +656,9 @@ def convert(workflow: str) -> str:
             )
         )
 
+    outdir_min = get_outdir_min(ast.task_runtime.get("disks", "1"))
+    requirements.append(cwl.ResourceRequirement(outdirMin=outdir_min))
+
     if "time_minutes" in ast.task_runtime:
 
         time_minutes: Union[str, int] = ""
@@ -755,7 +771,7 @@ def convert(workflow: str) -> str:
     )
 
     # implemented runtime requirements
-    runtime_requirements = ["docker", "memory", "time_minutes", "cpu"]
+    runtime_requirements = ["docker", "memory", "disks", "time_minutes", "cpu"]
 
     for i in ast.task_runtime:
         if i not in runtime_requirements:
