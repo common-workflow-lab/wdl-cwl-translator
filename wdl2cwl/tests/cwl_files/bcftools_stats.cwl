@@ -159,6 +159,8 @@ requirements:
         return parseInt(memory);
         }
   - class: ResourceRequirement
+    outdirMin: 1024
+  - class: ResourceRequirement
     coresMin: $(inputs.threads + 1)
 cwlVersion: v1.2
 baseCommand:

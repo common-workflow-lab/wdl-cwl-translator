@@ -80,6 +80,8 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+  - class: ResourceRequirement
+    outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: 60
   - class: ResourceRequirement

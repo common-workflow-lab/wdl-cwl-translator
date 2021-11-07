@@ -129,6 +129,8 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
+  - class: ResourceRequirement
+    outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)
   - class: ResourceRequirement
