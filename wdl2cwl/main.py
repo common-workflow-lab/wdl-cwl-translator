@@ -77,7 +77,7 @@ def get_outdir_min(outdir_min: str) -> int:
     return outdir_value
 
 
-def get_ram_min_js(ram_min: Union[str, list], unit: str) -> str:
+def get_ram_min_js(ram_min: Union[str, List[Any]], unit: str) -> str:
     """Get memory requirement for user input."""
     append_str: str = ""
     if type(ram_min) == list:
