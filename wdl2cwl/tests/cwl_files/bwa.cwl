@@ -82,7 +82,7 @@ requirements:
     ramMin: |-
         ${
         var unit = "G;
-        var value = (function() {for (const elem of [inputs.memoryGb,inputs.estimatedMemoryGb]) if (elem != null) return elem}) ();
+        var value = (function() {for (const elem of [inputs.memoryGb,inputs.estimatedMemoryGb]) if (elem != null) return elem;}) ();
         if (value == undefined) throw "error! array contains only null values or it's empty";
         var memory = "";
         if(unit==="KiB") memory = value/1024;

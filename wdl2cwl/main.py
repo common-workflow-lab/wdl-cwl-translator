@@ -75,32 +75,25 @@ def get_ram_min_js(ram_min: Union[str, list], unit: str) -> str:
             + "\nvar value = (function() {for (const elem of ["
             + ",".join(inputs_list)
             + "]"
-            + ") if (elem != null) return elem}) ();\n"
+            + ") if (elem != null) return elem;}) ();\n"
             + 'if (value == undefined) throw "error! array contains only null values or it\'s empty";\n'
-            + 'var memory = "";\n'
-            + 'if(unit==="KiB") memory = value/1024;\n'
-            + 'else if(unit==="MiB") memory = value;\n'
-            + 'else if(unit==="GiB") memory = value*1024;\n'
-            + 'else if(unit==="TiB") memory = value*1024*1024;\n'
-            + 'else if(unit==="B") memory = value/(1024*1024);\n'
-            + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);\n'
-            + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
-            + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
-            + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
-            + "return parseInt(memory);\n}"
         )
-        return js_str
     if unit:
         append_str = '${\nvar unit = "' + unit + '";'
     else:
         append_str = (
             "${\nvar unit = " + inputs(ram_min) + '.match(/[a-zA-Z]+/g).join("");'
         )
-    js_str = (
+    if type(ram_min) != list: 
+        js_str = (
         append_str
         + "\nvar value = parseInt("
         + inputs(ram_min)
         + ".match(/[0-9]+/g));\n"
+        )
+    
+    js_str = (
+        js_str
         + 'var memory = "";\n'
         + 'if(unit==="KiB") memory = value/1024;\n'
         + 'else if(unit==="MiB") memory = value;\n'
