@@ -1,0 +1,24 @@
+__pycache__/
+env/
+.tox/
+.mypy_cache/
+.pytest_cache/
+wdl2cwl.egg-info/
+coverage.xml
+.coverage
+
+
+# My local testing files
+.gitignore_for_python_dev
+local/
+local_test/
+*.tmp
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json

@@ -77,38 +77,49 @@ def get_outdir_min(outdir_min: str) -> int:
     return outdir_value
 
 
-def get_ram_min_js(ram_min: Any, unit: str) -> str:
+def get_ram_min_js_from_reference(ram_min: str, unit: str) -> str:
     """Get memory requirement for user input."""
     append_str: str = ""
-    add_to_js_str: str = ""
-    if type(ram_min) == list:
-        input_string = "select_first"
-        inputs_list = [inputs(input_name) for input_name in ram_min]
-        add_to_js_str = (
-            '${\nvar unit = "'
-            + unit
-            + '";\n'
-            + "var select_first = (function() {for (const elem of ["
-            + ",".join(inputs_list)
-            + "]"
-            + ") if (elem != null) return elem;}) ();\n"
-            + 'if (select_first == undefined) throw "error! array contains only null values or is empty"'
-        )
+    if unit:
+        append_str = '${\nvar unit = "' + unit + '";'
     else:
-        input_string = inputs(ram_min)
-        if unit:
-            append_str = '${\nvar unit = "' + unit + '";'
-        else:
-            append_str = (
-                "${\nvar unit = " + input_string + '.match(/[a-zA-Z]+/g).join("");'
-            )
-
+        append_str = (
+            "${\nvar unit = " + inputs(ram_min) + '.match(/[a-zA-Z]+/g).join("");'
+        )
     js_str = (
         append_str
-        + add_to_js_str
         + "\nvar value = parseInt("
-        + input_string
+        + inputs(ram_min)
         + ".match(/[0-9]+/g));\n"
+        + 'var memory = "";\n'
+        + 'if(unit==="KiB") memory = value/1024;\n'
+        + 'else if(unit==="MiB") memory = value;\n'
+        + 'else if(unit==="GiB") memory = value*1024;\n'
+        + 'else if(unit==="TiB") memory = value*1024*1024;\n'
+        + 'else if(unit==="B") memory = value/(1024*1024);\n'
+        + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);\n'
+        + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
+        + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
+        + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
+        + "return parseInt(memory);\n}"
+    )
+
+    return js_str
+
+
+def get_ram_min_js_from_function(ram_min_list: List[str], unit: str) -> str:
+    """Get memory requirement for user input from select_first function"""
+
+    inputs_list = [inputs(input_name) for input_name in ram_min_list]
+    js_str = (
+        '${\nvar unit = "'
+        + unit
+        + '";\n'
+        + "var select_first = (function() {for (const elem of ["
+        + ",".join(inputs_list)
+        + "]) if (elem != null) return elem;}) ();\n"
+        + 'if (select_first == undefined) throw "error! array contains only null values or is empty"\n'
+        + "var value = parseInt(select_first.match(/[0-9]+/g));\n"
         + 'var memory = "";\n'
         + 'if(unit==="KiB") memory = value/1024;\n'
         + 'else if(unit==="MiB") memory = value;\n'
@@ -662,7 +673,7 @@ def convert(workflow: str) -> str:
                 if len(ast.task_runtime["memory"]) != temp + 1:
                     unit = ast.task_runtime["memory"][temp + 1 : -1].strip()
                     if input_name in input_names:
-                        ram_min = get_ram_min_js(input_name, unit)
+                        ram_min = get_ram_min_js_from_reference(input_name, unit)
             elif "~{select_first(" in ast.task_runtime["memory"]:
                 input_names_string = ast.task_runtime["memory"][
                     ast.task_runtime["memory"].find("[")
@@ -678,12 +689,12 @@ def convert(workflow: str) -> str:
                     if input_name in input_names
                 ]
 
-                ram_min = get_ram_min_js(only_given_input_names, unit)
+                ram_min = get_ram_min_js_from_function(only_given_input_names, unit)
 
             else:
                 ram_min = get_ram_min(ast.task_runtime["memory"])
         else:
-            ram_min = get_ram_min_js(ast.task_runtime["memory"], "")
+            ram_min = get_ram_min_js_from_reference(ast.task_runtime["memory"], "")
 
         requirements.append(
             cwl.ResourceRequirement(
