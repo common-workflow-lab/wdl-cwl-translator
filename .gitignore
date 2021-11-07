@@ -9,16 +9,7 @@ coverage.xml
 
 
 # My local testing files
-.gitignore_for_python_dev
+
 local/
 local_test/
 *.tmp
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
