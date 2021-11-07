@@ -64,9 +64,32 @@ def get_ram_min(ram_min: str) -> int:
     return ram_value
 
 
-def get_ram_min_js(ram_min: str, unit: str) -> str:
+def get_ram_min_js(ram_min: Union[str, list], unit: str) -> str:
     """Get memory requirement for user input."""
     append_str: str = ""
+    if type(ram_min) == list:
+        inputs_list = [inputs(input_name) for input_name in ram_min]
+        append_str = '${\nvar unit = "' + unit + ";"
+        js_str = (
+            append_str
+            + "\nvar value = (function() {for (const elem of ["
+            + ",".join(inputs_list)
+            + "]"
+            + ") if (elem != null) return elem}) ();\n"
+            + 'if (value == undefined) throw "error! array contains only null values or it\'s empty";\n'
+            + 'var memory = "";\n'
+            + 'if(unit==="KiB") memory = value/1024;\n'
+            + 'else if(unit==="MiB") memory = value;\n'
+            + 'else if(unit==="GiB") memory = value*1024;\n'
+            + 'else if(unit==="TiB") memory = value*1024*1024;\n'
+            + 'else if(unit==="B") memory = value/(1024*1024);\n'
+            + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);\n'
+            + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
+            + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
+            + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
+            + "return parseInt(memory);\n}"
+        )
+        return js_str
     if unit:
         append_str = '${\nvar unit = "' + unit + '";'
     else:
@@ -647,7 +670,7 @@ def convert(workflow: str) -> str:
                     if input_name in input_names
                 ]
 
-                ram_min = get_ram_min_js(only_given_input_names[0], unit)
+                ram_min = get_ram_min_js(only_given_input_names, unit)
 
             else:
                 ram_min = get_ram_min(ast.task_runtime["memory"])
