@@ -97,10 +97,10 @@ def get_ram_min_js(ram_min: Any, unit: str) -> str:
     else:
         input_string = inputs(ram_min)
         if unit:
-            append_str = '${\nvar unit = "' + unit + '";\n'
+            append_str = '${\nvar unit = "' + unit + '";'
         else:
             append_str = (
-                "${\nvar unit = " + inputs(ram_min) + '.match(/[a-zA-Z]+/g).join("");'
+                "${\nvar unit = " + input_string + '.match(/[a-zA-Z]+/g).join("");'
             )
 
     js_str = (
