@@ -3,7 +3,7 @@ import argparse
 from argparse import Namespace
 import sys
 from io import StringIO
-from typing import List, cast, Union
+from typing import List, cast, Union, Any
 from io import StringIO
 import textwrap
 import re
@@ -77,7 +77,7 @@ def get_outdir_min(outdir_min: str) -> int:
     return outdir_value
 
 
-def get_ram_min_js(ram_min: Union[str, List], unit: str) -> str:
+def get_ram_min_js(ram_min: Any, unit: str) -> str:
     """Get memory requirement for user input."""
     append_str: str = ""
     if type(ram_min) == list:
