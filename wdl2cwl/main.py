@@ -109,7 +109,6 @@ def get_ram_min_js_from_reference(ram_min: str, unit: str) -> str:
 
 def get_ram_min_js_from_function(ram_min_list: List[str], unit: str) -> str:
     """Get memory requirement for user input from select_first function"""
-
     inputs_list = [inputs(input_name) for input_name in ram_min_list]
     js_str = (
         '${\nvar unit = "'
