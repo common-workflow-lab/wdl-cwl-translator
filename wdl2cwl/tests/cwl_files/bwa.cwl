@@ -83,7 +83,7 @@ requirements:
         ${
         var unit = "G";
         var select_first = (function() {for (const elem of [inputs.memoryGb,inputs.estimatedMemoryGb]) if (elem != null) return elem;}) ();
-        if (select_first == undefined) throw "error! array contains only null values or it's empty"
+        if (select_first == undefined) throw "error! array contains only null values or is empty"
         var value = parseInt(select_first.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;

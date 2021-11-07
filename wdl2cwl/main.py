@@ -85,20 +85,23 @@ def get_ram_min_js(ram_min: Any, unit: str) -> str:
         input_string = "select_first"
         inputs_list = [inputs(input_name) for input_name in ram_min]
         add_to_js_str = (
-            "var select_first = (function() {for (const elem of ["
+            '${\nvar unit = "'
+            + unit
+            + '";\n'
+            + "var select_first = (function() {for (const elem of ["
             + ",".join(inputs_list)
             + "]"
             + ") if (elem != null) return elem;}) ();\n"
             + 'if (select_first == undefined) throw "error! array contains only null values or is empty"'
         )
-    if unit:
-        append_str = '${\nvar unit = "' + unit + '";\n'
     else:
-        append_str = (
-            "${\nvar unit = " + inputs(ram_min) + '.match(/[a-zA-Z]+/g).join("");'
-        )
-    if type(ram_min) != list:
         input_string = inputs(ram_min)
+        if unit:
+            append_str = '${\nvar unit = "' + unit + '";\n'
+        else:
+            append_str = (
+                "${\nvar unit = " + inputs(ram_min) + '.match(/[a-zA-Z]+/g).join("");'
+            )
 
     js_str = (
         append_str
