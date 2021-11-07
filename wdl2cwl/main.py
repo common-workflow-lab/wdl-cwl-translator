@@ -80,33 +80,32 @@ def get_outdir_min(outdir_min: str) -> int:
 def get_ram_min_js(ram_min: Any, unit: str) -> str:
     """Get memory requirement for user input."""
     append_str: str = ""
+    add_to_js_str: str = ""
     if type(ram_min) == list:
+        input_string = "select_first"
         inputs_list = [inputs(input_name) for input_name in ram_min]
-        append_str = '${\nvar unit = "' + unit + ";"
-        js_str = (
-            append_str
-            + "\nvar value = (function() {for (const elem of ["
+        add_to_js_str = (
+            "var select_first = (function() {for (const elem of ["
             + ",".join(inputs_list)
             + "]"
             + ") if (elem != null) return elem;}) ();\n"
-            + 'if (value == undefined) throw "error! array contains only null values or it\'s empty";\n'
+            + 'if (select_first == undefined) throw "error! array contains only null values or is empty"'
         )
     if unit:
-        append_str = '${\nvar unit = "' + unit + '";'
+        append_str = '${\nvar unit = "' + unit + '";\n'
     else:
         append_str = (
             "${\nvar unit = " + inputs(ram_min) + '.match(/[a-zA-Z]+/g).join("");'
         )
     if type(ram_min) != list:
-        js_str = (
-            append_str
-            + "\nvar value = parseInt("
-            + inputs(ram_min)
-            + ".match(/[0-9]+/g));\n"
-        )
+        input_string = inputs(ram_min)
 
     js_str = (
-        js_str
+        append_str
+        + add_to_js_str
+        + "\nvar value = parseInt("
+        + input_string
+        + ".match(/[0-9]+/g));\n"
         + 'var memory = "";\n'
         + 'if(unit==="KiB") memory = value/1024;\n'
         + 'else if(unit==="MiB") memory = value;\n'
