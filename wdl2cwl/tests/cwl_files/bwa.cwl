@@ -82,9 +82,9 @@ requirements:
     ramMin: |-
         ${
         var unit = "G";
-        var select_first = (function() {for (const elem of [inputs.memoryGb,inputs.estimatedMemoryGb]) if (elem != null) return elem;}) ();
-        if (select_first == undefined) throw "error! array contains only null values or is empty"
-        var value = parseInt(select_first.match(/[0-9]+/g));
+        var value = (function() {for (const elem of [inputs.memoryGb,inputs.estimatedMemoryGb]) if (elem != null) return elem;}) ();
+        if (value == undefined) throw "error! array contains only null values or is empty"
+        value = parseInt(value.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;

@@ -119,11 +119,11 @@ def get_ram_min_js_from_function(ram_min_list: List[str], unit: str) -> str:
         '${\nvar unit = "'
         + unit
         + '";\n'
-        + "var select_first = (function() {for (const elem of ["
+        + "var value = (function() {for (const elem of ["
         + ",".join(inputs_list)
         + "]) if (elem != null) return elem;}) ();\n"
-        + 'if (select_first == undefined) throw "error! array contains only null values or is empty"\n'
-        + "var value = parseInt(select_first.match(/[0-9]+/g));\n"
+        + 'if (value == undefined) throw "error! array contains only null values or is empty"\n'
+        + "value = parseInt(value.match(/[0-9]+/g));\n"
         + get_ram_min_js_epilogue_str
     )
 
