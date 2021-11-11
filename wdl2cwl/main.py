@@ -43,18 +43,19 @@ valid_js_identifier = regex.compile(
 
 
 get_ram_min_js_epilogue_str = (
-        'var memory = "";\n'
-        + 'if(unit==="KiB") memory = value/1024;\n'
-        + 'else if(unit==="MiB") memory = value;\n'
-        + 'else if(unit==="GiB") memory = value*1024;\n'
-        + 'else if(unit==="TiB") memory = value*1024*1024;\n'
-        + 'else if(unit==="B") memory = value/(1024*1024);\n'
-        + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);\n'
-        + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
-        + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
-        + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
-        + "return parseInt(memory);\n}"
+    'var memory = "";\n'
+    + 'if(unit==="KiB") memory = value/1024;\n'
+    + 'else if(unit==="MiB") memory = value;\n'
+    + 'else if(unit==="GiB") memory = value*1024;\n'
+    + 'else if(unit==="TiB") memory = value*1024*1024;\n'
+    + 'else if(unit==="B") memory = value/(1024*1024);\n'
+    + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);\n'
+    + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
+    + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
+    + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
+    + "return parseInt(memory);\n}"
 )
+
 
 def inputs(input_name: str) -> str:
     """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -124,7 +125,6 @@ def get_ram_min_js_from_function(ram_min_list: List[str], unit: str) -> str:
         + 'if (select_first == undefined) throw "error! array contains only null values or is empty"\n'
         + "var value = parseInt(select_first.match(/[0-9]+/g));\n"
         + get_ram_min_js_epilogue_str
-
     )
 
     return js_str
