@@ -10,7 +10,7 @@ import re
 
 import regex  # type: ignore
 
-import cwl_utils.parser_v1_2 as cwl
+import cwl_utils.parser.cwl_v1_2 as cwl
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
