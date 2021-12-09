@@ -11,17 +11,6 @@ from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
 
-# WDL-CWL Type Mappings
-wdl_type = {
-    "Array[String]": "string[]",
-    "String": "string",
-    "File": "File",
-    "Int": "int",
-    "Float": "float",
-    "Boolean": "boolean",
-}
-
-
 
 class Converter:
 
@@ -52,19 +41,14 @@ class Converter:
         print(f"Workflow {obj.name} loaded")
     
     def load_wdl_task(self, obj: WDL.Task):
-        inputs = obj.inputs
         runtime = obj.runtime
-
-        # command = self.translate_command(obj.command, inputs)
-        # print(f"Task {obj.name} loaded")
-        # print(obj.__dict__)
-        raw_inputs = self.get_raw_inputs(obj.inputs)
-        inputs = self.get_inputs(raw_inputs)
+        
+        cwl_inputs = self.get_cwl_inputs(obj.inputs)
         base_command = ["bash", "example.sh"]
 
         cat_tool = cwl.CommandLineTool(
         id=obj.name,
-        inputs=inputs,
+        inputs=cwl_inputs,
         requirements=None,
         outputs=[],
         cwlVersion="v1.2",
@@ -82,52 +66,33 @@ class Converter:
         yaml.dump(cwl_result, sys.stdout)
 
         return result_stream.getvalue()
-    
-    def get_raw_inputs(self, input_declarations: List[str]):
-        raw_inputs = []
 
-        for input_declaration in input_declarations:
-            split_str = str(input_declaration).split(" ")
-            type_of, name, *expression = split_str
+    def get_cwl_inputs(self, wdl_inputs: List[str]):
+        inputs = []
 
-            if expression: 
-                expression = "".join(expression[1:])
-            else: 
-                expression = None
+        for wdl_input in wdl_inputs:
+            input_name = wdl_input.name
+            input_value = None
 
-            raw_inputs.append([type_of, name, expression])
+            if isinstance(wdl_input, WDL.Type.Array):
+                input_type = 'File'
+                type_of = [cwl.CommandInputArraySchema(items=input_type, type="array")]
+            elif isinstance(wdl_input, WDL.Type.String):
+                type_of = "string"
+            elif isinstance(wdl_input, WDL.Type.Boolean):
+                type_of = "boolean"
+            elif isinstance(wdl_input, WDL.Type.Int):
+                type_of = "int"
+            else:
+                print(wdl_input.type)
+                type_of = ""
 
-        return raw_inputs
 
-    def get_inputs(self, raw_inputs: List[str]):
-        inputs: List[cwl.CommandInputParameter]
+            if wdl_input.type.optional: type_of = [type_of, "null"]
 
-        for raw_input in raw_inputs:
-            if raw_input[2] is None:
-                input_name = raw_input[1]
+            if wdl_input.expr is not None: input_value = wdl_input.expr.literal.value
 
-                if "Array" in raw_input[0]:
-                    temp_type = wdl_type[
-                        raw_input[0][raw_input[0].find("[") + 1 : raw_input[0].find("]")].replace('"', "")
-                    ]
-                    input_type = temp_type if "?" not in raw_input[0] else [temp_type, "null"]
-                    input_name = raw_input[1]
-
-                    inputs.append(
-                        cwl.CommandInputParameter(
-                            id=input_name,
-                            type=[cwl.CommandInputArraySchema(items=input_type, type="array")],
-                        )
-                    )
-
-                else:
-                    input_type = (
-                        wdl_type[raw_input[0]]
-                        if "?" not in raw_input[0]
-                        else [wdl_type[raw_input[0].replace("?", "")], "null"]
-                    )
-
-                    inputs.append(cwl.CommandInputParameter(id=input_name, type=input_type))
+            inputs.append(cwl.CommandInputParameter(id=input_name, type=type_of, default=input_value))
 
         return inputs
         
