@@ -268,7 +268,18 @@ if __name__ == '__main__':
         )
     )
 
+    requirements: List[cwl.ProcessRequirement] = []
 
+    dockerpull = task.runtime["docker"].expr.referee.expr.literal.value
+    requirements.append(
+            cwl.DockerRequirement(dockerPull=dockerpull)
+        )
+    command = task.command
+
+    wdl_command_part_1 = command.parts[0]
+    command_1 = textwrap.dedent(wdl_command_part_1)
+    wdl_command_part_2 = command.parts[1] # This is a wdl.Expr.placeholder
+    command_2_expr = wdl_command_part_2.expr
 
     # Resulting cwl output
     base_command = ["bash", "example.sh"]
@@ -276,7 +287,7 @@ if __name__ == '__main__':
     cat_tool = cwl.CommandLineTool(
     id=task.name,
     inputs=cwl_inputs,
-    requirements=None,
+    requirements=requirements,
     outputs=cwl_outputs,
     cwlVersion="v1.2",
     baseCommand=base_command,
