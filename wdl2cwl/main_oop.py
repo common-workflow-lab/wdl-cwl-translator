@@ -11,6 +11,16 @@ from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
 
+# WDL-CWL Type Mappings
+wdl_type = {
+    "Array[String]": "string[]",
+    "String": "string",
+    "File": "File",
+    "Int": "int",
+    "Float": "float",
+    "Boolean": "boolean",
+}
+
 
 class Converter:
 
@@ -74,18 +84,17 @@ class Converter:
             input_name = wdl_input.name
             input_value = None
 
-            if isinstance(wdl_input, WDL.Type.Array):
+            if isinstance(wdl_input.type, WDL.Type.Array):
                 input_type = 'File'
                 type_of = [cwl.CommandInputArraySchema(items=input_type, type="array")]
-            elif isinstance(wdl_input, WDL.Type.String):
+            elif isinstance(wdl_input.type, WDL.Type.String):
                 type_of = "string"
-            elif isinstance(wdl_input, WDL.Type.Boolean):
+            elif isinstance(wdl_input.type, WDL.Type.Boolean):
                 type_of = "boolean"
-            elif isinstance(wdl_input, WDL.Type.Int):
+            elif isinstance(wdl_input.type, WDL.Type.Int):
                 type_of = "int"
             else:
-                print(wdl_input.type)
-                type_of = ""
+                type_of = "unknown type"
 
 
             if wdl_input.type.optional: type_of = [type_of, "null"]
@@ -137,6 +146,7 @@ if __name__ == '__main__':
     import sys
     import argparse
     
+
     
     # Command-line parsing.
     parser = argparse.ArgumentParser()
@@ -144,14 +154,157 @@ if __name__ == '__main__':
 
     # args = parser.parse_args()
 
+    wdl_path = "wdl2cwl/tests/wdl_files/bowtie_1.wdl"
+    doc_tree = WDL.load(wdl_path)
+    task = doc_tree.tasks[0]
+    inputs = task.inputs
+    wdl_first_input = inputs[0]
 
-    try:
-        converted = Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
-        # converted = Converter.load_wdl_tree(args.workflow)
-    except WDL.Error.SyntaxError as err:
-        print(err)
-    except WDL.Error.ValidationError as err:
-        print(err)
-    except WDL.Error.MultipleValidationErrors as err:
-        for error in err.exceptions:
-            print(error)
+    cwl_inputs: List[cwl.CommandInputParameter] = []
+
+    # add a function to return the cwl type from wdl_type using isinstance
+
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_first_input.name,
+                    type=[cwl.CommandInputArraySchema(items="File", type="array")],
+                )
+            )
+    wdl_second_input = inputs[1]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_second_input.name,
+                    type="string", default=wdl_second_input.expr.literal.value
+                )
+            )
+    wdl_third_input = inputs[2]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_third_input.name,
+                    type=[cwl.CommandInputArraySchema(items="File", type="array")],
+                )
+            )
+    wdl_fourth_input = inputs[3]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_fourth_input.name,
+                    type="boolean", default=wdl_fourth_input.expr.literal.value
+                )
+            )
+    wdl_fifth_input = inputs[4]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_fifth_input.name,
+                    type="boolean", default=wdl_fifth_input.expr.literal.value
+                )
+            )
+    wdl_sixth_input = inputs[5]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_sixth_input.name,
+                    type="boolean", default=wdl_sixth_input.expr.literal.value
+                )
+            )
+    wdl_seventh_input = inputs[6]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_seventh_input.name,
+                    type=["int", "null"], default=None
+                )
+            )
+    wdl_eight_input = inputs[7]
+    # since wdl_eight_input.type.optional == True then we return an array with null appended
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_eight_input.name,
+                    type=["int", "null"], default=None
+                )
+            )
+    wdl_nineth_input = inputs[8]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_nineth_input.name,
+                    type=["int", "null"], default=None
+                )
+            )
+    wdl_tenth_input = inputs[9]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_tenth_input.name,
+                    type=["string", "null"], default=None
+                )
+            )
+    wdl_eleventh_input = inputs[10]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_eleventh_input.name,
+                    type="string", default=wdl_eleventh_input.expr.literal.value
+                )
+            )
+    wdl_twelveth_input = inputs[11]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_twelveth_input.name,
+                    type="int", default=wdl_twelveth_input.expr.literal.value
+                )
+            )
+    wdl_thirteenth_input = inputs[12]
+    cwl_inputs.append(
+                cwl.CommandInputParameter(
+                    id=wdl_thirteenth_input.name,
+                    type="string", default=wdl_thirteenth_input.expr.literal.value
+                )
+            )
+    
+    wdl_outputs = task.outputs
+    cwl_outputs = []
+    wdl_first_output = wdl_outputs[0]
+
+    cwl_outputs.append(
+    cwl.CommandOutputParameter(
+        id=wdl_first_output.name,
+        type="File",
+        outputBinding=cwl.CommandOutputBinding(glob="$(inputs.{outputpath})".format(outputpath=wdl_first_output.expr.expr.name)),
+        )
+    )
+
+
+
+    # Resulting cwl output
+    base_command = ["bash", "example.sh"]
+
+    cat_tool = cwl.CommandLineTool(
+    id=task.name,
+    inputs=cwl_inputs,
+    requirements=None,
+    outputs=cwl_outputs,
+    cwlVersion="v1.2",
+    baseCommand=base_command,
+    )
+
+    yaml = YAML()
+    yaml.default_flow_style = False
+    yaml.indent = 4
+    yaml.block_seq_indent = 2
+    result_stream = StringIO()
+    cwl_result = cat_tool.save()
+    scalarstring.walk_tree(cwl_result)
+    yaml.dump(cwl_result, result_stream)
+    yaml.dump(cwl_result, sys.stdout)
+
+    result_stream.getvalue()
+
+    # write to a file in oop_cwl_files
+    with open("wdl2cwl/tests/oop_cwl_files/bowtie_1.cwl", "w") as result:
+        result.write(result_stream.getvalue())
+
+    # try:
+    #     converted = Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    #     # converted = Converter.load_wdl_tree(args.workflow)
+    # except WDL.Error.SyntaxError as err:
+    #     print(err)
+    # except WDL.Error.ValidationError as err:
+    #     print(err)
+    # except WDL.Error.MultipleValidationErrors as err:
+    #     for error in err.exceptions:
+    #         print(error)
