@@ -275,12 +275,102 @@ if __name__ == '__main__':
             cwl.DockerRequirement(dockerPull=dockerpull)
         )
     command = task.command
+    cwl_command_str = ""
 
     wdl_command_part_1 = command.parts[0]
     command_1 = textwrap.dedent(wdl_command_part_1)
-    wdl_command_part_2 = command.parts[1] # This is a wdl.Expr.placeholder
-    command_2_expr = wdl_command_part_2.expr
+    cwl_command_str += command_1
+    wdl_command_part_2 = command.parts[1] # This is a wdl.Expr.placeholder object
+    command_2_expr = wdl_command_part_2.expr.expr.name
+    cwl_command_str += "$(inputs." + command_2_expr + ")"
+    wdl_command_part_3 = command.parts[2]
+    command_3 = textwrap.dedent(wdl_command_part_3)
+    cwl_command_str += command_3
+    wdl_command_part_4 = command.parts[3]
 
+    command_4_arg_name, command_4_input_value = wdl_command_part_4.expr.arguments # This is a wdl.Expr.apply object
+    command_4_arg_name_value = command_4_arg_name.literal.value
+    command_4_input_value_name = command_4_input_value.expr.name
+
+    # Since command_4_arg_value.expr.referee.type.optional == True
+    cwl_command_str += "$(inputs." + command_4_input_value_name + ' === null ? "" : ' + f"'{command_4_arg_name_value}'"  + " inputs." + command_4_input_value_name + ")"
+    wdl_command_part_5 = command.parts[4]
+    command_5 = textwrap.dedent(wdl_command_part_5)
+    cwl_command_str += command_5
+    wdl_command_part_6 = command.parts[5]
+
+    command_6_arg_name, command_6_input_value = wdl_command_part_6.expr.arguments # This is a wdl.Expr.apply object
+    command_6_arg_name_value = command_6_arg_name.literal.value
+    command_6_input_value_name = command_6_input_value.expr.name
+
+    # Since command_6_arg_value.expr.referee.type.optional == True
+    cwl_command_str += "$(inputs." + command_6_input_value_name + ' === null ? "" : ' + f"'{command_6_arg_name_value}'"  + " inputs." + command_6_input_value_name + ")"
+ 
+    wdl_command_part_7 = command.parts[6]
+    command_7 = textwrap.dedent(wdl_command_part_7)
+    cwl_command_str += command_7
+
+    wdl_command_part_8 = command.parts[7]
+    command_8_arg_name, command_8_input_value = wdl_command_part_8.expr.arguments # This is a wdl.Expr.apply object
+    command_8_arg_name_value = command_8_arg_name.literal.value
+    command_8_input_value_name = command_8_input_value.expr.name
+
+    # Since command_4_arg_value.expr.referee.type.optional == True
+    cwl_command_str += "$(inputs." + command_8_input_value_name + ' === null ? "" : ' + f"'{command_8_arg_name_value}'"  + " inputs." + command_8_input_value_name + ")"
+
+    wdl_command_part_9 = command.parts[8]
+    command_9 = textwrap.dedent(wdl_command_part_9)
+    cwl_command_str += command_9
+    wdl_command_part_10 = command.parts[9]
+
+    # Since wdl_command_part_10.options = {'true': '--best', 'false': '""'}
+    command_10_expr = wdl_command_part_10.expr.expr.name
+    cwl_command_str += "$(inputs." + command_10_expr + " ? " + "'{true_value}' : '{false_value}')".format(true_value=wdl_command_part_10.options["true"], false_value=wdl_command_part_10.options["false"]) + ")"
+    wdl_command_part_11 = command.parts[10]
+    command_11 = textwrap.dedent(wdl_command_part_11)
+    cwl_command_str += command_11
+    wdl_command_part_12 = command.parts[11]
+    command_12_expr = wdl_command_part_12.expr.expr.name
+# Since wdl_command_part_12.options = {'true': '--best', 'false': '""'}
+    cwl_command_str += "$(inputs." + command_12_expr + " ? " + "'{true_value}' : '{false_value}')".format(true_value=wdl_command_part_12.options["true"], false_value=wdl_command_part_12.options["false"]) + ")"
+    wdl_command_part_13 = command.parts[12]
+    command_13 = textwrap.dedent(wdl_command_part_13)
+    cwl_command_str += command_13
+    wdl_command_part_14 = command.parts[13]
+    command_14_expr = wdl_command_part_14.expr.expr.name
+# Since wdl_command_part_14.options = {'true': '--best', 'false': '""
+    cwl_command_str += "$(inputs." + command_14_expr + " ? " + "'{true_value}' : '{false_value}')".format(true_value=wdl_command_part_14.options["true"], false_value=wdl_command_part_14.options["false"]) + ")"
+    wdl_command_part_15 = command.parts[14]
+    command_15 = textwrap.dedent(wdl_command_part_15)
+    cwl_command_str += command_15
+    wdl_command_part_16 = command.parts[15]
+
+    command_16_arg_name, command_16_input_value = wdl_command_part_16.expr.arguments # This is a wdl.Expr.apply object
+    command_16_arg_name_value = command_16_arg_name.literal.value
+    command_16_input_value_name = command_16_input_value.expr.name
+
+    # Since command_4_arg_value.expr.referee.type.optional == True
+    cwl_command_str += "$(inputs." + command_16_input_value_name + ' === null ? "" : ' + f"'{command_16_arg_name_value}'"  + " inputs." + command_16_input_value_name + ")"
+
+    wdl_command_part_17 = command.parts[16]
+    command_17 = textwrap.dedent(wdl_command_part_17)
+    cwl_command_str += command_17
+    wdl_command_part_18 = command.parts[17]
+
+    command_18_arg_name, command_18_input_value = wdl_command_part_18.expr.arguments # This is a wdl.Expr.apply object
+    command_18_arg_name_value = command_18_arg_name.literal.value
+    command_18_input_value_name = command_18_input_value.expr.name
+
+    # Since command_4_arg_value.expr.referee.type.optional == True
+    cwl_command_str += "$(inputs." + command_18_input_value_name + ' === null ? "" : ' + f"'{command_18_arg_name_value}'"  + " inputs." + command_18_input_value_name + ")"
+
+    wdl_command_part_19 = command.parts[18]
+
+    requirements.append(
+        cwl.InitialWorkDirRequirement(
+            listing=[cwl.Dirent(entry=cwl_command_str, entryname="example.sh")]
+        )
+    )
     # Resulting cwl output
     base_command = ["bash", "example.sh"]
 

@@ -54,6 +54,24 @@ outputs:
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/mulled-v2-bfe71839265127576d3cd749c056e7b168308d56:1d8bec77b352cdcf3e9ff3d20af238b33ed96eae-0
+  - class: InitialWorkDirRequirement
+    listing:
+      - entryname: example.sh
+        entry: |4-
+
+            set -e -o pipefail
+            mkdir -p "$(dirname $(inputs.outputPath))"
+                    bowtie \
+                    -q \
+                    --sam \
+            $(inputs.seedmms === null ? "" : '--seedmms ' inputs.seedmms\
+            $(inputs.seedlen === null ? "" : '--seedlen ' inputs.seedlen\
+            $(inputs.k === null ? "" : '-k ' inputs.k\
+            $(inputs.best ? '--best' : '')\
+            $(inputs.strata ? '--strata' : '')\
+            $(inputs.allowContain ? '--allow-contain' : '')\
+            $(inputs.threads === null ? "" : '--threads ' inputs.threads\
+            $(inputs.samRG === null ? "" : '--sam-RG '' inputs.samRG
 cwlVersion: v1.2
 baseCommand:
   - bash
