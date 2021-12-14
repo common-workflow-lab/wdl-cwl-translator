@@ -57,21 +57,33 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
-        entry: |4-
+        entry: |4
 
             set -e -o pipefail
-            mkdir -p "$(dirname $(inputs.outputPath))"
+            mkdir -p "$(dirname $(inputs.outputPath ))"
                     bowtie \
                     -q \
                     --sam \
-            $(inputs.seedmms === null ? "" : '--seedmms ' inputs.seedmms\
-            $(inputs.seedlen === null ? "" : '--seedlen ' inputs.seedlen\
-            $(inputs.k === null ? "" : '-k ' inputs.k\
-            $(inputs.best ? '--best' : '')\
-            $(inputs.strata ? '--strata' : '')\
-            $(inputs.allowContain ? '--allow-contain' : '')\
-            $(inputs.threads === null ? "" : '--threads ' inputs.threads\
-            $(inputs.samRG === null ? "" : '--sam-RG '' inputs.samRG
+            $(inputs.seedmms === null ? "" : "--seedmms " inputs.seedmms )\
+            $(inputs.seedlen === null ? "" : "--seedlen " inputs.seedlen )\
+            $(inputs.k === null ? "" : "-k " inputs.k )\
+            $(inputs.best ? "--best" : ""))\
+            $(inputs.strata ? "--strata" : ""))\
+            $(inputs.allowContain ? "--allow-contain" : ""))\
+            $(inputs.threads === null ? "" : "--threads " inputs.threads )\
+            $(inputs.samRG === null ? "" : "--sam-RG '" inputs.samRG )$(inputs.samRG ? "" : "'")\
+            $(inputs.indexFiles[0].replace( "(\.rev)?\.[0-9]\.ebwt$", "") )\
+            $(inputs.readsUpstream.map(function(el) {return el.path}).join(","))\
+                   | picard -Xmx$(inputs.picardXmx) SortSam \
+                   INPUT=/dev/stdin \
+                   OUTPUT=$(inputs.outputPath) \
+                   SORT_ORDER=coordinate \
+                   CREATE_INDEX=true
+  - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
+  - class: ResourceRequirement
+    ramMin: $(inputs.threads)
 cwlVersion: v1.2
 baseCommand:
   - bash
