@@ -279,6 +279,8 @@ if __name__ == '__main__':
 
     wdl_command_part_1 = command.parts[0]
     command_1 = textwrap.dedent(wdl_command_part_1)
+    command_1_splitted_p1, command_1_splitted_p2 = command_1.split("$")
+    command_1 = command_1_splitted_p1 + "\\$" + command_1_splitted_p2
     cwl_command_str += command_1
     wdl_command_part_2 = command.parts[1] # This is a wdl.Expr.placeholder object
     command_2_expr = wdl_command_part_2.expr.expr.name

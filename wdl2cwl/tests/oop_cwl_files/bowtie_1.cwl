@@ -60,7 +60,7 @@ requirements:
         entry: |4
 
             set -e -o pipefail
-            mkdir -p "$(dirname $(inputs.outputPath ))"
+            mkdir -p "\$(dirname $(inputs.outputPath ))"
                     bowtie \
                     -q \
                     --sam \
