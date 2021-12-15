@@ -1,3 +1,4 @@
+"""Main entrypoint for WDL2CWL."""
 import os
 from typing import List, Union, Optional, Callable
 import WDL  # type: ignore[import]
@@ -141,7 +142,7 @@ from ruamel.yaml.main import YAML
 #         #     print(placeholder)
 #         pass
 def convert(path: str) -> str:
-    """convert just the bowtie_1 file."""
+    """Convert just the bowtie_1 file."""
     wdl_path = path
     doc_tree = WDL.load(wdl_path)
     task = doc_tree.tasks[0]
@@ -556,7 +557,7 @@ def convert(path: str) -> str:
 
 
 def main() -> None:
-    """The main entry point."""
+    """Main entry point."""
     # Command-line parsing.
     parser = argparse.ArgumentParser()
     parser.add_argument("workflow", help="Path to WDL workflow")

@@ -1,3 +1,4 @@
+''' Tests for miniwdl '''
 import os.path
 import pytest
 import pathlib
