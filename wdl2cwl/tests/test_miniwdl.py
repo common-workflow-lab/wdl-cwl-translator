@@ -7,6 +7,7 @@ from .. import main_oop as wdl
 
 
 def get_file(path: str) -> str:
+    """Get file."""
     return os.path.join(os.path.dirname(__file__), path)
 
 
