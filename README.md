@@ -60,9 +60,14 @@ pip install -e .
 ```
 make install-dep
 make test  # just the unit tests
+make help # to list major makefile targets
+make diff_pydocstyle_report # run a diff to show how much changes where made in the docstyle
+
 tox  # all the code checks
 tox -e py39-pydocstyle # perform only pydocstyle tests (py39 is the version of the python interpreter you have installed)
-make diff_pydocstyle_report # run a diff to show how much changes where made in the docstryle
+
+
+
 ```
 
 ### Adding Test Cases
