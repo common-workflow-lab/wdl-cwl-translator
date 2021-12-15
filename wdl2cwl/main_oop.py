@@ -557,7 +557,7 @@ def convert(path: str) -> str:
 
 
 def main() -> None:
-    """Main entry point."""
+    """Entry point."""
     # Command-line parsing.
     parser = argparse.ArgumentParser()
     parser.add_argument("workflow", help="Path to WDL workflow")
