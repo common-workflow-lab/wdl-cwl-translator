@@ -54,7 +54,7 @@ task ValidateLoom {
        docker: "ubuntu:16.04"
        cpu: 1
        memory: "3.75 GB"
-       disks: "local-disk ${required_disk} HDD"
+       #disks: "local-disk ${required_disk} HDD"
    }
 
    output {

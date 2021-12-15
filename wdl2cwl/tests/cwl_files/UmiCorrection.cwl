@@ -91,6 +91,8 @@ requirements:
         return parseInt(memory);
         }
   - class: ResourceRequirement
+    outdirMin: 1024
+  - class: ResourceRequirement
     coresMin: $(inputs.cpu)
 cwlVersion: v1.2
 baseCommand:

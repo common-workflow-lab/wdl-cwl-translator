@@ -60,6 +60,8 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
+  - class: ResourceRequirement
+    outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
   - bash
