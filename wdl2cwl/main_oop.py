@@ -1,6 +1,6 @@
 import os
 from typing import List, Union, Optional, Callable
-import WDL
+import WDL # type: ignore
 import cwl_utils.parser.cwl_v1_2 as cwl
 
 from io import StringIO
