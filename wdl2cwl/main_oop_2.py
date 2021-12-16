@@ -45,7 +45,6 @@ class Converter:
         runtime = obj.runtime
 
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
-        print(cwl_inputs)
         base_command = ["bash", "example.sh"]
 
         cat_tool = cwl.CommandLineTool(
@@ -107,29 +106,18 @@ class Converter:
         if expr is None:
             return None
 
-        if isinstance(expr, WDL.Expr.Array):
-            return [self.translate_expr(e) for e in expr.items]
+        # if isinstance(expr, WDL.Expr.Array):
+        #     return [self.translate_expr(e) for e in expr.items]
 
         if isinstance(expr, WDL.Expr.String):
             return self.translate_command_string(expr)
         elif isinstance(expr, (WDL.Expr.Int, WDL.Expr.Boolean, WDL.Expr.Float)):
             return self.literal.value
-        if isinstance(expr, WDL.Expr.Placeholder):
-            return self.translate_expr(expr.expr)
+        # if isinstance(expr, WDL.Expr.Placeholder):
+        #     return self.translate_expr(expr.expr)
 
     def translate_command_string(self, string: WDL.Expr.String):
-        # print("this is the literal", string.literal)
-        # if string.literal is not None:
-        #     return str(string.literal).lstrip("').rstrip('"')
 
-        # elements = {}
-        # counter = 1
-        # _format = str(string).lstrip('"').rstrip('"')
-        # print("from _format", _format)
-
-        # for placeholder in string.children:
-
-        #     print(placeholder)
         pass
 def main() -> None:
     """Entry point."""
