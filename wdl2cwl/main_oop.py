@@ -26,7 +26,6 @@ from ruamel.yaml.main import YAML
 # }
 
 
-
 def convert(path: str) -> str:
     """Convert just the bowtie_1 file."""
     wdl_path = path

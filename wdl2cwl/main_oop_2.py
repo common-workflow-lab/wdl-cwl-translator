@@ -45,13 +45,14 @@ class Converter:
         runtime = obj.runtime
 
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
+        cwl_outputs = self.get_cwl_outputs(obj.outputs)
         base_command = ["bash", "example.sh"]
 
         cat_tool = cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
             requirements=None,
-            outputs=[],
+            outputs=cwl_outputs,
             cwlVersion="v1.2",
             baseCommand=base_command,
         )
@@ -69,7 +70,7 @@ class Converter:
         return result_stream.getvalue()
 
     def get_cwl_inputs(self, wdl_inputs: List[str]):
-        inputs = []
+        inputs: List[cwl.CommandInputParameter] = []
 
         for wdl_input in wdl_inputs:
             input_name = wdl_input.name
@@ -101,6 +102,27 @@ class Converter:
 
         return inputs
 
+    def get_cwl_outputs(self, wdl_outputs: List[str]):
+        outputs: List[cwl.CommandOutputParameter] = []
+
+        for wdl_output in wdl_outputs:
+            output_name = wdl_output.name
+            if isinstance(wdl_output.type, WDL.Type.File):
+                type_of = "File"
+
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=type_of,
+                    outputBinding=cwl.CommandOutputBinding(
+                        glob="$(inputs.{outputpath})".format(
+                            outputpath=wdl_output.expr.expr.name
+                        )
+                    ),
+                )
+            )
+        return outputs
+
     def translate_command(self, expr: WDL.Expr.Base, inputs: List[str]):
 
         if expr is None:
@@ -119,6 +141,8 @@ class Converter:
     def translate_command_string(self, string: WDL.Expr.String):
 
         pass
+
+
 def main() -> None:
     """Entry point."""
     # # Command-line parsing.
@@ -128,8 +152,8 @@ def main() -> None:
     # args = parser.parse_args()
     # # write to a file in oop_cwl_files
     # if args.output:
-        # with open(args.output, "w") as result:
-        #     result.write(str(
+    # with open(args.output, "w") as result:
+    #     result.write(str(
     Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
 
 
