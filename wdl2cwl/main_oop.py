@@ -19,7 +19,7 @@ class Converter:
 
     @staticmethod
     def load_wdl_tree(doc: str):
-        """Static method that loads the WDL file and loads the WDL document tree."""
+        """Load WDL file, instantiate Converter class and loads the WDL document tree."""
         wdl_path = os.path.relpath(doc)
         doc_tree = WDL.load(wdl_path)
 
