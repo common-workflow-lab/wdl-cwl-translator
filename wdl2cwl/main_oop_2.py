@@ -6,7 +6,6 @@ import cwl_utils.parser.cwl_v1_2 as cwl
 
 from io import StringIO
 import textwrap
-import re
 import sys
 import argparse
 
@@ -17,6 +16,7 @@ from ruamel.yaml.main import YAML
 
 class Converter:
     """An object that handles WDL Workflows and task conversion to CWL."""
+
     @staticmethod
     def load_wdl_tree(doc: str):
         """A static method that loads the WDL file and loads the WDL document tree."""
@@ -51,18 +51,18 @@ class Converter:
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_outputs(obj.outputs)
         docker_requirement = self.get_cwl_docker_requirements(obj.runtime["docker"])
-        test_part_11 = obj.command.parts[11]
-        test_part_18 = obj.command.parts[18]
-        test_part_20 = obj.command.parts[20]
-        test_part_22 = obj.command.parts[22]
-        test_placeholder_with_args = obj.command.parts[3]
         cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
         base_command = ["bash", "example.sh"]
+        requirements = docker_requirement + cwl_command_str
+        requirements.append(cwl.InlineJavascriptRequirement())
+        requirements.append(cwl.NetworkAccess(networkAccess=True))
+        cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
+        requirements.append(cpu_requirement)
 
         cat_tool = cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
-            requirements=docker_requirement + cwl_command_str,
+            requirements=requirements,
             outputs=cwl_outputs,
             cwlVersion="v1.2",
             baseCommand=base_command,
@@ -79,14 +79,22 @@ class Converter:
         yaml.dump(cwl_result, sys.stdout)
 
         return result_stream.getvalue()
+    
+    def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
+        cpu_runtime_name = cpu_runtime.expr.name
+        ram_min = f"$(inputs.{cpu_runtime_name})"
+        return cwl.ResourceRequirement(ramMin=ram_min)
 
     def get_cwl_docker_requirements(self, wdl_docker: WDL.Expr):
+        """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
         requirements: List[cwl.ProcessRequirement] = []
         dockerpull = wdl_docker.expr.referee.expr.literal.value
         requirements.append(cwl.DockerRequirement(dockerPull=dockerpull))
         return requirements
 
-    def get_cwl_command_requirements(self, wdl_commands: List[str]) -> List[cwl.InitialWorkDirRequirement]:
+    def get_cwl_command_requirements(
+        self, wdl_commands: List[str]
+    ) -> List[cwl.InitialWorkDirRequirement]:
         """Translate WDL commands into CWL Initial WorkDir REquirement."""
         command_str: str = ""
         for wdl_command in wdl_commands:
@@ -99,38 +107,49 @@ class Converter:
                 listing=[cwl.Dirent(entry=command_str, entryname="example.sh")]
             )
         ]
+
     def translate_wdl_placeholder(self, wdl_placeholder) -> str:
         cwl_command_str = ""
+
+        options = wdl_placeholder.options
+        if options:
+            if "true" in options:
+                true_value = options["true"]
+                false_value = options["false"]
+            elif "sep" in options:
+                seperator = options["sep"]
         if isinstance(wdl_placeholder.expr, WDL.Expr.Get):
             placeholder_name = wdl_placeholder.expr.expr.name
-            if wdl_placeholder.options:
-                if "true" in wdl_placeholder.options:
-                    cwl_command_str = (
-            "$(inputs."
-            + placeholder_name
-            + " ? "
-            + '"{true_value}" : "{false_value}")'.format(
-                true_value=wdl_placeholder.options["true"],
-                false_value=wdl_placeholder.options["false"],
-            )
-            + ")"
-        )
-            else:
-                cwl_command_str = "$(inputs." + wdl_placeholder.expr.expr.name + ")"
-        elif isinstance(wdl_placeholder.expr, WDL.Expr.Apply):
-            if len(wdl_placeholder.expr.arguments) == 1:
-                arg_name = wdl_placeholder.expr.arguments[0].expr.referee.name
+            if not options:
+                cwl_command_str = "$(inputs." + placeholder_name + ")"
+            elif "true" in options:
                 cwl_command_str = (
                     "$(inputs."
-                    + arg_name
+                    + placeholder_name
                     + " ? "
-                    + '"{false_value}" : "{true_value}")'.format(
-                        true_value=wdl_placeholder.options["true"],
-                        false_value=wdl_placeholder.options["false"],
-                    )
+                    + f'"{true_value}" : "{false_value}")'
                 )
-            if len(wdl_placeholder.expr.arguments) == 2:
-                arg_name, arg_value = wdl_placeholder.expr.arguments
+            elif "sep" in options:
+                cwl_command_str = (
+                    f"$(inputs.{placeholder_name}.map("
+                    + 'function(el) {return el.path}).join("'
+                    + seperator
+                    + '"))'
+                )
+        elif isinstance(wdl_placeholder.expr, WDL.Expr.Apply):
+            function_name = wdl_placeholder.expr.function_name
+            expr_arguments = wdl_placeholder.expr.arguments
+
+            if function_name == "defined":
+                arg_referee_name = expr_arguments[0].expr.referee.name
+                cwl_command_str = (
+                    "$(inputs."
+                    + arg_referee_name
+                    + " ? "
+                    + f'"{false_value}" : "{true_value}")'
+                )
+            elif function_name == "_interpolation_add":
+                arg_name, arg_value = expr_arguments
                 arg_name, arg_value = arg_name.literal.value, arg_value.expr.name
                 if wdl_placeholder.expr.type.optional:
                     cwl_command_str = (
@@ -139,19 +158,38 @@ class Converter:
                         + ' === null ? "" : '
                         + f'"{arg_name}"'
                         + " inputs."
-                        + arg_name
+                        + arg_value
                         + " )"
                     )
+                else:
+                    cwl_command_str = (
+                        f'{arg_name} $(inputs.{arg_value})'
+                    )
+            elif function_name == "sub":
+                wdl_apply_object_arg, arg_string, arg_substitute = expr_arguments
+                apply_input, index_to_sub = wdl_apply_object_arg.arguments
+                apply_input_name, index_to_sub_value = (
+                    apply_input.expr.name,
+                    index_to_sub.value,
+                )
+                cwl_command_str = (
+                    "$(inputs."
+                    + apply_input_name
+                    + f"[{index_to_sub_value}]"
+                    + f'.replace("{arg_string.literal.value}", "{arg_substitute.literal.value}") )'
+                )
         return cwl_command_str
 
     def translate_wdl_str(self, wdl_command: str) -> str:
         """Translate WDL string command to CWL Process requirement string."""
-        wdl_command.replace("\\n", "\n")
-        command_str = textwrap.dedent(wdl_command)
+        first_newline = wdl_command.find("\n")
+        command_str = wdl_command[:first_newline] + textwrap.dedent(
+            wdl_command[first_newline:]
+        )
+
         if "$" in command_str:
             splitted_1, splitted_2 = command_str.split("$")
             command_str = splitted_1 + "\\$" + splitted_2
-
 
         return command_str
 
@@ -189,7 +227,9 @@ class Converter:
 
         return inputs
 
-    def get_cwl_outputs(self, wdl_outputs: List[str]) -> List[cwl.CommandOutputParameter]:
+    def get_cwl_outputs(
+        self, wdl_outputs: List[str]
+    ) -> List[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
         outputs: List[cwl.CommandOutputParameter] = []
 
@@ -210,25 +250,6 @@ class Converter:
                 )
             )
         return outputs
-
-    # def translate_command(self, expr: WDL.Expr.Base, inputs: List[str]):
-
-    #     if expr is None:
-    #         return None
-
-    #     # if isinstance(expr, WDL.Expr.Array):
-    #     #     return [self.translate_expr(e) for e in expr.items]
-
-    #     if isinstance(expr, WDL.Expr.String):
-    #         return self.translate_command_string(expr)
-    #     elif isinstance(expr, (WDL.Expr.Int, WDL.Expr.Boolean, WDL.Expr.Float)):
-    #         return self.literal.value
-    #     # if isinstance(expr, WDL.Expr.Placeholder):
-    #     #     return self.translate_expr(expr.expr)
-
-    # def translate_command_string(self, string: WDL.Expr.String):
-
-    #     pass
 
 
 def main() -> None:
