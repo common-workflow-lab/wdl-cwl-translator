@@ -15,11 +15,11 @@ from ruamel.yaml.main import YAML
 
 
 class Converter:
-    """An object that handles WDL Workflows and task conversion to CWL."""
+    """Object that handles WDL Workflows and task conversion to CWL."""
 
     @staticmethod
     def load_wdl_tree(doc: str):
-        """A static method that loads the WDL file and loads the WDL document tree."""
+        """Static method that loads the WDL file and loads the WDL document tree."""
         wdl_path = os.path.relpath(doc)
         doc_tree = WDL.load(wdl_path)
 
@@ -35,7 +35,7 @@ class Converter:
         return tasks[0]
 
     def load_wdl_objects(self, obj: WDL.SourceNode):
-        """Loads a WDL SourceNode obj and returns either a Task or a Workflow."""
+        """Load a WDL SourceNode obj and returns either a Task or a Workflow."""
         if isinstance(obj, WDL.Task):
             return self.load_wdl_task(obj)
         elif isinstance(obj, WDL.Workflow):
@@ -47,7 +47,6 @@ class Converter:
 
     def load_wdl_task(self, obj: WDL.Task):
         """Load task and convert to CWL."""
-
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_outputs(obj.outputs)
         docker_requirement = self.get_cwl_docker_requirements(obj.runtime["docker"])
@@ -81,6 +80,7 @@ class Converter:
         return result_stream.getvalue()
 
     def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
+        """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
         cpu_runtime_name = cpu_runtime.expr.name
         ram_min = f"$(inputs.{cpu_runtime_name})"
         return cwl.ResourceRequirement(ramMin=ram_min)
@@ -109,6 +109,7 @@ class Converter:
         ]
 
     def translate_wdl_placeholder(self, wdl_placeholder) -> str:
+        """Translate WDL Expr Placeholder to a valid CWL command string."""
         cwl_command_str = ""
 
         options = wdl_placeholder.options
