@@ -34,10 +34,11 @@ class Converter:
 
         return tasks[0]
 
-    def load_wdl_objects(self, obj: Union[WDL.Task, WDL.Workflow]) -> WDL.SourceNode: 
+    def load_wdl_objects(self, obj: Union[WDL.Task, WDL.Workflow]) -> WDL.SourceNode:
         """Load a WDL SourceNode obj and returns either a Task or a Workflow."""
         if isinstance(obj, WDL.Task):
             return self.load_wdl_task(obj)
+
     #     elif isinstance(obj, WDL.Workflow):
     #         return self.load_wdl_workflow(obj)
 
@@ -52,7 +53,10 @@ class Converter:
         docker_requirement = self.get_cwl_docker_requirements(obj.runtime["docker"])
         cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
         base_command = ["bash", "example.sh"]
-        requirements: List[cwl.ProcessRequirement] = [ docker_requirement , cwl_command_str ]
+        requirements: List[cwl.ProcessRequirement] = [
+            docker_requirement,
+            cwl_command_str,
+        ]
         requirements.append(cwl.InlineJavascriptRequirement())
         requirements.append(cwl.NetworkAccess(networkAccess=True))
         cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
@@ -79,13 +83,17 @@ class Converter:
 
         return result_stream.getvalue()
 
-    def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> cwl.ResourceRequirement:
+    def get_cpu_requirement(
+        self, cpu_runtime: WDL.Expr.Base
+    ) -> cwl.ResourceRequirement:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
         cpu_runtime_name = cpu_runtime.expr.name
         ram_min = f"$(inputs.{cpu_runtime_name})"
         return cwl.ResourceRequirement(ramMin=ram_min)
 
-    def get_cwl_docker_requirements(self, wdl_docker: WDL.Expr) -> cwl.ProcessRequirement:
+    def get_cwl_docker_requirements(
+        self, wdl_docker: WDL.Expr
+    ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
         dockerpull = wdl_docker.expr.referee.expr.literal.value
         return cwl.DockerRequirement(dockerPull=dockerpull)
@@ -101,8 +109,8 @@ class Converter:
             elif isinstance(wdl_command, WDL.Expr.Placeholder):
                 command_str += self.translate_wdl_placeholder(wdl_command)
         return cwl.InitialWorkDirRequirement(
-                listing=[cwl.Dirent(entry=command_str, entryname="example.sh")]
-            )
+            listing=[cwl.Dirent(entry=command_str, entryname="example.sh")]
+        )
 
     def translate_wdl_placeholder(self, wdl_placeholder: WDL.Expr) -> str:
         """Translate WDL Expr Placeholder to a valid CWL command string."""
@@ -188,7 +196,9 @@ class Converter:
 
         return command_str
 
-    def get_cwl_inputs(self, wdl_inputs: List[WDL.Tree.Decl]) -> List[cwl.CommandInputParameter]:
+    def get_cwl_inputs(
+        self, wdl_inputs: List[WDL.Tree.Decl]
+    ) -> List[cwl.CommandInputParameter]:
         """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
         inputs: List[cwl.CommandInputParameter] = []
 
@@ -200,7 +210,7 @@ class Converter:
             if isinstance(wdl_input.type, WDL.Type.Array):
                 input_type = "File"
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
-                
+
             elif isinstance(wdl_input.type, WDL.Type.String):
                 type_of = "string"
             elif isinstance(wdl_input.type, WDL.Type.Boolean):
@@ -211,7 +221,11 @@ class Converter:
                 type_of = "unknown type"
 
             if wdl_input.type.optional:
-                final_type_of: Union[List[Union[str, cwl.CommandInputArraySchema]], str, cwl.CommandInputArraySchema] = [type_of, "null"]
+                final_type_of: Union[
+                    List[Union[str, cwl.CommandInputArraySchema]],
+                    str,
+                    cwl.CommandInputArraySchema,
+                ] = [type_of, "null"]
             else:
                 final_type_of = type_of
 
@@ -262,9 +276,10 @@ def main() -> None:
     # # write to a file in oop_cwl_files
     # if args.output:
     #     with open(args.output, "w") as result:
-            # result.write(str(Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl"))) #missing args.workflow)
+    # result.write(str(Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl"))) #missing args.workflow)
 
     Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
+
 
 if __name__ == "__main__":
 
