@@ -3,15 +3,15 @@ id: Bowtie
 inputs:
   - id: readsUpstream
     type:
-      - items: File
-        type: array
+      items: File
+      type: array
   - id: outputPath
     default: mapped.bam
     type: string
   - id: indexFiles
     type:
-      - items: File
-        type: array
+      items: File
+      type: array
   - id: best
     default: false
     type: boolean
