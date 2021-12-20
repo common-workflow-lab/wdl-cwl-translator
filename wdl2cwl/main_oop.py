@@ -52,7 +52,7 @@ class Converter:
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_outputs(obj.outputs)
         runtime_docker = obj.runtime["docker"]
-        if not isinstance(runtime_docker, WDL.Expr.Placeholder):
+        if not isinstance(runtime_docker, WDL.Expr.Get):
             raise Exception(
                 f"Unsupport docker runtime type: {type(runtime_docker)}: {runtime_docker}"
             )
@@ -93,14 +93,14 @@ class Converter:
         self, cpu_runtime: WDL.Expr.Base
     ) -> cwl.ResourceRequirement:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
-        if not isinstance(cpu_runtime, WDL.Expr.Placeholder):
+        if not isinstance(cpu_runtime, WDL.Expr.Get):
             raise Exception(f"Unhandled type: {type(cpu_runtime)}: {cpu_runtime}")
         cpu_runtime_name = cast(WDL.Expr.Ident, cpu_runtime.expr).name
         ram_min = f"$(inputs.{cpu_runtime_name})"
         return cwl.ResourceRequirement(ramMin=ram_min)
 
     def get_cwl_docker_requirements(
-        self, wdl_docker: WDL.Expr.Placeholder
+        self, wdl_docker: WDL.Expr.Get
     ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
         dockerpull_expr = wdl_docker.expr
@@ -166,14 +166,16 @@ class Converter:
 
             if function_name == "defined":
                 arg = expr_arguments[0]
-                if not isinstance(arg, WDL.Expr.Placeholder):
+                if not isinstance(arg, WDL.Expr.Get):
                     raise Exception(f"Unsupported type: {type(arg)}: {arg}")
                 arg_expr = arg.expr
                 if not isinstance(arg_expr, WDL.Expr.Ident):
                     raise Exception(f"Unsupported type: {type(arg_expr)}: {arg_expr}")
                 arg_referee = arg_expr.referee
-                if not isinstance(arg_expr, WDL.Tree.Decl):
-                    raise Exception(f"Unsupported type: {type(arg_expr)}: {arg_expr}")
+                if not isinstance(arg_referee, WDL.Tree.Decl):
+                    raise Exception(
+                        f"Unsupported type: {type(arg_referee)}: {arg_referee}"
+                    )
                 arg_referee_name = arg_referee.name
                 cwl_command_str = (
                     "$(inputs."
@@ -186,7 +188,7 @@ class Converter:
                 arg_name_literal = arg_name_raw.literal
                 if arg_name_literal is None or not hasattr(arg_name_literal, "value"):
                     raise Exception(f"Unsupported type: {type(arg_name_literal)}")
-                if not isinstance(arg_value_raw, WDL.Expr.Placeholder):
+                if not isinstance(arg_value_raw, WDL.Expr.Get):
                     raise Exception(f"Unsupported type: {type(arg_value_raw)}")
                 arg_value_expr = arg_value_raw.expr
                 if not isinstance(arg_value_expr, WDL.Expr.Ident):
