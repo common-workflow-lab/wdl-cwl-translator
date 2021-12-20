@@ -1,7 +1,7 @@
 """Main entrypoint for WDL2CWL."""
 import os
-from typing import List, Union, Optional, Callable
-import WDL  # type: ignore[import]
+from typing import List, Union, Optional, Callable, cast
+import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 
 from io import StringIO
@@ -18,7 +18,7 @@ class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
     @staticmethod
-    def load_wdl_tree(doc: str) -> Union[WDL.Task, WDL.Workflow]:
+    def load_wdl_tree(doc: str) -> str:
         """Load WDL file, instantiate Converter class and loads the WDL document tree."""
         wdl_path = os.path.relpath(doc)
         doc_tree = WDL.load(wdl_path)
@@ -34,10 +34,11 @@ class Converter:
 
         return tasks[0]
 
-    def load_wdl_objects(self, obj: Union[WDL.Task, WDL.Workflow]) -> WDL.SourceNode:
+    def load_wdl_objects(self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]) -> str:
         """Load a WDL SourceNode obj and returns either a Task or a Workflow."""
-        if isinstance(obj, WDL.Task):
+        if isinstance(obj, WDL.Tree.Task):
             return self.load_wdl_task(obj)
+        raise Exception(f"Unimplemented type: {type(obj)}: {obj}")
 
     #     elif isinstance(obj, WDL.Workflow):
     #         return self.load_wdl_workflow(obj)
@@ -46,11 +47,16 @@ class Converter:
     #     print(f"Workflow {obj.name} loaded")
     #     pass
 
-    def load_wdl_task(self, obj: WDL.Task) -> str:
+    def load_wdl_task(self, obj: WDL.Tree.Task) -> str:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_outputs(obj.outputs)
-        docker_requirement = self.get_cwl_docker_requirements(obj.runtime["docker"])
+        runtime_docker = obj.runtime["docker"]
+        if not isinstance(runtime_docker, WDL.Expr.Placeholder):
+            raise Exception(
+                f"Unsupport docker runtime type: {type(runtime_docker)}: {runtime_docker}"
+            )
+        docker_requirement = self.get_cwl_docker_requirements(runtime_docker)
         cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
         base_command = ["bash", "example.sh"]
         requirements: List[cwl.ProcessRequirement] = [
@@ -87,19 +93,29 @@ class Converter:
         self, cpu_runtime: WDL.Expr.Base
     ) -> cwl.ResourceRequirement:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
-        cpu_runtime_name = cpu_runtime.expr.name
+        if not isinstance(cpu_runtime, WDL.Expr.Placeholder):
+            raise Exception(f"Unhandled type: {type(cpu_runtime)}: {cpu_runtime}")
+        cpu_runtime_name = cast(WDL.Expr.Ident, cpu_runtime.expr).name
         ram_min = f"$(inputs.{cpu_runtime_name})"
         return cwl.ResourceRequirement(ramMin=ram_min)
 
     def get_cwl_docker_requirements(
-        self, wdl_docker: WDL.Expr
+        self, wdl_docker: WDL.Expr.Placeholder
     ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
-        dockerpull = wdl_docker.expr.referee.expr.literal.value
+        dockerpull_expr = wdl_docker.expr
+        if dockerpull_expr is None or not isinstance(dockerpull_expr, WDL.Expr.Ident):
+            raise Exception(
+                f"Unsupported type: {type(dockerpull_expr)}: {dockerpull_expr}"
+            )
+        dockerpull_referee = dockerpull_expr.referee
+        if dockerpull_referee is None:
+            raise Exception(f"Unsupported type: {type(dockerpull_referee)}")
+        dockerpull = dockerpull_referee.expr.literal.value
         return cwl.DockerRequirement(dockerPull=dockerpull)
 
     def get_cwl_command_requirements(
-        self, wdl_commands: List[str]
+        self, wdl_commands: List[Union[str, WDL.Expr.Placeholder]]
     ) -> cwl.InitialWorkDirRequirement:
         """Translate WDL commands into CWL Initial WorkDir REquirement."""
         command_str: str = ""
@@ -112,7 +128,7 @@ class Converter:
             listing=[cwl.Dirent(entry=command_str, entryname="example.sh")]
         )
 
-    def translate_wdl_placeholder(self, wdl_placeholder: WDL.Expr) -> str:
+    def translate_wdl_placeholder(self, wdl_placeholder: WDL.Expr.Placeholder) -> str:
         """Translate WDL Expr Placeholder to a valid CWL command string."""
         cwl_command_str = ""
 
@@ -124,7 +140,10 @@ class Converter:
             elif "sep" in options:
                 seperator = options["sep"]
         if isinstance(wdl_placeholder.expr, WDL.Expr.Get):
-            placeholder_name = wdl_placeholder.expr.expr.name
+            nested_expr = wdl_placeholder.expr.expr
+            if nested_expr is None or not isinstance(nested_expr, WDL.Expr.Ident):
+                raise Exception(f"Unsupported type: {type(nested_expr)}")
+            placeholder_name = nested_expr.name
             if not options:
                 cwl_command_str = "$(inputs." + placeholder_name + ")"
             elif "true" in options:
@@ -146,7 +165,16 @@ class Converter:
             expr_arguments = wdl_placeholder.expr.arguments
 
             if function_name == "defined":
-                arg_referee_name = expr_arguments[0].expr.referee.name
+                arg = expr_arguments[0]
+                if not isinstance(arg, WDL.Expr.Placeholder):
+                    raise Exception(f"Unsupported type: {type(arg)}: {arg}")
+                arg_expr = arg.expr
+                if not isinstance(arg_expr, WDL.Expr.Ident):
+                    raise Exception(f"Unsupported type: {type(arg_expr)}: {arg_expr}")
+                arg_referee = arg_expr.referee
+                if not isinstance(arg_expr, WDL.Tree.Decl):
+                    raise Exception(f"Unsupported type: {type(arg_expr)}: {arg_expr}")
+                arg_referee_name = arg_referee.name
                 cwl_command_str = (
                     "$(inputs."
                     + arg_referee_name
@@ -154,8 +182,16 @@ class Converter:
                     + f'"{false_value}" : "{true_value}")'
                 )
             elif function_name == "_interpolation_add":
-                arg_name, arg_value = expr_arguments
-                arg_name, arg_value = arg_name.literal.value, arg_value.expr.name
+                arg_name_raw, arg_value_raw = expr_arguments
+                arg_name_literal = arg_name_raw.literal
+                if arg_name_literal is None or not hasattr(arg_name_literal, "value"):
+                    raise Exception(f"Unsupported type: {type(arg_name_literal)}")
+                if not isinstance(arg_value_raw, WDL.Expr.Placeholder):
+                    raise Exception(f"Unsupported type: {type(arg_value_raw)}")
+                arg_value_expr = arg_value_raw.expr
+                if not isinstance(arg_value_expr, WDL.Expr.Ident):
+                    raise Exception(f"Unsupported type: {type(arg_value_expr)}")
+                arg_name, arg_value = arg_name_literal.value, arg_value_expr.name
                 if wdl_placeholder.expr.type.optional:
                     cwl_command_str = (
                         "$(inputs."
@@ -197,7 +233,7 @@ class Converter:
         return command_str
 
     def get_cwl_inputs(
-        self, wdl_inputs: List[WDL.Tree.Decl]
+        self, wdl_inputs: Optional[List[WDL.Tree.Decl]]
     ) -> List[cwl.CommandInputParameter]:
         """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
         inputs: List[cwl.CommandInputParameter] = []
