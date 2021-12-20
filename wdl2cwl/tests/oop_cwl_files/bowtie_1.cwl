@@ -3,14 +3,14 @@ id: Bowtie
 inputs:
   - id: readsUpstream
     type:
-      - items: File
+        items: File
         type: array
   - id: outputPath
     default: mapped.bam
     type: string
   - id: indexFiles
     type:
-      - items: File
+        items: File
         type: array
   - id: best
     default: false
@@ -60,25 +60,25 @@ requirements:
         entry: |4
 
             set -e -o pipefail
-            mkdir -p "\$(dirname $(inputs.outputPath ))"
-                    bowtie \
-                    -q \
-                    --sam \
-            $(inputs.seedmms === null ? "" : "--seedmms " inputs.seedmms )\
-            $(inputs.seedlen === null ? "" : "--seedlen " inputs.seedlen )\
-            $(inputs.k === null ? "" : "-k " inputs.k )\
-            $(inputs.best ? "--best" : ""))\
-            $(inputs.strata ? "--strata" : ""))\
-            $(inputs.allowContain ? "--allow-contain" : ""))\
-            $(inputs.threads === null ? "" : "--threads " inputs.threads )\
-            $(inputs.samRG === null ? "" : "--sam-RG '" inputs.samRG )$(inputs.samRG ? "" : "'")\
-            $(inputs.indexFiles[0].replace( "(\.rev)?\.[0-9]\.ebwt$", "") )\
-            $(inputs.readsUpstream.map(function(el) {return el.path}).join(","))\
-                   | picard -Xmx$(inputs.picardXmx) SortSam \
-                   INPUT=/dev/stdin \
-                   OUTPUT=$(inputs.outputPath) \
-                   SORT_ORDER=coordinate \
-                   CREATE_INDEX=true
+            mkdir -p "\$(dirname $(inputs.outputPath))"
+            bowtie \
+            -q \
+            --sam \
+            $(inputs.seedmms === null ? "" : "--seedmms " inputs.seedmms ) \
+            $(inputs.seedlen === null ? "" : "--seedlen " inputs.seedlen ) \
+            $(inputs.k === null ? "" : "-k " inputs.k ) \
+            $(inputs.best ? "--best" : "") \
+            $(inputs.strata ? "--strata" : "") \
+            $(inputs.allowContain ? "--allow-contain" : "") \
+            --threads  $(inputs.threads) \
+            $(inputs.samRG === null ? "" : "--sam-RG '" inputs.samRG )$(inputs.samRG ? "" : "'") \
+            $(inputs.indexFiles[0].replace("(\.rev)?\.[0-9]\.ebwt$", "") ) \
+            $(inputs.readsUpstream.map(function(el) {return el.path}).join(",")) \
+            | picard -Xmx$(inputs.picardXmx) SortSam \
+            INPUT=/dev/stdin \
+            OUTPUT=$(inputs.outputPath) \
+            SORT_ORDER=coordinate \
+            CREATE_INDEX=true
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
