@@ -1,6 +1,6 @@
 """Main entrypoint for WDL2CWL."""
 import os
-from typing import List, Union, Optional, Callable, cast
+from typing import List, Union, Optional, Callable, cast, Any
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 
@@ -208,18 +208,25 @@ class Converter:
                     cwl_command_str = f"{arg_name} $(inputs.{arg_value})"
             elif function_name == "sub":
                 wdl_apply_object_arg, arg_string, arg_substitute = expr_arguments
+                if not hasattr(wdl_apply_object_arg, "arguments"):
+                    raise Exception(f"{type(wdl_apply_object_arg)} has no attribute: 'arguments'")
                 apply_input, index_to_sub = wdl_apply_object_arg.arguments
-                apply_input_name, index_to_sub_value = (
-                    apply_input.expr.name,
-                    index_to_sub.value,
-                )
+                apply_input_name: str = self.get_expr_name(apply_input)
+                if not hasattr(index_to_sub, "value"):
+                    raise Exception(f"{type(index_to_sub)} has no attribute: 'value")
+                index_to_sub_value= index_to_sub.value
                 cwl_command_str = (
                     "$(inputs."
                     + apply_input_name
                     + f"[{index_to_sub_value}]"
-                    + f'.replace("{arg_string.literal.value}", "{arg_substitute.literal.value}") )'
+                    + f'.replace("{self.get_wdl_literal(arg_string.literal)}", "{self.get_wdl_literal(arg_substitute.literal)}") )'
                 )
         return cwl_command_str
+    def get_wdl_literal(self, wdl_expr: Optional[WDL.Value.Base]) -> Any:
+        """Extract Literal value from WDL expr."""
+        if wdl_expr is None or not hasattr(wdl_expr, "value"):
+            raise Exception(f"{type(wdl_expr)} has not attribute 'value'")
+        return wdl_expr.value
 
     def translate_wdl_str(self, wdl_command: str) -> str:
         """Translate WDL string command to CWL Process requirement string."""
@@ -240,66 +247,79 @@ class Converter:
         """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
         inputs: List[cwl.CommandInputParameter] = []
 
-        for wdl_input in wdl_inputs:
-            input_name = wdl_input.name
-            input_value = None
-            type_of: Union[str, cwl.CommandInputArraySchema]
+        if wdl_inputs:
+            for wdl_input in wdl_inputs:
+                input_name = wdl_input.name
+                input_value = None
+                type_of: Union[str, cwl.CommandInputArraySchema]
 
-            if isinstance(wdl_input.type, WDL.Type.Array):
-                input_type = "File"
-                type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
+                if isinstance(wdl_input.type, WDL.Type.Array):
+                    input_type = "File"
+                    type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
 
-            elif isinstance(wdl_input.type, WDL.Type.String):
-                type_of = "string"
-            elif isinstance(wdl_input.type, WDL.Type.Boolean):
-                type_of = "boolean"
-            elif isinstance(wdl_input.type, WDL.Type.Int):
-                type_of = "int"
-            else:
-                type_of = "unknown type"
+                elif isinstance(wdl_input.type, WDL.Type.String):
+                    type_of = "string"
+                elif isinstance(wdl_input.type, WDL.Type.Boolean):
+                    type_of = "boolean"
+                elif isinstance(wdl_input.type, WDL.Type.Int):
+                    type_of = "int"
+                else:
+                    type_of = "unknown type"
 
-            if wdl_input.type.optional:
-                final_type_of: Union[
-                    List[Union[str, cwl.CommandInputArraySchema]],
-                    str,
-                    cwl.CommandInputArraySchema,
-                ] = [type_of, "null"]
-            else:
-                final_type_of = type_of
+                if wdl_input.type.optional:
+                    final_type_of: Union[
+                        List[Union[str, cwl.CommandInputArraySchema]],
+                        str,
+                        cwl.CommandInputArraySchema,
+                    ] = [type_of, "null"]
+                else:
+                    final_type_of = type_of
 
-            if wdl_input.expr is not None:
-                input_value = wdl_input.expr.literal.value
+                if wdl_input.expr is not None:
+                    literal = wdl_input.expr.literal
+                    if not literal or not hasattr(literal, "value"):
+                        raise Exception(f'{type(literal)} has no attribute "value"')
+                    input_value = literal.value
 
-            inputs.append(
-                cwl.CommandInputParameter(
-                    id=input_name, type=final_type_of, default=input_value
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name, type=final_type_of, default=input_value
+                    )
                 )
-            )
 
         return inputs
+
+    def get_expr_name(self, wdl_expr: WDL.Tree.Decl) -> str:
+        """Extract name from WDL expr."""
+        if wdl_expr is None or not hasattr(wdl_expr, "name"):
+            raise Exception(f"{type(wdl_expr)} has not attribute 'name'")
+        if wdl_expr.expr:
+            return self.get_expr_name(wdl_expr)
+        return wdl_expr.name
+
 
     def get_cwl_outputs(
         self, wdl_outputs: List[WDL.Tree.Decl]
     ) -> List[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
         outputs: List[cwl.CommandOutputParameter] = []
+        
+        if wdl_outputs:
+            for wdl_output in wdl_outputs:
+                output_name = wdl_output.name
+                if isinstance(wdl_output.type, WDL.Type.File):
+                    type_of = "File"
 
-        for wdl_output in wdl_outputs:
-            output_name = wdl_output.name
-            if isinstance(wdl_output.type, WDL.Type.File):
-                type_of = "File"
-
-            outputs.append(
-                cwl.CommandOutputParameter(
-                    id=output_name,
-                    type=type_of,
-                    outputBinding=cwl.CommandOutputBinding(
-                        glob="$(inputs.{outputpath})".format(
-                            outputpath=wdl_output.expr.expr.name
-                        )
-                    ),
+                outputpath = self.get_expr_name(wdl_output)
+                outputs.append(
+                    cwl.CommandOutputParameter(
+                        id=output_name,
+                        type=type_of,
+                        outputBinding=cwl.CommandOutputBinding(
+                            glob=f"$(inputs.{outputpath})"
+                        ),
+                    )
                 )
-            )
         return outputs
 
 
