@@ -50,29 +50,31 @@ class Converter:
     def load_wdl_task(self, obj: WDL.Tree.Task) -> str:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
-        cwl_outputs = self.get_cwl_outputs(obj.outputs)
-        runtime_docker = obj.runtime["docker"]
-        if not isinstance(runtime_docker, WDL.Expr.Get):
-            raise Exception(
-                f"Unsupport docker runtime type: {type(runtime_docker)}: {runtime_docker}"
-            )
-        docker_requirement = self.get_cwl_docker_requirements(runtime_docker)
-        cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
+        # cwl_outputs = self.get_cwl_outputs(obj.outputs)
+        # runtime_docker = obj.runtime["docker"]
+        # if not isinstance(runtime_docker, WDL.Expr.Get):
+        #     raise Exception(
+        #         f"Unsupport docker runtime type: {type(runtime_docker)}: {runtime_docker}"
+        #     )
+        # docker_requirement = self.get_cwl_docker_requirements(runtime_docker)
+        # cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
         base_command = ["bash", "example.sh"]
-        requirements: List[cwl.ProcessRequirement] = [
-            docker_requirement,
-            cwl_command_str,
-        ]
-        requirements.append(cwl.InlineJavascriptRequirement())
-        requirements.append(cwl.NetworkAccess(networkAccess=True))
-        cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
-        requirements.append(cpu_requirement)
+        # requirements: List[cwl.ProcessRequirement] = [
+        #     docker_requirement,
+        #     cwl_command_str,
+        # ]
+        # requirements.append(cwl.InlineJavascriptRequirement())
+        # requirements.append(cwl.NetworkAccess(networkAccess=True))
+        # cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
+        # requirements.append(cpu_requirement)
 
         cat_tool = cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
-            requirements=requirements,
-            outputs=cwl_outputs,
+            # requirements=requirements,
+            requirements=[],
+            # outputs=cwl_outputs,
+            outputs=None,
             cwlVersion="v1.2",
             baseCommand=base_command,
         )
@@ -250,46 +252,61 @@ class Converter:
         """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
         inputs: List[cwl.CommandInputParameter] = []
 
-        if not wdl_inputs:
-            return inputs
-        for wdl_input in wdl_inputs:
-            input_name = wdl_input.name
-            input_value = None
-            type_of: Union[str, cwl.CommandInputArraySchema]
+        if wdl_inputs:
+            for wdl_input in wdl_inputs:
+                input_name = wdl_input.name
+                input_value = None
+                type_of: Union[str, cwl.CommandInputArraySchema]
 
-            if isinstance(wdl_input.type, WDL.Type.Array):
-                input_type = "File"
-                type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
+                if isinstance(wdl_input.type, WDL.Type.Array):
+                    input_type = ""
+                    array_items_type = wdl_input.type.item_type
+                    if isinstance(array_items_type, WDL.Type.File):
+                        input_type = "File"
+                    elif isinstance(array_items_type, WDL.Type.String):
+                        input_type = "string"
+                    elif isinstance(array_items_type, WDL.Type.Boolean):
+                        input_type = "boolean"
+                    elif isinstance(array_items_type, WDL.Type.Int):
+                        input_type = "int"
+                    else:
+                        raise Exception(f'{type(array_items_type)}: not supported')
+                    type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
 
-            elif isinstance(wdl_input.type, WDL.Type.String):
-                type_of = "string"
-            elif isinstance(wdl_input.type, WDL.Type.Boolean):
-                type_of = "boolean"
-            elif isinstance(wdl_input.type, WDL.Type.Int):
-                type_of = "int"
-            else:
-                type_of = "unknown type"
+                elif isinstance(wdl_input.type, WDL.Type.File):
+                    type_of = "File"
+                elif isinstance(wdl_input.type, WDL.Type.String):
+                    type_of = "string"
+                elif isinstance(wdl_input.type, WDL.Type.Boolean):
+                    type_of = "boolean"
+                elif isinstance(wdl_input.type, WDL.Type.Int):
+                    type_of = "int"
+                else:
+                    type_of = "unknown type"
 
-            if wdl_input.type.optional:
-                final_type_of: Union[
-                    List[Union[str, cwl.CommandInputArraySchema]],
-                    str,
-                    cwl.CommandInputArraySchema,
-                ] = [type_of, "null"]
-            else:
-                final_type_of = type_of
+                if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply) :
+                    final_type_of: Union[
+                        List[Union[str, cwl.CommandInputArraySchema]],
+                        str,
+                        cwl.CommandInputArraySchema,
+                    ] = [type_of, "null"]
+                else:
+                    final_type_of = type_of
 
-            if wdl_input.expr is not None:
-                literal = wdl_input.expr.literal
-                if not literal or not hasattr(literal, "value"):
-                    raise Exception(f'{type(literal)} has no attribute "value"')
-                input_value = literal.value
+                if wdl_input.expr is not None:
+                    if isinstance(wdl_input.expr, WDL.Expr.Apply):
+                        input_value = None
+                    else:
+                        literal = wdl_input.expr.literal
+                        if not literal or not hasattr(literal, "value"):
+                            raise Exception(f'{type(literal)} has no attribute "value"')
+                        input_value = literal.value
 
-            inputs.append(
-                cwl.CommandInputParameter(
-                    id=input_name, type=final_type_of, default=input_value
+                inputs.append(
+                    cwl.CommandInputParameter(
+                        id=input_name, type=final_type_of, default=input_value
+                    )
                 )
-            )
 
         return inputs
 
@@ -337,7 +354,7 @@ def main() -> None:
     #     with open(args.output, "w") as result:
     # result.write(str(Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl"))) #missing args.workflow)
 
-    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
 
 
 if __name__ == "__main__":
