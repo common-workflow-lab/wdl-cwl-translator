@@ -446,18 +446,18 @@ class Converter:
 def main() -> None:
     """Entry point."""
     # Command-line parsing.
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("workflow", help="Path to WDL workflow")
-    # parser.add_argument("-o", "--output", help="Name of resultant CWL file")
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("workflow", help="Path to WDL workflow")
+    parser.add_argument("-o", "--output", help="Name of resultant CWL file")
+    args = parser.parse_args()
 
-    # # write to a file in oop_cwl_files
-    # if args.output:
-    #     with open(args.output, "w") as result:
-    # result.write(str(Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl"))) #missing args.workflow)
+    # write to a file in oop_cwl_files
+    if args.output:
+        with open(args.output, "w") as result:
+            result.write(str(Converter.load_wdl_tree(args.workflow))) #missing args.workflow)
 
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
-    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
+    # # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
 
 
 if __name__ == "__main__":
