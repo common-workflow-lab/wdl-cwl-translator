@@ -92,7 +92,9 @@ class Converter:
 
         return result_stream.getvalue()
 
-    def get_memory_requirement(self, memory_runtime: WDL.Expr.Base) -> cwl.ResourceRequirement:
+    def get_memory_requirement(
+        self, memory_runtime: WDL.Expr.Base
+    ) -> cwl.ResourceRequirement:
         """Translate WDL Runtime Memory requirement to CWL Resource Requirement."""
         ram_min = ""
         if isinstance(memory_runtime.expr, WDL.Expr.Ident):
@@ -100,7 +102,7 @@ class Converter:
             expr_referee_name = expr_referee.name
             ram_min = self.get_ram_min_js(expr_referee_name, None)
         return cwl.ResourceRequirement(ramMin=ram_min)
-    
+
     def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
         """Get memory requirement for user input."""
         append_str: str = ""
@@ -108,7 +110,9 @@ class Converter:
             append_str = '${\nvar unit = "' + unit + '";'
         else:
             append_str = (
-                "${\nvar unit = inputs." + ram_min_ref_name + '.match(/[a-zA-Z]+/g).join("");'
+                "${\nvar unit = inputs."
+                + ram_min_ref_name
+                + '.match(/[a-zA-Z]+/g).join("");'
             )
         js_str = (
             append_str
@@ -138,13 +142,13 @@ class Converter:
             cpu_runtime_name = cast(WDL.Expr.Ident, cpu_runtime.expr).name
             ram_min = f"$(inputs.{cpu_runtime_name})"
         elif isinstance(cpu_runtime, WDL.Expr.Apply):
-                ref_function = cpu_runtime.function_name
-                ref_arguments = cpu_runtime.arguments
-                if ref_function == "_add":
-                    first_arg, second_arg = ref_arguments
-                    second_arg_value = self.get_wdl_literal(second_arg.literal)
-                    first_arg_expr_name = first_arg.expr.name
-                    ram_min = f"inputs.{first_arg_expr_name} + {second_arg_value}"
+            ref_function = cpu_runtime.function_name
+            ref_arguments = cpu_runtime.arguments
+            if ref_function == "_add":
+                first_arg, second_arg = ref_arguments
+                second_arg_value = self.get_wdl_literal(second_arg.literal)
+                first_arg_expr_name = first_arg.expr.name
+                ram_min = f"inputs.{first_arg_expr_name} + {second_arg_value}"
 
         else:
             raise Exception(f"Unhandled type: {type(cpu_runtime)}: {cpu_runtime}")
@@ -196,7 +200,9 @@ class Converter:
                 raise Exception(f"Unsupported type: {type(nested_expr)}")
             placeholder_name = nested_expr.name
             if not options:
-                if nested_expr.referee and isinstance(nested_expr.referee.expr, WDL.Expr.Apply):
+                if nested_expr.referee and isinstance(
+                    nested_expr.referee.expr, WDL.Expr.Apply
+                ):
                     reference_expr = nested_expr.referee
                     ref_expr_to_apply = reference_expr.expr
                     ref_function = ref_expr_to_apply.function_name
@@ -210,7 +216,6 @@ class Converter:
                             only_argument = first_arg.arguments[0]
                             only_argument_expr_name = only_argument.expr.name
                         true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
-
 
                     cwl_command_str = (
                         " $(inputs."
@@ -326,7 +331,7 @@ class Converter:
 
         if not wdl_inputs:
             return inputs
-        
+
         for wdl_input in wdl_inputs:
             input_name = wdl_input.name
             input_value = None
@@ -344,7 +349,9 @@ class Converter:
                 elif isinstance(array_items_type, WDL.Type.Int):
                     input_type = "int"
                 else:
-                    raise Exception(f'Array of item_type = {type(array_items_type)}: not supported')
+                    raise Exception(
+                        f"Array of item_type = {type(array_items_type)}: not supported"
+                    )
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
 
             elif isinstance(wdl_input.type, WDL.Type.File):
@@ -358,7 +365,7 @@ class Converter:
             else:
                 type_of = "unknown type"
 
-            if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply) :
+            if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
                     List[Union[str, cwl.CommandInputArraySchema]],
                     str,
@@ -406,7 +413,9 @@ class Converter:
             # check for output with referee and referee expr of type WDL.Expr.Apply
             expr_ident = wdl_output.expr.expr
             expr_ident_name = expr_ident.name
-            if expr_ident.referee and isinstance(expr_ident.referee.expr, WDL.Expr.Apply):
+            if expr_ident.referee and isinstance(
+                expr_ident.referee.expr, WDL.Expr.Apply
+            ):
                 reference_expr = expr_ident.referee
                 ref_expr_to_apply = reference_expr.expr
                 ref_function = ref_expr_to_apply.function_name
@@ -421,23 +430,20 @@ class Converter:
                         only_argument_expr_name = only_argument.expr.name
                     true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
 
-
                 glob_expr = (
                     "$(inputs."
                     + reference_expr.name
                     + " === null ?"
                     + f" ({true_tenary}) : inputs.{reference_expr.name})"
                 )
-            else:    
+            else:
                 glob_expr = f"$(inputs.{expr_ident_name})"  # type: ignore[union-attr]
-            
+
             outputs.append(
                 cwl.CommandOutputParameter(
                     id=output_name,
                     type=type_of,
-                    outputBinding=cwl.CommandOutputBinding(
-                        glob=glob_expr
-                    ),
+                    outputBinding=cwl.CommandOutputBinding(glob=glob_expr),
                 )
             )
         return outputs
@@ -446,18 +452,20 @@ class Converter:
 def main() -> None:
     """Entry point."""
     # Command-line parsing.
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("workflow", help="Path to WDL workflow")
-    # parser.add_argument("-o", "--output", help="Name of resultant CWL file")
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("workflow", help="Path to WDL workflow")
+    parser.add_argument("-o", "--output", help="Name of resultant CWL file")
+    args = parser.parse_args()
 
-    # # write to a file in oop_cwl_files
-    # if args.output:
-    #     with open(args.output, "w") as result:
-    # result.write(str(Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl"))) #missing args.workflow)
+    # write to a file in oop_cwl_files
+    if args.output:
+        with open(args.output, "w") as result:
+            result.write(
+                str(Converter.load_wdl_tree(args.workflow))
+            )  # missing args.workflow)
 
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
-    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
+    # # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
 
 
 if __name__ == "__main__":
