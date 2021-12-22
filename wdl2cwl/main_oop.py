@@ -50,7 +50,7 @@ class Converter:
     def load_wdl_task(self, obj: WDL.Tree.Task) -> str:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
-        # cwl_outputs = self.get_cwl_outputs(obj.outputs)
+        cwl_outputs = self.get_cwl_outputs(obj.outputs)
         # runtime_docker = obj.runtime["docker"]
         # if not isinstance(runtime_docker, WDL.Expr.Get):
         #     raise Exception(
@@ -73,8 +73,8 @@ class Converter:
             inputs=cwl_inputs,
             # requirements=requirements,
             requirements=[],
-            # outputs=cwl_outputs,
-            outputs=None,
+            outputs=cwl_outputs,
+            # outputs=None,
             cwlVersion="v1.2",
             baseCommand=base_command,
         )
@@ -272,7 +272,7 @@ class Converter:
                 elif isinstance(array_items_type, WDL.Type.Int):
                     input_type = "int"
                 else:
-                    raise Exception(f'{type(array_items_type)}: not supported')
+                    raise Exception(f'Array of item_type = {type(array_items_type)}: not supported')
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
 
             elif isinstance(wdl_input.type, WDL.Type.File):
@@ -324,22 +324,50 @@ class Converter:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
         outputs: List[cwl.CommandOutputParameter] = []
 
-        if wdl_outputs:
-            for wdl_output in wdl_outputs:
-                output_name = wdl_output.name
-                if isinstance(wdl_output.type, WDL.Type.File):
-                    type_of = "File"
+        if not wdl_outputs:
+            return outputs
 
-                outputpath = self.get_expr_name(wdl_output)
-                outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        type=type_of,
-                        outputBinding=cwl.CommandOutputBinding(
-                            glob=f"$(inputs.{wdl_output.expr.expr.name})"  # type: ignore[union-attr]
-                        ),
-                    )
+        for wdl_output in wdl_outputs:
+            output_name = wdl_output.name
+            if isinstance(wdl_output.type, WDL.Type.File):
+                type_of = "File"
+            # check for output with referee and referee expr of type WDL.Expr.Apply
+            expr_ident = wdl_output.expr.expr
+            expr_ident_name = expr_ident.name
+            if expr_ident.referee and isinstance(expr_ident.referee.expr, WDL.Expr.Apply):
+                reference_expr = expr_ident.referee
+                ref_expr_to_apply = reference_expr.expr
+                ref_function = ref_expr_to_apply.function_name
+                ref_arguments = ref_expr_to_apply.arguments
+                if ref_function == "_add":
+                    # return true value for a javascript tenary
+                    first_arg, second_arg = ref_arguments
+                    second_arg_value = self.get_wdl_literal(second_arg.literal)
+                    first_arg_fun_name = first_arg.function_name
+                    if first_arg_fun_name == "basename":
+                        only_argument = first_arg.arguments[0]
+                        only_argument_expr_name = only_argument.expr.name
+                    true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
+
+
+                glob_expr = (
+                    "$(inputs."
+                    + reference_expr.name
+                    + " === null ?"
+                    + f" ({true_tenary}) : inputs.{reference_expr.name})"
                 )
+            else:    
+                glob_expr = f"$(inputs.{expr_ident_name})"  # type: ignore[union-attr]
+            
+            outputs.append(
+                cwl.CommandOutputParameter(
+                    id=output_name,
+                    type=type_of,
+                    outputBinding=cwl.CommandOutputBinding(
+                        glob=glob_expr
+                    ),
+                )
+            )
         return outputs
 
 
