@@ -95,14 +95,45 @@ class Converter:
     def get_memory_requirement(self, memory_runtime: WDL.Expr.Base) -> cwl.ResourceRequirement:
         """Translate WDL Runtime Memory requirement to CWL Resource Requirement."""
         ram_min = ""
-        return ram_min
+        if isinstance(memory_runtime.expr, WDL.Expr.Ident):
+            expr_referee = memory_runtime.expr.referee
+            expr_referee_name = expr_referee.name
+            ram_min = self.get_ram_min_js(expr_referee_name, None)
+        return cwl.ResourceRequirement(ramMin=ram_min)
+    
+    def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
+        """Get memory requirement for user input."""
+        append_str: str = ""
+        if unit:
+            append_str = '${\nvar unit = "' + unit + '";'
+        else:
+            append_str = (
+                "${\nvar unit = inputs." + ram_min_ref_name + '.match(/[a-zA-Z]+/g).join("");'
+            )
+        js_str = (
+            append_str
+            + "\nvar value = parseInt(inputs."
+            + ram_min_ref_name
+            + ".match(/[0-9]+/g));\n"
+            + 'var memory = "";\n'
+            + 'if(unit==="KiB") memory = value/1024;\n'
+            + 'else if(unit==="MiB") memory = value;\n'
+            + 'else if(unit==="GiB") memory = value*1024;\n'
+            + 'else if(unit==="TiB") memory = value*1024*1024;\n'
+            + 'else if(unit==="B") memory = value/(1024*1024);\n'
+            + 'else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);\n'
+            + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
+            + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
+            + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
+            + "return parseInt(memory);\n}"
+        )
+
+        return js_str
 
     def get_cpu_requirement(
         self, cpu_runtime: WDL.Expr.Base
     ) -> cwl.ResourceRequirement:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
-        # if not isinstance(cpu_runtime, WDL.Expr.Get):
-        #     raise Exception(f"Unhandled type: {type(cpu_runtime)}: {cpu_runtime}")
         if isinstance(cpu_runtime, WDL.Expr.Get):
             cpu_runtime_name = cast(WDL.Expr.Ident, cpu_runtime.expr).name
             ram_min = f"$(inputs.{cpu_runtime_name})"
@@ -110,7 +141,6 @@ class Converter:
                 ref_function = cpu_runtime.function_name
                 ref_arguments = cpu_runtime.arguments
                 if ref_function == "_add":
-                    # return true value for a javascript tenary
                     first_arg, second_arg = ref_arguments
                     second_arg_value = self.get_wdl_literal(second_arg.literal)
                     first_arg_expr_name = first_arg.expr.name
