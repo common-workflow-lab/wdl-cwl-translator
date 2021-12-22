@@ -140,7 +140,7 @@ class Converter:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
         if isinstance(cpu_runtime, WDL.Expr.Get):
             cpu_runtime_name = cast(WDL.Expr.Ident, cpu_runtime.expr).name
-            ram_min = f"$(inputs.{cpu_runtime_name})"
+            cores_min = f"$(inputs.{cpu_runtime_name})"
         elif isinstance(cpu_runtime, WDL.Expr.Apply):
             ref_function = cpu_runtime.function_name
             ref_arguments = cpu_runtime.arguments
@@ -148,11 +148,11 @@ class Converter:
                 first_arg, second_arg = ref_arguments
                 second_arg_value = self.get_wdl_literal(second_arg.literal)
                 first_arg_expr_name = first_arg.expr.name
-                ram_min = f"inputs.{first_arg_expr_name} + {second_arg_value}"
+                cores_min = f"$(inputs.{first_arg_expr_name} + {second_arg_value})"
 
         else:
             raise Exception(f"Unhandled type: {type(cpu_runtime)}: {cpu_runtime}")
-        return cwl.ResourceRequirement(ramMin=ram_min)
+        return cwl.ResourceRequirement(coresMin=cores_min)
 
     def get_cwl_docker_requirements(
         self, wdl_docker: WDL.Expr.Get

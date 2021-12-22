@@ -146,7 +146,7 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    ramMin: inputs.threads + 1
+    coresMin: $(inputs.threads + 1)
   - class: ResourceRequirement
     ramMin: |-
         ${

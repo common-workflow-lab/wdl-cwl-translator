@@ -83,7 +83,7 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    ramMin: $(inputs.threads)
+    coresMin: $(inputs.threads)
 cwlVersion: v1.2
 baseCommand:
   - bash
