@@ -51,30 +51,28 @@ class Converter:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_outputs(obj.outputs)
-        # runtime_docker = obj.runtime["docker"]
-        # if not isinstance(runtime_docker, WDL.Expr.Get):
-        #     raise Exception(
-        #         f"Unsupport docker runtime type: {type(runtime_docker)}: {runtime_docker}"
-        #     )
-        # docker_requirement = self.get_cwl_docker_requirements(runtime_docker)
-        # cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
+        runtime_docker = obj.runtime["docker"]
+        if not isinstance(runtime_docker, WDL.Expr.Get):
+            raise Exception(
+                f"Unsupport docker runtime type: {type(runtime_docker)}: {runtime_docker}"
+            )
+        docker_requirement = self.get_cwl_docker_requirements(runtime_docker)
+        cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
         base_command = ["bash", "example.sh"]
-        # requirements: List[cwl.ProcessRequirement] = [
-        #     docker_requirement,
-        #     cwl_command_str,
-        # ]
-        # requirements.append(cwl.InlineJavascriptRequirement())
-        # requirements.append(cwl.NetworkAccess(networkAccess=True))
+        requirements: List[cwl.ProcessRequirement] = [
+            docker_requirement,
+            cwl_command_str,
+        ]
+        requirements.append(cwl.InlineJavascriptRequirement())
+        requirements.append(cwl.NetworkAccess(networkAccess=True))
         # cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
         # requirements.append(cpu_requirement)
 
         cat_tool = cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
-            # requirements=requirements,
-            requirements=[],
+            requirements=requirements,
             outputs=cwl_outputs,
-            # outputs=None,
             cwlVersion="v1.2",
             baseCommand=base_command,
         )
@@ -147,7 +145,30 @@ class Converter:
                 raise Exception(f"Unsupported type: {type(nested_expr)}")
             placeholder_name = nested_expr.name
             if not options:
-                cwl_command_str = "$(inputs." + placeholder_name + ")"
+                if nested_expr.referee and isinstance(nested_expr.referee.expr, WDL.Expr.Apply):
+                    reference_expr = nested_expr.referee
+                    ref_expr_to_apply = reference_expr.expr
+                    ref_function = ref_expr_to_apply.function_name
+                    ref_arguments = ref_expr_to_apply.arguments
+                    if ref_function == "_add":
+                        # return true value for a javascript tenary
+                        first_arg, second_arg = ref_arguments
+                        second_arg_value = self.get_wdl_literal(second_arg.literal)
+                        first_arg_fun_name = first_arg.function_name
+                        if first_arg_fun_name == "basename":
+                            only_argument = first_arg.arguments[0]
+                            only_argument_expr_name = only_argument.expr.name
+                        true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
+
+
+                    cwl_command_str = (
+                        " $(inputs."
+                        + reference_expr.name
+                        + " === null ?"
+                        + f" {true_tenary} : inputs.{reference_expr.name})"
+                    )
+                else:
+                    cwl_command_str = "$(inputs." + placeholder_name + ")"
             elif "true" in options:
                 cwl_command_str = (
                     "$(inputs."
@@ -204,7 +225,7 @@ class Converter:
                         + f'"{arg_name}"'
                         + " inputs."
                         + arg_value
-                        + " )"
+                        + ")"
                     )
                 else:
                     cwl_command_str = f"{arg_name} $(inputs.{arg_value})"
@@ -223,7 +244,7 @@ class Converter:
                     "$(inputs."
                     + apply_input_name
                     + f"[{index_to_sub_value}]"
-                    + f'.replace("{self.get_wdl_literal(arg_string.literal)}", "{self.get_wdl_literal(arg_substitute.literal)}") )'
+                    + f'.replace("{self.get_wdl_literal(arg_string.literal)}", "{self.get_wdl_literal(arg_substitute.literal)}"))'
                 )
         return cwl_command_str
 
