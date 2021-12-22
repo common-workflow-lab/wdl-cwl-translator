@@ -252,61 +252,63 @@ class Converter:
         """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
         inputs: List[cwl.CommandInputParameter] = []
 
-        if wdl_inputs:
-            for wdl_input in wdl_inputs:
-                input_name = wdl_input.name
-                input_value = None
-                type_of: Union[str, cwl.CommandInputArraySchema]
+        if not wdl_inputs:
+            return inputs
+        
+        for wdl_input in wdl_inputs:
+            input_name = wdl_input.name
+            input_value = None
+            type_of: Union[str, cwl.CommandInputArraySchema]
 
-                if isinstance(wdl_input.type, WDL.Type.Array):
-                    input_type = ""
-                    array_items_type = wdl_input.type.item_type
-                    if isinstance(array_items_type, WDL.Type.File):
-                        input_type = "File"
-                    elif isinstance(array_items_type, WDL.Type.String):
-                        input_type = "string"
-                    elif isinstance(array_items_type, WDL.Type.Boolean):
-                        input_type = "boolean"
-                    elif isinstance(array_items_type, WDL.Type.Int):
-                        input_type = "int"
-                    else:
-                        raise Exception(f'{type(array_items_type)}: not supported')
-                    type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
-
-                elif isinstance(wdl_input.type, WDL.Type.File):
-                    type_of = "File"
-                elif isinstance(wdl_input.type, WDL.Type.String):
-                    type_of = "string"
-                elif isinstance(wdl_input.type, WDL.Type.Boolean):
-                    type_of = "boolean"
-                elif isinstance(wdl_input.type, WDL.Type.Int):
-                    type_of = "int"
+            if isinstance(wdl_input.type, WDL.Type.Array):
+                input_type = ""
+                array_items_type = wdl_input.type.item_type
+                if isinstance(array_items_type, WDL.Type.File):
+                    input_type = "File"
+                elif isinstance(array_items_type, WDL.Type.String):
+                    input_type = "string"
+                elif isinstance(array_items_type, WDL.Type.Boolean):
+                    input_type = "boolean"
+                elif isinstance(array_items_type, WDL.Type.Int):
+                    input_type = "int"
                 else:
-                    type_of = "unknown type"
+                    raise Exception(f'{type(array_items_type)}: not supported')
+                type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
 
-                if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply) :
-                    final_type_of: Union[
-                        List[Union[str, cwl.CommandInputArraySchema]],
-                        str,
-                        cwl.CommandInputArraySchema,
-                    ] = [type_of, "null"]
+            elif isinstance(wdl_input.type, WDL.Type.File):
+                type_of = "File"
+            elif isinstance(wdl_input.type, WDL.Type.String):
+                type_of = "string"
+            elif isinstance(wdl_input.type, WDL.Type.Boolean):
+                type_of = "boolean"
+            elif isinstance(wdl_input.type, WDL.Type.Int):
+                type_of = "int"
+            else:
+                type_of = "unknown type"
+
+            if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply) :
+                final_type_of: Union[
+                    List[Union[str, cwl.CommandInputArraySchema]],
+                    str,
+                    cwl.CommandInputArraySchema,
+                ] = [type_of, "null"]
+            else:
+                final_type_of = type_of
+
+            if wdl_input.expr is not None:
+                if isinstance(wdl_input.expr, WDL.Expr.Apply):
+                    input_value = None
                 else:
-                    final_type_of = type_of
+                    literal = wdl_input.expr.literal
+                    if not literal or not hasattr(literal, "value"):
+                        raise Exception(f'{type(literal)} has no attribute "value"')
+                    input_value = literal.value
 
-                if wdl_input.expr is not None:
-                    if isinstance(wdl_input.expr, WDL.Expr.Apply):
-                        input_value = None
-                    else:
-                        literal = wdl_input.expr.literal
-                        if not literal or not hasattr(literal, "value"):
-                            raise Exception(f'{type(literal)} has no attribute "value"')
-                        input_value = literal.value
-
-                inputs.append(
-                    cwl.CommandInputParameter(
-                        id=input_name, type=final_type_of, default=input_value
-                    )
+            inputs.append(
+                cwl.CommandInputParameter(
+                    id=input_name, type=final_type_of, default=input_value
                 )
+            )
 
         return inputs
 
@@ -354,6 +356,7 @@ def main() -> None:
     #     with open(args.output, "w") as result:
     # result.write(str(Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl"))) #missing args.workflow)
 
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
 
 
