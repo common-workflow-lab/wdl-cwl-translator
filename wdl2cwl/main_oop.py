@@ -460,9 +460,9 @@ def main() -> None:
     # write to a file in oop_cwl_files
     if args.output:
         with open(args.output, "w") as result:
-            result.write(str(Converter.load_wdl_tree(args.workflow))) #missing args.workflow)
+            result.write(str(Converter.load_wdl_tree(args.workflow))) 
 
-    # # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
 
 
