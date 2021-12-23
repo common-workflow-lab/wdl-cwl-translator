@@ -54,7 +54,7 @@ class Converter:
         runtime_docker = obj.runtime["docker"]
         if not isinstance(runtime_docker, WDL.Expr.Get):
             raise Exception(
-                f"Unsupport docker runtime type: {type(runtime_docker)}: {runtime_docker}"
+                f"Unsupported docker runtime type: {type(runtime_docker)}: {runtime_docker}"
             )
         docker_requirement = self.get_cwl_docker_requirements(runtime_docker)
         cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
@@ -67,7 +67,9 @@ class Converter:
         requirements.append(cwl.NetworkAccess(networkAccess=True))
         cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
         requirements.append(cpu_requirement)
-        if "memory" in obj.runtime:
+        if "memory" in obj.runtime and isinstance(
+            obj.runtime["memory"], WDL.Expr.Get
+        ):
             memory_requirement = self.get_memory_requirement(obj.runtime["memory"])
             requirements.append(memory_requirement)
 
@@ -93,14 +95,15 @@ class Converter:
         return result_stream.getvalue()
 
     def get_memory_requirement(
-        self, memory_runtime: WDL.Expr.Base
+        self, memory_runtime: WDL.Expr.Get
     ) -> cwl.ResourceRequirement:
         """Translate WDL Runtime Memory requirement to CWL Resource Requirement."""
         ram_min = ""
         if isinstance(memory_runtime.expr, WDL.Expr.Ident):
             expr_referee = memory_runtime.expr.referee
-            expr_referee_name = expr_referee.name
-            ram_min = self.get_ram_min_js(expr_referee_name, None)
+            if expr_referee:
+                expr_referee_name = str(expr_referee.name)
+                ram_min = self.get_ram_min_js(expr_referee_name, "")
         return cwl.ResourceRequirement(ramMin=ram_min)
 
     def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
@@ -147,7 +150,9 @@ class Converter:
             if ref_function == "_add":
                 first_arg, second_arg = ref_arguments
                 second_arg_value = self.get_wdl_literal(second_arg.literal)
-                first_arg_expr_name = first_arg.expr.name
+                first_arg_expr_name = cast(
+                    WDL.Expr.Ident, cast(WDL.Expr.Get, first_arg).expr
+                ).name
                 cores_min = f"$(inputs.{first_arg_expr_name} + {second_arg_value})"
 
         else:
@@ -411,7 +416,10 @@ class Converter:
             if isinstance(wdl_output.type, WDL.Type.File):
                 type_of = "File"
             # check for output with referee and referee expr of type WDL.Expr.Apply
-            expr_ident = wdl_output.expr.expr
+            if not wdl_output.expr:
+                raise ValueError("Missing expression")
+            get_expr = cast(WDL.Expr.Get, wdl_output.expr)
+            expr_ident = cast(WDL.Expr.Ident, get_expr.expr)
             expr_ident_name = expr_ident.name
             if expr_ident.referee and isinstance(
                 expr_ident.referee.expr, WDL.Expr.Apply
@@ -437,7 +445,7 @@ class Converter:
                     + f" ({true_tenary}) : inputs.{reference_expr.name})"
                 )
             else:
-                glob_expr = f"$(inputs.{expr_ident_name})"  # type: ignore[union-attr]
+                glob_expr = f"$(inputs.{expr_ident_name})"
 
             outputs.append(
                 cwl.CommandOutputParameter(
@@ -460,7 +468,7 @@ def main() -> None:
     # write to a file in oop_cwl_files
     if args.output:
         with open(args.output, "w") as result:
-            result.write(str(Converter.load_wdl_tree(args.workflow))) 
+            result.write(str(Converter.load_wdl_tree(args.workflow)))
 
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
