@@ -67,9 +67,7 @@ class Converter:
         requirements.append(cwl.NetworkAccess(networkAccess=True))
         cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
         requirements.append(cpu_requirement)
-        if "memory" in obj.runtime and isinstance(
-            obj.runtime["memory"], WDL.Expr.Get
-        ):
+        if "memory" in obj.runtime and isinstance(obj.runtime["memory"], WDL.Expr.Get):
             memory_requirement = self.get_memory_requirement(obj.runtime["memory"])
             requirements.append(memory_requirement)
 
