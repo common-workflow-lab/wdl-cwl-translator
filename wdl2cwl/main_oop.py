@@ -66,10 +66,16 @@ class Converter:
         requirements.append(cwl.InlineJavascriptRequirement())
         requirements.append(cwl.NetworkAccess(networkAccess=True))
         cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
-        requirements.append(cpu_requirement)
         if "memory" in obj.runtime and isinstance(obj.runtime["memory"], WDL.Expr.Get):
             memory_requirement = self.get_memory_requirement(obj.runtime["memory"])
-            requirements.append(memory_requirement)
+        else:
+            memory_requirement = None
+        requirements.append(
+            cwl.ResourceRequirement(
+                coresMin=cpu_requirement,
+                ramMin=memory_requirement,
+            )
+        )
 
         cat_tool = cwl.CommandLineTool(
             id=obj.name,
@@ -92,9 +98,7 @@ class Converter:
 
         return result_stream.getvalue()
 
-    def get_memory_requirement(
-        self, memory_runtime: WDL.Expr.Get
-    ) -> cwl.ResourceRequirement:
+    def get_memory_requirement(self, memory_runtime: WDL.Expr.Get) -> str:
         """Translate WDL Runtime Memory requirement to CWL Resource Requirement."""
         ram_min = ""
         if isinstance(memory_runtime.expr, WDL.Expr.Ident):
@@ -102,7 +106,7 @@ class Converter:
             if expr_referee:
                 expr_referee_name = str(expr_referee.name)
                 ram_min = self.get_ram_min_js(expr_referee_name, "")
-        return cwl.ResourceRequirement(ramMin=ram_min)
+        return ram_min
 
     def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
         """Get memory requirement for user input."""
@@ -135,9 +139,7 @@ class Converter:
 
         return js_str
 
-    def get_cpu_requirement(
-        self, cpu_runtime: WDL.Expr.Base
-    ) -> cwl.ResourceRequirement:
+    def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
         if isinstance(cpu_runtime, WDL.Expr.Get):
             cpu_runtime_name = cast(WDL.Expr.Ident, cpu_runtime.expr).name
@@ -155,7 +157,7 @@ class Converter:
 
         else:
             raise Exception(f"Unhandled type: {type(cpu_runtime)}: {cpu_runtime}")
-        return cwl.ResourceRequirement(coresMin=cores_min)
+        return cores_min
 
     def get_cwl_docker_requirements(
         self, wdl_docker: WDL.Expr.Get

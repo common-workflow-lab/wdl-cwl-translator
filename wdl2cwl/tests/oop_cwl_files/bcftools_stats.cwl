@@ -147,7 +147,6 @@ requirements:
     networkAccess: true
   - class: ResourceRequirement
     coresMin: $(inputs.threads + 1)
-  - class: ResourceRequirement
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
