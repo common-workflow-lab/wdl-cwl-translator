@@ -110,22 +110,22 @@ requirements:
             bcftools annotate \
             -o $(inputs.outputPath) \
             -O $(inputs.compressed ? "z" : "v") \
-            $(inputs.annsFile === null ? "" : "--annotations " inputs.annsFile) \
-            $(inputs.collapse === null ? "" : "--collapse " inputs.collapse) \
+            $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile) \
+            $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
             $(inputs.columns.map(function(el) {return el.path}).join(",")) \
-            $(inputs.exclude === null ? "" : "--exclude " inputs.exclude) \
+            $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
             $(inputs.force ? "--force" : "") \
-            $(inputs.headerLines === null ? "" : "--header-lines " inputs.headerLines) \
-            $(inputs.newId === null ? "" : "--set-id " inputs.newId) \
-            $(inputs.include === null ? "" : "--include " inputs.include) \
+            $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines) \
+            $(inputs.newId === null ? "" : "--set-id " + inputs.newId) \
+            $(inputs.include === null ? "" : "--include " + inputs.include) \
             $(inputs.keepSites ? "--keep-sites" : "") \
-            $(inputs.markSites === null ? "" : "--mark-sites " inputs.markSites) \
+            $(inputs.markSites === null ? "" : "--mark-sites " + inputs.markSites) \
             $(inputs.noVersion ? "--no-version" : "") \
-            $(inputs.regions === null ? "" : "--regions " inputs.regions) \
-            $(inputs.regionsFile === null ? "" : "--regions-file " inputs.regionsFile) \
-            $(inputs.renameChrs === null ? "" : "--rename-chrs " inputs.renameChrs) \
+            $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
+            $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile) \
+            $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs) \
             $(inputs.samples.map(function(el) {return el.path}).join(",")) \
-            $(inputs.samplesFile === null ? "" : "--samples-file " inputs.samplesFile) \
+            $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile) \
             $(inputs.singleOverlaps ? "--single-overlaps" : "") \
             $(inputs.removeAnns.map(function(el) {return el.path}).join(",")) \
             $(inputs.inputFile)

@@ -287,7 +287,7 @@ class Converter:
                         "$(inputs."
                         + arg_value
                         + ' === null ? "" : '
-                        + f'"{arg_name}"'
+                        + f'"{arg_name}" +'
                         + " inputs."
                         + arg_value
                         + ")"

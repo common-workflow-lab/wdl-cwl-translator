@@ -121,24 +121,24 @@ requirements:
             set -e
             mkdir -p \$(dirname  $(inputs.outputPath === null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath))
             bcftools stats \
-            $(inputs.afBins === null ? "" : "--af-bins " inputs.afBins) \
-            $(inputs.afTag === null ? "" : "--af-tag " inputs.afTag) \
+            $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
+            $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
             $(inputs.firstAlleleOnly ? "--1st-allele-only" : "") \
-            $(inputs.collapse === null ? "" : "--collapse " inputs.collapse) \
-            $(inputs.depth === null ? "" : "--depth " inputs.depth) \
-            $(inputs.exclude === null ? "" : "--exclude " inputs.exclude) \
-            $(inputs.exons === null ? "" : "--exons " inputs.exons) \
-            $(inputs.applyFilters === null ? "" : "--apply-filters " inputs.applyFilters) \
-            $(inputs.fastaRef === null ? "" : "--fasta-ref " inputs.fastaRef) \
-            $(inputs.include === null ? "" : "--include " inputs.include) \
+            $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
+            $(inputs.depth === null ? "" : "--depth " + inputs.depth) \
+            $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
+            $(inputs.exons === null ? "" : "--exons " + inputs.exons) \
+            $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
+            $(inputs.fastaRef === null ? "" : "--fasta-ref " + inputs.fastaRef) \
+            $(inputs.include === null ? "" : "--include " + inputs.include) \
             $(inputs.splitByID ? "--split-by-ID" : "") \
-            $(inputs.regions === null ? "" : "--regions " inputs.regions) \
-            $(inputs.regionsFile === null ? "" : "--regions-file " inputs.regionsFile) \
+            $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
+            $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile) \
             $(inputs.samples.map(function(el) {return el.path}).join(",")) \
-            $(inputs.samplesFile === null ? "" : "--samples-file " inputs.samplesFile) \
-            $(inputs.targets === null ? "" : "--targets " inputs.targets) \
-            $(inputs.targetsFile === null ? "" : "--targets-file " inputs.targetsFile) \
-            $(inputs.userTsTv === null ? "" : "--user-tstv " inputs.userTsTv) \
+            $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile) \
+            $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
+            $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile) \
+            $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
             --threads $(inputs.threads) \
             $(inputs.verbose ? "--verbose" : "") \
             $(inputs.inputVcf)$(inputs.compareVcf) > $(inputs.outputPath === null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath)
