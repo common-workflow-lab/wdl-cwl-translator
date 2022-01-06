@@ -65,7 +65,7 @@ class Converter:
         ]
         requirements.append(cwl.InlineJavascriptRequirement())
         requirements.append(cwl.NetworkAccess(networkAccess=True))
-        cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"])
+        cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"]) if "cpu" in obj.runtime else None
         if "memory" in obj.runtime and isinstance(obj.runtime["memory"], WDL.Expr.Get):
             memory_requirement = self.get_memory_requirement(obj.runtime["memory"])
         else:
@@ -418,39 +418,65 @@ class Converter:
             # check for output with referee and referee expr of type WDL.Expr.Apply
             if not wdl_output.expr:
                 raise ValueError("Missing expression")
-            get_expr = cast(WDL.Expr.Get, wdl_output.expr)
-            expr_ident = cast(WDL.Expr.Ident, get_expr.expr)
-            expr_ident_name = expr_ident.name
-            if expr_ident.referee and isinstance(
-                expr_ident.referee.expr, WDL.Expr.Apply
-            ):
-                reference_expr = expr_ident.referee
-                ref_expr_to_apply = reference_expr.expr
-                ref_function = ref_expr_to_apply.function_name
-                ref_arguments = ref_expr_to_apply.arguments
-                if ref_function == "_add":
-                    # return true value for a javascript tenary
-                    first_arg, second_arg = ref_arguments
-                    second_arg_value = self.get_wdl_literal(second_arg.literal)
-                    first_arg_fun_name = first_arg.function_name
-                    if first_arg_fun_name == "basename":
-                        only_argument = first_arg.arguments[0]
-                        only_argument_expr_name = only_argument.expr.name
-                    true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
+            if isinstance(wdl_output.expr, WDL.Expr.Apply):
+                apply_expr = wdl_output.expr
+                function_name = getattr(apply_expr, "function_name", None)
 
-                glob_expr = (
-                    "$(inputs."
-                    + reference_expr.name
-                    + " === null ?"
-                    + f" ({true_tenary}) : inputs.{reference_expr.name})"
-                )
+                if function_name and function_name == "_add":
+                    func_arguments = apply_expr.arguments
+                    first_arg, second_arg = func_arguments
+                    first_arg_expr_ident = cast(WDL.Expr.Ident, first_arg.expr)
+                    expr_ident_name = first_arg_expr_ident.name
+                    second_arg_literal = self.get_wdl_literal(second_arg.literal)
+
+                glob_expr = f"$(inputs.{expr_ident_name})" + second_arg_literal
+
+
+            elif isinstance(wdl_output.expr, WDL.Expr.Get):   
+                get_expr = cast(WDL.Expr.Get, wdl_output.expr)
+                expr_ident = cast(WDL.Expr.Ident, get_expr.expr)
+                expr_ident_name = expr_ident.name
+                if expr_ident.referee and isinstance(
+                    expr_ident.referee.expr, WDL.Expr.Apply
+                ):
+                    reference_expr = expr_ident.referee
+                    ref_expr_to_apply = reference_expr.expr
+                    ref_function = ref_expr_to_apply.function_name
+                    ref_arguments = ref_expr_to_apply.arguments
+                    if ref_function == "_add":
+                        # return true value for a javascript tenary
+                        first_arg, second_arg = ref_arguments
+                        second_arg_value = self.get_wdl_literal(second_arg.literal)
+                        first_arg_fun_name = first_arg.function_name
+                        if first_arg_fun_name == "basename":
+                            only_argument = first_arg.arguments[0]
+                            only_argument_expr_name = only_argument.expr.name
+                        true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
+
+                    glob_expr = (
+                        "$(inputs."
+                        + reference_expr.name
+                        + " === null ?"
+                        + f" ({true_tenary}) : inputs.{reference_expr.name})"
+                    )
+                else:
+                    glob_expr = f"$(inputs.{expr_ident_name})"
             else:
-                glob_expr = f"$(inputs.{expr_ident_name})"
+                raise ValueError("Expression not found")
+
+            if wdl_output.type.optional or isinstance(wdl_output.expr, WDL.Expr.Apply):
+                final_type_of: Union[
+                    List[Union[str, cwl.CommandOutputArraySchema]],
+                    str,
+                    cwl.CommandInputArraySchema,
+                ] = [type_of, "null"]
+            else:
+                final_type_of = type_of
 
             outputs.append(
                 cwl.CommandOutputParameter(
                     id=output_name,
-                    type=type_of,
+                    type=final_type_of,
                     outputBinding=cwl.CommandOutputBinding(glob=glob_expr),
                 )
             )
@@ -472,6 +498,7 @@ def main() -> None:
 
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
 
 
 if __name__ == "__main__":
