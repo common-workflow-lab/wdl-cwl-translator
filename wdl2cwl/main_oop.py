@@ -425,7 +425,7 @@ class Converter:
                 if function_name and function_name == "_add":
                     func_arguments = apply_expr.arguments
                     first_arg, second_arg = func_arguments
-                    first_arg_expr_ident = cast(WDL.Expr.Ident, first_arg.expr)
+                    first_arg_expr_ident = getattr( first_arg, "expr", wdl_output)
                     expr_ident_name = first_arg_expr_ident.name
                     second_arg_literal = self.get_wdl_literal(second_arg.literal)
 
@@ -433,7 +433,7 @@ class Converter:
 
 
             elif isinstance(wdl_output.expr, WDL.Expr.Get):   
-                get_expr = cast(WDL.Expr.Get, wdl_output.expr)
+                get_expr = wdl_output.expr
                 expr_ident = cast(WDL.Expr.Ident, get_expr.expr)
                 expr_ident_name = expr_ident.name
                 if expr_ident.referee and isinstance(
@@ -447,9 +447,10 @@ class Converter:
                         # return true value for a javascript tenary
                         first_arg, second_arg = ref_arguments
                         second_arg_value = self.get_wdl_literal(second_arg.literal)
-                        first_arg_fun_name = first_arg.function_name
-                        if first_arg_fun_name == "basename":
-                            only_argument = first_arg.arguments[0]
+                        first_arg_fun_name = getattr(first_arg, "function_name", None)
+                        if first_arg_fun_name and first_arg_fun_name == "basename":
+                            argument = getattr(first_arg, "arguments", ["invalid: argument not found"])
+                            only_argument = argument[0]
                             only_argument_expr_name = only_argument.expr.name
                         true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
 

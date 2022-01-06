@@ -17,6 +17,7 @@ def get_file(path: str) -> str:
     [
         ("wdl_files/bowtie_1.wdl", "oop_cwl_files/bowtie_1.cwl"),
         ("wdl_files/bcftools_stats.wdl", "oop_cwl_files/bcftools_stats.cwl"),
+        ("wdl_files/bcftools_annotate.wdl", "oop_cwl_files/bcftools_annotate.cwl"),
     ],
 )
 class TestParameterized:
