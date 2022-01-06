@@ -15,11 +15,19 @@
       class: File
       size: 261
 
-# Tests for doc: bcftools_stats
 - doc: bcftools_stats
   tool: cwl_files/bcftools_stats.cwl
   job: inputs/bcftools_stats.yaml
   output: 
+    stats:
+      basename: male.vcf.stats
+      class: File
+      size: 6060
+
+- doc: bcftools_stats
+  tool: oop_cwl_files/bcftools_stats.cwl
+  job: inputs/bcftools_stats.yaml
+  output:
     stats:
       basename: male.vcf.stats
       class: File
