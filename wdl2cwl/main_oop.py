@@ -65,7 +65,11 @@ class Converter:
         ]
         requirements.append(cwl.InlineJavascriptRequirement())
         requirements.append(cwl.NetworkAccess(networkAccess=True))
-        cpu_requirement = self.get_cpu_requirement(obj.runtime["cpu"]) if "cpu" in obj.runtime else None
+        cpu_requirement = (
+            self.get_cpu_requirement(obj.runtime["cpu"])
+            if "cpu" in obj.runtime
+            else None
+        )
         if "memory" in obj.runtime and isinstance(obj.runtime["memory"], WDL.Expr.Get):
             memory_requirement = self.get_memory_requirement(obj.runtime["memory"])
         else:
@@ -425,14 +429,13 @@ class Converter:
                 if function_name and function_name == "_add":
                     func_arguments = apply_expr.arguments
                     first_arg, second_arg = func_arguments
-                    first_arg_expr_ident = getattr( first_arg, "expr", wdl_output)
+                    first_arg_expr_ident = getattr(first_arg, "expr", wdl_output)
                     expr_ident_name = first_arg_expr_ident.name
                     second_arg_literal = self.get_wdl_literal(second_arg.literal)
 
                 glob_expr = f"$(inputs.{expr_ident_name})" + second_arg_literal
 
-
-            elif isinstance(wdl_output.expr, WDL.Expr.Get):   
+            elif isinstance(wdl_output.expr, WDL.Expr.Get):
                 get_expr = wdl_output.expr
                 expr_ident = cast(WDL.Expr.Ident, get_expr.expr)
                 expr_ident_name = expr_ident.name
@@ -449,7 +452,9 @@ class Converter:
                         second_arg_value = self.get_wdl_literal(second_arg.literal)
                         first_arg_fun_name = getattr(first_arg, "function_name", None)
                         if first_arg_fun_name and first_arg_fun_name == "basename":
-                            argument = getattr(first_arg, "arguments", ["invalid: argument not found"])
+                            argument = getattr(
+                                first_arg, "arguments", ["invalid: argument not found"]
+                            )
                             only_argument = argument[0]
                             only_argument_expr_name = only_argument.expr.name
                         true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
