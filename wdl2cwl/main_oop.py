@@ -1,7 +1,7 @@
 """Main entrypoint for WDL2CWL."""
 import os
 from typing import List, Union, Optional, Callable, cast, Any
-import WDL
+import WDL # type: ignore [import]
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
 
@@ -339,8 +339,12 @@ class Converter:
             if "true" in options:
                 true_value = options["true"]
                 false_value = options["false"]
-                if not wdl_placeholder.expr.type.optional:
-
+                is_optional = False
+                if isinstance(wdl_placeholder.expr, WDL.Expr.Get):
+                    is_optional = wdl_placeholder.expr.type.optional
+                elif isinstance(wdl_placeholder.expr, WDL.Expr.Apply):
+                    is_optional = wdl_placeholder.expr.arguments[0].type.optional
+                if not is_optional:
                     cwl_command_str = (
                         f'$({placeholder_expr} ? "{true_value}" : "{false_value}")'
                     )
