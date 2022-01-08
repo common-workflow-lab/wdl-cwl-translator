@@ -71,8 +71,8 @@ requirements:
             $(inputs.strata ? "--strata" : "") \
             $(inputs.allowContain ? "--allow-contain" : "") \
             --threads  $(inputs.threads) \
-            $(inputs.samRG === null ? "" : "--sam-RG '" + inputs.samRG)$(inputs.samRG ? "" : "'") \
-            $(inputs.indexFiles[0].replace("(\.rev)?\.[0-9]\.ebwt$", "")) \
+            $(inputs.samRG === null ? "" : "--sam-RG '" + inputs.samRG)$(inputs.samRG ? "'" : "") \
+            inputs.indexFiles[0].replace("(\.rev)?\.[0-9]\.ebwt$", "") \
             $(inputs.readsUpstream.map(function(el) {return el.path}).join(",")) \
             | picard -Xmx$(inputs.picardXmx) SortSam \
             INPUT=/dev/stdin \

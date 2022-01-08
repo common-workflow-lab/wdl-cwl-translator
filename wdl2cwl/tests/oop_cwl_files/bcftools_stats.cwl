@@ -108,8 +108,8 @@ outputs:
   - id: stats
     type: File
     outputBinding:
-        glob: "$(inputs.outputPath === null ? (inputs.inputVcf.basename + '.stats')\
-            \ : inputs.outputPath)"
+        glob: "$(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' :\
+            \ inputs.outputPath)"
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
@@ -119,7 +119,7 @@ requirements:
         entry: |4
 
             set -e
-            mkdir -p \$(dirname  $(inputs.outputPath === null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath))
+            mkdir -p \$(dirname $(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath))
             bcftools stats \
             $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
             $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
@@ -127,21 +127,21 @@ requirements:
             $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
             $(inputs.depth === null ? "" : "--depth " + inputs.depth) \
             $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
-            $(inputs.exons === null ? "" : "--exons " + inputs.exons) \
+            $(inputs.exons === null ? "" : "--exons " + inputs.exons.path) \
             $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
-            $(inputs.fastaRef === null ? "" : "--fasta-ref " + inputs.fastaRef) \
+            $(inputs.fastaRef === null ? "" : "--fasta-ref " + inputs.fastaRef.path) \
             $(inputs.include === null ? "" : "--include " + inputs.include) \
             $(inputs.splitByID ? "--split-by-ID" : "") \
             $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
-            $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile) \
-            $(inputs.samples.map(function(el) {return el.path}).join(",")) \
-            $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile) \
+            $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
+            $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.map(function(el) {return el.path}).join(",")) \
+            $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
             $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
-            $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile) \
+            $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path) \
             $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
             --threads $(inputs.threads) \
             $(inputs.verbose ? "--verbose" : "") \
-            $(inputs.inputVcf)$(inputs.compareVcf) > $(inputs.outputPath === null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath)
+            $(inputs.inputVcf.path) $(inputs.compareVcf == null ? "" : inputs.compareVcf.path) > $(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath)
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true

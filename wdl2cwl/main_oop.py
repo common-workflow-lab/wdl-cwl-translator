@@ -3,6 +3,7 @@ import os
 from typing import List, Union, Optional, Callable, cast, Any
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
+import regex  # type: ignore
 
 from io import StringIO
 import textwrap
@@ -12,6 +13,14 @@ import argparse
 
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
+
+valid_js_identifier = regex.compile(
+    r"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|null|this|true|"
+    r"void|with|break|catch|class|const|false|super|throw|while|yield|delete|export|"
+    r"import|public|return|static|switch|typeof|default|extends|finally|package|"
+    r"private|continue|debugger|function|arguments|interface|protected|implements|"
+    r"instanceof)$)(?:[$_\p{ID_Start}])(?:[$_\u200C\u200D\p{ID_Continue}])*$"
+)
 
 
 class Converter:
@@ -102,15 +111,16 @@ class Converter:
 
         return result_stream.getvalue()
 
+    def get_input(self, input_name: str) -> str:
+        """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
+        if valid_js_identifier.match(input_name):
+            return f"inputs.{input_name}"
+        return f'inputs["{input_name}"]'
+
     def get_memory_requirement(self, memory_runtime: WDL.Expr.Get) -> str:
         """Translate WDL Runtime Memory requirement to CWL Resource Requirement."""
-        ram_min = ""
-        if isinstance(memory_runtime.expr, WDL.Expr.Ident):
-            expr_referee = memory_runtime.expr.referee
-            if expr_referee:
-                expr_referee_name = str(expr_referee.name)
-                ram_min = self.get_ram_min_js(expr_referee_name, "")
-        return ram_min
+        ram_min = self.get_expr_name(memory_runtime.expr)
+        return self.get_ram_min_js(ram_min, "")
 
     def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
         """Get memory requirement for user input."""
@@ -119,13 +129,11 @@ class Converter:
             append_str = '${\nvar unit = "' + unit + '";'
         else:
             append_str = (
-                "${\nvar unit = inputs."
-                + ram_min_ref_name
-                + '.match(/[a-zA-Z]+/g).join("");'
+                "${\nvar unit = " + ram_min_ref_name + '.match(/[a-zA-Z]+/g).join("");'
             )
         js_str = (
             append_str
-            + "\nvar value = parseInt(inputs."
+            + "\nvar value = parseInt("
             + ram_min_ref_name
             + ".match(/[0-9]+/g));\n"
             + 'var memory = "";\n'
@@ -143,28 +151,153 @@ class Converter:
 
         return js_str
 
-    def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
-        """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
-        if isinstance(cpu_runtime, WDL.Expr.Get):
-            cpu_runtime_name = cast(WDL.Expr.Ident, cpu_runtime.expr).name
-            cores_min = f"$(inputs.{cpu_runtime_name})"
-        elif isinstance(cpu_runtime, WDL.Expr.Apply):
-            ref_function = cpu_runtime.function_name
-            ref_arguments = cpu_runtime.arguments
-            if ref_function == "_add":
-                first_arg, second_arg = ref_arguments
-                second_arg_value = self.get_wdl_literal(second_arg.literal)
-                first_arg_expr_name = cast(
-                    WDL.Expr.Ident, cast(WDL.Expr.Get, first_arg).expr
-                ).name
-                cores_min = f"$(inputs.{first_arg_expr_name} + {second_arg_value})"
+    def get_expr(self, wdl_expr: WDL.Expr.Base) -> str:
+        """Translate WDL Expressions."""
+        if isinstance(wdl_expr, WDL.Expr.Apply):
+            return self.get_expr_apply(wdl_expr)
+        elif isinstance(wdl_expr, WDL.Expr.Get):
+            return self.get_expr_get(wdl_expr)
+        elif isinstance(
+            wdl_expr,
+            (
+                WDL.Expr.String,
+                WDL.Expr.Boolean,
+                WDL.Expr.Int,
+                WDL.Expr.Float,
+                WDL.Expr.Array,
+            ),
+        ):
+            return self.get_literal_name(wdl_expr)
+        else:
+            raise Exception(f"The expression '{wdl_expr}' is not handled yet.")
+
+    def get_literal_name(self, expr: WDL.Tree.Decl) -> str:
+        """Translate WDL Boolean, Int or Float Expression."""
+        if expr is None or not hasattr(expr, "parent"):
+            raise Exception(f"{type(expr)} has no attribute 'parent'")
+        if isinstance(expr.parent, WDL.Expr.Apply):
+            return self.get_wdl_literal(expr.literal)
+        parent_name = expr.parent.name
+        parent_name = self.get_input(parent_name)
+        return (
+            parent_name
+            if not isinstance(expr.parent.type, WDL.Type.File)
+            else f"{parent_name}.path"
+        )
+
+    def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
+        """Translate WDL Apply Expressions."""
+        function_name = wdl_apply_expr.function_name
+        arguments = wdl_apply_expr.arguments
+        if not arguments:
+            raise Exception(f"The '{wdl_apply_expr}' expression has no arguments.")
+        referer = ""
+        treat_as_optional = wdl_apply_expr.type.optional
+        if function_name == "_add":
+            left_operand, right_operand = arguments
+            right_operand = self.get_wdl_literal(right_operand.literal)
+            left_operand_value = self.get_expr(left_operand)
+            if getattr(left_operand, "function_name", None) == "basename":
+                treat_as_optional = True
+                referer = wdl_apply_expr.parent.name
+            return (
+                f"{left_operand_value} + {right_operand}"
+                if not treat_as_optional
+                else f"{self.get_input(referer)} == null ? {left_operand_value} + '{right_operand}' : {self.get_input(referer)}"
+            )
+        elif function_name == "basename":
+            only_operand, basename = arguments[0], function_name
+            only_operand = self.get_expr_name(only_operand.expr)
+            return f"{only_operand}.{basename}"
+        elif function_name == "defined":
+            only_operand = arguments[0]
+            only_operand = self.get_expr(only_operand)
+            return only_operand
+        elif function_name == "_interpolation_add":
+            arg_value, arg_name = arguments
+            just_arg_name = self.get_expr_name(arg_name.expr)
+            arg_name_with_file_check = self.get_expr_name_with_is_file_check(
+                arg_name.expr
+            )
+            arg_value = self.get_wdl_literal(arg_value.literal)
+            return (
+                f'{just_arg_name} === null ? "" : "{arg_value}" + {arg_name_with_file_check}'
+                if treat_as_optional
+                else f"{arg_value} $({arg_name_with_file_check})"
+            )
+        elif function_name == "sub":
+            wdl_apply, arg_string, arg_sub = arguments
+            wdl_apply = self.get_expr(wdl_apply)
+            arg_string = self.get_expr(arg_string)
+            arg_sub = self.get_expr(arg_sub)
+            return f'{wdl_apply}.replace("{arg_string}", "{arg_sub}")'
+
+        elif function_name == "_at":
+            iterable_object, index = arguments
+            iterable_object, index = self.get_expr(iterable_object), self.get_expr(
+                index
+            )
+            return f"{iterable_object}[{index}]"
+        elif function_name == "_gt":
+            left_operand, right_operand = arguments
+            left_operand = self.get_expr_apply(left_operand)
+            right_operand = self.get_expr(right_operand)
+            return f"{left_operand} > {right_operand}"
+        elif function_name == "length":
+            only_arg = arguments[0]
+            only_arg = self.get_expr_get(only_arg)
+            return f"{only_arg}.length"
+        elif function_name == "_neg":
+            # Yet to be implemented for the bcftools_annotate
+            pass
 
         else:
-            raise Exception(f"Unhandled type: {type(cpu_runtime)}: {cpu_runtime}")
-        return cores_min
+            raise ValueError(f"Function name '{function_name}' not yet handled.")
+
+    def get_expr_get(self, wdl_get_expr: WDL.Expr.Get) -> str:
+        """Translate WDL Get Expressions."""
+
+        if isinstance(wdl_get_expr.expr, WDL.Expr.Ident) and wdl_get_expr.expr:
+            ident_name = wdl_get_expr.expr.name
+            ident_name = self.get_input(ident_name)
+            referee = wdl_get_expr.expr.referee
+            optional = wdl_get_expr.expr.type.optional
+            if (
+                referee
+                and referee.expr
+                and not isinstance(wdl_get_expr.type, WDL.Type.File)
+            ):
+                return self.get_expr(referee.expr)
+            if optional and isinstance(wdl_get_expr.type, WDL.Type.File):
+                # To prevent null showing on the terminal for inputs of type File
+                just_id_name = self.get_expr_name(wdl_get_expr.expr)
+                with_file_check = self.get_expr_name_with_is_file_check(
+                    wdl_get_expr.expr
+                )
+                ident_name = f'{just_id_name} == null ? "" : {with_file_check}'
+        else:
+            raise ValueError(f"Get expr '{wdl_get_expr.expr}' has no name attribute.")
+        return (
+            ident_name
+            if optional or not isinstance(wdl_get_expr.type, WDL.Type.File)
+            else f"{ident_name}.path"
+        )
+
+    def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
+        """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
+        cpu_str = ""
+        if isinstance(cpu_runtime, WDL.Expr.Apply):
+            cpu_str = self.get_expr_apply(cpu_runtime)
+        elif isinstance(cpu_runtime, WDL.Expr.Get):
+            cpu_str = self.get_expr_get(cpu_runtime)
+        else:
+            raise Exception(
+                f"CPU runtime of type {type(cpu_runtime)} is not yet handled."
+            )
+        return f"$({cpu_str})"
 
     def get_cwl_docker_requirements(
-        self, wdl_docker: WDL.Expr.Get
+        self, wdl_docker: WDL.Tree.Decl
     ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
         dockerpull_expr = wdl_docker.expr
@@ -196,135 +329,74 @@ class Converter:
         """Translate WDL Expr Placeholder to a valid CWL command string."""
         cwl_command_str = ""
 
+        placeholder_expr = self.get_expr(wdl_placeholder.expr)
+        if not placeholder_expr:
+            raise ValueError(
+                f"The placeholder '{wdl_placeholder}' has no expr attribute."
+            )
         options = wdl_placeholder.options
         if options:
             if "true" in options:
                 true_value = options["true"]
                 false_value = options["false"]
-            elif "sep" in options:
-                seperator = options["sep"]
-        if isinstance(wdl_placeholder.expr, WDL.Expr.Get):
-            nested_expr = wdl_placeholder.expr.expr
-            if nested_expr is None or not isinstance(nested_expr, WDL.Expr.Ident):
-                raise Exception(f"Unsupported type: {type(nested_expr)}")
-            placeholder_name = nested_expr.name
-            if not options:
-                if nested_expr.referee and isinstance(
-                    nested_expr.referee.expr, WDL.Expr.Apply
-                ):
-                    reference_expr = nested_expr.referee
-                    ref_expr_to_apply = reference_expr.expr
-                    ref_function = ref_expr_to_apply.function_name
-                    ref_arguments = ref_expr_to_apply.arguments
-                    if ref_function == "_add":
-                        # return true value for a javascript tenary
-                        first_arg, second_arg = ref_arguments
-                        second_arg_value = self.get_wdl_literal(second_arg.literal)
-                        first_arg_fun_name = first_arg.function_name
-                        if first_arg_fun_name == "basename":
-                            only_argument = first_arg.arguments[0]
-                            only_argument_expr_name = only_argument.expr.name
-                        true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
+                if not wdl_placeholder.expr.type.optional:
 
                     cwl_command_str = (
-                        " $(inputs."
-                        + reference_expr.name
-                        + " === null ?"
-                        + f" {true_tenary} : inputs.{reference_expr.name})"
+                        f'$({placeholder_expr} ? "{true_value}" : "{false_value}")'
                     )
                 else:
-                    cwl_command_str = "$(inputs." + placeholder_name + ")"
-            elif "true" in options:
-                cwl_command_str = (
-                    "$(inputs."
-                    + placeholder_name
-                    + " ? "
-                    + f'"{true_value}" : "{false_value}")'
-                )
+                    cwl_command_str = f'$({placeholder_expr} == null ? "{false_value}" : "{true_value}")'
             elif "sep" in options:
+                seperator = options["sep"]
                 cwl_command_str = (
-                    f"$(inputs.{placeholder_name}.map("
+                    f"$({placeholder_expr}.map("
                     + 'function(el) {return el.path}).join("'
                     + seperator
                     + '"))'
                 )
-        elif isinstance(wdl_placeholder.expr, WDL.Expr.Apply):
-            function_name = wdl_placeholder.expr.function_name
-            expr_arguments = wdl_placeholder.expr.arguments
+            else:
+                raise Exception(
+                    f"Placeholders with options {options} are not yet handled."
+                )
+        else:
+            cwl_command_str = (
+                f"$({placeholder_expr})"
+                if placeholder_expr[-1] != ")"
+                else placeholder_expr
+            )
 
-            if function_name == "defined":
-                arg = expr_arguments[0]
-                if not isinstance(arg, WDL.Expr.Get):
-                    raise Exception(f"Unsupported type: {type(arg)}: {arg}")
-                arg_expr = arg.expr
-                if not isinstance(arg_expr, WDL.Expr.Ident):
-                    raise Exception(f"Unsupported type: {type(arg_expr)}: {arg_expr}")
-                arg_referee = arg_expr.referee
-                if not isinstance(arg_referee, WDL.Tree.Decl):
-                    raise Exception(
-                        f"Unsupported type: {type(arg_referee)}: {arg_referee}"
-                    )
-                arg_referee_name = arg_referee.name
-                cwl_command_str = (
-                    "$(inputs."
-                    + arg_referee_name
-                    + " ? "
-                    + f'"{false_value}" : "{true_value}")'
-                )
-            elif function_name == "_interpolation_add":
-                arg_name_raw, arg_value_raw = expr_arguments
-                arg_name_literal = arg_name_raw.literal
-                if arg_name_literal is None or not hasattr(arg_name_literal, "value"):
-                    raise Exception(f"Unsupported type: {type(arg_name_literal)}")
-                if not isinstance(arg_value_raw, WDL.Expr.Get):
-                    raise Exception(f"Unsupported type: {type(arg_value_raw)}")
-                arg_value_expr = arg_value_raw.expr
-                if not isinstance(arg_value_expr, WDL.Expr.Ident):
-                    raise Exception(f"Unsupported type: {type(arg_value_expr)}")
-                arg_name, arg_value = arg_name_literal.value, arg_value_expr.name
-                if wdl_placeholder.expr.type.optional:
-                    cwl_command_str = (
-                        "$(inputs."
-                        + arg_value
-                        + ' === null ? "" : '
-                        + f'"{arg_name}" +'
-                        + " inputs."
-                        + arg_value
-                        + ")"
-                    )
-                else:
-                    cwl_command_str = f"{arg_name} $(inputs.{arg_value})"
-            elif function_name == "sub":
-                wdl_apply_object_arg, arg_string, arg_substitute = expr_arguments
-                if not isinstance(wdl_apply_object_arg, WDL.Expr.Apply):
-                    raise Exception(f"Unsupported type: {type(wdl_apply_object_arg)}")
-                apply_input, index_to_sub = wdl_apply_object_arg.arguments
-                if not isinstance(apply_input, WDL.Expr.Get):
-                    raise Exception(f"Unsupported type: {type(apply_input)}")
-                apply_input_name = apply_input.expr.name  # type: ignore[attr-defined]
-                if not hasattr(index_to_sub, "value"):
-                    raise Exception(f"{type(index_to_sub)} has no attribute: 'value")
-                index_to_sub_value = index_to_sub.value  # type: ignore[attr-defined]
-                cwl_command_str = (
-                    "$(inputs."
-                    + apply_input_name
-                    + f"[{index_to_sub_value}]"
-                    + f'.replace("{self.get_wdl_literal(arg_string.literal)}", "{self.get_wdl_literal(arg_substitute.literal)}"))'
-                )
         return cwl_command_str
 
-    def get_wdl_literal(self, wdl_expr: Optional[WDL.Value.Base]) -> Any:
+    def get_wdl_literal(self, wdl_expr: Optional[WDL.Value.Base]) -> str:
         """Extract Literal value from WDL expr."""
         if wdl_expr is None or not hasattr(wdl_expr, "value"):
             raise Exception(f"{type(wdl_expr)} has not attribute 'value'")
         return wdl_expr.value
 
+    def get_expr_name(self, wdl_expr: WDL.Tree.Decl) -> str:
+        """Extract name from WDL expr."""
+        if wdl_expr is None or not hasattr(wdl_expr, "name"):
+            raise Exception(f"{type(wdl_expr)} has not attribute 'name'")
+        expr_name = self.get_input(wdl_expr.name)
+        return expr_name
+
+    def get_expr_name_with_is_file_check(self, wdl_expr: WDL.Tree.Decl) -> str:
+        """Extract name from WDL expr and check if it's a file path."""
+        if wdl_expr is None or not hasattr(wdl_expr, "name"):
+            raise Exception(f"{type(wdl_expr)} has not attribute 'name'")
+        expr_name = self.get_input(wdl_expr.name)
+        is_file = isinstance(wdl_expr.type, WDL.Type.File)
+        return expr_name if not is_file else f"{expr_name}.path"
+
     def translate_wdl_str(self, wdl_command: str) -> str:
         """Translate WDL string command to CWL Process requirement string."""
         first_newline = wdl_command.find("\n")
-        command_str = wdl_command[:first_newline] + textwrap.dedent(
-            wdl_command[first_newline:]
-        )
+        if first_newline == -1:
+            command_str = wdl_command
+        else:
+            command_str = wdl_command[:first_newline] + textwrap.dedent(
+                wdl_command[first_newline:]
+            )
 
         if "$" in command_str:
             splitted_1, splitted_2 = command_str.split("$")
@@ -400,12 +472,6 @@ class Converter:
 
         return inputs
 
-    def get_expr_name(self, wdl_expr: WDL.Tree.Decl) -> str:
-        """Extract name from WDL expr."""
-        if wdl_expr is None or not hasattr(wdl_expr, "name"):
-            raise Exception(f"{type(wdl_expr)} has not attribute 'name'")
-        return wdl_expr.name
-
     def get_cwl_outputs(
         self, wdl_outputs: List[WDL.Tree.Decl]
     ) -> List[cwl.CommandOutputParameter]:
@@ -419,56 +485,11 @@ class Converter:
             output_name = wdl_output.name
             if isinstance(wdl_output.type, WDL.Type.File):
                 type_of = "File"
-            # check for output with referee and referee expr of type WDL.Expr.Apply
+
             if not wdl_output.expr:
                 raise ValueError("Missing expression")
-            if isinstance(wdl_output.expr, WDL.Expr.Apply):
-                apply_expr = wdl_output.expr
-                function_name = getattr(apply_expr, "function_name", None)
-
-                if function_name and function_name == "_add":
-                    func_arguments = apply_expr.arguments
-                    first_arg, second_arg = func_arguments
-                    first_arg_expr_ident = getattr(first_arg, "expr", wdl_output)
-                    expr_ident_name = first_arg_expr_ident.name
-                    second_arg_literal = self.get_wdl_literal(second_arg.literal)
-
-                glob_expr = f"$(inputs.{expr_ident_name})" + second_arg_literal
-
-            elif isinstance(wdl_output.expr, WDL.Expr.Get):
-                get_expr = wdl_output.expr
-                expr_ident = cast(WDL.Expr.Ident, get_expr.expr)
-                expr_ident_name = expr_ident.name
-                if expr_ident.referee and isinstance(
-                    expr_ident.referee.expr, WDL.Expr.Apply
-                ):
-                    reference_expr = expr_ident.referee
-                    ref_expr_to_apply = reference_expr.expr
-                    ref_function = ref_expr_to_apply.function_name
-                    ref_arguments = ref_expr_to_apply.arguments
-                    if ref_function == "_add":
-                        # return true value for a javascript tenary
-                        first_arg, second_arg = ref_arguments
-                        second_arg_value = self.get_wdl_literal(second_arg.literal)
-                        first_arg_fun_name = getattr(first_arg, "function_name", None)
-                        if first_arg_fun_name and first_arg_fun_name == "basename":
-                            argument = getattr(
-                                first_arg, "arguments", ["invalid: argument not found"]
-                            )
-                            only_argument = argument[0]
-                            only_argument_expr_name = only_argument.expr.name
-                        true_tenary = f"inputs.{only_argument_expr_name}.{first_arg_fun_name} + '{second_arg_value}'"
-
-                    glob_expr = (
-                        "$(inputs."
-                        + reference_expr.name
-                        + " === null ?"
-                        + f" ({true_tenary}) : inputs.{reference_expr.name})"
-                    )
-                else:
-                    glob_expr = f"$(inputs.{expr_ident_name})"
-            else:
-                raise ValueError("Expression not found")
+            glob_expr = self.get_expr(wdl_output.expr)
+            glob_str = f"$({glob_expr})"
 
             if wdl_output.type.optional or isinstance(wdl_output.expr, WDL.Expr.Apply):
                 final_type_of: Union[
@@ -483,7 +504,7 @@ class Converter:
                 cwl.CommandOutputParameter(
                     id=output_name,
                     type=final_type_of,
-                    outputBinding=cwl.CommandOutputBinding(glob=glob_expr),
+                    outputBinding=cwl.CommandOutputBinding(glob=glob_str),
                 )
             )
         return outputs
