@@ -1,7 +1,7 @@
 """Main entrypoint for WDL2CWL."""
 import os
 from typing import List, Union, Optional, Callable, cast, Any
-import WDL # type: ignore [import]
+import WDL  # type: ignore [import]
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
 
@@ -230,7 +230,7 @@ class Converter:
             wdl_apply = self.get_expr(wdl_apply)
             arg_string = self.get_expr(arg_string)
             arg_sub = self.get_expr(arg_sub)
-            return f'{wdl_apply}.replace("{arg_string}", "{arg_sub}")'
+            return f'{wdl_apply}.replace("{arg_string}", "{arg_sub}"'
 
         elif function_name == "_at":
             iterable_object, index = arguments
