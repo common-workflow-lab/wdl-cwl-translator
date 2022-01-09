@@ -25,6 +25,7 @@ valid_js_identifier = regex.compile(
 
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
+    inputs_with_basename = []
 
     @staticmethod
     def load_wdl_tree(doc: str) -> str:
@@ -202,24 +203,32 @@ class Converter:
         arguments = wdl_apply_expr.arguments
         if not arguments:
             raise Exception(f"The '{wdl_apply_expr}' expression has no arguments.")
-        referer = ""
         treat_as_optional = wdl_apply_expr.type.optional
         if function_name == "_add":
             left_operand, right_operand = arguments
             right_operand = self.get_wdl_literal(right_operand.literal)  # type: ignore
             left_operand_value = self.get_expr(left_operand)
             if getattr(left_operand, "function_name", None) == "basename":
-                treat_as_optional = True
-                referer = wdl_apply_expr.parent.name  # type: ignore
-            return (
-                f"{left_operand_value} + {right_operand}"
-                if not treat_as_optional
-                else f"{self.get_input(referer)} == null ? {left_operand_value} + '{right_operand}' : {self.get_input(referer)}"
-            )
+                if left_operand_value in self.inputs_with_basename:
+                    parent_name = wdl_apply_expr.parent
+                    return self.get_expr_name(parent_name)
+                else:
+                    self.inputs_with_basename.append(left_operand_value)
+
+            #     treat_as_optional = True
+            #     referer = wdl_apply_expr.parent.name  # type: ignore
+            # return (
+            #     f"{left_operand_value} + {right_operand}"
+            #     if not treat_as_optional
+            #     else f"{self.get_input(referer)} == null ? {left_operand_value} + '{right_operand}' : {self.get_input(referer)}"
+            # )
+            return f"{left_operand_value} + {right_operand}"
         elif function_name == "basename":
-            only_operand, basename = arguments[0], function_name
+            only_operand = arguments[0]
             only_operand = self.get_expr_name(only_operand.expr)  # type: ignore
-            return f"{only_operand}.{basename}"
+            strip_input_str = only_operand[7:]
+            # return f"{only_operand}.{basename}"
+            return f"basename({strip_input_str})"
         elif function_name == "defined":
             only_operand = arguments[0]
             only_operand = self.get_expr(only_operand)  # type: ignore
@@ -387,7 +396,8 @@ class Converter:
         """Extract Literal value from WDL expr."""
         if wdl_expr is None or not hasattr(wdl_expr, "value"):
             raise Exception(f"{type(wdl_expr)} has not attribute 'value'")
-        return wdl_expr.value
+        value = wdl_expr.value
+        return value
 
     def get_expr_name(self, wdl_expr: WDL.Expr.Ident) -> str:
         """Extract name from WDL expr."""
@@ -462,7 +472,8 @@ class Converter:
             else:
                 raise Exception(f"Input of type {wdl_input.type} is not yet handled.")
 
-            if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
+            # if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
+            if wdl_input.type.optional:
                 final_type_of: Union[
                     List[Union[str, cwl.CommandInputArraySchema]],
                     str,
@@ -473,7 +484,7 @@ class Converter:
 
             if wdl_input.expr is not None:
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
-                    input_value = None
+                    input_value = self.get_expr_apply(wdl_input.expr)
                 else:
                     literal = wdl_input.expr.literal
                     if not literal or not hasattr(literal, "value"):
@@ -528,20 +539,20 @@ class Converter:
 
 def main() -> None:
     """Entry point."""
-    # # Command-line parsing.
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("workflow", help="Path to WDL workflow")
-    # parser.add_argument("-o", "--output", help="Name of resultant CWL file")
-    # args = parser.parse_args()
+    # Command-line parsing.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("workflow", help="Path to WDL workflow")
+    parser.add_argument("-o", "--output", help="Name of resultant CWL file")
+    args = parser.parse_args()
 
-    # # write to a file in oop_cwl_files
-    # if args.output:
-    #     with open(args.output, "w") as result:
-    #         result.write(str(Converter.load_wdl_tree(args.workflow)))
+    # write to a file in oop_cwl_files
+    if args.output:
+        with open(args.output, "w") as result:
+            result.write(str(Converter.load_wdl_tree(args.workflow)))
 
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
-    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
 
 
 if __name__ == "__main__":

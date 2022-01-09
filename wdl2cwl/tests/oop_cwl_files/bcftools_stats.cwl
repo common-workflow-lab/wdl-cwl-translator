@@ -6,9 +6,8 @@ inputs:
   - id: inputVcfIndex
     type: File
   - id: outputPath
-    type:
-      - string
-      - 'null'
+    default: basename(inputVcf) + .stats
+    type: string
   - id: firstAlleleOnly
     default: false
     type: boolean
@@ -108,18 +107,15 @@ outputs:
   - id: stats
     type: File
     outputBinding:
-        glob: "$(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' :\
-            \ inputs.outputPath)"
+        glob: $(inputs.outputPath)
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
         entry: |4
 
             set -e
-            mkdir -p \$(dirname $(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath))
+            mkdir -p \$(dirname $(inputs.outputPath))
             bcftools stats \
             $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
             $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
@@ -141,7 +137,7 @@ requirements:
             $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
             --threads $(inputs.threads) \
             $(inputs.verbose ? "--verbose" : "") \
-            $(inputs.inputVcf.path) $(inputs.compareVcf == null ? "" : inputs.compareVcf.path) > $(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath)
+            $(inputs.inputVcf.path) $(inputs.compareVcf == null ? "" : inputs.compareVcf.path) > $(inputs.outputPath)
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
