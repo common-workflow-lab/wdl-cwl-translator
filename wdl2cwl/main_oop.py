@@ -380,7 +380,7 @@ class Converter:
                         + '"))'
                     )
                 elif isinstance(wdl_placeholder.expr.type, WDL.Type.Array):
-                    cwl_command_str = f'$({placeholder_expr}.join("{seperator}")'
+                    cwl_command_str = f'$({placeholder_expr}.join("{seperator}"))'
                 else:
                     raise Exception(
                         f"{wdl_placeholder} with expr of type {wdl_placeholder.expr.type} is not yet handled"

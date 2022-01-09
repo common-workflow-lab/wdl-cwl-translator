@@ -132,7 +132,7 @@ requirements:
             $(inputs.splitByID ? "--split-by-ID" : "") \
             $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
             $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
-            $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",") \
+            $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
             $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
             $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
             $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path) \
