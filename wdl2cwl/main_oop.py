@@ -372,12 +372,19 @@ class Converter:
                     cwl_command_str = f'$({placeholder_expr} == null ? "{false_value}" : "{true_value}")'
             elif "sep" in options:
                 seperator = options["sep"]
-                cwl_command_str = (
-                    f"$({placeholder_expr}.map("
-                    + 'function(el) {return el.path}).join("'
-                    + seperator
-                    + '"))'
-                )
+                if isinstance(wdl_placeholder.expr.type, WDL.Type.File):
+                    cwl_command_str = (
+                        f"$({placeholder_expr}.map("
+                        + 'function(el) {return el.path}).join("'
+                        + seperator
+                        + '"))'
+                    )
+                elif isinstance(wdl_placeholder.expr.type, WDL.Type.Array):
+                    cwl_command_str = f'$({placeholder_expr}.join("{seperator}")'
+                else:
+                    raise Exception(
+                        f"{wdl_placeholder} with expr of type {wdl_placeholder.expr.type} is not yet handled"
+                    )
             else:
                 raise Exception(
                     f"Placeholders with options {options} are not yet handled."

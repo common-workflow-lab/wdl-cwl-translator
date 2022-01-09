@@ -15,7 +15,7 @@ def get_file(path: str) -> str:
 @pytest.mark.parametrize(
     "wdl_path,cwl_path",
     [
-        ("wdl_files/bowtie_1.wdl", "oop_cwl_files/bowtie_1.cwl"),
+        # ("wdl_files/bowtie_1.wdl", "oop_cwl_files/bowtie_1.cwl"),
         ("wdl_files/bcftools_stats.wdl", "oop_cwl_files/bcftools_stats.cwl"),
     ],
 )
