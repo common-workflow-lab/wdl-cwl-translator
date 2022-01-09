@@ -230,7 +230,7 @@ class Converter:
             wdl_apply = self.get_expr(wdl_apply)
             arg_string = self.get_expr(arg_string)
             arg_sub = self.get_expr(arg_sub)
-            return f'{wdl_apply}.replace("{arg_string}", "{arg_sub}"'
+            return f'{wdl_apply}.replace("{arg_string}", "{arg_sub}") '
 
         elif function_name == "_at":
             iterable_object, index = arguments
@@ -256,7 +256,6 @@ class Converter:
 
     def get_expr_get(self, wdl_get_expr: WDL.Expr.Get) -> str:
         """Translate WDL Get Expressions."""
-
         if isinstance(wdl_get_expr.expr, WDL.Expr.Ident) and wdl_get_expr.expr:
             ident_name = wdl_get_expr.expr.name
             ident_name = self.get_input(ident_name)
