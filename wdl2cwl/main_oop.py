@@ -25,7 +25,8 @@ valid_js_identifier = regex.compile(
 
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
-    inputs_with_basename = []
+
+    inputs_with_basename: List[str] = []
 
     @staticmethod
     def load_wdl_tree(doc: str) -> str:
@@ -210,7 +211,7 @@ class Converter:
             left_operand_value = self.get_expr(left_operand)
             if getattr(left_operand, "function_name", None) == "basename":
                 if left_operand_value in self.inputs_with_basename:
-                    parent_name = wdl_apply_expr.parent
+                    parent_name = wdl_apply_expr.parent  # type: ignore
                     return self.get_expr_name(parent_name)
                 else:
                     self.inputs_with_basename.append(left_operand_value)
@@ -226,7 +227,7 @@ class Converter:
         elif function_name == "basename":
             only_operand = arguments[0]
             only_operand = self.get_expr_name(only_operand.expr)  # type: ignore
-            strip_input_str = only_operand[7:]
+            strip_input_str = only_operand[7:]  # type: ignore
             # return f"{only_operand}.{basename}"
             return f"basename({strip_input_str})"
         elif function_name == "defined":
