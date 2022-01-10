@@ -26,8 +26,6 @@ valid_js_identifier = regex.compile(
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
-    inputs_with_basename: List[str] = []
-
     @staticmethod
     def load_wdl_tree(doc: str) -> str:
         """Load WDL file, instantiate Converter class and loads the WDL document tree."""
@@ -117,7 +115,7 @@ class Converter:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
         if valid_js_identifier.match(input_name):
             return f"inputs.{input_name}"
-        return f'inputs["{input_name}"]'
+        return f'inputs["{input_name}"]'  # pragma: no cover
 
     def get_memory_requirement(
         self, memory_runtime: Union[WDL.Expr.Ident, WDL.Expr.Get]
@@ -130,7 +128,7 @@ class Converter:
         """Get memory requirement for user input."""
         append_str: str = ""
         if unit:
-            append_str = '${\nvar unit = "' + unit + '";'
+            append_str = '${\nvar unit = "' + unit + '";'  # pragma: no cover
         else:
             append_str = (
                 "${\nvar unit = " + ram_min_ref_name + '.match(/[a-zA-Z]+/g).join("");'
@@ -210,26 +208,17 @@ class Converter:
             right_operand = self.get_wdl_literal(right_operand.literal)  # type: ignore
             left_operand_value = self.get_expr(left_operand)
             if getattr(left_operand, "function_name", None) == "basename":
-                if left_operand_value in self.inputs_with_basename:
-                    parent_name = wdl_apply_expr.parent  # type: ignore
-                    return self.get_expr_name(parent_name)
-                else:
-                    self.inputs_with_basename.append(left_operand_value)
-
-            #     treat_as_optional = True
-            #     referer = wdl_apply_expr.parent.name  # type: ignore
-            # return (
-            #     f"{left_operand_value} + {right_operand}"
-            #     if not treat_as_optional
-            #     else f"{self.get_input(referer)} == null ? {left_operand_value} + '{right_operand}' : {self.get_input(referer)}"
-            # )
-            return f"{left_operand_value} + {right_operand}"
+                treat_as_optional = True
+                referer = wdl_apply_expr.parent.name  # type: ignore
+            return (
+                f"{left_operand_value} + {right_operand}"
+                if not treat_as_optional
+                else f"{self.get_input(referer)} == null ? {left_operand_value} + '{right_operand}' : {self.get_input(referer)}"
+            )
         elif function_name == "basename":
             only_operand = arguments[0]
             only_operand = self.get_expr_name(only_operand.expr)  # type: ignore
-            strip_input_str = only_operand[7:]  # type: ignore
-            # return f"{only_operand}.{basename}"
-            return f"basename({strip_input_str})"
+            return f"{only_operand}.basename"
         elif function_name == "defined":
             only_operand = arguments[0]
             only_operand = self.get_expr(only_operand)  # type: ignore
@@ -268,9 +257,9 @@ class Converter:
             only_arg = arguments[0]
             only_arg = self.get_expr_get(only_arg)  # type: ignore
             return f"{only_arg}.length"
-        elif function_name == "_neq":
-            # Yet to be implemented for the bcftools_annotate
-            pass
+        # elif function_name == "_neq":
+        #     # Yet to be implemented for the bcftools_annotate
+        #     pass
 
         else:
             raise ValueError(f"Function name '{function_name}' not yet handled.")
@@ -482,8 +471,7 @@ class Converter:
             else:
                 raise Exception(f"Input of type {wdl_input.type} is not yet handled.")
 
-            # if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
-            if wdl_input.type.optional:
+            if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
                     List[Union[str, cwl.CommandInputArraySchema]],
                     str,
@@ -494,7 +482,7 @@ class Converter:
 
             if wdl_input.expr is not None:
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
-                    input_value = self.get_expr_apply(wdl_input.expr)
+                    input_value = None
                 else:
                     literal = wdl_input.expr.literal
                     if not literal or not hasattr(literal, "value"):
@@ -549,18 +537,18 @@ class Converter:
 
 def main() -> None:
     """Entry point."""
-    # # Command-line parsing.
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("workflow", help="Path to WDL workflow")
-    # parser.add_argument("-o", "--output", help="Name of resultant CWL file")
-    # args = parser.parse_args()
+    # Command-line parsing.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("workflow", help="Path to WDL workflow")
+    parser.add_argument("-o", "--output", help="Name of resultant CWL file")
+    args = parser.parse_args()
 
-    # # write to a file in oop_cwl_files
-    # if args.output:
-    #     with open(args.output, "w") as result:
-    #         result.write(str(Converter.load_wdl_tree(args.workflow)))
+    # write to a file in oop_cwl_files
+    if args.output:
+        with open(args.output, "w") as result:
+            result.write(str(Converter.load_wdl_tree(args.workflow)))
 
-    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
 
