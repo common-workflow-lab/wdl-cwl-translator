@@ -196,7 +196,7 @@ class Converter:
             else f"{parent_name}.path"
         )
 
-    def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:  # type: ignore
+    def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
         """Translate WDL Apply Expressions."""
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
