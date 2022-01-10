@@ -213,7 +213,7 @@ class Converter:
             return (
                 f"{left_operand_value} + {right_operand}"
                 if not treat_as_optional
-                else f"{self.get_input(referer)} == null ? {left_operand_value} + '{right_operand}' : {self.get_input(referer)}"
+                else f"{self.get_input(referer)} === null ? {left_operand_value} + '{right_operand}' : {self.get_input(referer)}"
             )
         elif function_name == "basename":
             only_operand = arguments[0]
@@ -291,7 +291,7 @@ class Converter:
                 with_file_check = self.get_expr_name_with_is_file_check(
                     wdl_get_expr.expr
                 )
-                ident_name = f'{just_id_name} == null ? "" : {with_file_check}'
+                ident_name = f'{just_id_name} === null ? "" : {with_file_check}'
         else:
             raise ValueError(f"Get expr '{wdl_get_expr.expr}' has no name attribute.")
         return (
@@ -372,7 +372,7 @@ class Converter:
                         f'$({placeholder_expr} ? "{true_value}" : "{false_value}")'
                     )
                 else:
-                    cwl_command_str = f'$({placeholder_expr} == null ? "{false_value}" : "{true_value}")'
+                    cwl_command_str = f'$({placeholder_expr} === null ? "{false_value}" : "{true_value}")'
             elif "sep" in options:
                 seperator = options["sep"]
                 if isinstance(wdl_placeholder.expr.type, WDL.Type.Array):
