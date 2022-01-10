@@ -120,6 +120,9 @@ requirements:
 
             set -e
             mkdir -p \$(dirname $(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath))
+            mkdir fastaRef_dir
+            ln -s $(inputs.fastaRef == null ? "" : inputs.fastaRef.path) fastaRef_dir/\$(basename $(inputs.fastaRef == null ? "" : inputs.fastaRef.path))
+            ln -s $(inputs.fastaRefIndex == null ? "" : inputs.fastaRefIndex.path) fastaRef_dir/\$(basename $(inputs.fastaRefIndex == null ? "" : inputs.fastaRefIndex.path))
             bcftools stats \
             $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
             $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
@@ -129,7 +132,7 @@ requirements:
             $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
             $(inputs.exons === null ? "" : "--exons " + inputs.exons.path) \
             $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
-            $(inputs.fastaRef === null ? "" : "--fasta-ref " + inputs.fastaRef.path) \
+            $(inputs.fastaRef === null ? "" : "--fasta-ref fastaRef_dir/$(basename " + inputs.fastaRef.path + ")") \
             $(inputs.include === null ? "" : "--include " + inputs.include) \
             $(inputs.splitByID ? "--split-by-ID" : "") \
             $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
@@ -142,6 +145,7 @@ requirements:
             --threads $(inputs.threads) \
             $(inputs.verbose ? "--verbose" : "") \
             $(inputs.inputVcf.path) $(inputs.compareVcf == null ? "" : inputs.compareVcf.path) > $(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath)
+            sed -i "s=\$(dirname $(inputs.inputVcf.path))/==g" $(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' : inputs.outputPath)  # for reproducibility
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true

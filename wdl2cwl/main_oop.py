@@ -225,6 +225,14 @@ class Converter:
             return only_operand  # type: ignore
         elif function_name == "_interpolation_add":
             arg_value, arg_name = arguments
+            if isinstance(arg_name, WDL.Expr.String) and isinstance(
+                arg_value, WDL.Expr.Apply
+            ):
+                arg_name = self.get_wdl_literal(arg_name.literal)
+                arg_value = self.get_expr_apply(arg_value)
+                return self.get_pseudo_interpolation_add(arg_value, arg_name)
+            elif isinstance(arg_value, WDL.Expr.Get):
+                arg_name, arg_value = arg_value, arg_name
             just_arg_name = self.get_expr_name(arg_name.expr)  # type: ignore
             arg_name_with_file_check = self.get_expr_name_with_is_file_check(
                 arg_name.expr  # type: ignore
@@ -291,6 +299,12 @@ class Converter:
             if optional or not isinstance(wdl_get_expr.type, WDL.Type.File)
             else f"{ident_name}.path"
         )
+
+    def get_pseudo_interpolation_add(
+        self, left_operand: str, right_operand: str
+    ) -> str:
+        """Combine two strings in a _add function manner."""
+        return f'{left_operand} + "{right_operand}"'
 
     def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
