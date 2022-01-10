@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         py-ver-major: [3]
-        py-ver-minor: [6, 7, 8, 9]
+        py-ver-minor: [7, 8, 9]
         step: [lint, unit, mypy]
 
     env:
@@ -98,3 +98,32 @@ jobs:
 
       - name: Test with tox
         run: tox
+
+  cwltests:
+    name: Run functional tests
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+
+      - name: Cache for pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-cwltests
+
+      - name: Upgrade setuptools and install cwltool
+        run: |
+          pip install -U pip setuptools wheel
+          pip install cwltool cwltest
+
+      - name: Run the CWL functional tests
+        run: make cwltest

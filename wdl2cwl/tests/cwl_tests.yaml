@@ -22,7 +22,8 @@
     stats:
       basename: male.vcf.stats
       class: File
-      size: 6060
+      size: 6468
+      checksum: sha1$1e26ffbc1cd36ebbfd6e83d0905c67226263eceb
 
 - doc: bcftools_stats
   tool: oop_cwl_files/bcftools_stats.cwl
@@ -31,4 +32,5 @@
     stats:
       basename: male.vcf.stats
       class: File
-      size: 6060
+      size: 6468
+      checksum: sha1$1e26ffbc1cd36ebbfd6e83d0905c67226263eceb
