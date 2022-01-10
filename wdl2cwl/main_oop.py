@@ -281,10 +281,11 @@ class Converter:
                 is_file = isinstance(operand.type, WDL.Type.File)
                 operand = self.get_expr_name(operand.expr)  # type: ignore
                 regex_str = self.get_wdl_literal(regex_str.literal)  # type: ignore
+                regex_str = regex_str[1:]
                 return (
                     f"{operand}.basename.replace('{regex_str}$', '') "
                     if is_file
-                    else f"{operand}.split('/').reverse()[0].replace('\{regex_str}$', '') "
+                    else f"{operand}.split('/').reverse()[0].replace('\.{regex_str}$', '') "
                 )
         elif function_name == "defined":
             only_operand = arguments[0]
