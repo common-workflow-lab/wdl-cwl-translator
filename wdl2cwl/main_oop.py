@@ -372,15 +372,17 @@ class Converter:
                     cwl_command_str = f'$({placeholder_expr} == null ? "{false_value}" : "{true_value}")'
             elif "sep" in options:
                 seperator = options["sep"]
-                if isinstance(wdl_placeholder.expr.type, WDL.Type.File):
-                    cwl_command_str = (
-                        f"$({placeholder_expr}.map("
-                        + 'function(el) {return el.path}).join("'
-                        + seperator
-                        + '"))'
-                    )
-                elif isinstance(wdl_placeholder.expr.type, WDL.Type.Array):
-                    cwl_command_str = f'$({placeholder_expr}.join("{seperator}"))'
+                if isinstance(wdl_placeholder.expr.type, WDL.Type.Array):
+                    item_type = wdl_placeholder.expr.type.item_type
+                    if isinstance(item_type, WDL.Type.String):
+                        cwl_command_str = f'$({placeholder_expr}.join("{seperator}"))'
+                    elif isinstance(item_type, WDL.Type.File):
+                        cwl_command_str = (
+                            f"$({placeholder_expr}.map("
+                            + 'function(el) {return el.path}).join("'
+                            + seperator
+                            + '"))'
+                        )
                 else:
                     raise Exception(
                         f"{wdl_placeholder} with expr of type {wdl_placeholder.expr.type} is not yet handled"
@@ -547,18 +549,18 @@ class Converter:
 
 def main() -> None:
     """Entry point."""
-    # Command-line parsing.
-    parser = argparse.ArgumentParser()
-    parser.add_argument("workflow", help="Path to WDL workflow")
-    parser.add_argument("-o", "--output", help="Name of resultant CWL file")
-    args = parser.parse_args()
+    # # Command-line parsing.
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("workflow", help="Path to WDL workflow")
+    # parser.add_argument("-o", "--output", help="Name of resultant CWL file")
+    # args = parser.parse_args()
 
-    # write to a file in oop_cwl_files
-    if args.output:
-        with open(args.output, "w") as result:
-            result.write(str(Converter.load_wdl_tree(args.workflow)))
+    # # write to a file in oop_cwl_files
+    # if args.output:
+    #     with open(args.output, "w") as result:
+    #         result.write(str(Converter.load_wdl_tree(args.workflow)))
 
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
 
