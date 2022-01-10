@@ -228,9 +228,9 @@ class Converter:
             if isinstance(arg_name, WDL.Expr.String) and isinstance(
                 arg_value, WDL.Expr.Apply
             ):
-                arg_name = self.get_wdl_literal(arg_name.literal)
-                arg_value = self.get_expr_apply(arg_value)
-                return self.get_pseudo_interpolation_add(arg_value, arg_name)
+                arg_name = self.get_wdl_literal(arg_name.literal)  # type: ignore
+                arg_value = self.get_expr_apply(arg_value)  # type: ignore
+                return self.get_pseudo_interpolation_add(arg_value, arg_name)  # type: ignore
             elif isinstance(arg_value, WDL.Expr.Get):
                 arg_name, arg_value = arg_value, arg_name
             just_arg_name = self.get_expr_name(arg_name.expr)  # type: ignore
