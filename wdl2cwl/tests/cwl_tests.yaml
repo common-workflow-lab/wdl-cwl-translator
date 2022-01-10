@@ -23,4 +23,5 @@
     stats:
       basename: male.vcf.stats
       class: File
-      size: 6060
+      size: 6468
+      checksum: sha1$1e26ffbc1cd36ebbfd6e83d0905c67226263eceb
