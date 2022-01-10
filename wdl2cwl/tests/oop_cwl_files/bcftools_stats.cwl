@@ -111,6 +111,8 @@ outputs:
         glob: "$(inputs.outputPath == null ? inputs.inputVcf.basename + '.stats' :\
             \ inputs.outputPath)"
 requirements:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
