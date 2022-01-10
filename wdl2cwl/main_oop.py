@@ -26,6 +26,9 @@ valid_js_identifier = regex.compile(
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
+    non_static_values: set[str] = set()
+    optional_cwl_null: set[str] = set()
+
     @staticmethod
     def load_wdl_tree(doc: str) -> str:
         """Load WDL file, instantiate Converter class and loads the WDL document tree."""
@@ -159,10 +162,19 @@ class Converter:
             return self.get_expr_apply(wdl_expr)
         elif isinstance(wdl_expr, WDL.Expr.Get):
             return self.get_expr_get(wdl_expr)
+        elif isinstance(wdl_expr, WDL.Expr.IfThenElse):
+            return self.get_expr_ifthenelse(wdl_expr)
+        elif isinstance(wdl_expr, WDL.Expr.Placeholder):
+            return self.translate_wdl_placeholder(wdl_expr)
+        elif isinstance(wdl_expr, WDL.Expr.String):
+            return self.get_expr_string(wdl_expr)
+        elif isinstance(wdl_expr, WDL.Expr.Ident):
+            return self.get_expr_ident(wdl_expr)
+        elif isinstance(wdl_expr, WDL.Tree.Decl):
+            return self.get_expr(wdl_expr.expr)
         elif isinstance(
             wdl_expr,
             (
-                WDL.Expr.String,
                 WDL.Expr.Boolean,
                 WDL.Expr.Int,
                 WDL.Expr.Float,
@@ -176,7 +188,6 @@ class Converter:
     def get_literal_name(
         self,
         expr: Union[
-            WDL.Expr.String,
             WDL.Expr.Boolean,
             WDL.Expr.Int,
             WDL.Expr.Float,
@@ -196,7 +207,43 @@ class Converter:
             else f"{parent_name}.path"
         )
 
-    def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
+    def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
+        """Translate WDL String Expressions."""
+        string = ""
+        parts = wdl_expr_string.parts
+        is_placeholder_present = False
+        for part in parts[:-1]:
+            if isinstance(
+                part,
+                (WDL.Expr.Placeholder, WDL.Expr.Apply, WDL.Expr.Get, WDL.Expr.Ident),
+            ):
+                is_placeholder_present = True
+                placeholder = self.get_expr(part)
+                part = f"' + {placeholder} +'"
+            string += part
+        if is_placeholder_present:
+            if string[1] == "+":
+                string = string[1:]
+            if string[-2] == "+":
+                string = string[:-2]
+        return (
+            f'"{wdl_expr_string.literal.value}"'  # type: ignore
+            if not is_placeholder_present
+            else f"{string}"
+        )
+
+    def get_expr_ifthenelse(self, wdl_ifthenelse: WDL.Expr.IfThenElse) -> str:
+        """Translate WDL IfThenElse Expressions."""
+        condition = wdl_ifthenelse.condition
+        if_true = wdl_ifthenelse.consequent
+        if_false = wdl_ifthenelse.alternative
+
+        condition = self.get_expr(condition)  # type: ignore
+        if_true = self.get_expr(if_true)  # type: ignore
+        if_false = self.get_expr(if_false)  # type: ignore
+        return f"{condition} ? {if_true} : {if_false}"
+
+    def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:  # type: ignore
         """Translate WDL Apply Expressions."""
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
@@ -205,20 +252,40 @@ class Converter:
         treat_as_optional = wdl_apply_expr.type.optional
         if function_name == "_add":
             left_operand, right_operand = arguments
-            right_operand = self.get_wdl_literal(right_operand.literal)  # type: ignore
+            if isinstance(right_operand, WDL.Expr.String):
+                right_operand = self.get_expr_string(right_operand)  # type: ignore
+            else:
+                right_operand = self.get_wdl_literal(right_operand.literal)  # type: ignore
             left_operand_value = self.get_expr(left_operand)
             if getattr(left_operand, "function_name", None) == "basename":
                 treat_as_optional = True
                 referer = wdl_apply_expr.parent.name  # type: ignore
+            # return_str = f"{left_operand_value} + {right_operand}" if not isinstance(type(right_operand), str) else f"{left_operand_value} + '{right_operand}'"
             return (
                 f"{left_operand_value} + {right_operand}"
                 if not treat_as_optional
-                else f"{self.get_input(referer)} === null ? {left_operand_value} + '{right_operand}' : {self.get_input(referer)}"
+                else f"{self.get_input(referer)} === null ? {left_operand_value} + {right_operand} : {self.get_input(referer)}"
             )
         elif function_name == "basename":
-            only_operand = arguments[0]
-            only_operand = self.get_expr_name(only_operand.expr)  # type: ignore
-            return f"{only_operand}.basename"
+            if len(arguments) == 1:
+                only_operand = arguments[0]
+                is_file = isinstance(only_operand.type, WDL.Type.File)
+                only_operand = self.get_expr_name(only_operand.expr)  # type: ignore
+                return (
+                    f"{only_operand}.basename"
+                    if is_file
+                    else f"{only_operand}.split('/').reverse()[0]"
+                )
+            elif len(arguments) == 2:
+                operand, regex_str = arguments
+                is_file = isinstance(operand.type, WDL.Type.File)
+                operand = self.get_expr_name(operand.expr)  # type: ignore
+                regex_str = self.get_wdl_literal(regex_str.literal)  # type: ignore
+                return (
+                    f"{operand}.basename.replace('{regex_str}$', '') "
+                    if is_file
+                    else f"{operand}.split('/').reverse()[0].replace('\{regex_str}$', '') "
+                )
         elif function_name == "defined":
             only_operand = arguments[0]
             only_operand = self.get_expr(only_operand)  # type: ignore
@@ -248,7 +315,7 @@ class Converter:
             wdl_apply = self.get_expr(wdl_apply)  # type: ignore
             arg_string = self.get_expr(arg_string)  # type: ignore
             arg_sub = self.get_expr(arg_sub)  # type: ignore
-            return f'{wdl_apply}.replace("{arg_string}", "{arg_sub}") '
+            return f"{wdl_apply}.replace({arg_string}, {arg_sub}) "
 
         elif function_name == "_at":
             iterable_object, index = arguments
@@ -265,38 +332,47 @@ class Converter:
             only_arg = arguments[0]
             only_arg = self.get_expr_get(only_arg)  # type: ignore
             return f"{only_arg}.length"
-        # elif function_name == "_neq":
-        #     # Yet to be implemented for the bcftools_annotate
-        #     pass
+        elif function_name == "_neq":
+            left_operand, right_operand = arguments
+            if isinstance(left_operand, WDL.Expr.Apply):
+                left_operand = self.get_expr_apply(left_operand)  # type: ignore
+            if isinstance(right_operand, WDL.Expr.Apply):
+                right_operand = self.get_expr_apply(right_operand)  # type: ignore
+            return f"{left_operand} !== {right_operand}"
 
         else:
             raise ValueError(f"Function name '{function_name}' not yet handled.")
 
-    def get_expr_get(self, wdl_get_expr: WDL.Expr.Get) -> str:
+    def get_expr_get(self, wdl_get_expr: WDL.Expr.Get) -> str:  # type: ignore
         """Translate WDL Get Expressions."""
-        if isinstance(wdl_get_expr.expr, WDL.Expr.Ident) and wdl_get_expr.expr:
-            ident_name = wdl_get_expr.expr.name
-            ident_name = self.get_input(ident_name)
-            referee = wdl_get_expr.expr.referee
-            optional = wdl_get_expr.expr.type.optional
+        member = wdl_get_expr.member
+        if (
+            not member
+            and isinstance(wdl_get_expr.expr, WDL.Expr.Ident)
+            and wdl_get_expr.expr
+        ):
+            return self.get_expr_ident(wdl_get_expr.expr)
+
+    def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
+        """Translate WDL Ident Expressions."""
+        ident_name = wdl_ident_expr.name
+        ident_name = self.get_input(ident_name)
+        referee = wdl_ident_expr.referee
+        optional = wdl_ident_expr.type.optional
+        if referee and referee.expr:
             if (
-                referee
-                and referee.expr
-                and not isinstance(wdl_get_expr.type, WDL.Type.File)
+                wdl_ident_expr.name in self.optional_cwl_null
+                or wdl_ident_expr.name not in self.non_static_values
             ):
                 return self.get_expr(referee.expr)
-            if optional and isinstance(wdl_get_expr.type, WDL.Type.File):
-                # To prevent null showing on the terminal for inputs of type File
-                just_id_name = self.get_expr_name(wdl_get_expr.expr)
-                with_file_check = self.get_expr_name_with_is_file_check(
-                    wdl_get_expr.expr
-                )
-                ident_name = f'{just_id_name} === null ? "" : {with_file_check}'
-        else:
-            raise ValueError(f"Get expr '{wdl_get_expr.expr}' has no name attribute.")
+        if optional and isinstance(wdl_ident_expr.type, WDL.Type.File):
+            # To prevent null showing on the terminal for inputs of type File
+            just_id_name = ident_name
+            with_file_check = self.get_expr_name_with_is_file_check(wdl_ident_expr)
+            ident_name = f'{just_id_name} === null ? "" : {with_file_check}'
         return (
             ident_name
-            if optional or not isinstance(wdl_get_expr.type, WDL.Type.File)
+            if optional or not isinstance(wdl_ident_expr.type, WDL.Type.File)
             else f"{ident_name}.path"
         )
 
@@ -400,8 +476,14 @@ class Converter:
                 if placeholder_expr[-1] != ")"
                 else placeholder_expr
             )
-
-        return cwl_command_str
+        parent = wdl_placeholder.parent  # type: ignore
+        grand_parent = parent.parent
+        return (
+            cwl_command_str
+            if isinstance(parent, WDL.Expr.String)
+            and isinstance(grand_parent, WDL.Tree.Task)
+            else cwl_command_str[2:-1]
+        )
 
     def get_wdl_literal(
         self, wdl_expr: Union[WDL.Expr.Int, WDL.Expr.Float, WDL.Expr.Boolean]
@@ -454,6 +536,7 @@ class Converter:
 
         for wdl_input in wdl_inputs:
             input_name = wdl_input.name
+            self.non_static_values.add(input_name)
             input_value = None
             type_of: Union[str, cwl.CommandInputArraySchema]
 
@@ -491,6 +574,8 @@ class Converter:
                     str,
                     cwl.CommandInputArraySchema,
                 ] = [type_of, "null"]
+                if isinstance(wdl_input.expr, WDL.Expr.Apply):
+                    self.optional_cwl_null.add(input_name)
             else:
                 final_type_of = type_of
 
@@ -527,7 +612,7 @@ class Converter:
 
             if not wdl_output.expr:
                 raise ValueError("Missing expression")
-            glob_expr = self.get_expr(wdl_output.expr)
+            glob_expr = self.get_expr(wdl_output)
             glob_str = f"$({glob_expr})"
 
             if wdl_output.type.optional or isinstance(wdl_output.expr, WDL.Expr.Apply):

@@ -1,18 +1,18 @@
 class: CommandLineTool
-id: Stats
+id: Annotate
 inputs:
-  - id: inputVcf
-    type: File
-  - id: inputVcfIndex
-    type: File
-  - id: outputPath
+  - id: columns
+    default: []
     type:
-      - string
-      - 'null'
-  - id: firstAlleleOnly
+        items: string
+        type: array
+  - id: force
     default: false
     type: boolean
-  - id: splitByID
+  - id: keepSites
+    default: false
+    type: boolean
+  - id: noVersion
     default: false
     type: boolean
   - id: samples
@@ -20,30 +20,24 @@ inputs:
     type:
         items: string
         type: array
-  - id: verbose
+  - id: singleOverlaps
     default: false
     type: boolean
-  - id: compareVcf
+  - id: removeAnns
+    default: []
+    type:
+        items: string
+        type: array
+  - id: inputFile
+    type: File
+  - id: outputPath
+    default: output.vcf.gz
+    type: string
+  - id: annsFile
     type:
       - File
-      - 'null'
-  - id: compareVcfIndex
-    type:
-      - File
-      - 'null'
-  - id: afBins
-    type:
-      - string
-      - 'null'
-  - id: afTag
-    type:
-      - string
       - 'null'
   - id: collapse
-    type:
-      - string
-      - 'null'
-  - id: depth
     type:
       - string
       - 'null'
@@ -51,23 +45,19 @@ inputs:
     type:
       - string
       - 'null'
-  - id: exons
+  - id: headerLines
     type:
       - File
       - 'null'
-  - id: applyFilters
+  - id: newId
     type:
       - string
       - 'null'
-  - id: fastaRef
-    type:
-      - File
-      - 'null'
-  - id: fastaRefIndex
-    type:
-      - File
-      - 'null'
   - id: include
+    type:
+      - string
+      - 'null'
+  - id: markSites
     type:
       - string
       - 'null'
@@ -79,21 +69,13 @@ inputs:
     type:
       - File
       - 'null'
+  - id: renameChrs
+    type:
+      - File
+      - 'null'
   - id: samplesFile
     type:
       - File
-      - 'null'
-  - id: targets
-    type:
-      - string
-      - 'null'
-  - id: targetsFile
-    type:
-      - File
-      - 'null'
-  - id: userTsTv
-    type:
-      - string
       - 'null'
   - id: threads
     default: 0
@@ -105,11 +87,16 @@ inputs:
     default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
     type: string
 outputs:
-  - id: stats
+  - id: outputVcf
     type: File
     outputBinding:
-        glob: '$(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats"
-            : inputs.outputPath)'
+        glob: $(inputs.outputPath)
+  - id: outputVcfIndex
+    type:
+      - File
+      - 'null'
+    outputBinding:
+        glob: $(inputs.outputPath + ".tbi")
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
@@ -119,38 +106,35 @@ requirements:
         entry: |4
 
             set -e
-            mkdir -p \$(dirname $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath))
-            mkdir fastaRef_dir
-            ln -s $(inputs.fastaRef === null ? "" : inputs.fastaRef.path) fastaRef_dir/\$(basename $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))
-            ln -s $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path) fastaRef_dir/\$(basename $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path))
-            bcftools stats \
-            $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
-            $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
-            $(inputs.firstAlleleOnly ? "--1st-allele-only" : "") \
+            mkdir -p "\$(dirname $(inputs.outputPath))"
+            bcftools annotate \
+            -o $(inputs.outputPath) \
+            -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace('\.gz$', '')  ? "z" : "v") \
+            $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path) \
             $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
-            $(inputs.depth === null ? "" : "--depth " + inputs.depth) \
+            $(inputs.columns.length > 0 ? "--columns" : "") $(inputs.columns.join(",")) \
             $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
-            $(inputs.exons === null ? "" : "--exons " + inputs.exons.path) \
-            $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
-            $(inputs.fastaRef === null ? "" : "--fasta-ref fastaRef_dir/$(basename " + inputs.fastaRef.path + ")") \
+            $(inputs.force ? "--force" : "") \
+            $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines.path) \
+            $(inputs.newId === null ? "" : "--set-id " + inputs.newId) \
             $(inputs.include === null ? "" : "--include " + inputs.include) \
-            $(inputs.splitByID ? "--split-by-ID" : "") \
+            $(inputs.keepSites ? "--keep-sites" : "") \
+            $(inputs.markSites === null ? "" : "--mark-sites " + inputs.markSites) \
+            $(inputs.noVersion ? "--no-version" : "") \
             $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
             $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
+            $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs.path) \
             $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
             $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
-            $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
-            $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path) \
-            $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
-            --threads $(inputs.threads) \
-            $(inputs.verbose ? "--verbose" : "") \
-            $(inputs.inputVcf.path) $(inputs.compareVcf === null ? "" : inputs.compareVcf.path) > $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)
-            sed -i "s=\$(dirname $(inputs.inputVcf.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
+            $(inputs.singleOverlaps ? "--single-overlaps" : "") \
+            $(inputs.removeAnns.length > 0 ? "--remove" : "") $(inputs.removeAnns.join(",")) \
+            $(inputs.inputFile.path)
+
+            $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace('\.gz$', '')  ? 'bcftools index --tbi ' + inputs.outputPath  : "")
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    coresMin: $(inputs.threads + 1)
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
