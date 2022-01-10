@@ -9,14 +9,18 @@ input_bam_index:
 output_bam_prefix: RP-929.NA12878.readgroup
 ref_dict:
   class: File
-  location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
+  path: Homo_sapiens_assembly38.dict
+  checksum: sha1$491a8fe834e818728105814df1870f0c8528e9bc
+  # location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
 ref_fasta:
   class: File
   path: Homo_sapiens_assembly38.fasta
-  location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
+  checksum: sha1$2b9475654e19946c2067ee799f7a5b7115764b31
+  # location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
 ref_fasta_index:
   class: File
-  path: Homo_sapiens_assembly38.fasta
-  location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+  path: Homo_sapiens_assembly38.fasta.fai
+  checksum: sha1$521fa7ba606ad4cfbbf8fc6ac5ac95cccfcaf7a3
+  # location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 collect_gc_bias_metrics: False
 preemptible_tries: 3

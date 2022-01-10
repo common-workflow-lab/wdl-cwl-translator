@@ -1,6 +1,7 @@
 input_bam:
   class: File
   path: valid.bam
+  checksum: sha1sum:c9a80bd7b1c2ff1efc09f8a50a94b113e06737a2
   doc: |
     From https://github.com/broadinstitute/gatk/blob/7f96bf6677040851c6da3cb96d97f957f1df05bc/src/test/resources/org/broadinstitute/hellbender/metrics/analysis/CollectQualityYieldMetrics/valid.bam
     Copyright 2021 Broad Institute, Inc.
