@@ -1,7 +1,7 @@
 """Main entrypoint for WDL2CWL."""
 import os
 import re
-from typing import List, Union, Optional, Callable, cast, Any
+from typing import List, Union, Optional, Callable, cast, Any, Set
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -27,8 +27,8 @@ valid_js_identifier = regex.compile(
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
-    non_static_values: set[str] = set()
-    optional_cwl_null: set[str] = set()
+    non_static_values: Set[str] = set()
+    optional_cwl_null: Set[str] = set()
 
     @staticmethod
     def load_wdl_tree(doc: str) -> str:
