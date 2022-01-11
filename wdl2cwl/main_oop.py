@@ -27,8 +27,9 @@ valid_js_identifier = regex.compile(
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
-    non_static_values: Set[str] = set()
-    optional_cwl_null: Set[str] = set()
+    def __init__(self):  # type: ignore
+        self.non_static_values: Set[str] = set()
+        self.optional_cwl_null: Set[str] = set()
 
     @staticmethod
     def load_wdl_tree(doc: str) -> str:
@@ -36,7 +37,7 @@ class Converter:
         wdl_path = os.path.relpath(doc)
         doc_tree = WDL.load(wdl_path)
 
-        parser = Converter()
+        parser = Converter()  # type: ignore
 
         if doc_tree.workflow:
             return parser.load_wdl_objects(doc_tree.workflow)
@@ -649,8 +650,8 @@ def main() -> None:
         with open(args.output, "w") as result:
             result.write(str(Converter.load_wdl_tree(args.workflow)))
 
-    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
-    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
 
 
