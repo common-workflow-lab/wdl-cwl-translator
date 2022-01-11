@@ -1,5 +1,6 @@
 """Main entrypoint for WDL2CWL."""
 import os
+import re
 from typing import List, Union, Optional, Callable, cast, Any
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
@@ -277,17 +278,15 @@ class Converter:
                     else f"{only_operand}.split('/').reverse()[0]"
                 )
             elif len(arguments) == 2:
-                operand, regex_str = arguments
+                operand, suffix = arguments
                 is_file = isinstance(operand.type, WDL.Type.File)
                 operand = self.get_expr_name(operand.expr)  # type: ignore
-                regex_str = self.get_wdl_literal(regex_str.literal)  # type: ignore
-                regex_str = regex_str[1:]
+                suffix_str = self.get_wdl_literal(suffix.literal)  # type: ignore
+                regex_str = re.escape(suffix_str)
                 return (
                     f"{operand}.basename.replace('{regex_str}$', '') "
                     if is_file
-                    else f"{operand}.split('/').reverse()[0].replace("
-                    + r"'\."
-                    + f"{regex_str}$', '') "
+                    else f"{operand}.split('/').reverse()[0].replace('{regex_str}$', '')"
                 )
         elif function_name == "defined":
             only_operand = arguments[0]
