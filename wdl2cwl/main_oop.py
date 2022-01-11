@@ -282,11 +282,11 @@ class Converter:
                 is_file = isinstance(operand.type, WDL.Type.File)
                 operand = self.get_expr_name(operand.expr)  # type: ignore
                 suffix_str = self.get_wdl_literal(suffix.literal)  # type: ignore
-                regex_str = re.escape(suffix_str)
+                regex_str = suffix_str
                 return (
-                    f"{operand}.basename.replace('{regex_str}$', '') "
+                    f"{operand}.basename.replace(/{regex_str}$/, '') "
                     if is_file
-                    else f"{operand}.split('/').reverse()[0].replace('{regex_str}$', '')"
+                    else f"{operand}.split('/').reverse()[0].replace(/{regex_str}$/, '')"
                 )
         elif function_name == "defined":
             only_operand = arguments[0]
@@ -649,8 +649,8 @@ def main() -> None:
         with open(args.output, "w") as result:
             result.write(str(Converter.load_wdl_tree(args.workflow)))
 
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
+    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
+    Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
 
 

@@ -109,7 +109,7 @@ requirements:
             mkdir -p "\$(dirname $(inputs.outputPath))"
             bcftools annotate \
             -o $(inputs.outputPath) \
-            -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace('\.gz$', '') ? "z" : "v") \
+            -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/.gz$/, '') ? "z" : "v") \
             $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path) \
             $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
             $(inputs.columns.length > 0 ? "--columns" : "") $(inputs.columns.join(",")) \
@@ -130,7 +130,7 @@ requirements:
             $(inputs.removeAnns.length > 0 ? "--remove" : "") $(inputs.removeAnns.join(",")) \
             $(inputs.inputFile.path)
 
-            $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace('\.gz$', '') ? 'bcftools index --tbi ' + inputs.outputPath  : "")
+            $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath  : "")
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
