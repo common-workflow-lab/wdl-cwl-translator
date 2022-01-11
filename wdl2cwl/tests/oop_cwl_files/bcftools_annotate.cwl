@@ -108,6 +108,7 @@ requirements:
             set -e
             mkdir -p "\$(dirname $(inputs.outputPath))"
             bcftools annotate \
+            --no-version \
             -o $(inputs.outputPath) \
             -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/.gz$/, '') ? "z" : "v") \
             $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path) \
@@ -129,7 +130,7 @@ requirements:
             $(inputs.singleOverlaps ? "--single-overlaps" : "") \
             $(inputs.removeAnns.length > 0 ? "--remove" : "") $(inputs.removeAnns.join(",")) \
             $(inputs.inputFile.path)
-
+            # --no-version is for reproducibility
             $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath  : "")
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
