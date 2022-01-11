@@ -28,6 +28,7 @@ class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
     def __init__(self):  # type: ignore
+        """Initialize the sets used by the object and prevent inconsistent behaviours."""
         self.non_static_values: Set[str] = set()
         self.optional_cwl_null: Set[str] = set()
 
@@ -283,7 +284,7 @@ class Converter:
                 is_file = isinstance(operand.type, WDL.Type.File)
                 operand = self.get_expr_name(operand.expr)  # type: ignore
                 suffix_str = self.get_wdl_literal(suffix.literal)  # type: ignore
-                regex_str = suffix_str
+                regex_str = re.escape(suffix_str)
                 return (
                     f"{operand}.basename.replace(/{regex_str}$/, '') "
                     if is_file
