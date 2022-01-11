@@ -537,10 +537,10 @@ class Converter:
 
             if isinstance(wdl_input.type, WDL.Type.Array):
                 array_items_type = wdl_input.type.item_type
-                input_type = self.get_input_type(array_items_type)  # type: ignore
+                input_type = self.get_cwl_input_type(array_items_type)  # type: ignore
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             else:
-                type_of = self.get_input_type(wdl_input.type)  # type: ignore
+                type_of = self.get_cwl_input_type(wdl_input.type)  # type: ignore
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
@@ -568,8 +568,8 @@ class Converter:
 
         return inputs
 
-    def get_input_type(self, input_type: WDL.Tree.Decl) -> str:
-        """Extract the type of any WDL input."""
+    def get_cwl_input_type(self, input_type: WDL.Tree.Decl) -> str:
+        """Determine the CWL type for a WDL input declaration."""
         if isinstance(input_type, WDL.Type.File):
             type_of = "File"
         elif isinstance(input_type, WDL.Type.String):
@@ -578,6 +578,8 @@ class Converter:
             type_of = "boolean"
         elif isinstance(input_type, WDL.Type.Int):
             type_of = "int"
+        elif isinstance(input_type, WDL.Type.Float):
+            type_of = "float"
         else:
             raise Exception(f"Input of type {input_type} is not yet handled.")
         return type_of
