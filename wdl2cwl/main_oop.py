@@ -285,7 +285,9 @@ class Converter:
                 return (
                     f"{operand}.basename.replace('{regex_str}$', '') "
                     if is_file
-                    else f"{operand}.split('/').reverse()[0].replace("+r"'\."+f"{regex_str}$', '') "
+                    else f"{operand}.split('/').reverse()[0].replace("
+                    + r"'\."
+                    + f"{regex_str}$', '') "
                 )
         elif function_name == "defined":
             only_operand = arguments[0]
