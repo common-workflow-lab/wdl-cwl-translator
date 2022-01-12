@@ -14,7 +14,7 @@ outputs:
         outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
 requirements:
   - class: DockerRequirement
-    dockerPull: '"quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6"'
+    dockerPull: quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh

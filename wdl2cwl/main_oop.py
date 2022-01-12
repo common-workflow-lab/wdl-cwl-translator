@@ -399,7 +399,7 @@ class Converter:
     ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
         if isinstance(wdl_docker, WDL.Expr.String):
-            dockerpull = self.get_expr_string(wdl_docker)
+            dockerpull = self.get_wdl_literal(wdl_docker.literal)  # type: ignore
         else:
             dockerpull_expr = wdl_docker.expr
             if dockerpull_expr is None or not isinstance(

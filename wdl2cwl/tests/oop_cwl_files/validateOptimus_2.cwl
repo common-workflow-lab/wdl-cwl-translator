@@ -16,7 +16,7 @@ outputs:
         outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
 requirements:
   - class: DockerRequirement
-    dockerPull: '"ubuntu:16.04"'
+    dockerPull: ubuntu:16.04
   - class: InitialWorkDirRequirement
     listing:
       - entryname: example.sh
