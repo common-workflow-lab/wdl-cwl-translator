@@ -126,4 +126,4 @@ jobs:
           pip install cwltool cwltest
 
       - name: Run the CWL functional tests
-        run: make cwltest
+        run: make cwltest cwltest_big

@@ -5,13 +5,17 @@ regionsFile: null
 fastaRefIndex:
   class: File
   path: bcftools/reference.fasta.fai
+  checksum: sha1$e85dc741b1a0b83cebb1ed48d203374cedc3b5df
 fastaRef:
   class: File
   path: bcftools/reference.fasta
+  checksum: sha1$51115933fd37788eba6ba4b62e763999a940cd50
 outputPath: ./samples//male.vcf.stats
 inputVcfIndex:
   class: File
   path: bcftools/male.g.vcf.gz.tbi
+  checksum: sha1$f6923cf67f445861513f1fa79b46963d461fb337
 inputVcf: 
   class: File
   path: bcftools/male.g.vcf.gz
+  checksum: sha1$40579b9b2e996eaa11b1a7ddb70448e12b384c77
