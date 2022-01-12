@@ -1,18 +1,22 @@
 referenceFasta:
   class: File
   path: deepvariant-testdata/ucsc.hg19.chr20.unittest.fasta
+  checksum: sha1$23f5d58709c0efb900346ec08001860a394bb01d
   # location: https://storage.googleapis.com/deepvariant/quickstart-testdata/ucsc.hg19.chr20.unittest.fasta
 referenceFastaIndex:
   class: File
   path: deepvariant-testdata/ucsc.hg19.chr20.unittest.fasta.fai
+  checksum: sha1$86c0b1a699ba7ea6ce52e4c4a7600fc0cec35d9a
   # location: https://storage.googleapis.com/deepvariant/quickstart-testdata/ucsc.hg19.chr20.unittest.fasta.fai
 inputBam:
   class: File
   path: deepvariant-testdata/NA12878_S1.chr20.10_10p1mb.bam
+  checksum: sha1$fd30c08e002959ba4acf8a30df975d4f40c8c151
   # location: https://storage.googleapis.com/deepvariant/quickstart-testdata/NA12878_S1.chr20.10_10p1mb.bam
 inputBamIndex:
   class: File
   path: deepvariant-testdata/NA12878_S1.chr20.10_10p1mb.bam.bai
+  checksum: sha1$d81ba82513c93f4e2f5cbacb91253a96456c14c7
   # location: https://storage.googleapis.com/deepvariant/quickstart-testdata/NA12878_S1.chr20.10_10p1mb.bam.bai
 modelType: WGS
 outputVcf: output.vcf.gz
