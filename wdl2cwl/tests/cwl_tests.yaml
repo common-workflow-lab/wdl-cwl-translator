@@ -43,8 +43,13 @@
     outputVcf:
       class: File
       basename: output.vcf.gz
-      size: 29263
-      checksum: sha1$314945c1c620441e6faeac1058a67cc367c0d8dd
+      size: 7246
+      checksum: sha1$abc226e8522c44d66e305faf8a5b70bfd22dc32e
+    outputVcfIndex:
+      class: File
+      basename: output.vcf.gz.tbi
+      size: 141
+      checksum: sha1$2f36160f5e29a5c3c256fef42d7a4959441ff604
 
 - doc: bcftools_annotate_oop
   tool: oop_cwl_files/bcftools_annotate.cwl
@@ -53,5 +58,10 @@
     outputVcf:
       class: File
       basename: output.vcf.gz
-      size: 29263
-      checksum: sha1$314945c1c620441e6faeac1058a67cc367c0d8dd
+      size: 7246
+      checksum: sha1$abc226e8522c44d66e305faf8a5b70bfd22dc32e
+    outputVcfIndex:
+      class: File
+      basename: output.vcf.gz.tbi
+      size: 141
+      checksum: sha1$2f36160f5e29a5c3c256fef42d7a4959441ff604
