@@ -58,6 +58,7 @@ task Annotate {
         set -e
         mkdir -p "$(dirname ~{outputPath})"
         bcftools annotate \
+        --no-version \
         -o ~{outputPath} \
         -O ~{true="z" false="v" compressed} \
         ~{"--annotations " + annsFile} \
@@ -79,7 +80,7 @@ task Annotate {
         ~{true="--single-overlaps" false="" singleOverlaps} \
         ~{true="--remove" false="" length(removeAnns) > 0} ~{sep="," removeAnns} \
         ~{inputFile}
-
+        # --no-version is for reproducibility
         ~{if compressed then 'bcftools index --tbi ~{outputPath}' else ''}
     }
 

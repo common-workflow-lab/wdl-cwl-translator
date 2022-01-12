@@ -10,9 +10,9 @@
   job: inputs/CollectQualityYieldMatrics.yaml
   output:
     quality_yield_metrics:
+      class: File
       basename: collect_quality_yield_metrics.quals.txt
       checksum: sha1$870d2ec27fb38292079c8b135fdf864c03f32bfe
-      class: File
       size: 261
 
 - doc: bcftools_stats
@@ -20,17 +20,48 @@
   job: inputs/bcftools_stats.yaml
   output: 
     stats:
-      basename: male.vcf.stats
       class: File
+      basename: male.vcf.stats
       size: 6468
       checksum: sha1$1e26ffbc1cd36ebbfd6e83d0905c67226263eceb
 
-- doc: bcftools_stats
+- doc: bcftools_stats_oop
   tool: oop_cwl_files/bcftools_stats.cwl
   job: inputs/bcftools_stats.yaml
   output:
     stats:
-      basename: male.vcf.stats
       class: File
+      basename: male.vcf.stats
       size: 6468
       checksum: sha1$1e26ffbc1cd36ebbfd6e83d0905c67226263eceb
+
+- doc: bcftools_annotate
+  tool: cwl_files/bcftools_annotate.cwl
+  job: inputs/bcftools_annotate.yaml
+  should_fail: true  # only working in the oop version
+  output:
+    outputVcf:
+      class: File
+      basename: output.vcf.gz
+      size: 7246
+      checksum: sha1$abc226e8522c44d66e305faf8a5b70bfd22dc32e
+    outputVcfIndex:
+      class: File
+      basename: output.vcf.gz.tbi
+      size: 141
+      checksum: sha1$2f36160f5e29a5c3c256fef42d7a4959441ff604
+
+- doc: bcftools_annotate_oop
+  tool: oop_cwl_files/bcftools_annotate.cwl
+  job: inputs/bcftools_annotate.yaml
+  output:
+    outputVcf:
+      class: File
+      basename: output.vcf.gz
+      size: 7246
+      checksum: sha1$abc226e8522c44d66e305faf8a5b70bfd22dc32e
+    outputVcfIndex:
+      class: File
+      basename: output.vcf.gz.tbi
+      size: 141
+      checksum: sha1$2f36160f5e29a5c3c256fef42d7a4959441ff604
