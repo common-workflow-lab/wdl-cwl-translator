@@ -67,7 +67,7 @@ class Converter:
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_outputs(obj.outputs)
         runtime_docker = obj.runtime["docker"]
-        if not isinstance(runtime_docker, WDL.Expr.Get):
+        if not isinstance(runtime_docker, (WDL.Expr.Get, WDL.Expr.String)):
             raise Exception(
                 f"Unsupported docker runtime type: {type(runtime_docker)}: {runtime_docker}"
             )
@@ -339,6 +339,10 @@ class Converter:
             if isinstance(right_operand, WDL.Expr.Apply):
                 right_operand = self.get_expr_apply(right_operand)  # type: ignore
             return f"{left_operand} !== {right_operand}"
+        elif function_name == "read_string":
+            only_arg = arguments[0]
+            only_arg = self.get_expr(only_arg)  # type: ignore
+            return only_arg  # type: ignore
 
         else:
             raise ValueError(f"Function name '{function_name}' not yet handled.")
@@ -384,22 +388,30 @@ class Converter:
 
     def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
+        if isinstance(cpu_runtime, (WDL.Expr.Int, WDL.Expr.Float)):
+            cpu_str = self.get_wdl_literal(cpu_runtime.literal)  # type: ignore
+            return cpu_str  # type: ignore
         cpu_str = self.get_expr(cpu_runtime)
         return f"$({cpu_str})"
 
     def get_cwl_docker_requirements(
-        self, wdl_docker: WDL.Expr.Get
+        self, wdl_docker: Union[WDL.Expr.Get, WDL.Expr.String]
     ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
-        dockerpull_expr = wdl_docker.expr
-        if dockerpull_expr is None or not isinstance(dockerpull_expr, WDL.Expr.Ident):
-            raise Exception(
-                f"Unsupported type: {type(dockerpull_expr)}: {dockerpull_expr}"
-            )
-        dockerpull_referee = dockerpull_expr.referee
-        if dockerpull_referee is None:
-            raise Exception(f"Unsupported type: {type(dockerpull_referee)}")
-        dockerpull = dockerpull_referee.expr.literal.value
+        if isinstance(wdl_docker, WDL.Expr.String):
+            dockerpull = self.get_expr_string(wdl_docker)
+        else:
+            dockerpull_expr = wdl_docker.expr
+            if dockerpull_expr is None or not isinstance(
+                dockerpull_expr, WDL.Expr.Ident
+            ):
+                raise Exception(
+                    f"Unsupported type: {type(dockerpull_expr)}: {dockerpull_expr}"
+                )
+            dockerpull_referee = dockerpull_expr.referee
+            if dockerpull_referee is None:
+                raise Exception(f"Unsupported type: {type(dockerpull_referee)}")
+            dockerpull = dockerpull_referee.expr.literal.value
         return cwl.DockerRequirement(dockerPull=dockerpull)
 
     def get_cwl_command_requirements(
@@ -514,9 +526,9 @@ class Converter:
                 wdl_command[first_newline:]
             )
 
-        if "$" in command_str:
-            splitted_1, splitted_2 = command_str.split("$")
-            command_str = splitted_1 + "\\$" + splitted_2
+        if "$(" in command_str:
+            splitted_1, splitted_2 = command_str.split("$(")
+            command_str = splitted_1 + "\\$(" + splitted_2
 
         return command_str
 
@@ -537,10 +549,10 @@ class Converter:
 
             if isinstance(wdl_input.type, WDL.Type.Array):
                 array_items_type = wdl_input.type.item_type
-                input_type = self.get_cwl_input_type(array_items_type)  # type: ignore
+                input_type = self.get_cwl_type(array_items_type)  # type: ignore
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             else:
-                type_of = self.get_cwl_input_type(wdl_input.type)  # type: ignore
+                type_of = self.get_cwl_type(wdl_input.type)  # type: ignore
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
@@ -568,7 +580,7 @@ class Converter:
 
         return inputs
 
-    def get_cwl_input_type(self, input_type: WDL.Tree.Decl) -> str:
+    def get_cwl_type(self, input_type: WDL.Tree.Decl) -> str:
         """Determine the CWL type for a WDL input declaration."""
         if isinstance(input_type, WDL.Type.File):
             type_of = "File"
@@ -595,30 +607,51 @@ class Converter:
 
         for wdl_output in wdl_outputs:
             output_name = wdl_output.name
-            if isinstance(wdl_output.type, WDL.Type.File):
-                type_of = "File"
+            type_of = self.get_cwl_type(wdl_output.type)  # type: ignore
 
             if not wdl_output.expr:
                 raise ValueError("Missing expression")
-            glob_expr = self.get_expr(wdl_output)
-            glob_str = f"$({glob_expr})"
 
-            if wdl_output.type.optional or isinstance(wdl_output.expr, WDL.Expr.Apply):
-                final_type_of: Union[
-                    List[Union[str, cwl.CommandOutputArraySchema]],
-                    str,
-                    cwl.CommandInputArraySchema,
-                ] = [type_of, "null"]
-            else:
-                final_type_of = type_of
+            if (
+                isinstance(wdl_output.expr, WDL.Expr.Apply)
+                and wdl_output.expr.function_name == "read_string"
+            ):
+                glob_expr = self.get_expr(wdl_output)
+                glob_str = glob_expr[1:-1]
 
-            outputs.append(
-                cwl.CommandOutputParameter(
-                    id=output_name,
-                    type=final_type_of,
-                    outputBinding=cwl.CommandOutputBinding(glob=glob_str),
+                outputs.append(
+                    cwl.CommandOutputParameter(
+                        id=output_name,
+                        type=type_of,
+                        outputBinding=cwl.CommandOutputBinding(
+                            glob=glob_str,
+                            loadContents=True,
+                            outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
+                        ),
+                    )
                 )
-            )
+            else:
+                glob_expr = self.get_expr(wdl_output)
+                glob_str = f"$({glob_expr})"
+
+                if wdl_output.type.optional or isinstance(
+                    wdl_output.expr, WDL.Expr.Apply
+                ):
+                    final_type_of: Union[
+                        List[Union[str, cwl.CommandOutputArraySchema]],
+                        str,
+                        cwl.CommandInputArraySchema,
+                    ] = [type_of, "null"]
+                else:
+                    final_type_of = type_of
+
+                outputs.append(
+                    cwl.CommandOutputParameter(
+                        id=output_name,
+                        type=final_type_of,
+                        outputBinding=cwl.CommandOutputBinding(glob=glob_str),
+                    )
+                )
         return outputs
 
 
@@ -638,6 +671,7 @@ def main() -> None:
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/validateOptimus_2.wdl")
 
 
 if __name__ == "__main__":
