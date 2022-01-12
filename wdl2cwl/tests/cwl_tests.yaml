@@ -65,3 +65,9 @@
       basename: output.vcf.gz.tbi
       size: 141
       checksum: sha1$2f36160f5e29a5c3c256fef42d7a4959441ff604
+
+- doc: validateOptimus_2
+  tool: oop_cwl_files/validateOptimus_2.cwl
+  job: inputs/validateOptimus_2.yaml
+  output:
+    result: PASS
