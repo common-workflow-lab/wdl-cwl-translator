@@ -2,6 +2,7 @@
 import os
 import re
 from typing import List, Union, Optional, Callable, cast, Any, Set
+from typing_extensions import runtime
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -85,10 +86,11 @@ class Converter:
             if "cpu" in obj.runtime
             else None
         )
-        if "memory" in obj.runtime and isinstance(obj.runtime["memory"], WDL.Expr.Get):
-            memory_requirement = self.get_memory_requirement(obj.runtime["memory"])
-        else:
-            memory_requirement = None
+        memory_requirement = (
+            self.get_memory_requirement(obj.runtime["memory"])  # type: ignore 
+            if "memory" in obj.runtime
+            else None
+        )
         requirements.append(
             cwl.ResourceRequirement(
                 coresMin=cpu_requirement,
@@ -124,11 +126,41 @@ class Converter:
         return f'inputs["{input_name}"]'  # pragma: no cover
 
     def get_memory_requirement(
-        self, memory_runtime: Union[WDL.Expr.Ident, WDL.Expr.Get]
-    ) -> str:
+        self, memory_runtime: Union[WDL.Expr.Ident, WDL.Expr.Get, WDL.Expr.String]
+    ) -> Union[str, float]:
         """Translate WDL Runtime Memory requirement to CWL Resource Requirement."""
+        if isinstance(memory_runtime, WDL.Expr.String):
+            ram_min_literal = self.get_memory_literal(memory_runtime)
+            return ram_min_literal
         ram_min = self.get_expr_name(memory_runtime.expr)  # type: ignore
         return self.get_ram_min_js(ram_min, "")
+
+    def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> float:
+        """Get the literal value for memory requirement with type WDL.Expr.String."""
+        ram_min = self.get_expr_string(memory_runtime)[1:-1]
+        unit = re.search(r"[a-zA-Z]+", ram_min).group() # type: ignore
+        value = float(ram_min.split(unit)[0])
+
+        if unit == "KiB":
+            memory = value / 1024
+        elif unit == "MiB":
+            memory = value
+        elif unit == "GiB":
+            memory = value * 1024
+        elif unit == "TiB":
+            memory = value * 1024 * 1024
+        elif unit == "B":
+            memory = value / (1024 * 1024)
+        elif unit == "KB" or unit == "K":
+            memory = (value * 1000) / (1024 * 1024)
+        elif unit == "MB" or unit == "M":
+            memory = (value * (1000 * 1000)) / (1024 * 1024)
+        elif unit == "GB" or unit == "G":
+            memory = (value * (1000 * 1000 * 1000)) / (1024 * 1024)
+        elif unit == "TB" or unit == "T":
+            memory = (value * (1000 * 1000 * 1000 * 1000)) / (1024 * 1024)
+
+        return memory
 
     def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
         """Get memory requirement for user input."""
@@ -200,8 +232,12 @@ class Converter:
         """Translate WDL Boolean, Int or Float Expression."""
         if expr is None or not hasattr(expr, "parent"):
             raise Exception(f"{type(expr)} has no attribute 'parent'")
+        # if the literal expr is used inside WDL.Expr.Apply
+        # the literal value is what's needed
         if isinstance(expr.parent, WDL.Expr.Apply):  # type: ignore
             return self.get_wdl_literal(expr.literal)  # type: ignore
+        # if it is a WDL.Expr.Ident
+        # the parent expression name is needed
         parent_name = expr.parent.name  # type: ignore
         parent_name = self.get_input(parent_name)
         return (  # type: ignore
@@ -617,7 +653,9 @@ class Converter:
                 and wdl_output.expr.function_name == "read_string"
             ):
                 glob_expr = self.get_expr(wdl_output)
-                glob_str = glob_expr[1:-1]
+                glob_str = glob_expr[
+                    1:-1
+                ]  # remove quotes from the string returned by get_expr_string
 
                 outputs.append(
                     cwl.CommandOutputParameter(
@@ -671,7 +709,7 @@ def main() -> None:
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/validateOptimus_2.wdl")
+    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/validateOptimus_1.wdl")
 
 
 if __name__ == "__main__":
