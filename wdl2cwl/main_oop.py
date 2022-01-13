@@ -2,7 +2,6 @@
 import os
 import re
 from typing import List, Union, Optional, Callable, cast, Any, Set
-from typing_extensions import runtime
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
