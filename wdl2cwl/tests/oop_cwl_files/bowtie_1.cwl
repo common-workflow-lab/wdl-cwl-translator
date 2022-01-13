@@ -84,6 +84,7 @@ requirements:
     networkAccess: true
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
+    outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
   - bash
