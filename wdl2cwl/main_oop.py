@@ -87,7 +87,7 @@ class Converter:
             else None
         )
         memory_requirement = (
-            self.get_memory_requirement(obj.runtime["memory"])  # type: ignore 
+            self.get_memory_requirement(obj.runtime["memory"])  # type: ignore
             if "memory" in obj.runtime
             else None
         )
@@ -138,7 +138,7 @@ class Converter:
     def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> float:
         """Get the literal value for memory requirement with type WDL.Expr.String."""
         ram_min = self.get_expr_string(memory_runtime)[1:-1]
-        unit = re.search(r"[a-zA-Z]+", ram_min).group() # type: ignore
+        unit = re.search(r"[a-zA-Z]+", ram_min).group()  # type: ignore
         value = float(ram_min.split(unit)[0])
 
         if unit == "KiB":
