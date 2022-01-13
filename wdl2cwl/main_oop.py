@@ -2,6 +2,7 @@
 import os
 import re
 from typing import List, Union, Optional, Callable, cast, Any, Set
+from typing_extensions import runtime
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -90,10 +91,16 @@ class Converter:
             if "memory" in obj.runtime
             else None
         )
+        outdir_requirement = (
+            self.get_outdir_requirement(obj.runtime["disks"])  # type: ignore
+            if "disks" in obj.runtime
+            else 1024
+        )
         requirements.append(
             cwl.ResourceRequirement(
                 coresMin=cpu_requirement,
                 ramMin=memory_requirement,
+                outdirMin=outdir_requirement,
             )
         )
 
@@ -117,6 +124,13 @@ class Converter:
         yaml.dump(cwl_result, sys.stdout)
 
         return result_stream.getvalue()
+
+    def get_outdire_requirement(
+        self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]
+    ) -> int:
+        """Produce the memory requirement for the output directory from WDL runtime disks."""
+        # This is yet to be implemented. After Feature Parity.
+        return 1
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -681,6 +695,8 @@ class Converter:
                     ] = [type_of, "null"]
                 else:
                     final_type_of = type_of
+                if isinstance(wdl_output.expr, WDL.Expr.String):
+                    glob_str = glob_str[3:-2]
 
                 outputs.append(
                     cwl.CommandOutputParameter(
