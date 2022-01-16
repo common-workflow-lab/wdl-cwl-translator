@@ -145,12 +145,12 @@ class Converter:
         time_minutes_str = self.get_expr(time_minutes)
         return f"$({time_minutes_str} * 60)"
 
-    def get_outdire_requirement(
+    def get_outdir_requirement(
         self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]
     ) -> int:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         # This is yet to be implemented. After Feature Parity.
-        return 1
+        return self.get_wdl_literal(outdir.literal)
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""

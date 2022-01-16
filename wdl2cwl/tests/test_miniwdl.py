@@ -40,6 +40,9 @@ def get_file(path: str) -> str:
         ("wdl_files/vardict.wdl", "oop_cwl_files/vardict.cwl"),
         ("wdl_files/vt.wdl", "oop_cwl_files/vt.cwl"),
         ("wdl_files/TrimAdapters.wdl", "oop_cwl_files/TrimAdapters.cwl"),
+        ("wdl_files/CollectQualityYieldMetrics.wdl","oop_cwl_files/CollectQualityYieldMetrics.cwl"),
+        ("wdl_files/CollectReadgroupBamQualityMetrics.wdl","oop_cwl_files/CollectReadgroupBamQualityMetrics.cwl"),
+        ("wdl_files/read_string_cornercase.wdl","oop_cwl_files/read_string_cornercase.cwl"),
     ],
 )
 class TestParameterized:
