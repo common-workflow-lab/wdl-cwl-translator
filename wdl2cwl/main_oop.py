@@ -200,15 +200,6 @@ class Converter:
 
         return memory
 
-    def get_alt_mem_literal(self, memory_runtime: WDL.Expr.String) -> str:
-        """Get memory string from WDDL.Expr.String containing Placeholders."""
-        _, placeholder, unit, _ = memory_runtime.parts
-        placeholder_expr = placeholder.expr.expr  # type: ignore
-        referee = placeholder_expr.referee
-        referee_expr = referee.expr
-        mem_value = self.get_wdl_literal(referee_expr.literal)
-        return f"{mem_value}{unit}"
-
     def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
         """Get memory requirement for user input."""
         append_str: str = ""
