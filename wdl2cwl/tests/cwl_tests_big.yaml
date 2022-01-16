@@ -24,8 +24,35 @@
        class: File
        checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
        size: 0
+
 - doc: deepvariant
   tool: cwl_files/deepvariant.cwl
+  job: inputs/deepvariant.yaml
+  output:
+    outputVCF:
+      basename: output.vcf.gz
+      class: File
+      checksum: sha1$818ecb550393e009c3096511508426abe73fecc2
+      size: 2290
+    outputVCFIndex:
+      basename: output.vcf.gz.tbi
+      class: File
+      checksum: sha1$f80ccdb4fb614396adb5405077fcc268372576f7
+      size: 143
+    outputVCFStatsReport:
+      - basename: output.visual_report.html
+        class: File
+        checksum: sha1$d4b36165bcdeef86ed89e363a6d1d286c860ed31
+        size: 34107
+    outputGVCF:
+      basename: output.g.vcf.gz
+      checksum: sha1$8d356cc7fb3827f809e379ea68d19532b212013b
+      class: File
+      size: 4371
+    outputGVCFIndex: null
+
+- doc: deepvariant_oop
+  tool: oop_cwl_files/deepvariant.cwl
   job: inputs/deepvariant.yaml
   output:
     outputVCF:
