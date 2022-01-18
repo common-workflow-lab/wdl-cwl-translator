@@ -22,6 +22,17 @@
       checksum: sha1$870d2ec27fb38292079c8b135fdf864c03f32bfe
       size: 261
 
+- doc: CollectQualityYieldMetrics_oop
+  tool: oop_cwl_files/CollectQualityYieldMetrics.cwl
+  job: inputs/CollectQualityYieldMatrics.yaml
+  output:
+    quality_yield_metrics:
+      class: File
+      basename: collect_quality_yield_metrics.quals.txt
+      checksum: sha1$870d2ec27fb38292079c8b135fdf864c03f32bfe
+      size: 261
+
+
 - doc: bcftools_stats
   tool: cwl_files/bcftools_stats.cwl
   job: inputs/bcftools_stats.yaml
