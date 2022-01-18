@@ -528,8 +528,16 @@ class Converter:
             if "true" in options:
                 true_value = options["true"]
                 false_value = options["false"]
-                true_value = true_value.replace('"', "'") if type(true_value) == str else true_value
-                false_value = false_value.replace('"', "'") if type(true_value) == str else false_value
+                true_value = (
+                    true_value.replace('"', "'")
+                    if type(true_value) == str
+                    else true_value
+                )
+                false_value = (
+                    false_value.replace('"', "'")
+                    if type(true_value) == str
+                    else false_value
+                )
                 is_optional = False
                 if isinstance(expr, WDL.Expr.Get):
                     is_optional = expr.type.optional
