@@ -33,7 +33,7 @@ def get_file(path: str) -> str:
         ("wdl_files/isoseq3.wdl", "oop_cwl_files/isoseq3.cwl"),
         ("wdl_files/minCores.wdl", "oop_cwl_files/minCores.cwl"),
         ("wdl_files/pbmm2.wdl", "oop_cwl_files/pbmm2.cwl"),
-        ("wdl_files/rtg_2.wdl", "oop_cwl_files/rtg_2.cwl"),
+        ("wdl_files/rtg_VcfEval.wdl", "oop_cwl_files/rtg_VcfEval.cwl"),
         ("wdl_files/rtg.wdl", "oop_cwl_files/rtg.cwl"),
         ("wdl_files/seqtk_1.wdl", "oop_cwl_files/seqtk_1.cwl"),
         ("wdl_files/seqtk_2.wdl", "oop_cwl_files/seqtk_2.cwl"),
