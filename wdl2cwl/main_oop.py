@@ -24,6 +24,23 @@ valid_js_identifier = regex.compile(
 )
 
 
+def convert(doc: str) -> str:
+    """Load WDL file, instantiate Converter class and loads the WDL document tree."""
+    wdl_path = os.path.relpath(doc)
+    doc_tree = WDL.load(wdl_path)
+
+    parser = Converter()  # type: ignore
+
+    if doc_tree.workflow:
+        return parser.load_wdl_objects(doc_tree.workflow)
+
+    tasks = []
+    for task in doc_tree.tasks:
+        tasks.append(parser.load_wdl_objects(task))
+
+    return tasks[0]
+
+
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
@@ -31,23 +48,6 @@ class Converter:
         """Initialize the sets used by the object and prevent inconsistent behaviours."""
         self.non_static_values: Set[str] = set()
         self.optional_cwl_null: Set[str] = set()
-
-    @staticmethod
-    def load_wdl_tree(doc: str) -> str:
-        """Load WDL file, instantiate Converter class and loads the WDL document tree."""
-        wdl_path = os.path.relpath(doc)
-        doc_tree = WDL.load(wdl_path)
-
-        parser = Converter()  # type: ignore
-
-        if doc_tree.workflow:
-            return parser.load_wdl_objects(doc_tree.workflow)
-
-        tasks = []
-        for task in doc_tree.tasks:
-            tasks.append(parser.load_wdl_objects(task))
-
-        return tasks[0]
 
     def load_wdl_objects(self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]) -> str:
         """Load a WDL SourceNode obj and returns either a Task or a Workflow."""
@@ -794,7 +794,7 @@ def main() -> None:
     # write to a file in oop_cwl_files
     if args.output:
         with open(args.output, "w") as result:
-            result.write(str(Converter.load_wdl_tree(args.workflow)))
+            result.write(convert(args.workflow))
 
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
 

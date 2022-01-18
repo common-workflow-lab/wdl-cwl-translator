@@ -1,10 +1,8 @@
 """Tests for miniwdl."""
 import os.path
 import pytest
-import pathlib
-import filecmp
 
-from .. import main_oop as wdl
+from ..main_oop import convert
 
 
 def get_file(path: str) -> str:
@@ -54,7 +52,7 @@ class TestParameterized:
 
     def test_wdls(self, wdl_path: str, cwl_path: str) -> None:
         """Test WDL to CWL conversion."""
-        convertedStr = wdl.Converter.load_wdl_tree(get_file(wdl_path))
+        convertedStr = convert(get_file(wdl_path))
         testStr = ""
         with open(get_file(cwl_path)) as file:
             testStr = file.read()
