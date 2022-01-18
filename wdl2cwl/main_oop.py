@@ -150,7 +150,7 @@ class Converter:
     ) -> int:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         # This is yet to be implemented. After Feature Parity.
-        return self.get_wdl_literal(outdir.literal)
+        return self.get_wdl_literal(outdir.literal)  # type: ignore
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -304,7 +304,7 @@ class Converter:
                     "" if parts[index + 1] == '"' or parts[index + 1] == "'" else " + '"  # type: ignore
                 )
             string += part
-        # condition to determin if the openning and closing quotes should be added to string
+        # condition to determine if the opening and closing quotes should be added to string
         # for cases where a placeholder begins or ends a WDL.Expr.String
         if type(parts[1]) == str:
             string = "'" + string
@@ -474,11 +474,11 @@ class Converter:
             return cpu_str  # type: ignore
         elif isinstance(cpu_runtime, WDL.Expr.String):
             if cpu_runtime.literal is not None:
-                literal_str = self.get_wdl_literal(cpu_runtime.literal)
+                literal_str = self.get_wdl_literal(cpu_runtime.literal)  # type: ignore
                 numeral = (
                     int(literal_str) if "." not in literal_str else float(literal_str)
                 )
-                return numeral
+                return numeral  # type: ignore
         cpu_str = self.get_expr(cpu_runtime)
         return f"$({cpu_str})"
 
@@ -659,9 +659,8 @@ class Converter:
                 else:
                     literal = wdl_input.expr.literal
                     input_value = self.get_wdl_literal(literal)  # type: ignore
-
-            if final_type_of == "float":
-                input_value = float(input_value)
+                    if final_type_of == "float":
+                        input_value = float(input_value)
 
             inputs.append(
                 cwl.CommandInputParameter(
