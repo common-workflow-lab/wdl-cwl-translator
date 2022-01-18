@@ -125,5 +125,11 @@ jobs:
           pip install -U pip setuptools wheel
           pip install cwltool cwltest
 
+      - name: Checkout cache
+        uses: actions/checkout@v2
+        with:
+          repository: common-workflow-lab/wdl2cwl_test_cache
+          path: wdl2cwl/tests/cache
+
       - name: Run the CWL functional tests
         run: make cwltest cwltest_big
