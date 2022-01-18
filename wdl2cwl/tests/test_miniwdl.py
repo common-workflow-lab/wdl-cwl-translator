@@ -16,6 +16,8 @@ def get_file(path: str) -> str:
     "wdl_path,cwl_path",
     [
         ("wdl_files/bowtie_1.wdl", "oop_cwl_files/bowtie_1.cwl"),
+        ("wdl_files/bowtie_2.wdl", "oop_cwl_files/bowtie_2.cwl"),
+        ("wdl_files/bowtie_3.wdl", "oop_cwl_files/bowtie_3.cwl"),
         ("wdl_files/bcftools_stats.wdl", "oop_cwl_files/bcftools_stats.cwl"),
         ("wdl_files/bcftools_annotate.wdl", "oop_cwl_files/bcftools_annotate.cwl"),
         ("wdl_files/validateOptimus_1.wdl", "oop_cwl_files/validateOptimus_1.cwl"),
@@ -40,14 +42,6 @@ def get_file(path: str) -> str:
         ("wdl_files/vardict.wdl", "oop_cwl_files/vardict.cwl"),
         ("wdl_files/vt.wdl", "oop_cwl_files/vt.cwl"),
         ("wdl_files/TrimAdapters.wdl", "oop_cwl_files/TrimAdapters.cwl"),
-        (
-            "wdl_files/CollectQualityYieldMetrics.wdl",
-            "oop_cwl_files/CollectQualityYieldMetrics.cwl",
-        ),
-        (
-            "wdl_files/CollectReadgroupBamQualityMetrics.wdl",
-            "oop_cwl_files/CollectReadgroupBamQualityMetrics.cwl",
-        ),
         (
             "wdl_files/read_string_cornercase.wdl",
             "oop_cwl_files/read_string_cornercase.cwl",
