@@ -29,6 +29,7 @@ def get_file(path: str) -> str:
         ("wdl_files/gatk_1.wdl", "oop_cwl_files/gatk_1.cwl"),
         ("wdl_files/hisat2_1.wdl", "oop_cwl_files/hisat2_1.cwl"),
         ("wdl_files/hisat2_2.wdl", "oop_cwl_files/hisat2_2.cwl"),
+        ("wdl_files/hisat2_3.wdl", "oop_cwl_files/hisat2_3.cwl"),
         ("wdl_files/isoseq3.wdl", "oop_cwl_files/isoseq3.cwl"),
         ("wdl_files/minCores.wdl", "oop_cwl_files/minCores.cwl"),
         ("wdl_files/pbmm2.wdl", "oop_cwl_files/pbmm2.cwl"),
