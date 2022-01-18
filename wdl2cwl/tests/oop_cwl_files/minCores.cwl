@@ -17,7 +17,7 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    coresMin: $("8")
+    coresMin: 8
     outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:

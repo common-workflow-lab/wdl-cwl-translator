@@ -472,6 +472,13 @@ class Converter:
         if isinstance(cpu_runtime, (WDL.Expr.Int, WDL.Expr.Float)):
             cpu_str = self.get_wdl_literal(cpu_runtime.literal)  # type: ignore
             return cpu_str  # type: ignore
+        elif isinstance(cpu_runtime, WDL.Expr.String):
+            if cpu_runtime.literal is not None:
+                literal_str = self.get_wdl_literal(cpu_runtime.literal)
+                numeral = (
+                    int(literal_str) if "." not in literal_str else float(literal_str)
+                )
+                return numeral
         cpu_str = self.get_expr(cpu_runtime)
         return f"$({cpu_str})"
 
@@ -652,6 +659,9 @@ class Converter:
                 else:
                     literal = wdl_input.expr.literal
                     input_value = self.get_wdl_literal(literal)  # type: ignore
+
+            if final_type_of == "float":
+                input_value = float(input_value)
 
             inputs.append(
                 cwl.CommandInputParameter(

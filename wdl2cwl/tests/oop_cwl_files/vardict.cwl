@@ -22,7 +22,7 @@ inputs:
     default: true
     type: boolean
   - id: mappingQuality
-    default: 20
+    default: 20.0
     type: float
   - id: minimumTotalDepth
     default: 8
