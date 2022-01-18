@@ -150,7 +150,7 @@ class Converter:
     ) -> int:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         # This is yet to be implemented. After Feature Parity.
-        return int(self.get_wdl_literal(outdir.literal))  # type: ignore
+        return int(self.get_wdl_literal(outdir.literal)) * 1024  # type: ignore
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -528,16 +528,22 @@ class Converter:
             if "true" in options:
                 true_value = options["true"]
                 false_value = options["false"]
-                true_value = (
-                    true_value.replace('"', "'")
-                    if type(true_value) == str
-                    else true_value
-                )
-                false_value = (
-                    false_value.replace('"', "'")
-                    if type(true_value) == str
-                    else false_value
-                )
+                if type(true_value) == str:
+                    true_str = (
+                        f'"{true_value}"'
+                        if '"' not in true_value
+                        else f"'{true_value}'"
+                    )
+                else:
+                    true_str = true_value
+                if type(false_value) == str:
+                    false_str = (
+                        f'"{false_value}"'
+                        if '"' not in false_value
+                        else f"'{false_value}'"
+                    )
+                else:
+                    false_str = false_value
                 is_optional = False
                 if isinstance(expr, WDL.Expr.Get):
                     is_optional = expr.type.optional
@@ -545,10 +551,12 @@ class Converter:
                     is_optional = expr.arguments[0].type.optional
                 if not is_optional:
                     cwl_command_str = (
-                        f'$({placeholder_expr} ? "{true_value}" : "{false_value}")'
+                        f"$({placeholder_expr} ? {true_str} : {false_str})"
                     )
                 else:
-                    cwl_command_str = f'$({placeholder_expr} === null ? "{false_value}" : "{true_value}")'
+                    cwl_command_str = (
+                        f"$({placeholder_expr} === null ? {false_str} : {true_str})"
+                    )
             elif "sep" in options:
                 seperator = options["sep"]
                 if isinstance(expr.type, WDL.Type.Array):
