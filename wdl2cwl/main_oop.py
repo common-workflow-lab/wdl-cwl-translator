@@ -150,7 +150,7 @@ class Converter:
     ) -> int:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         # This is yet to be implemented. After Feature Parity.
-        return self.get_wdl_literal(outdir.literal)  # type: ignore
+        return int(self.get_wdl_literal(outdir.literal))  # type: ignore
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
