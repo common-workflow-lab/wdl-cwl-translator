@@ -64,7 +64,7 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    ramMin: 7168
+    ramMin: 51200
   - class: ResourceRequirement
     outdirMin: 30720
 cwlVersion: v1.2
