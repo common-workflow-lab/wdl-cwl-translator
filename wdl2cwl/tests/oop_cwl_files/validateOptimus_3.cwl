@@ -44,7 +44,7 @@ requirements:
 
             ## Convert matrix to format that can be read by R
             npz2rds.sh -c $(inputs.matrix_col_index.path) -r $(inputs.matrix_row_index.path) \
-            -d $(inputs.matrix.path) -o matrix.rds
+                -d $(inputs.matrix.path) -o matrix.rds
 
             cp $(inputs.reference_matrix.path) referenceMatrix.rds
 

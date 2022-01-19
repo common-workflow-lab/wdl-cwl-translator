@@ -40,29 +40,29 @@ requirements:
       - entryname: example.sh
         entry: |4+
 
-            set -e
+             set -e
 
-            mv $(inputs.bam_input.path) input.bam
-            mv $(inputs.bam_index.path) input.bam.bai
+             mv $(inputs.bam_input.path) input.bam
+             mv $(inputs.bam_index.path) input.bam.bai
 
-            touch input.bam
-            touch input.bam.bai
+             touch input.bam
+             touch input.bam.bai
 
-            umi_tools group \
-                -I input.bam \
-                -L outlog.txt \
-                -E outerr.txt \
-                -S duplicate_marked.bam \
-                --output-bam \
-                --extract-umi-method=tag \
-                --umi-tag UR \
-                --method directional \
-                --per-gene \
-                --per-cell \
-                --cell-tag CB \
-                --gene-tag GE \
-                --no-sort-output \
-                --group-out $(inputs.groupout_filename) \
+             umi_tools group \
+                 -I input.bam \
+                 -L outlog.txt \
+                 -E outerr.txt \
+                 -S duplicate_marked.bam \
+                 --output-bam \
+                 --extract-umi-method=tag \
+                 --umi-tag UR \
+                 --method directional \
+                 --per-gene \
+                 --per-cell \
+                 --cell-tag CB \
+                 --gene-tag GE \
+                 --no-sort-output \
+                 --group-out $(inputs.groupout_filename) \
                  --umi-group-tag UB
 
             getUntaggedReads --in-bam-file input.bam --out-bam-file untagged.bam
