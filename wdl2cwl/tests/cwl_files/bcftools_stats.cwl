@@ -5,6 +5,24 @@ inputs:
     type: File
   - id: inputVcfIndex
     type: File
+  - id: outputPath
+    type:
+      - string
+      - 'null'
+  - id: firstAlleleOnly
+    default: false
+    type: boolean
+  - id: splitByID
+    default: false
+    type: boolean
+  - id: samples
+    default: []
+    type:
+        items: string
+        type: array
+  - id: verbose
+    default: false
+    type: boolean
   - id: compareVcf
     type:
       - File
@@ -77,21 +95,6 @@ inputs:
     type:
       - string
       - 'null'
-  - id: outputPath
-    default: basename(inputVcf)+.stats
-    type: string
-  - id: firstAlleleOnly
-    default: false
-    type: boolean
-  - id: splitByID
-    default: false
-    type: boolean
-  - id: samples
-    default: '[]'
-    type: string[]
-  - id: verbose
-    default: false
-    type: boolean
   - id: threads
     default: 0
     type: int
@@ -105,7 +108,8 @@ outputs:
   - id: stats
     type: File
     outputBinding:
-        glob: $(inputs.outputPath)
+        glob: '$(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats"
+            : inputs.outputPath)'
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
@@ -115,41 +119,42 @@ requirements:
         entry: |4
 
             set -e
-            mkdir -p \$(dirname $(inputs.outputPath))
+            mkdir -p \$(dirname $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath))
             mkdir fastaRef_dir
             ln -s $(inputs.fastaRef === null ? "" : inputs.fastaRef.path) fastaRef_dir/\$(basename $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))
             ln -s $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path) fastaRef_dir/\$(basename $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path))
             bcftools stats \
-            $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins ) \
-            $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag ) \
+            $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
+            $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
             $(inputs.firstAlleleOnly ? "--1st-allele-only" : "") \
-            $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse ) \
-            $(inputs.depth === null ? "" : "--depth " + inputs.depth ) \
-            $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude ) \
-            $(inputs.exons === null ? "" : "--exons " + inputs.exons.path ) \
-            $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters ) \
-            $(inputs.fastaRef === null ? "" : "--fasta-ref fastaRef_dir/$(basename " + inputs.fastaRef.path + ")" ) \
-            $(inputs.include === null ? "" : "--include " + inputs.include ) \
+            $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
+            $(inputs.depth === null ? "" : "--depth " + inputs.depth) \
+            $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
+            $(inputs.exons === null ? "" : "--exons " + inputs.exons.path) \
+            $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
+            $(inputs.fastaRef === null ? "" : "--fasta-ref fastaRef_dir/$(basename " + inputs.fastaRef.path + ")") \
+            $(inputs.include === null ? "" : "--include " + inputs.include) \
             $(inputs.splitByID ? "--split-by-ID" : "") \
-            $(inputs.regions === null ? "" : "--regions " + inputs.regions ) \
-            $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path ) \
-            ${if (inputs.samples.length > 0) {return "--samples";} else {return '';}} $(inputs.samples.join(",")) \
-            $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path ) \
-            $(inputs.targets === null ? "" : "--targets " + inputs.targets ) \
-            $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path ) \
-            $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv ) \
+            $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
+            $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
+            $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
+            $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
+            $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
+            $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path) \
+            $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
             --threads $(inputs.threads) \
             $(inputs.verbose ? "--verbose" : "") \
-            $(inputs.inputVcf.path) $(inputs.compareVcf === null ? "" : inputs.compareVcf.path) > $(inputs.outputPath)
-            sed -i "s=\$(dirname $(inputs.inputVcf.path))/==g" $(inputs.outputPath)  # for reproducibility
+            $(inputs.inputVcf.path) $(inputs.compareVcf === null ? "" : inputs.compareVcf.path) > $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)
+            sed -i "s=\$(dirname $(inputs.inputVcf.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
+    coresMin: $(inputs.threads + 1)
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs.memory.match(/[0-9]+/g));
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -162,10 +167,7 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ResourceRequirement
     outdirMin: 1024
-  - class: ResourceRequirement
-    coresMin: $(inputs.threads + 1)
 cwlVersion: v1.2
 baseCommand:
   - bash

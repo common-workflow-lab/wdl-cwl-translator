@@ -74,10 +74,11 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
+    coresMin: $(inputs.cpu)
     ramMin: |-
         ${
         var unit = "MiB";
-        var value = parseInt(inputs.machine_mem_mb.match(/[0-9]+/g));
+        var value = parseInt(`${inputs.machine_mem_mb}`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -90,10 +91,7 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ResourceRequirement
     outdirMin: 1024
-  - class: ResourceRequirement
-    coresMin: $(inputs.cpu)
 cwlVersion: v1.2
 baseCommand:
   - bash

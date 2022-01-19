@@ -1,6 +1,15 @@
 class: CommandLineTool
 id: Refine
 inputs:
+  - id: minPolyALength
+    default: 20
+    type: int
+  - id: requirePolyA
+    default: false
+    type: boolean
+  - id: logLevel
+    default: WARN
+    type: string
   - id: inputBamFile
     type: File
   - id: inputBamIndex
@@ -10,15 +19,6 @@ inputs:
   - id: outputDir
     type: string
   - id: outputNamePrefix
-    type: string
-  - id: minPolyALength
-    default: 20
-    type: int
-  - id: requirePolyA
-    default: false
-    type: boolean
-  - id: logLevel
-    default: WARN
     type: string
   - id: threads
     default: 2
@@ -36,27 +36,27 @@ outputs:
   - id: refineBam
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/$(inputs.outputNamePrefix).bam
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".bam")
   - id: refineBamIndex
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/$(inputs.outputNamePrefix).bam.pbi
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".bam.pbi")
   - id: refineConsensusReadset
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/$(inputs.outputNamePrefix).consensusreadset.xml
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".consensusreadset.xml")
   - id: refineFilterSummary
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/$(inputs.outputNamePrefix).filter_summary.json
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".filter_summary.json")
   - id: refineReport
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/$(inputs.outputNamePrefix).report.csv
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".report.csv")
   - id: refineStderr
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/$(inputs.outputNamePrefix).stderr.log
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".stderr.log")
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/isoseq3:3.4.0--0
@@ -80,10 +80,11 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
+    coresMin: $(inputs.threads)
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs.memory.match(/[0-9]+/g));
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -96,12 +97,9 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ResourceRequirement
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)
-  - class: ResourceRequirement
-    coresMin: $(inputs.threads)
 cwlVersion: v1.2
 baseCommand:
   - bash

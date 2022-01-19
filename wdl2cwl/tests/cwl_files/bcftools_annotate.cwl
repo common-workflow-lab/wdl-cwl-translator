@@ -1,8 +1,38 @@
 class: CommandLineTool
 id: Annotate
 inputs:
+  - id: columns
+    default: []
+    type:
+        items: string
+        type: array
+  - id: force
+    default: false
+    type: boolean
+  - id: keepSites
+    default: false
+    type: boolean
+  - id: noVersion
+    default: false
+    type: boolean
+  - id: samples
+    default: []
+    type:
+        items: string
+        type: array
+  - id: singleOverlaps
+    default: false
+    type: boolean
+  - id: removeAnns
+    default: []
+    type:
+        items: string
+        type: array
   - id: inputFile
     type: File
+  - id: outputPath
+    default: output.vcf.gz
+    type: string
   - id: annsFile
     type:
       - File
@@ -47,30 +77,6 @@ inputs:
     type:
       - File
       - 'null'
-  - id: columns
-    default: '[]'
-    type: string[]
-  - id: force
-    default: false
-    type: boolean
-  - id: keepSites
-    default: false
-    type: boolean
-  - id: noVersion
-    default: false
-    type: boolean
-  - id: samples
-    default: '[]'
-    type: string[]
-  - id: singleOverlaps
-    default: false
-    type: boolean
-  - id: removeAnns
-    default: '[]'
-    type: string[]
-  - id: outputPath
-    default: output.vcf.gz
-    type: string
   - id: threads
     default: 0
     type: int
@@ -90,7 +96,7 @@ outputs:
       - File
       - 'null'
     outputBinding:
-        glob: $(inputs.outputPath).tbi
+        glob: $(inputs.outputPath + ".tbi")
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
@@ -104,28 +110,28 @@ requirements:
             bcftools annotate \
             --no-version \
             -o $(inputs.outputPath) \
-            -O  \
-            $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path ) \
-            $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse ) \
-            ${if (inputs.columns.length > 0) {return "--columns";} else {return '';}} $(inputs.columns.join(",")) \
-            $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude ) \
+            -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
+            $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path) \
+            $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
+            $(inputs.columns.length > 0 ? "--columns" : "") $(inputs.columns.join(",")) \
+            $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
             $(inputs.force ? "--force" : "") \
-            $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines.path ) \
-            $(inputs.newId === null ? "" : "--set-id " + inputs.newId ) \
-            $(inputs.include === null ? "" : "--include " + inputs.include ) \
+            $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines.path) \
+            $(inputs.newId === null ? "" : "--set-id " + inputs.newId) \
+            $(inputs.include === null ? "" : "--include " + inputs.include) \
             $(inputs.keepSites ? "--keep-sites" : "") \
-            $(inputs.markSites === null ? "" : "--mark-sites " + inputs.markSites ) \
+            $(inputs.markSites === null ? "" : "--mark-sites " + inputs.markSites) \
             $(inputs.noVersion ? "--no-version" : "") \
-            $(inputs.regions === null ? "" : "--regions " + inputs.regions ) \
-            $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path ) \
-            $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs.path ) \
-            ${if (inputs.samples.length > 0) {return "--samples";} else {return '';}} $(inputs.samples.join(",")) \
-            $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path ) \
+            $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
+            $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
+            $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs.path) \
+            $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
+            $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
             $(inputs.singleOverlaps ? "--single-overlaps" : "") \
-            ${if (inputs.removeAnns.length > 0) {return "--remove";} else {return '';}} $(inputs.removeAnns.join(",")) \
+            $(inputs.removeAnns.length > 0 ? "--remove" : "") $(inputs.removeAnns.join(",")) \
             $(inputs.inputFile.path)
             # --no-version is for reproducibility
-            $(inputs.ifcompressedthen'bcftools index --tbi ~{outputPath)'else''}
+            $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath : "")
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
@@ -133,7 +139,7 @@ requirements:
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs.memory.match(/[0-9]+/g));
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -146,7 +152,6 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ResourceRequirement
     outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:

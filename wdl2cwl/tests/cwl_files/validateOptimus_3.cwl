@@ -14,7 +14,7 @@ outputs:
     type: string
     outputBinding:
         loadContents: true
-        glob: ''
+        glob: result.txt
         outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
   - id: new_reference_matrix
     type: File
@@ -62,11 +62,9 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    ramMin: 0
-  - class: ResourceRequirement
-    outdirMin: 1024
-  - class: ResourceRequirement
     coresMin: 1
+    ramMin: 15258.7890625
+    outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
   - bash

@@ -9,7 +9,7 @@ inputs:
       - 'null'
   - id: indexFiles
     type:
-      - items: File
+        items: File
         type: array
   - id: outputBam
     type: string
@@ -19,14 +19,6 @@ inputs:
     type: string
   - id: readgroup
     type: string
-  - id: sortThreads
-    type:
-      - int
-      - 'null'
-  - id: memoryGb
-    type:
-      - int
-      - 'null'
   - id: platform
     default: illumina
     type: string
@@ -39,9 +31,17 @@ inputs:
   - id: compressionLevel
     default: 1
     type: int
+  - id: sortThreads
+    type:
+      - int
+      - 'null'
   - id: threads
     default: 4
     type: int
+  - id: memoryGb
+    type:
+      - int
+      - 'null'
   - id: dockerImage
     default: quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0
     type: string
@@ -63,8 +63,8 @@ requirements:
             hisat2 \
             -p $(inputs.threads) \
             -x $(inputs.indexFiles[0]) \
-            $(inputs.inputR2 === null  ? "-U" : "-1") $(inputs.inputR1.path) \
-            $(inputs.inputR2 === null ? "" : "-2" + inputs.inputR2.path ) \
+            $(inputs.inputR2 === null ? "-U" : "-1") $(inputs.inputR1.path) \
+            $(inputs.inputR2 === null ? "" : "-2" + inputs.inputR2.path) \
             --rg-id $(inputs.readgroup) \
             --rg 'SM:$(inputs.sample)' \
             --rg 'LB:$(inputs.library)' \
@@ -81,11 +81,10 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
+    coresMin: 2
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: 60
-  - class: ResourceRequirement
-    coresMin: 2
 cwlVersion: v1.2
 baseCommand:
   - bash
