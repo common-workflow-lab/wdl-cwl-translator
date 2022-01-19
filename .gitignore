@@ -6,3 +6,7 @@ env/
 wdl2cwl.egg-info/
 coverage.xml
 .coverage
+build/
+dist/
+pydocstyle_report.txt
+

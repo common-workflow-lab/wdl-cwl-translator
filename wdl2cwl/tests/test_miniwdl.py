@@ -1,10 +1,10 @@
 """Tests for miniwdl."""
 import os.path
+from tempfile import NamedTemporaryFile
+from pathlib import Path
 import pytest
-import pathlib
-import filecmp
 
-from .. import main_oop as wdl
+from ..main_oop import main
 
 
 def get_file(path: str) -> str:
@@ -49,14 +49,19 @@ def get_file(path: str) -> str:
         ),
     ],
 )
-class TestParameterized:
-    """Contains the test functions for WDL to CWL conversion."""
+def test_wdls(wdl_path: str, cwl_path: str) -> None:
+    """Test WDL to CWL conversion."""
+    with open(get_file(cwl_path), encoding="utf-8") as file:
+        with NamedTemporaryFile(mode="w", encoding="utf-8") as output:
+            main(["-o", output.name, get_file(wdl_path)])
+            output.flush()
+            assert Path(output.name).read_text(encoding="utf-8") == file.read()
 
-    def test_wdls(self, wdl_path: str, cwl_path: str) -> None:
-        """Test WDL to CWL conversion."""
-        convertedStr = wdl.Converter.load_wdl_tree(get_file(wdl_path))
-        testStr = ""
-        with open(get_file(cwl_path)) as file:
-            testStr = file.read()
 
-        assert convertedStr == testStr
+def test_wdl_stdout(capsys) -> None:  # type: ignore
+    """Test WDL to CWL conversion using stdout."""
+    with open(get_file("oop_cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
+        main([get_file("wdl_files/bowtie_1.wdl")])
+        captured = capsys.readouterr()
+        assert captured.out == file.read()
+        assert captured.err == ""

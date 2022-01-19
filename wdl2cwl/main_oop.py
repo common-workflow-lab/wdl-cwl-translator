@@ -1,12 +1,11 @@
 """Main entrypoint for WDL2CWL."""
 import os
 import re
-from typing import List, Union, Optional, Callable, cast, Any, Set
+from typing import List, Union, Optional, Any, Set
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
 
-from io import StringIO
 import textwrap
 import sys
 import argparse
@@ -24,32 +23,34 @@ valid_js_identifier = regex.compile(
 )
 
 
+def convert(doc: str) -> cwl.CommandLineTool:
+    """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
+    wdl_path = os.path.relpath(doc)
+    doc_tree = WDL.load(wdl_path)
+
+    parser = Converter()
+
+    if doc_tree.workflow:
+        return parser.load_wdl_objects(doc_tree.workflow)
+
+    tasks = []
+    for task in doc_tree.tasks:
+        tasks.append(parser.load_wdl_objects(task))
+
+    return tasks[0]
+
+
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
-    def __init__(self):  # type: ignore
+    def __init__(self) -> None:
         """Initialize the sets used by the object and prevent inconsistent behaviours."""
         self.non_static_values: Set[str] = set()
         self.optional_cwl_null: Set[str] = set()
 
-    @staticmethod
-    def load_wdl_tree(doc: str) -> str:
-        """Load WDL file, instantiate Converter class and loads the WDL document tree."""
-        wdl_path = os.path.relpath(doc)
-        doc_tree = WDL.load(wdl_path)
-
-        parser = Converter()  # type: ignore
-
-        if doc_tree.workflow:
-            return parser.load_wdl_objects(doc_tree.workflow)
-
-        tasks = []
-        for task in doc_tree.tasks:
-            tasks.append(parser.load_wdl_objects(task))
-
-        return tasks[0]
-
-    def load_wdl_objects(self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]) -> str:
+    def load_wdl_objects(
+        self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]
+    ) -> cwl.CommandLineTool:
         """Load a WDL SourceNode obj and returns either a Task or a Workflow."""
         if isinstance(obj, WDL.Tree.Task):
             return self.load_wdl_task(obj)
@@ -62,7 +63,7 @@ class Converter:
     #     print(f"Workflow {obj.name} loaded")
     #     pass
 
-    def load_wdl_task(self, obj: WDL.Tree.Task) -> str:
+    def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_outputs(obj.outputs)
@@ -114,7 +115,7 @@ class Converter:
                 )
             )
 
-        cat_tool = cwl.CommandLineTool(
+        return cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
             requirements=requirements,
@@ -122,18 +123,6 @@ class Converter:
             cwlVersion="v1.2",
             baseCommand=base_command,
         )
-
-        yaml = YAML()
-        yaml.default_flow_style = False
-        yaml.indent = 4
-        yaml.block_seq_indent = 2
-        result_stream = StringIO()
-        cwl_result = cat_tool.save()
-        scalarstring.walk_tree(cwl_result)
-        yaml.dump(cwl_result, result_stream)
-        yaml.dump(cwl_result, sys.stdout)
-
-        return result_stream.getvalue()
 
     def get_time_minutes_requirement(
         self, time_minutes: WDL.Expr.Get
@@ -783,22 +772,36 @@ class Converter:
         return outputs
 
 
-def main() -> None:
+def main(args: Union[List[str], None] = None) -> None:
     """Entry point."""
     # Command-line parsing.
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Converts WDL workflows into CWL workflows. Outputs "
+        "to <stdout> by default."
+    )
     parser.add_argument("workflow", help="Path to WDL workflow")
-    parser.add_argument("-o", "--output", help="Name of resultant CWL file")
-    args = parser.parse_args()
+    parser.add_argument("-o", "--output", help="Name of output CWL file")
+    parsed_args = parser.parse_args(args)
 
-    # write to a file in oop_cwl_files
-    if args.output:
-        with open(args.output, "w") as result:
-            result.write(str(Converter.load_wdl_tree(args.workflow)))
+    result = convert(parsed_args.workflow)
+    cwl_result = result.save()
+
+    # Serialize result in YAML to either <stdout> or specified output file.
+    yaml = YAML()
+    yaml.default_flow_style = False
+    yaml.indent = 4
+    yaml.block_seq_indent = 2
+    scalarstring.walk_tree(cwl_result)
+
+    if parsed_args.output is None:
+        yaml.dump(cwl_result, sys.stdout)
+    else:
+        with open(parsed_args.output, "w") as f:
+            yaml.dump(cwl_result, f)
 
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
 
 
 if __name__ == "__main__":
 
-    main()
+    main(sys.argv[1:])  # pragma: no cover
