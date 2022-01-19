@@ -498,7 +498,7 @@ class Converter:
         command_str: str = ""
         for wdl_command in wdl_commands:
             if isinstance(wdl_command, str):
-                command_str += self.translate_wdl_str(wdl_command)
+                command_str += wdl_command.replace("$(", "\\$(")
             elif isinstance(wdl_command, WDL.Expr.Placeholder):
                 command_str += self.translate_wdl_placeholder(wdl_command)
 
@@ -612,22 +612,6 @@ class Converter:
         expr_name = self.get_input(wdl_expr.name)
         is_file = isinstance(wdl_expr.type, WDL.Type.File)
         return expr_name if not is_file else f"{expr_name}.path"
-
-    def translate_wdl_str(self, wdl_command: str) -> str:
-        """Translate WDL string command to CWL Process requirement string."""
-        # first_newline = wdl_command.find("\n")
-        # if first_newline == -1:
-        #     command_str = wdl_command
-        # else:
-        #     command_str = wdl_command[:first_newline] + textwrap.dedent(
-        #         wdl_command[first_newline:]
-        #     )
-        command_str = wdl_command
-        if "$(" in command_str:
-            splitted_1, splitted_2 = command_str.split("$(")
-            command_str = splitted_1 + "\\$(" + splitted_2
-
-        return command_str
 
     def get_cwl_inputs(
         self, wdl_inputs: Optional[List[WDL.Tree.Decl]]
