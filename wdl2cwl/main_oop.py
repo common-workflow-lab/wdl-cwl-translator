@@ -501,6 +501,8 @@ class Converter:
                 command_str += self.translate_wdl_str(wdl_command)
             elif isinstance(wdl_command, WDL.Expr.Placeholder):
                 command_str += self.translate_wdl_placeholder(wdl_command)
+
+        command_str = textwrap.dedent(command_str)
         return cwl.InitialWorkDirRequirement(
             listing=[cwl.Dirent(entry=command_str, entryname="example.sh")]
         )
@@ -613,14 +615,14 @@ class Converter:
 
     def translate_wdl_str(self, wdl_command: str) -> str:
         """Translate WDL string command to CWL Process requirement string."""
-        first_newline = wdl_command.find("\n")
-        if first_newline == -1:
-            command_str = wdl_command
-        else:
-            command_str = wdl_command[:first_newline] + textwrap.dedent(
-                wdl_command[first_newline:]
-            )
-
+        # first_newline = wdl_command.find("\n")
+        # if first_newline == -1:
+        #     command_str = wdl_command
+        # else:
+        #     command_str = wdl_command[:first_newline] + textwrap.dedent(
+        #         wdl_command[first_newline:]
+        #     )
+        command_str = wdl_command
         if "$(" in command_str:
             splitted_1, splitted_2 = command_str.split("$(")
             command_str = splitted_1 + "\\$(" + splitted_2
