@@ -1,0 +1,136 @@
+class: CommandLineTool
+id: RunDeepVariant
+inputs:
+  - id: referenceFasta
+    type: File
+  - id: referenceFastaIndex
+    type: File
+  - id: inputBam
+    type: File
+  - id: inputBamIndex
+    type: File
+  - id: modelType
+    type: string
+  - id: outputVcf
+    type: string
+  - id: postprocessVariantsExtraArgs
+    type:
+      - string
+      - 'null'
+  - id: customizedModel
+    type:
+      - File
+      - 'null'
+  - id: numShards
+    type:
+      - int
+      - 'null'
+  - id: outputGVcf
+    type:
+      - string
+      - 'null'
+  - id: outputGVcfIndex
+    type:
+      - string
+      - 'null'
+  - id: regions
+    type: string
+  - id: sampleName
+    type:
+      - string
+      - 'null'
+  - id: VCFStatsReport
+    default: true
+    type:
+      - boolean
+      - 'null'
+  - id: memory
+    default: 3G
+    type: string
+  - id: timeMinutes
+    default: 5000
+    type: int
+  - id: dockerImage
+    default: google/deepvariant:1.0.0
+    type: string
+outputs:
+  - id: outputVCF
+    type: File
+    outputBinding:
+        glob: $(inputs.outputVcf)
+  - id: outputVCFIndex
+    type: File
+    outputBinding:
+        glob: $(inputs.outputVcf + ".tbi")
+  - id: outputVCFStatsReport
+    type:
+        items: File
+        type: array
+    outputBinding:
+        glob: $("*.visual_report.html")
+  - id: outputGVCF
+    type:
+      - File
+      - 'null'
+    outputBinding:
+        glob: $(inputs.outputGVcf)
+  - id: outputGVCFIndex
+    type:
+      - File
+      - 'null'
+    outputBinding:
+        glob: $(inputs.outputGVcfIndex)
+requirements:
+  - class: DockerRequirement
+    dockerPull: google/deepvariant:1.0.0
+  - class: InitialWorkDirRequirement
+    listing:
+      - entryname: example.sh
+        entry: |4
+
+            set -e
+            mkdir reference_dir
+            ln -s $(inputs.referenceFasta.path) reference_dir/\$(basename $(inputs.referenceFasta.path))
+            ln -s $(inputs.referenceFastaIndex.path) reference_dir/\$(basename $(inputs.referenceFastaIndex.path))
+            mkdir bam_dir
+            ln -s $(inputs.inputBam.path) bam_dir/\$(basename $(inputs.inputBam.path))
+            ln -s $(inputs.inputBamIndex.path) bam_dir/\$(basename $(inputs.inputBamIndex.path))
+            /opt/deepvariant/bin/run_deepvariant \
+            --ref reference_dir/\$(basename $(inputs.referenceFasta.path)) \
+            --reads bam_dir/\$(basename $(inputs.inputBam.path)) \
+            --model_type $(inputs.modelType) \
+            --output_vcf $(inputs.outputVcf) \
+            $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf) \
+            $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path) \
+            $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards) \
+            --regions  $(inputs.regions) \
+            $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName) \
+            $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs) \
+            $(inputs.VCFStatsReport === null ? "--novcf_stats_report" : "--vcf_stats_report")
+  - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
+  - class: ResourceRequirement
+    ramMin: |-
+        ${
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+        var memory = "";
+        if(unit==="KiB") memory = value/1024;
+        else if(unit==="MiB") memory = value;
+        else if(unit==="GiB") memory = value*1024;
+        else if(unit==="TiB") memory = value*1024*1024;
+        else if(unit==="B") memory = value/(1024*1024);
+        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+        else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+        else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+        else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+        return parseInt(memory);
+        }
+    outdirMin: 1024
+  - class: ToolTimeLimit
+    timelimit: $(inputs.timeMinutes * 60)
+cwlVersion: v1.2
+baseCommand:
+  - bash
+  - example.sh

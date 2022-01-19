@@ -66,18 +66,18 @@ class Converter:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_outputs(obj.outputs)
-        runtime_docker = obj.runtime["docker"]
-        if not isinstance(runtime_docker, (WDL.Expr.Get, WDL.Expr.String)):
-            raise Exception(
-                f"Unsupported docker runtime type: {type(runtime_docker)}: {runtime_docker}"
-            )
-        docker_requirement = self.get_cwl_docker_requirements(runtime_docker)
+        docker_requirement = (
+            self.get_cwl_docker_requirements(obj.runtime["docker"])  # type: ignore
+            if "docker" in obj.runtime
+            else None
+        )
         cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
         base_command = ["bash", "example.sh"]
-        requirements: List[cwl.ProcessRequirement] = [
-            docker_requirement,
-            cwl_command_str,
-        ]
+        requirements: List[cwl.ProcessRequirement] = []
+        if docker_requirement:
+            requirements.append(docker_requirement)
+        if cwl_command_str:
+            requirements.append(cwl_command_str)
         requirements.append(cwl.InlineJavascriptRequirement())
         requirements.append(cwl.NetworkAccess(networkAccess=True))
         cpu_requirement = (
@@ -102,6 +102,17 @@ class Converter:
                 outdirMin=outdir_requirement,
             )
         )
+        time_minutes = (
+            self.get_time_minutes_requirement(obj.runtime["time_minutes"])  # type: ignore
+            if "time_minutes" in obj.runtime
+            else None
+        )
+        if time_minutes:
+            requirements.append(
+                cwl.ToolTimeLimit(
+                    timelimit=time_minutes,
+                )
+            )
 
         cat_tool = cwl.CommandLineTool(
             id=obj.name,
@@ -124,12 +135,22 @@ class Converter:
 
         return result_stream.getvalue()
 
-    def get_outdire_requirement(
+    def get_time_minutes_requirement(
+        self, time_minutes: WDL.Expr.Get
+    ) -> Union[str, int]:
+        """Produce the time limit expression from WDL runtime time minutes."""
+        if isinstance(time_minutes, (WDL.Expr.Int, WDL.Expr.Float)):
+            literal = self.get_wdl_literal(time_minutes.literal)  # type: ignore
+            return literal * 60  # type: ignore
+        time_minutes_str = self.get_expr(time_minutes)
+        return f"$({time_minutes_str} * 60)"
+
+    def get_outdir_requirement(
         self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]
     ) -> int:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         # This is yet to be implemented. After Feature Parity.
-        return 1
+        return int(self.get_wdl_literal(outdir.literal)) * 1024  # type: ignore
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -149,6 +170,11 @@ class Converter:
 
     def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> float:
         """Get the literal value for memory requirement with type WDL.Expr.String."""
+        if memory_runtime.literal is None:
+            _, placeholder, unit, _ = memory_runtime.parts
+            value_name = self.get_expr_get(placeholder.expr)  # type: ignore
+            return self.get_ram_min_js(value_name, unit.strip())  # type: ignore
+
         ram_min = self.get_expr_string(memory_runtime)[1:-1]
         unit = re.search(r"[a-zA-Z]+", ram_min).group()  # type: ignore
         value = float(ram_min.split(unit)[0])
@@ -185,9 +211,9 @@ class Converter:
             )
         js_str = (
             append_str
-            + "\nvar value = parseInt("
+            + "\nvar value = parseInt(`${"
             + ram_min_ref_name
-            + ".match(/[0-9]+/g));\n"
+            + "}`.match(/[0-9]+/g));\n"
             + 'var memory = "";\n'
             + 'if(unit==="KiB") memory = value/1024;\n'
             + 'else if(unit==="MiB") memory = value;\n'
@@ -260,28 +286,31 @@ class Converter:
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
+        if wdl_expr_string.literal is not None:
+            return f'"{wdl_expr_string.literal.value}"'
         string = ""
         parts = wdl_expr_string.parts
-        is_placeholder_present = False
-        for part in parts[:-1]:
+        for index, part in enumerate(parts[1:-1], start=1):
             if isinstance(
                 part,
                 (WDL.Expr.Placeholder, WDL.Expr.Apply, WDL.Expr.Get, WDL.Expr.Ident),
             ):
-                is_placeholder_present = True
                 placeholder = self.get_expr(part)
-                part = f"' + {placeholder} +'"
+                part = (
+                    "" if parts[index - 1] == '"' or parts[index - 1] == "'" else "' + "  # type: ignore
+                )
+                part += placeholder
+                part += (
+                    "" if parts[index + 1] == '"' or parts[index + 1] == "'" else " + '"  # type: ignore
+                )
             string += part
-        if is_placeholder_present:
-            if string[1] == "+":
-                string = string[1:]
-            if string[-2] == "+":
-                string = string[:-2]
-        return (
-            f'"{wdl_expr_string.literal.value}"'  # type: ignore
-            if not is_placeholder_present
-            else f"{string}"
-        )
+        # condition to determine if the opening and closing quotes should be added to string
+        # for cases where a placeholder begins or ends a WDL.Expr.String
+        if type(parts[1]) == str:
+            string = "'" + string
+        if type(parts[-2]) == str:
+            string = string + "'"
+        return string
 
     def get_expr_ifthenelse(self, wdl_ifthenelse: WDL.Expr.IfThenElse) -> str:
         """Translate WDL IfThenElse Expressions."""
@@ -336,7 +365,7 @@ class Converter:
                 )
         elif function_name == "defined":
             only_operand = arguments[0]
-            only_operand = self.get_expr(only_operand)  # type: ignore
+            only_operand = self.get_expr_name(only_operand.expr)  # type: ignore
             return only_operand  # type: ignore
         elif function_name == "_interpolation_add":
             arg_value, arg_name = arguments
@@ -391,6 +420,10 @@ class Converter:
             only_arg = arguments[0]
             only_arg = self.get_expr(only_arg)  # type: ignore
             return only_arg  # type: ignore
+        elif function_name == "glob":
+            only_arg = arguments[0]
+            glob = self.get_expr(only_arg)
+            return glob
 
         else:
             raise ValueError(f"Function name '{function_name}' not yet handled.")
@@ -439,6 +472,13 @@ class Converter:
         if isinstance(cpu_runtime, (WDL.Expr.Int, WDL.Expr.Float)):
             cpu_str = self.get_wdl_literal(cpu_runtime.literal)  # type: ignore
             return cpu_str  # type: ignore
+        elif isinstance(cpu_runtime, WDL.Expr.String):
+            if cpu_runtime.literal is not None:
+                literal_str = self.get_wdl_literal(cpu_runtime.literal)  # type: ignore
+                numeral = (
+                    int(literal_str) if "." not in literal_str else float(literal_str)
+                )
+                return numeral  # type: ignore
         cpu_str = self.get_expr(cpu_runtime)
         return f"$({cpu_str})"
 
@@ -488,6 +528,22 @@ class Converter:
             if "true" in options:
                 true_value = options["true"]
                 false_value = options["false"]
+                if type(true_value) == str:
+                    true_str = (
+                        f'"{true_value}"'
+                        if '"' not in true_value
+                        else f"'{true_value}'"
+                    )
+                else:
+                    true_str = true_value
+                if type(false_value) == str:
+                    false_str = (
+                        f'"{false_value}"'
+                        if '"' not in false_value
+                        else f"'{false_value}'"
+                    )
+                else:
+                    false_str = false_value
                 is_optional = False
                 if isinstance(expr, WDL.Expr.Get):
                     is_optional = expr.type.optional
@@ -495,10 +551,12 @@ class Converter:
                     is_optional = expr.arguments[0].type.optional
                 if not is_optional:
                     cwl_command_str = (
-                        f'$({placeholder_expr} ? "{true_value}" : "{false_value}")'
+                        f"$({placeholder_expr} ? {true_str} : {false_str})"
                     )
                 else:
-                    cwl_command_str = f'$({placeholder_expr} === null ? "{false_value}" : "{true_value}")'
+                    cwl_command_str = (
+                        f"$({placeholder_expr} === null ? {false_str} : {true_str})"
+                    )
             elif "sep" in options:
                 seperator = options["sep"]
                 if isinstance(expr.type, WDL.Type.Array):
@@ -619,6 +677,8 @@ class Converter:
                 else:
                     literal = wdl_input.expr.literal
                     input_value = self.get_wdl_literal(literal)  # type: ignore
+                    if final_type_of == "float":
+                        input_value = float(input_value)
 
             inputs.append(
                 cwl.CommandInputParameter(
@@ -655,7 +715,12 @@ class Converter:
 
         for wdl_output in wdl_outputs:
             output_name = wdl_output.name
-            type_of = self.get_cwl_type(wdl_output.type)  # type: ignore
+            if isinstance(wdl_output.type, WDL.Type.Array):
+                array_items_type = wdl_output.type.item_type
+                input_type = self.get_cwl_type(array_items_type)  # type: ignore
+                type_of = cwl.CommandOutputArraySchema(items=input_type, type="array")
+            else:
+                type_of = self.get_cwl_type(wdl_output.type)  # type: ignore
 
             if not wdl_output.expr:
                 raise ValueError("Missing expression")
@@ -680,21 +745,32 @@ class Converter:
                         ),
                     )
                 )
+            elif (
+                isinstance(wdl_output.expr, WDL.Expr.Apply)
+                and wdl_output.expr.function_name == "stdout"
+            ):
+                outputs.append(
+                    cwl.CommandOutputParameter(
+                        id=output_name,
+                        type="stdout",
+                    )
+                )
             else:
                 glob_expr = self.get_expr(wdl_output)
                 glob_str = f"$({glob_expr})"
 
-                if wdl_output.type.optional or isinstance(
-                    wdl_output.expr, WDL.Expr.Apply
-                ):
+                if wdl_output.type.optional:
                     final_type_of: Union[
                         List[Union[str, cwl.CommandOutputArraySchema]],
                         str,
                         cwl.CommandInputArraySchema,
                     ] = [type_of, "null"]
                 else:
-                    final_type_of = type_of
-                if isinstance(wdl_output.expr, WDL.Expr.String):
+                    final_type_of = type_of  # type: ignore
+                if (
+                    isinstance(wdl_output.expr, WDL.Expr.String)
+                    and wdl_output.expr.literal is not None
+                ):
                     glob_str = glob_str[3:-2]
 
                 outputs.append(
@@ -721,9 +797,6 @@ def main() -> None:
             result.write(str(Converter.load_wdl_tree(args.workflow)))
 
     # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_stats.wdl")
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bcftools_annotate.wdl")
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/validateOptimus_1.wdl")
 
 
 if __name__ == "__main__":

@@ -5,6 +5,13 @@
   job: inputs/validateOptimus_2.yaml
   output:
     result: PASS
+
+- doc: validateOptimus_2_oop
+  tool: oop_cwl_files/validateOptimus_2.cwl
+  job: inputs/validateOptimus_2.yaml
+  output:
+    result: PASS
+
 - doc: CollectQualityYieldMetrics
   tool: cwl_files/CollectQualityYieldMetrics.cwl
   job: inputs/CollectQualityYieldMatrics.yaml
@@ -14,6 +21,17 @@
       basename: collect_quality_yield_metrics.quals.txt
       checksum: sha1$870d2ec27fb38292079c8b135fdf864c03f32bfe
       size: 261
+
+- doc: CollectQualityYieldMetrics_oop
+  tool: oop_cwl_files/CollectQualityYieldMetrics.cwl
+  job: inputs/CollectQualityYieldMatrics.yaml
+  output:
+    quality_yield_metrics:
+      class: File
+      basename: collect_quality_yield_metrics.quals.txt
+      checksum: sha1$870d2ec27fb38292079c8b135fdf864c03f32bfe
+      size: 261
+
 
 - doc: bcftools_stats
   tool: cwl_files/bcftools_stats.cwl
@@ -65,9 +83,3 @@
       basename: output.vcf.gz.tbi
       size: 141
       checksum: sha1$2f36160f5e29a5c3c256fef42d7a4959441ff604
-
-- doc: validateOptimus_2
-  tool: oop_cwl_files/validateOptimus_2.cwl
-  job: inputs/validateOptimus_2.yaml
-  output:
-    result: PASS
