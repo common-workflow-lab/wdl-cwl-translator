@@ -22,6 +22,11 @@ valid_js_identifier = regex.compile(
     r"instanceof)$)(?:[$_\p{ID_Start}])(?:[$_\u200C\u200D\p{ID_Continue}])*$"
 )
 
+# ^^ is a combination of https://github.com/tc39/proposal-regexp-unicode-property-escapes#other-examples
+# and regex at the bottom of https://stackoverflow.com/a/9392578
+# double checked against https://262.ecma-international.org/5.1/#sec-7.6
+# eval is not on the official list of reserved words, but it is a built-in function
+
 
 def convert(doc: str) -> cwl.CommandLineTool:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
@@ -55,13 +60,6 @@ class Converter:
         if isinstance(obj, WDL.Tree.Task):
             return self.load_wdl_task(obj)
         raise Exception(f"Unimplemented type: {type(obj)}: {obj}")
-
-    #     elif isinstance(obj, WDL.Workflow):
-    #         return self.load_wdl_workflow(obj)
-
-    # def load_wdl_workflow(self, obj: WDL.Workflow):
-    #     print(f"Workflow {obj.name} loaded")
-    #     pass
 
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
@@ -114,6 +112,23 @@ class Converter:
                     timelimit=time_minutes,
                 )
             )
+        runtime_requirements = ["docker", "memory", "disks", "time_minutes", "cpu"]
+
+        for i in runtime_requirements:
+            if i not in obj.runtime:
+                print(
+                    "----WARNING: SKIPPING REQUIREMENT " + i + "----", file=sys.stderr
+                )
+        if not obj.parameter_meta:
+            print("----WARNING: SKIPPING PARAMETER_META----", file=sys.stderr)
+
+        if not obj.meta:
+            print("----WARNING: SKIPPING META----", file=sys.stderr)
+        if len(obj.postinputs) > 0:
+            for a in obj.postinputs:
+                print(
+                    "----WARNING: SKIPPING VARIABLE " + a.name + "----", file=sys.stderr
+                )
 
         return cwl.CommandLineTool(
             id=obj.name,

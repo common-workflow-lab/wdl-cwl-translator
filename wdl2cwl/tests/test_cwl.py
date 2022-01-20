@@ -12,6 +12,12 @@ def get_file(path: str) -> str:
     return os.path.join(os.path.dirname(__file__), path)
 
 
+def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test meta warning."""
+    main([get_file("wdl_files/validateOptimus_3.wdl")])
+    assert "----WARNING: SKIPPING META----" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize(
     "wdl_path,cwl_path",
     [
@@ -64,4 +70,9 @@ def test_wdl_stdout(capsys) -> None:  # type: ignore
         main([get_file("wdl_files/bowtie_1.wdl")])
         captured = capsys.readouterr()
         assert captured.out == file.read()
-        assert captured.err == ""
+        assert captured.err == (
+            "----WARNING: SKIPPING REQUIREMENT memory----\n"
+            "----WARNING: SKIPPING REQUIREMENT disks----\n"
+            "----WARNING: SKIPPING REQUIREMENT time_minutes----\n"
+            "----WARNING: SKIPPING META----\n"
+        )
