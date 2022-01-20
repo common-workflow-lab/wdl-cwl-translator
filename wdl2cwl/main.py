@@ -141,7 +141,7 @@ class Converter:
     ) -> Union[str, int]:
         """Produce the time limit expression from WDL runtime time minutes."""
         if isinstance(time_minutes, (WDL.Expr.Int, WDL.Expr.Float)):
-            literal = self.get_wdl_literal(time_minutes.literal)  # type: ignore
+            literal = time_minutes.literal.value  # type: ignore
             return literal * 60  # type: ignore
         time_minutes_str = self.get_expr(time_minutes)
         return f"$({time_minutes_str} * 60)"
@@ -151,7 +151,7 @@ class Converter:
     ) -> int:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         # This is yet to be implemented. After Feature Parity.
-        return int(self.get_wdl_literal(outdir.literal)) * 1024  # type: ignore
+        return int(outdir.literal.value) * 1024  # type: ignore
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -259,7 +259,7 @@ class Converter:
         else:
             raise Exception(f"The expression '{wdl_expr}' is not handled yet.")
 
-    def get_literal_name(
+    def get_literal_name(  # type: ignore
         self,
         expr: Union[
             WDL.Expr.Boolean,
@@ -274,7 +274,7 @@ class Converter:
         # if the literal expr is used inside WDL.Expr.Apply
         # the literal value is what's needed
         if isinstance(expr.parent, WDL.Expr.Apply):  # type: ignore
-            return self.get_wdl_literal(expr.literal)  # type: ignore
+            return expr.literal.value  # type: ignore
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
@@ -348,7 +348,7 @@ class Converter:
                 operand, suffix = arguments
                 is_file = isinstance(operand.type, WDL.Type.File)
                 operand = self.get_expr_name(operand.expr)  # type: ignore
-                suffix_str = self.get_wdl_literal(suffix.literal)  # type: ignore
+                suffix_str = suffix.literal.value  # type: ignore
                 regex_str = re.escape(suffix_str)
                 return (
                     f"{operand}.basename.replace(/{regex_str}$/, '') "
@@ -367,13 +367,11 @@ class Converter:
                 arg_name = self.get_expr(arg_name)  # type: ignore
                 arg_value = self.get_expr_apply(arg_value)  # type: ignore
                 return self.get_pseudo_interpolation_add(arg_value, arg_name)  # type: ignore
-            elif isinstance(arg_value, WDL.Expr.Get):
-                arg_name, arg_value = arg_value, arg_name
             just_arg_name = self.get_expr_name(arg_name.expr)  # type: ignore
             arg_name_with_file_check = self.get_expr_name_with_is_file_check(
                 arg_name.expr  # type: ignore
             )
-            arg_value = self.get_wdl_literal(arg_value.literal)  # type: ignore
+            arg_value = arg_value.literal.value  # type: ignore
             return (
                 f'{just_arg_name} === null ? "" : "{arg_value}" + {arg_name_with_file_check}'
                 if treat_as_optional
@@ -462,11 +460,11 @@ class Converter:
     def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
         if isinstance(cpu_runtime, (WDL.Expr.Int, WDL.Expr.Float)):
-            cpu_str = self.get_wdl_literal(cpu_runtime.literal)  # type: ignore
+            cpu_str = cpu_runtime.literal.value  # type: ignore
             return cpu_str  # type: ignore
         elif isinstance(cpu_runtime, WDL.Expr.String):
             if cpu_runtime.literal is not None:
-                literal_str = self.get_wdl_literal(cpu_runtime.literal)  # type: ignore
+                literal_str = cpu_runtime.literal.value
                 numeral = (
                     int(literal_str) if "." not in literal_str else float(literal_str)
                 )
@@ -479,7 +477,7 @@ class Converter:
     ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
         if isinstance(wdl_docker, WDL.Expr.String):
-            dockerpull = self.get_wdl_literal(wdl_docker.literal)  # type: ignore
+            dockerpull = wdl_docker.literal.value  # type: ignore
         else:
             dockerpull_expr = wdl_docker.expr
             if dockerpull_expr is None or not isinstance(
@@ -582,15 +580,6 @@ class Converter:
             else cwl_command_str[2:-1]
         )
 
-    def get_wdl_literal(
-        self, wdl_expr: Union[WDL.Expr.Int, WDL.Expr.Float, WDL.Expr.Boolean]
-    ) -> Any:
-        """Extract Literal value from WDL expr."""
-        if wdl_expr is None or not hasattr(wdl_expr, "value"):
-            raise Exception(f"{type(wdl_expr)} has not attribute 'value'")
-        value = wdl_expr.value
-        return value
-
     def get_expr_name(self, wdl_expr: WDL.Expr.Ident) -> str:
         """Extract name from WDL expr."""
         if wdl_expr is None or not hasattr(wdl_expr, "name"):
@@ -643,8 +632,7 @@ class Converter:
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
                     input_value = None
                 else:
-                    literal = wdl_input.expr.literal
-                    input_value = self.get_wdl_literal(literal)  # type: ignore
+                    input_value = wdl_input.expr.literal.value  # type: ignore
                     if final_type_of == "float":
                         input_value = float(input_value)
 
