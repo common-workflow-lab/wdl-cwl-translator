@@ -259,7 +259,7 @@ class Converter:
         else:
             raise Exception(f"The expression '{wdl_expr}' is not handled yet.")
 
-    def get_literal_name(  # type: ignore
+    def get_literal_name(
         self,
         expr: Union[
             WDL.Expr.Boolean,
@@ -275,6 +275,7 @@ class Converter:
         # the literal value is what's needed
         if isinstance(expr.parent, WDL.Expr.Apply):  # type: ignore
             return expr.literal.value  # type: ignore
+        raise Exception(f"The parent expression for {expr} is not WDL.Expr.Apply")
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
