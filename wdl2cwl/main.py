@@ -35,9 +35,6 @@ def convert(doc: str) -> cwl.CommandLineTool:
 
     parser = Converter()
 
-    if doc_tree.workflow:
-        return parser.load_wdl_objects(doc_tree.workflow)
-
     tasks = []
     for task in doc_tree.tasks:
         tasks.append(parser.load_wdl_objects(task))
@@ -278,15 +275,6 @@ class Converter:
         # the literal value is what's needed
         if isinstance(expr.parent, WDL.Expr.Apply):  # type: ignore
             return self.get_wdl_literal(expr.literal)  # type: ignore
-        # if it is a WDL.Expr.Ident
-        # the parent expression name is needed
-        parent_name = expr.parent.name  # type: ignore
-        parent_name = self.get_input(parent_name)
-        return (  # type: ignore
-            parent_name
-            if not isinstance(expr.parent.type, WDL.Type.File)  # type: ignore
-            else f"{parent_name}.path"
-        )
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
@@ -534,22 +522,12 @@ class Converter:
             if "true" in options:
                 true_value = options["true"]
                 false_value = options["false"]
-                if type(true_value) == str:
-                    true_str = (
-                        f'"{true_value}"'
-                        if '"' not in true_value
-                        else f"'{true_value}'"
-                    )
-                else:
-                    true_str = true_value
-                if type(false_value) == str:
-                    false_str = (
-                        f'"{false_value}"'
-                        if '"' not in false_value
-                        else f"'{false_value}'"
-                    )
-                else:
-                    false_str = false_value
+                true_str = (
+                    f'"{true_value}"' if '"' not in true_value else f"'{true_value}'"
+                )
+                false_str = (
+                    f'"{false_value}"' if '"' not in false_value else f"'{false_value}'"
+                )
                 is_optional = False
                 if isinstance(expr, WDL.Expr.Get):
                     is_optional = expr.type.optional
