@@ -242,8 +242,6 @@ class Converter:
             return self.translate_wdl_placeholder(wdl_expr)
         elif isinstance(wdl_expr, WDL.Expr.String):
             return self.get_expr_string(wdl_expr)
-        elif isinstance(wdl_expr, WDL.Expr.Ident):
-            return self.get_expr_ident(wdl_expr)
         elif isinstance(wdl_expr, WDL.Tree.Decl):
             return self.get_expr(wdl_expr.expr)
         elif isinstance(
