@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from ..main import main
+from ..main import Converter
 
 
 def get_file(path: str) -> str:
@@ -79,3 +80,31 @@ def test_wdl_stdout(capsys) -> None:  # type: ignore
             "----WARNING: SKIPPING REQUIREMENT time_minutes----\n"
             "----WARNING: SKIPPING META----\n"
         )
+
+
+class TestObject:
+    pass
+
+
+testdata = [
+    ("20 MB", 19.073486328125),
+    ("400 G", 381469.7265625),
+    ("350 K", 0.3337860107421875),
+    ("5 T", 4768371.58203125),
+    ("7000 B", 0.00667572021484375),
+    ("90000 KiB", 87.890625),
+    ("15000 GiB", 15360000),
+    ("5 TiB", 5242880),
+    ("6000 MiB", 6000),
+]
+
+
+@pytest.mark.parametrize("memory_runtime, expected_memory", testdata)
+def test_length_function_error(memory_runtime: dict, expected_memory: float) -> None:
+    """Test get_memory_literal conditional statements."""
+    convert = Converter()
+    b = TestObject()
+    a = TestObject()
+    b.value = memory_runtime
+    a.literal = b
+    assert convert.get_memory_literal(a) == expected_memory
