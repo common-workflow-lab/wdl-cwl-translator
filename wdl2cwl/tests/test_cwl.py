@@ -100,11 +100,11 @@ testdata = [
 
 
 @pytest.mark.parametrize("memory_runtime, expected_memory", testdata)
-def test_length_function_error(memory_runtime: dict, expected_memory: float) -> None:
+def test_length_function_error(memory_runtime: str, expected_memory: float) -> None:
     """Test get_memory_literal conditional statements."""
     convert = Converter()
-    b = TestObject()
-    a = TestObject()
-    b.value = memory_runtime
-    a.literal = b
-    assert convert.get_memory_literal(a) == expected_memory
+    b = TestObject() 
+    a = TestObject()  
+    b.value = memory_runtime  # type: ignore
+    a.literal = b  # type: ignore
+    assert convert.get_memory_literal(a) == expected_memory  # type: ignore
