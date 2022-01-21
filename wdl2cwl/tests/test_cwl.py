@@ -83,6 +83,8 @@ def test_wdl_stdout(capsys) -> None:  # type: ignore
 
 
 class TestObject:
+    """Test object for creating WDL.Expr.String."""
+
     pass
 
 
@@ -100,7 +102,7 @@ testdata = [
 
 
 @pytest.mark.parametrize("memory_runtime, expected_memory", testdata)
-def test_length_function_error(memory_runtime: str, expected_memory: float) -> None:
+def test_get_memory_literal(memory_runtime: str, expected_memory: float) -> None:
     """Test get_memory_literal conditional statements."""
     convert = Converter()
     b = TestObject()
