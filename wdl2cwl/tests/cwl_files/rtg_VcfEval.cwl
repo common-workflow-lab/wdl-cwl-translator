@@ -9,8 +9,26 @@ inputs:
     type: File
   - id: callsIndex
     type: File
+  - id: squashPloidy
+    default: false
+    type: boolean
+  - id: outputMode
+    default: split
+    type: string
+  - id: outputDir
+    default: output/
+    type: string
   - id: template
     type: File
+  - id: allRecords
+    default: false
+    type: boolean
+  - id: decompose
+    default: false
+    type: boolean
+  - id: refOverlap
+    default: false
+    type: boolean
   - id: evaluationRegions
     type:
       - File
@@ -23,24 +41,6 @@ inputs:
     type:
       - string
       - 'null'
-  - id: squashPloidy
-    default: false
-    type: boolean
-  - id: outputMode
-    default: split
-    type: string
-  - id: outputDir
-    default: output/
-    type: string
-  - id: allRecords
-    default: false
-    type: boolean
-  - id: decompose
-    default: false
-    type: boolean
-  - id: refOverlap
-    default: false
-    type: boolean
   - id: rtgMem
     default: 8G
     type: string
@@ -57,51 +57,51 @@ outputs:
   - id: falseNegativesVcf
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/fn.vcf.gz
+        glob: $(inputs.outputDir + "/fn.vcf.gz")
   - id: falseNegativesVcfIndex
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/fn.vcf.gz.tbi
+        glob: $(inputs.outputDir + "/fn.vcf.gz.tbi")
   - id: falsePositivesVcf
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/fp.vcf.gz
+        glob: $(inputs.outputDir + "/fp.vcf.gz")
   - id: falsePositivesVcfIndex
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/fp.vcf.gz.tbi
+        glob: $(inputs.outputDir + "/fp.vcf.gz.tbi")
   - id: summary
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/summary.txt
+        glob: $(inputs.outputDir + "/summary.txt")
   - id: truePositivesBaselineVcf
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/tp-baseline.vcf.gz
+        glob: $(inputs.outputDir + "/tp-baseline.vcf.gz")
   - id: truePositivesBaselineVcfIndex
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/tp-baseline.vcf.gz.tbi
+        glob: $(inputs.outputDir + "/tp-baseline.vcf.gz.tbi")
   - id: truePositivesVcf
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/tp.vcf.gz
+        glob: $(inputs.outputDir + "/tp.vcf.gz")
   - id: truePositivesVcfIndex
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/tp.vcf.gz.tbi
+        glob: $(inputs.outputDir + "/tp.vcf.gz.tbi")
   - id: nonSnpRoc
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/non_snp_roc.tsv.gz
+        glob: $(inputs.outputDir + "/non_snp_roc.tsv.gz")
   - id: phasing
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/phasing.txt
+        glob: $(inputs.outputDir + "/phasing.txt")
   - id: weightedRoc
     type: File
     outputBinding:
-        glob: $(inputs.outputDir)/weighted_roc.tsv.gz
+        glob: $(inputs.outputDir + "/weighted_roc.tsv.gz")
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
@@ -115,25 +115,26 @@ requirements:
             rtg RTG_MEM=$(inputs.rtgMem) vcfeval \
             --baseline $(inputs.baseline.path) \
             --calls $(inputs.calls.path) \
-            $(inputs.evaluationRegions === null ? "" : "--evaluation-regions " + inputs.evaluationRegions.path ) \
-            $(inputs.bedRegions === null ? "" : "--bed-regions " + inputs.bedRegions.path ) \
+            $(inputs.evaluationRegions === null ? "" : "--evaluation-regions " + inputs.evaluationRegions.path) \
+            $(inputs.bedRegions === null ? "" : "--bed-regions " + inputs.bedRegions.path) \
             --output $(inputs.outputDir) \
             --template $(inputs.template.path) \
             $(inputs.allRecords ? "--all-records" : "") \
             $(inputs.decompose ? "--decompose" : "") \
             $(inputs.refOverlap ? "--ref-overlap" : "") \
-            $(inputs.sample === null ? "" : "--sample " + inputs.sample ) \
+            $(inputs.sample === null ? "" : "--sample " + inputs.sample) \
             $(inputs.squashPloidy ? "--squash-ploidy" : "") \
-            --output-mode $(inputs.outputMode) \
+            --output-mode  $(inputs.outputMode) \
             --threads $(inputs.threads)
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
+    coresMin: $(inputs.threads)
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs.memory.match(/[0-9]+/g));
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -146,10 +147,7 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ResourceRequirement
     outdirMin: 1024
-  - class: ResourceRequirement
-    coresMin: $(inputs.threads)
 cwlVersion: v1.2
 baseCommand:
   - bash

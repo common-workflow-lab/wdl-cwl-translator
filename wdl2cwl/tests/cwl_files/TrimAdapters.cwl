@@ -50,9 +50,8 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    outdirMin: 1024
-  - class: ResourceRequirement
     coresMin: $(inputs.cpu)
+    outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
   - bash

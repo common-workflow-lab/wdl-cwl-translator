@@ -13,28 +13,28 @@ inputs:
     type: File
   - id: ref_fasta_index
     type: File
-  - id: preemptible_tries
-    type: int
   - id: collect_gc_bias_metrics
     default: true
     type: boolean
+  - id: preemptible_tries
+    type: int
 outputs:
   - id: alignment_summary_metrics
     type: File
     outputBinding:
-        glob: $(inputs.output_bam_prefix).alignment_summary_metrics
+        glob: $(inputs.output_bam_prefix + '.alignment_summary_metrics')
   - id: gc_bias_detail_metrics
     type: File
     outputBinding:
-        glob: $(inputs.output_bam_prefix).gc_bias.detail_metrics
+        glob: $(inputs.output_bam_prefix + '.gc_bias.detail_metrics')
   - id: gc_bias_pdf
     type: File
     outputBinding:
-        glob: $(inputs.output_bam_prefix).gc_bias.pdf
+        glob: $(inputs.output_bam_prefix + '.gc_bias.pdf')
   - id: gc_bias_summary_metrics
     type: File
     outputBinding:
-        glob: $(inputs.output_bam_prefix).gc_bias.summary_metrics
+        glob: $(inputs.output_bam_prefix + '.gc_bias.summary_metrics')
 requirements:
   - class: DockerRequirement
     dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
@@ -64,8 +64,7 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    ramMin: 51200
-  - class: ResourceRequirement
+    ramMin: 51200.0
     outdirMin: 30720
 cwlVersion: v1.2
 baseCommand:

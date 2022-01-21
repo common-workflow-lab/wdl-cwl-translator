@@ -37,7 +37,7 @@ requirements:
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs.memory.match(/[0-9]+/g));
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -50,7 +50,6 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ResourceRequirement
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)

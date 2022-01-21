@@ -3,14 +3,25 @@ id: Bowtie
 inputs:
   - id: readsUpstream
     type:
-      - items: File
+        items: File
         type: array
+  - id: outputPath
+    default: mapped.bam
+    type: string
   - id: indexFiles
     type:
-      - items:
-          - File
-          - 'null'
+      - items: File
         type: array
+      - 'null'
+  - id: best
+    default: false
+    type: boolean
+  - id: strata
+    default: false
+    type: boolean
+  - id: allowContain
+    default: false
+    type: boolean
   - id: seedmms
     type:
       - int
@@ -27,18 +38,6 @@ inputs:
     type:
       - string
       - 'null'
-  - id: outputPath
-    default: mapped.bam
-    type: string
-  - id: best
-    default: false
-    type: boolean
-  - id: strata
-    default: false
-    type: boolean
-  - id: allowContain
-    default: false
-    type: boolean
   - id: picardXmx
     default: 4G
     type: string
@@ -66,16 +65,16 @@ requirements:
             bowtie \
             -q \
             --sam \
-            $(inputs.seedmms === null ? "" : "--seedmms " + inputs.seedmms ) \
-            $(inputs.seedlen === null ? "" : "--seedlen " + inputs.seedlen ) \
-            $(inputs.k === null ? "" : "-k " + inputs.k ) \
+            $(inputs.seedmms === null ? "" : "--seedmms " + inputs.seedmms) \
+            $(inputs.seedlen === null ? "" : "--seedlen " + inputs.seedlen) \
+            $(inputs.k === null ? "" : "-k " + inputs.k) \
             $(inputs.best ? "--best" : "") \
             $(inputs.strata ? "--strata" : "") \
             $(inputs.allowContain ? "--allow-contain" : "") \
-            --threads $(inputs.threads) \
-            $(inputs.samRG === null ? "" : "--sam-RG '" + inputs.samRG )$(inputs.samRG === null  ? "" : "'") \
-            $inputs.indexFiles.length === 0 ? "" :inputs.indexFiles.replace("(\.rev)?\.[0-9]\.ebwt$","")) \
-            $(inputs.readsUpstream.map(function(el) { return el.path}).join(",")) \
+            --threads  $(inputs.threads) \
+            $(inputs.samRG === null ? "" : "--sam-RG '" + inputs.samRG)$(inputs.samRG === null ? "" : "'") \
+            $(inputs.indexFiles.replace("(\.rev)?\.[0-9]\.ebwt$", "") ) \
+            $(inputs.readsUpstream.map(function(el) {return el.path}).join(",")) \
             | picard -Xmx$(inputs.picardXmx) SortSam \
             INPUT=/dev/stdin \
             OUTPUT=$(inputs.outputPath) \
@@ -85,9 +84,8 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    outdirMin: 1024
-  - class: ResourceRequirement
     coresMin: $(inputs.threads)
+    outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
   - bash

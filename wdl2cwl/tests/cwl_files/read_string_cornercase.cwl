@@ -38,11 +38,9 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
-    ramMin: 0
-  - class: ResourceRequirement
-    outdirMin: 1024
-  - class: ResourceRequirement
     coresMin: 1
+    ramMin: 3576.2786865234375
+    outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
   - bash

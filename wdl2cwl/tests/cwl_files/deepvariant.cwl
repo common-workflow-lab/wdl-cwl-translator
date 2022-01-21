@@ -61,13 +61,13 @@ outputs:
   - id: outputVCFIndex
     type: File
     outputBinding:
-        glob: $(inputs.outputVcf).tbi
+        glob: $(inputs.outputVcf + ".tbi")
   - id: outputVCFStatsReport
     type:
-      - items: File
+        items: File
         type: array
     outputBinding:
-        glob: '*.visual_report.html'
+        glob: $("*.visual_report.html")
   - id: outputGVCF
     type:
       - File
@@ -100,13 +100,13 @@ requirements:
             --reads bam_dir/\$(basename $(inputs.inputBam.path)) \
             --model_type $(inputs.modelType) \
             --output_vcf $(inputs.outputVcf) \
-            $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf ) \
-            $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path ) \
-            $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards ) \
-            --regions $(inputs.regions) \
-            $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName ) \
-            $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs ) \
-            $(inputs.VCFStatsReport ? "--vcf_stats_report" : "--novcf_stats_report")
+            $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf) \
+            $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path) \
+            $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards) \
+            --regions  $(inputs.regions) \
+            $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName) \
+            $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs) \
+            $(inputs.VCFStatsReport === null ? "--novcf_stats_report" : "--vcf_stats_report")
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
@@ -114,7 +114,7 @@ requirements:
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs.memory.match(/[0-9]+/g));
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -127,7 +127,6 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ResourceRequirement
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)

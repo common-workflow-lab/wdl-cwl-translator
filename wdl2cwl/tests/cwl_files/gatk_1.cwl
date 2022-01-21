@@ -3,11 +3,11 @@ id: HaplotypeCaller
 inputs:
   - id: inputBams
     type:
-      - items: File
+        items: File
         type: array
   - id: inputBamsIndex
     type:
-      - items: File
+        items: File
         type: array
   - id: outputPath
     type: string
@@ -17,18 +17,22 @@ inputs:
     type: File
   - id: referenceFastaDict
     type: File
+  - id: gvcf
+    default: false
+    type: boolean
+  - id: dontUseSoftClippedBases
+    default: false
+    type: boolean
   - id: intervalList
     type:
-      - items:
-          - File
-          - 'null'
+      - items: File
         type: array
+      - 'null'
   - id: excludeIntervalList
     type:
-      - items:
-          - File
-          - 'null'
+      - items: File
         type: array
+      - 'null'
   - id: contamination
     type:
       - float
@@ -57,12 +61,6 @@ inputs:
     type:
       - float
       - 'null'
-  - id: gvcf
-    default: false
-    type: boolean
-  - id: dontUseSoftClippedBases
-    default: false
-    type: boolean
   - id: javaXmxMb
     default: 4096
     type: int
@@ -80,7 +78,7 @@ outputs:
   - id: outputVCFIndex
     type: File
     outputBinding:
-        glob: $(inputs.outputPath).tbi
+        glob: $(inputs.outputPath + ".tbi")
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
@@ -92,8 +90,8 @@ requirements:
             set -e
             mkdir -p "\$(dirname $(inputs.outputPath))"
             mkdir wd
-            for FILE in $(inputs.inputBams.map(function(el) { return el.path}).join(" ")); do ln -s $FILE wd/\$(inputBams $FILE) ; done
-            for FILE in $(inputs.inputBamsIndex.map(function(el) { return el.path}).join(" ")); do ln -s $FILE wd/\$(inputBamsIndex $FILE) ; done
+            for FILE in $(inputs.inputBams.map(function(el) {return el.path}).join(" ")); do ln -s $FILE wd/\$(inputBams $FILE) ; done
+            for FILE in $(inputs.inputBamsIndex.map(function(el) {return el.path}).join(" ")); do ln -s $FILE wd/\$(inputBamsIndex $FILE) ; done
             mkdir wd2
             ln -s $(inputs.referenceFasta.path) wd2/\$(basename $(inputs.referenceFasta.path))
             ln -s $(inputs.referenceFastaDict.path) wd2/\$(basename $(inputs.referenceFastaDict.path))
@@ -102,9 +100,9 @@ requirements:
             HaplotypeCaller \
             -R wd2/\$(basename $(inputs.referenceFasta.path)) \
             -O $(inputs.outputPath) \
-            (for FILE in $(inputs.inputBams.map(function(el) { return el.path}).join(" ")); do echo -- "-I wd/"\$(basename $FILE); done)
-            $(inputs.intervalList.length === 0  ? "" : "-L") $(inputs.intervalList === null ? "" : (inputs.intervalList.map(function(el) { return el.path}).join(" -L "))) \
-            $(inputs.excludeIntervalList.length === 0  ? "" : "-XL") $(inputs.excludeIntervalList === null ? "" : (inputs.excludeIntervalList.map(function(el) { return el.path}).join(" -XL "))) \
+            (for FILE in $(inputs.inputBams.map(function(el) {return el.path}).join(" ")); do echo -- "-I wd/"\$(basename $FILE); done)
+            $(inputs.intervalList === null ? "" : "-L") $(inputs.intervalList.map(function(el) {return el.path}).join(" -L ")) \
+            $(inputs.excludeIntervalList === null ? "" : "-XL") $(inputs.excludeIntervalList.map(function(el) {return el.path}).join(" -XL ")) \
             $(inputs.dontUseSoftClippedBases ? "--dont-use-soft-clipped-bases" : "") \
 
   - class: InlineJavascriptRequirement

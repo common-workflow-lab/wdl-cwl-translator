@@ -3,15 +3,15 @@ id: Mapping
 inputs:
   - id: presetOption
     type: string
+  - id: sort
+    default: true
+    type: boolean
   - id: sample
     type: string
   - id: referenceMMI
     type: File
   - id: queryFile
     type: File
-  - id: sort
-    default: true
-    type: boolean
   - id: cores
     default: 4
     type: int
@@ -25,11 +25,11 @@ outputs:
   - id: outputAlignmentFile
     type: File
     outputBinding:
-        glob: $(inputs.sample).align.bam
+        glob: $(inputs.sample + ".align.bam")
   - id: outputIndexFile
     type: File
     outputBinding:
-        glob: $(inputs.sample).align.bam.bai
+        glob: $(inputs.sample + ".align.bam.bai")
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/pbmm2:1.3.0--h56fc30b_1
@@ -50,10 +50,11 @@ requirements:
   - class: NetworkAccess
     networkAccess: true
   - class: ResourceRequirement
+    coresMin: $(inputs.cores)
     ramMin: |-
         ${
         var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(inputs.memory.match(/[0-9]+/g));
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -66,10 +67,7 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-  - class: ResourceRequirement
     outdirMin: 1024
-  - class: ResourceRequirement
-    coresMin: $(inputs.cores)
 cwlVersion: v1.2
 baseCommand:
   - bash
