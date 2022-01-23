@@ -1,7 +1,7 @@
 """Main entrypoint for WDL2CWL."""
 import os
 import re
-from typing import List, Union, Optional, Any, Set
+from typing import List, Union, Optional, Any, Set, Dict
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -28,7 +28,7 @@ valid_js_identifier = regex.compile(
 # eval is not on the official list of reserved words, but it is a built-in function
 
 
-def convert(doc: str) -> cwl.CommandLineTool:
+def convert(doc: str) -> Dict[str, List[str]]:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
     wdl_path = os.path.relpath(doc)
     doc_tree = WDL.load(wdl_path)
@@ -36,18 +36,18 @@ def convert(doc: str) -> cwl.CommandLineTool:
     parser = Converter()
 
     dict_of_tasks = {"cwlVersion": "v1.2"}
-    dict_of_tasks["$graph"] = []
+    dict_of_tasks["$graph"] = []  # type: ignore
 
     for index, task in enumerate(doc_tree.tasks):
         cwl_task_object = parser.load_wdl_objects(task).save()
         if len(doc_tree.tasks) == 1:
             return cwl_task_object
         if index == 0:
-        # change Id name of the first task
+            # change Id name of the first task
             cwl_task_object["id"] = "main"
-        dict_of_tasks["$graph"].append(cwl_task_object)
+        dict_of_tasks["$graph"].append(cwl_task_object)  # type: ignore
 
-    return dict_of_tasks
+    return dict_of_tasks  # type: ignore
 
 
 class Converter:
