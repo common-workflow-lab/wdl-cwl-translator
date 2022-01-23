@@ -1,7 +1,7 @@
 cwlVersion: v1.2
 $graph:
   - class: CommandLineTool
-    id: main
+    id: Annotate
     inputs:
       - id: columns
         default: []

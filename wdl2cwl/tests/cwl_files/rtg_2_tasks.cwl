@@ -1,7 +1,7 @@
 cwlVersion: v1.2
 $graph:
   - class: CommandLineTool
-    id: main
+    id: Format
     inputs:
       - id: inputFiles
         type:

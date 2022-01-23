@@ -38,13 +38,10 @@ def convert(doc: str) -> Dict[str, List[str]]:
     dict_of_tasks = {"cwlVersion": "v1.2"}
     dict_of_tasks["$graph"] = []  # type: ignore
 
-    for index, task in enumerate(doc_tree.tasks):
+    for task in doc_tree.tasks:
         cwl_task_object = parser.load_wdl_objects(task).save()
         if len(doc_tree.tasks) == 1:
             return cwl_task_object
-        if index == 0:
-            # change Id name of the first task
-            cwl_task_object["id"] = "main"
         dict_of_tasks["$graph"].append(cwl_task_object)  # type: ignore
 
     return dict_of_tasks  # type: ignore
