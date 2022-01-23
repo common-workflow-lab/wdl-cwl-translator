@@ -55,6 +55,7 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
         ("validateOptimus_5.wdl"),
         ("vardict.wdl"),
         ("vt.wdl"),
+        ("rtg_2_tasks.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
