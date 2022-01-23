@@ -35,11 +35,19 @@ def convert(doc: str) -> cwl.CommandLineTool:
 
     parser = Converter()
 
-    tasks = []
-    for task in doc_tree.tasks:
-        tasks.append(parser.load_wdl_objects(task))
+    dict_of_tasks = {"cwlVersion": "v1.2"}
+    dict_of_tasks["$graph"] = []
 
-    return tasks[0]
+    for index, task in enumerate(doc_tree.tasks):
+        cwl_task_object = parser.load_wdl_objects(task).save()
+        if len(doc_tree.tasks) == 1:
+            return cwl_task_object
+        if index == 0:
+        # change Id name of the first task
+            cwl_task_object["id"] = "main"
+        dict_of_tasks["$graph"].append(cwl_task_object)
+
+    return dict_of_tasks
 
 
 class Converter:
@@ -749,8 +757,7 @@ def main(args: Union[List[str], None] = None) -> None:
     parser.add_argument("-o", "--output", help="Name of output CWL file")
     parsed_args = parser.parse_args(args)
 
-    result = convert(parsed_args.workflow)
-    cwl_result = result.save()
+    cwl_result = convert(parsed_args.workflow)
 
     # Serialize result in YAML to either <stdout> or specified output file.
     yaml = YAML()
@@ -764,8 +771,6 @@ def main(args: Union[List[str], None] = None) -> None:
     else:
         with open(parsed_args.output, "w") as f:
             yaml.dump(cwl_result, f)
-
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
 
 
 if __name__ == "__main__":
