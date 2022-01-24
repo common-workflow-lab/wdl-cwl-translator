@@ -1,7 +1,7 @@
 """Main entrypoint for WDL2CWL."""
 import os
 import re
-from typing import List, Union, Optional, Any, Set
+from typing import List, Union, Optional, Any, Set, Dict
 import WDL
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -28,18 +28,20 @@ valid_js_identifier = regex.compile(
 # eval is not on the official list of reserved words, but it is a built-in function
 
 
-def convert(doc: str) -> cwl.CommandLineTool:
+def convert(doc: str) -> Dict[str, Any]:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
     wdl_path = os.path.relpath(doc)
     doc_tree = WDL.load(wdl_path)
 
     parser = Converter()
 
-    tasks = []
-    for task in doc_tree.tasks:
-        tasks.append(parser.load_wdl_objects(task))
-
-    return tasks[0]
+    if len(doc_tree.tasks) == 1:
+        return parser.load_wdl_objects(doc_tree.tasks[0]).save()
+    else:
+        return {
+            "cwlVersion": "v1.2",
+            "$graph": [parser.load_wdl_objects(task).save() for task in doc_tree.tasks],
+        }
 
 
 class Converter:
@@ -749,8 +751,7 @@ def main(args: Union[List[str], None] = None) -> None:
     parser.add_argument("-o", "--output", help="Name of output CWL file")
     parsed_args = parser.parse_args(args)
 
-    result = convert(parsed_args.workflow)
-    cwl_result = result.save()
+    cwl_result = convert(parsed_args.workflow)
 
     # Serialize result in YAML to either <stdout> or specified output file.
     yaml = YAML()
@@ -764,8 +765,6 @@ def main(args: Union[List[str], None] = None) -> None:
     else:
         with open(parsed_args.output, "w") as f:
             yaml.dump(cwl_result, f)
-
-    # Converter.load_wdl_tree("wdl2cwl/tests/wdl_files/bowtie_1.wdl")
 
 
 if __name__ == "__main__":
