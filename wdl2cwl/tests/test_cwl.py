@@ -57,6 +57,7 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
         ("vt.wdl"),
         ("rtg_2_tasks.wdl"),
         ("bcftools.wdl"),
+        ("TrimAdapters_without_comment.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:

@@ -149,11 +149,13 @@ class Converter:
         return f"$({time_minutes_str} * 60)"
 
     def get_outdir_requirement(
-        self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]
-    ) -> int:
+        self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply, WDL.Expr.String]
+    ) -> Union[int, str]:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
-        # This is yet to be implemented. After Feature Parity.
-        return int(outdir.literal.value) * 1024  # type: ignore
+        if outdir.literal:
+            return int(outdir.literal.value) * 1024  # type: ignore
+        outdir_str = self.get_expr(outdir)
+        return f"$({outdir_str})"
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -285,9 +287,7 @@ class Converter:
         parts = wdl_expr_string.parts
         for index, part in enumerate(parts[1:-1], start=1):
             if isinstance(
-                part,
-                (WDL.Expr.Placeholder, WDL.Expr.Apply, WDL.Expr.Get, WDL.Expr.Ident),
-            ):
+                part, WDL.Expr.Placeholder):
                 placeholder = self.get_expr(part)
                 part = (
                     "" if parts[index - 1] == '"' or parts[index - 1] == "'" else "' + "  # type: ignore
@@ -325,15 +325,15 @@ class Converter:
         treat_as_optional = wdl_apply_expr.type.optional
         if function_name == "_add":
             left_operand, right_operand = arguments
-            right_operand = self.get_expr(right_operand)  # type: ignore
+            right_operand_value = self.get_expr(right_operand)  # type: ignore
             left_operand_value = self.get_expr(left_operand)
             if getattr(left_operand, "function_name", None) == "basename":
                 treat_as_optional = True
                 referer = wdl_apply_expr.parent.name  # type: ignore
             return (
-                f"{left_operand_value} + {right_operand}"
+                f"{left_operand_value} + {right_operand_value}"
                 if not treat_as_optional
-                else f"{self.get_input(referer)} === null ? {left_operand_value} + {right_operand} : {self.get_input(referer)}"
+                else f"{self.get_input(referer)} === null ? {left_operand_value} + {right_operand_value} : {self.get_input(referer)}"
             )
         elif function_name == "basename":
             if len(arguments) == 1:
@@ -409,13 +409,34 @@ class Converter:
             return f"{left_operand} !== {right_operand}"
         elif function_name == "read_string":
             only_arg = arguments[0]
-            only_arg = self.get_expr(only_arg)  # type: ignore
-            return only_arg  # type: ignore
+            only_arg_value = self.get_expr(only_arg)  # type: ignore
+            return only_arg_value  # type: ignore
         elif function_name == "glob":
             only_arg = arguments[0]
             glob = self.get_expr(only_arg)
             return glob
-
+        elif function_name == "ceil":
+            only_arg = arguments[0]
+            only_arg_expr = self.get_expr(only_arg)
+            return f"Math.ceil({only_arg_expr})"
+        elif function_name == "_mul":
+            left_operand, right_operand = arguments
+            if left_operand.literal:
+                left_operand_value = left_operand.literal.value
+            else: raise ValueError(f"Left operand {left_operand} of the mul function has no literal")
+            if right_operand.literal:
+                right_operand_value = right_operand.literal.value
+            else:
+                right_operand_value = self.get_expr(right_operand)
+            return f"{left_operand_value}*({right_operand_value})"
+        elif function_name == "size":
+            left_operand, right_operand = arguments
+            input_file_name = self.get_expr_name(left_operand.expr)
+            size_unit = self.get_expr(right_operand)[1:-1]
+            if size_unit == "Gi":
+                unit_value = 3
+            else: raise ValueError(f"Size unit {size_unit} not handle yet")
+            return f"{input_file_name}.size / 1024^{unit_value}"
         else:
             raise ValueError(f"Function name '{function_name}' not yet handled.")
 
