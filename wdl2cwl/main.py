@@ -152,10 +152,15 @@ class Converter:
         self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply, WDL.Expr.String]
     ) -> Union[int, str]:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
-        if outdir.literal:
-            return int(outdir.literal.value) * 1024
-        outdir_str = self.get_expr(outdir)
-        return f"$({outdir_str})"
+        if not outdir.literal:
+            if isinstance(outdir, WDL.Expr.String):
+                for part in outdir.parts:
+                    if isinstance(part, WDL.Expr.Placeholder):
+                        outdir_str = self.get_expr(part)
+                        return outdir_str
+            else:
+                raise Exception(f"Runtime Disks {outdir} are not handled yet.")
+        return int(outdir.literal.value) * 1024  # type: ignore
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -417,7 +422,7 @@ class Converter:
         elif function_name == "ceil":
             only_arg = arguments[0]
             only_arg_expr = self.get_expr(only_arg)
-            return f"Math.ceil({only_arg_expr})"
+            return f"Math.ceil({only_arg_expr}) "
         elif function_name == "_mul":
             left_operand, right_operand = arguments
             if left_operand.literal:
@@ -432,7 +437,7 @@ class Converter:
                 )
             else:
                 right_operand_value = self.get_expr(right_operand)
-            return f"{left_operand_value}*({right_operand_value})"
+            return f"{left_operand_value}*({right_operand_value}) "
         elif function_name == "size":
             left_operand, right_operand = arguments
             input_file_name = self.get_expr_name(left_operand.expr)  # type:ignore
