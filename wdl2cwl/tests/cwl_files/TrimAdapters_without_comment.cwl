@@ -90,8 +90,8 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-    outdirMin: $(Math.ceil(2*(inputs.fastq1_input_files.size / 1024^3 + inputs.fastq2_input_files.size
-        / 1024^3) )  + 10)
+    outdirMin: $((Math.ceil(2*(inputs.fastq1_input_files.size / 1024^3 + inputs.fastq2_input_files.size
+        / 1024^3) )  + 10)*1024)
 cwlVersion: v1.2
 baseCommand:
   - bash

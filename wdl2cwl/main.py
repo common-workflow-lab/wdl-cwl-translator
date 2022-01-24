@@ -156,8 +156,8 @@ class Converter:
             if isinstance(outdir, WDL.Expr.String):
                 for part in outdir.parts:
                     if isinstance(part, WDL.Expr.Placeholder):
-                        outdir_str = self.get_expr(part)
-                        return outdir_str
+                        outdir_str = self.get_expr(part)[1:]
+                        return f"$({outdir_str}*1024)"
             else:
                 raise Exception(f"Runtime Disks {outdir} are not handled yet.")
         return int(outdir.literal.value) * 1024  # type: ignore
