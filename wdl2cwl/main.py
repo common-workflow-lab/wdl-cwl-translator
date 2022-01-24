@@ -28,23 +28,20 @@ valid_js_identifier = regex.compile(
 # eval is not on the official list of reserved words, but it is a built-in function
 
 
-def convert(doc: str) -> Dict[str, List[str]]:
+def convert(doc: str) -> Dict[str, Any]:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
     wdl_path = os.path.relpath(doc)
     doc_tree = WDL.load(wdl_path)
 
     parser = Converter()
 
-    dict_of_tasks = {"cwlVersion": "v1.2"}
-    dict_of_tasks["$graph"] = []  # type: ignore
-
-    for task in doc_tree.tasks:
-        cwl_task_object = parser.load_wdl_objects(task).save()
-        if len(doc_tree.tasks) == 1:
-            return cwl_task_object
-        dict_of_tasks["$graph"].append(cwl_task_object)  # type: ignore
-
-    return dict_of_tasks  # type: ignore
+    if len(doc_tree.tasks) == 1:
+        return parser.load_wdl_objects(doc_tree.tasks[0]).save()
+    else:
+        return {
+            "cwlVersion": "v1.2",
+            "$graph": [parser.load_wdl_objects(task).save() for task in doc_tree.tasks],
+        }
 
 
 class Converter:
