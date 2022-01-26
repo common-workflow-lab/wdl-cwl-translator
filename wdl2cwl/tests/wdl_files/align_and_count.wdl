@@ -2,8 +2,7 @@ version 1.0
 
 # Source: https://github.com/broadinstitute/viral-pipelines/blob/master/pipes/WDL/workflows/align_and_count.wdl
 
-import "/home/dennis/Documents/CWLab/wdl-cwl-translator/wdl2cwl/tests/wdl_files/tasks/tasks_reports.wdl" as reports
-# import "../tasks/tasks_reports.wdl" as reports
+import "./tasks/tasks_reports.wdl" as reports
 
 workflow align_and_count_report {
     meta {
