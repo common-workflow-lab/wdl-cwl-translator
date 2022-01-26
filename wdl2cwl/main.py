@@ -34,7 +34,8 @@ def convert(doc: str) -> Dict[str, Any]:
     doc_tree = WDL.load(wdl_path)
 
     parser = Converter()
-
+    if doc_tree.workflow:
+        return parser.load_wdl_workflow(doc_tree.workflow, doc_tree.imports).save()
     if len(doc_tree.tasks) == 1:
         return parser.load_wdl_objects(doc_tree.tasks[0]).save()
     else:
@@ -60,10 +61,67 @@ class Converter:
             return self.load_wdl_task(obj)
         raise Exception(f"Unimplemented type: {type(obj)}: {obj}")
 
+    def load_wdl_workflow(self, obj: WDL.Tree.Workflow, imports = None) -> cwl.Workflow: # type: ignore
+        """Load WDL workflow and convert to CWL."""
+        inputs: list[cwl.WorkflowInputParameter] = []
+        outputs: list[cwl.WorkflowOutputParameter] = []
+        wf_steps: list[cwl.WorkflowStep] = []
+        wf_name = obj.name
+        wf_description = obj.meta["description"]
+        for index, call in enumerate(obj.body):
+            call_name = call.name  # type: ignore
+            callee = call.callee  # type: ignore
+            cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
+            wf_step_inputs = [
+                cwl.WorkflowStepInput(
+                    id=x.id, default=f"{imports[index].namespace}.{call_name}.{x.id}"
+                )
+                for x in cwl_call_inputs
+            ]
+            inputs.extend(
+                [
+                    cwl.WorkflowInputParameter(
+                        id=f"{imports[index].namespace}.{call_name}.{x.id}",
+                        type=x.type,
+                        default=x.default,
+                    )
+                    for x in cwl_call_inputs
+                ]
+            )
+            cwl_call_ouputs = self.get_cwl_task_outputs(callee.outputs)
+            wf_step_outputs = [cwl.WorkflowStepOutput(id=x.id) for x in cwl_call_ouputs]
+            outputs.extend(
+                [
+                    cwl.WorkflowOutputParameter(
+                        id=x.id,
+                        type=x.type,
+                        outputSource=f"{imports[index].namespace}.{call_name}/{x.id}",
+                    )
+                    for x in cwl_call_ouputs
+                ]
+            )
+            wf_step_run = self.load_wdl_objects(callee)
+            wf_step = cwl.WorkflowStep(
+                wf_step_inputs,
+                id=f"{imports[index].namespace}.{call_name}",
+                run=wf_step_run,
+                out=wf_step_outputs,
+            )
+            wf_steps.append(wf_step)
+
+        return cwl.Workflow(
+            id=wf_name,
+            cwlVersion="v1.2",
+            doc=wf_description,
+            inputs=inputs,
+            steps=wf_steps,
+            outputs=outputs,
+        )
+
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
-        cwl_inputs = self.get_cwl_inputs(obj.inputs)
-        cwl_outputs = self.get_cwl_outputs(obj.outputs)
+        cwl_inputs = self.get_cwl_task_inputs(obj.inputs)
+        cwl_outputs = self.get_cwl_task_outputs(obj.outputs)
         docker_requirement = (
             self.get_cwl_docker_requirements(obj.runtime["docker"])  # type: ignore
             if "docker" in obj.runtime
@@ -596,7 +654,7 @@ class Converter:
         is_file = isinstance(wdl_expr.type, WDL.Type.File)
         return expr_name if not is_file else f"{expr_name}.path"
 
-    def get_cwl_inputs(
+    def get_cwl_task_inputs(
         self, wdl_inputs: Optional[List[WDL.Tree.Decl]]
     ) -> List[cwl.CommandInputParameter]:
         """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
@@ -661,7 +719,7 @@ class Converter:
             raise Exception(f"Input of type {input_type} is not yet handled.")
         return type_of
 
-    def get_cwl_outputs(
+    def get_cwl_task_outputs(
         self, wdl_outputs: List[WDL.Tree.Decl]
     ) -> List[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
