@@ -114,22 +114,18 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Cache for pip
+      - name: Cache for pip and cwltool intermediate files
         uses: actions/cache@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-cwltests
+          path: |
+            ~/.cache/pip
+            wdl2cwl/tests/cache
+          key: ${{ runner.os }}-pip-cwltool-cwltests
 
       - name: Upgrade setuptools and install cwltool
         run: |
           pip install -U pip setuptools wheel
           pip install cwltool cwltest
-
-      - name: Checkout cache
-        uses: actions/checkout@v2
-        with:
-          repository: common-workflow-lab/wdl2cwl_test_cache
-          path: wdl2cwl/tests/cache
 
       - name: Run the CWL functional tests
         run: make cwltest cwltest_big
