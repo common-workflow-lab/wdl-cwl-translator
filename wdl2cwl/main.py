@@ -61,7 +61,7 @@ class Converter:
             return self.load_wdl_task(obj)
         raise Exception(f"Unimplemented type: {type(obj)}: {obj}")
 
-    def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow: # type: ignore
+    def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
         inputs: list[cwl.WorkflowInputParameter] = []
         outputs: list[cwl.WorkflowOutputParameter] = []
@@ -71,12 +71,10 @@ class Converter:
         for call in obj.body:
             call_name = call.name  # type: ignore
             callee = call.callee  # type: ignore
-            namespace, _ = call.callee_id
+            namespace, _ = call.callee_id  # type: ignore
             cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
             wf_step_inputs = [
-                cwl.WorkflowStepInput(
-                    id=x.id, source=f"{namespace}.{call_name}.{x.id}"
-                )
+                cwl.WorkflowStepInput(id=x.id, source=f"{namespace}.{call_name}.{x.id}")
                 for x in cwl_call_inputs
             ]
             inputs.extend(
@@ -334,10 +332,9 @@ class Converter:
         # the literal value is what's needed
         if isinstance(expr.parent, WDL.Expr.Apply):  # type: ignore
             return expr.literal.value  # type: ignore
-        else:
-            parent_name = expr.parent.name
-            return self.get_input(parent_name)
-        raise Exception(f"The parent expression for {expr} is not WDL.Expr.Apply")
+        parent_name = expr.parent.name  # type: ignore
+        return self.get_input(parent_name)
+        # raise Exception(f"The parent expression for {expr} is not WDL.Expr.Apply")
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
