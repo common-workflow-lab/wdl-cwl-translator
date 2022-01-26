@@ -83,8 +83,9 @@ steps:
             type: string
             outputBinding:
                 loadContents: true
-                glob: nputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
-                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.top.txt
+                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
+                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.top_' +
+                    inputs.topNHits + '_hits.txt')
                 outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
           - id: viralngs_version
             type: string

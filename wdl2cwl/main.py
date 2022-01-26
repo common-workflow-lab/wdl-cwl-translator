@@ -746,9 +746,13 @@ class Converter:
                 and wdl_output.expr.function_name == "read_string"
             ):
                 glob_expr = self.get_expr(wdl_output)
-                glob_str = glob_expr[
-                    1:-1
-                ]  # remove quotes from the string returned by get_expr_string
+                is_literal = wdl_output.expr.arguments[0].literal
+                if is_literal:
+                    glob_str = glob_expr[
+                        1:-1
+                    ]  # remove quotes from the string returned by get_expr_string
+                else:
+                    glob_expr = f"$({glob_expr})"
 
                 outputs.append(
                     cwl.CommandOutputParameter(

@@ -1,6 +1,6 @@
 version 1.0
 
-# Source: https://github.com/broadinstitute/viral-pipelines/blob/master/pipes/WDL/tasks/tasks_reports.wdl
+# Source: https://github.com/broadinstitute/viral-pipelines/blob/2a24ae82bf3c39dbbbfb8efdac0f7d276e780a4e/pipes/WDL/tasks/tasks_reports.wdl
 
 task alignment_metrics {
   input {
