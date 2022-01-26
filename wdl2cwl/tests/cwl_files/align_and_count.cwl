@@ -35,15 +35,15 @@ steps:
   - id: reports.align_and_count
     in:
       - id: reads_bam
-        default: reports.align_and_count.reads_bam
+        source: reports.align_and_count.reads_bam
       - id: ref_db
-        default: reports.align_and_count.ref_db
+        source: reports.align_and_count.ref_db
       - id: topNHits
-        default: reports.align_and_count.topNHits
+        source: reports.align_and_count.topNHits
       - id: machine_mem_gb
-        default: reports.align_and_count.machine_mem_gb
+        source: reports.align_and_count.machine_mem_gb
       - id: docker
-        default: reports.align_and_count.docker
+        source: reports.align_and_count.docker
     out:
       - id: report
       - id: report_top_hits
@@ -89,6 +89,8 @@ steps:
                 glob: VERSION
                 outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
         requirements:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/viral-core:2.1.33
           - class: InitialWorkDirRequirement
             listing:
               - entryname: example.sh

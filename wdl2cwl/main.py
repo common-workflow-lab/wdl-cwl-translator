@@ -74,7 +74,7 @@ class Converter:
             cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
             wf_step_inputs = [
                 cwl.WorkflowStepInput(
-                    id=x.id, default=f"{imports[index].namespace}.{call_name}.{x.id}"
+                    id=x.id, source=f"{imports[index].namespace}.{call_name}.{x.id}"
                 )
                 for x in cwl_call_inputs
             ]
