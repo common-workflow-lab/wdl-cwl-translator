@@ -71,16 +71,20 @@ steps:
           - id: report
             type: File
             outputBinding:
-                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.txt')
+                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
+                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.txt')
           - id: report_top_hits
             type: File
             outputBinding:
-                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.txt')
+                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
+                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.top_' +
+                    inputs.topNHits + '_hits.txt')
           - id: top_hit_id
             type: string
             outputBinding:
                 loadContents: true
-                glob: nputs.reads_bam.basename.replace(/\.bam$/, '')  + '.txt
+                glob: nputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
+                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.top.txt
                 outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
           - id: viralngs_version
             type: string
@@ -115,6 +119,7 @@ steps:
             networkAccess: true
           - class: ResourceRequirement
             coresMin: 4
+            ramMin: 14305.11474609375
             outdirMin: 384000
         cwlVersion: v1.2
         baseCommand:

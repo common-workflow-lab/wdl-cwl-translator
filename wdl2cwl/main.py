@@ -35,7 +35,7 @@ def convert(doc: str) -> Dict[str, Any]:
 
     parser = Converter()
     if doc_tree.workflow:
-        return parser.load_wdl_workflow(doc_tree.workflow, doc_tree.imports).save()
+        return parser.load_wdl_workflow(doc_tree.workflow).save()
     if len(doc_tree.tasks) == 1:
         return parser.load_wdl_objects(doc_tree.tasks[0]).save()
     else:
@@ -61,27 +61,28 @@ class Converter:
             return self.load_wdl_task(obj)
         raise Exception(f"Unimplemented type: {type(obj)}: {obj}")
 
-    def load_wdl_workflow(self, obj: WDL.Tree.Workflow, imports = None) -> cwl.Workflow: # type: ignore
+    def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow: # type: ignore
         """Load WDL workflow and convert to CWL."""
         inputs: list[cwl.WorkflowInputParameter] = []
         outputs: list[cwl.WorkflowOutputParameter] = []
         wf_steps: list[cwl.WorkflowStep] = []
         wf_name = obj.name
         wf_description = obj.meta["description"]
-        for index, call in enumerate(obj.body):
+        for call in obj.body:
             call_name = call.name  # type: ignore
             callee = call.callee  # type: ignore
+            namespace, _ = call.callee_id
             cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
             wf_step_inputs = [
                 cwl.WorkflowStepInput(
-                    id=x.id, source=f"{imports[index].namespace}.{call_name}.{x.id}"
+                    id=x.id, source=f"{namespace}.{call_name}.{x.id}"
                 )
                 for x in cwl_call_inputs
             ]
             inputs.extend(
                 [
                     cwl.WorkflowInputParameter(
-                        id=f"{imports[index].namespace}.{call_name}.{x.id}",
+                        id=f"{namespace}.{call_name}.{x.id}",
                         type=x.type,
                         default=x.default,
                     )
@@ -95,7 +96,7 @@ class Converter:
                     cwl.WorkflowOutputParameter(
                         id=x.id,
                         type=x.type,
-                        outputSource=f"{imports[index].namespace}.{call_name}/{x.id}",
+                        outputSource=f"{namespace}.{call_name}/{x.id}",
                     )
                     for x in cwl_call_ouputs
                 ]
@@ -103,7 +104,7 @@ class Converter:
             wf_step_run = self.load_wdl_objects(callee)
             wf_step = cwl.WorkflowStep(
                 wf_step_inputs,
-                id=f"{imports[index].namespace}.{call_name}",
+                id=f"{namespace}.{call_name}",
                 run=wf_step_run,
                 out=wf_step_outputs,
             )
@@ -333,6 +334,9 @@ class Converter:
         # the literal value is what's needed
         if isinstance(expr.parent, WDL.Expr.Apply):  # type: ignore
             return expr.literal.value  # type: ignore
+        else:
+            parent_name = expr.parent.name
+            return self.get_input(parent_name)
         raise Exception(f"The parent expression for {expr} is not WDL.Expr.Apply")
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:

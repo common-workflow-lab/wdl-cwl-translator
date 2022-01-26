@@ -303,17 +303,14 @@ task align_and_count {
   }
 
   output {
-    File   report           = "${reads_basename}.txt"
-    # File   report           = "${reads_basename}.count.${ref_basename}.txt"
-    # File   report_top_hits  = "${reads_basename}.count.${ref_basename}.top_${topNHits}_hits.txt"
-    File   report_top_hits  = "${reads_basename}.txt"
-    # String top_hit_id       = read_string("${reads_basename}.count.${ref_basename}.top.txt")
-    String top_hit_id       = read_string("${reads_basename}.txt")
+    File   report           = "${reads_basename}.count.${ref_basename}.txt"
+    File   report_top_hits  = "${reads_basename}.count.${ref_basename}.top_${topNHits}_hits.txt"
+    String top_hit_id       = read_string("${reads_basename}.count.${ref_basename}.top.txt")
     String viralngs_version = read_string("VERSION")
   }
 
   runtime {
-    # memory: select_first([machine_mem_gb, 15]) + " GB"
+    memory: "15 GB"
     cpu: 4
     docker: docker
     disks: "375"
