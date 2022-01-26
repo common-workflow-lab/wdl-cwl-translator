@@ -63,9 +63,9 @@ class Converter:
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
-        inputs: list[cwl.WorkflowInputParameter] = []
-        outputs: list[cwl.WorkflowOutputParameter] = []
-        wf_steps: list[cwl.WorkflowStep] = []
+        inputs: List[cwl.WorkflowInputParameter] = []
+        outputs: List[cwl.WorkflowOutputParameter] = []
+        wf_steps: List[cwl.WorkflowStep] = []
         wf_name = obj.name
         wf_description = obj.meta["description"]
         for call in obj.body:
