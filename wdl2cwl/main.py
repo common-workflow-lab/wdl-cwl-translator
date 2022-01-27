@@ -73,32 +73,31 @@ class Converter:
             callee = call.callee  # type: ignore
             namespace, _ = call.callee_id  # type: ignore
             cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
-            wf_step_inputs = [
-                cwl.WorkflowStepInput(id=x.id, source=f"{namespace}.{call_name}.{x.id}")
-                for x in cwl_call_inputs
-            ]
-            inputs.extend(
-                [
+            wf_step_inputs: List[cwl.WorkflowStepInput] = []
+            wf_step_outputs: List[cwl.WorkflowStepOutput] = []
+            for inp in cwl_call_inputs:
+                wf_step_inputs.append(
+                    cwl.WorkflowStepInput(
+                        id=inp.id, source=f"{namespace}.{call_name}.{inp.id}"
+                    )
+                )
+                inputs.append(
                     cwl.WorkflowInputParameter(
-                        id=f"{namespace}.{call_name}.{x.id}",
-                        type=x.type,
-                        default=x.default,
+                        id=f"{namespace}.{call_name}.{inp.id}",
+                        type=inp.type,
+                        default=inp.default,
                     )
-                    for x in cwl_call_inputs
-                ]
-            )
+                )
             cwl_call_ouputs = self.get_cwl_task_outputs(callee.outputs)
-            wf_step_outputs = [cwl.WorkflowStepOutput(id=x.id) for x in cwl_call_ouputs]
-            outputs.extend(
-                [
+            for output in cwl_call_ouputs:
+                wf_step_outputs.append(cwl.WorkflowStepOutput(id=output.id))
+                outputs.append(
                     cwl.WorkflowOutputParameter(
-                        id=x.id,
-                        type=x.type,
-                        outputSource=f"{namespace}.{call_name}/{x.id}",
+                        id=output.id,
+                        type=output.type,
+                        outputSource=f"{namespace}.{call_name}/{output.id}",
                     )
-                    for x in cwl_call_ouputs
-                ]
-            )
+                )
             wf_step_run = self.load_wdl_objects(callee)
             wf_step = cwl.WorkflowStep(
                 wf_step_inputs,
