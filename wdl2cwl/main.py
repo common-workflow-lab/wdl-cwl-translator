@@ -1,18 +1,18 @@
 """Main entrypoint for WDL2CWL."""
+import argparse
 import os
 import re
-from typing import List, Union, Optional, Any, Set, Dict
-import WDL
+import sys
+import textwrap
+from typing import Any, Dict, List, Optional, Set, Union
+
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
-
-import textwrap
-import sys
-import argparse
-
-
+import WDL
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
+
+from wdl2cwl.errors import WDLSourceLine
 
 valid_js_identifier = regex.compile(
     r"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|null|this|true|"
@@ -26,6 +26,10 @@ valid_js_identifier = regex.compile(
 # and regex at the bottom of https://stackoverflow.com/a/9392578
 # double checked against https://262.ecma-international.org/5.1/#sec-7.6
 # eval is not on the official list of reserved words, but it is a built-in function
+
+
+class ConversionException(Exception):
+    """Error during conversion."""
 
 
 def convert(doc: str) -> Dict[str, Any]:
@@ -59,7 +63,9 @@ class Converter:
         """Load a WDL SourceNode obj and returns either a Task or a Workflow."""
         if isinstance(obj, WDL.Tree.Task):
             return self.load_wdl_task(obj)
-        raise Exception(f"Unimplemented type: {type(obj)}: {obj}")
+        raise WDLSourceLine(obj, ConversionException).makeError(
+            f"Unimplemented type: {type(obj)}: {obj}"
+        )
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
@@ -209,7 +215,8 @@ class Converter:
     ) -> int:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         # This is yet to be implemented. After Feature Parity.
-        return int(outdir.literal.value) * 1024  # type: ignore
+        with WDLSourceLine(outdir, ConversionException):
+            return int(outdir.literal.value) * 1024  # type: ignore
 
     def get_input(self, input_name: str) -> str:
         """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
@@ -221,11 +228,12 @@ class Converter:
         self, memory_runtime: Union[WDL.Expr.Ident, WDL.Expr.Get, WDL.Expr.String]
     ) -> Union[str, float]:
         """Translate WDL Runtime Memory requirement to CWL Resource Requirement."""
-        if isinstance(memory_runtime, WDL.Expr.String):
-            ram_min_literal = self.get_memory_literal(memory_runtime)
-            return ram_min_literal
-        ram_min = self.get_expr_name(memory_runtime.expr)  # type: ignore
-        return self.get_ram_min_js(ram_min, "")
+        with WDLSourceLine(memory_runtime, ConversionException):
+            if isinstance(memory_runtime, WDL.Expr.String):
+                ram_min_literal = self.get_memory_literal(memory_runtime)
+                return ram_min_literal
+            ram_min = self.get_expr_name(memory_runtime.expr)  # type: ignore
+            return self.get_ram_min_js(ram_min, "")
 
     def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> float:
         """Get the literal value for memory requirement with type WDL.Expr.String."""
@@ -313,7 +321,9 @@ class Converter:
         ):
             return self.get_literal_name(wdl_expr)
         else:
-            raise Exception(f"The expression '{wdl_expr}' is not handled yet.")
+            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
+                f"The expression '{wdl_expr}' is not handled yet."
+            )
 
     def get_literal_name(
         self,
@@ -326,12 +336,16 @@ class Converter:
     ) -> str:
         """Translate WDL Boolean, Int or Float Expression."""
         if expr is None or not hasattr(expr, "parent"):
-            raise Exception(f"{type(expr)} has no attribute 'parent'")
+            raise WDLSourceLine(expr, ConversionException).makeError(
+                f"{type(expr)} has no attribute 'parent'"
+            )
         # if the literal expr is used inside WDL.Expr.Apply
         # the literal value is what's needed
         if isinstance(expr.parent, WDL.Expr.Apply):  # type: ignore
             return expr.literal.value  # type: ignore
-        raise Exception(f"The parent expression for {expr} is not WDL.Expr.Apply")
+        raise WDLSourceLine(expr, ConversionException).makeError(
+            f"The parent expression for {expr} is not WDL.Expr.Apply"
+        )
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
@@ -377,7 +391,9 @@ class Converter:
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
         if not arguments:
-            raise Exception(f"The '{wdl_apply_expr}' expression has no arguments.")
+            raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
+                f"The '{wdl_apply_expr}' expression has no arguments."
+            )
         treat_as_optional = wdl_apply_expr.type.optional
         if function_name == "_add":
             left_operand, right_operand = arguments
@@ -395,12 +411,13 @@ class Converter:
             if len(arguments) == 1:
                 only_operand = arguments[0]
                 is_file = isinstance(only_operand.type, WDL.Type.File)
-                only_operand = self.get_expr_name(only_operand.expr)  # type: ignore
-                return (
-                    f"{only_operand}.basename"
-                    if is_file
-                    else f"{only_operand}.split('/').reverse()[0]"
-                )
+                with WDLSourceLine(only_operand, ConversionException):
+                    only_operand = self.get_expr_name(only_operand.expr)  # type: ignore
+                    return (
+                        f"{only_operand}.basename"
+                        if is_file
+                        else f"{only_operand}.split('/').reverse()[0]"
+                    )
             elif len(arguments) == 2:
                 operand, suffix = arguments
                 is_file = isinstance(operand.type, WDL.Type.File)
@@ -428,12 +445,13 @@ class Converter:
             arg_name_with_file_check = self.get_expr_name_with_is_file_check(
                 arg_name.expr  # type: ignore
             )
-            arg_value = arg_value.literal.value  # type: ignore
-            return (
-                f'{just_arg_name} === null ? "" : "{arg_value}" + {arg_name_with_file_check}'
-                if treat_as_optional
-                else f"{arg_value} $({arg_name_with_file_check})"
-            )
+            with WDLSourceLine(arg_value, ConversionException):
+                arg_value = arg_value.literal.value  # type: ignore
+                return (
+                    f'{just_arg_name} === null ? "" : "{arg_value}" + {arg_name_with_file_check}'
+                    if treat_as_optional
+                    else f"{arg_value} $({arg_name_with_file_check})"
+                )
         elif function_name == "sub":
             wdl_apply, arg_string, arg_sub = arguments
             wdl_apply = self.get_expr(wdl_apply)  # type: ignore
@@ -473,7 +491,9 @@ class Converter:
             return glob
 
         else:
-            raise ValueError(f"Function name '{function_name}' not yet handled.")
+            raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
+                f"Function name '{function_name}' not yet handled."
+            )
 
     def get_expr_get(self, wdl_get_expr: WDL.Expr.Get) -> str:
         """Translate WDL Get Expressions."""
@@ -484,7 +504,9 @@ class Converter:
             and wdl_get_expr.expr
         ):
             return self.get_expr_ident(wdl_get_expr.expr)
-        raise Exception(f"Get expressions with {member} are not yet handled.")
+        raise WDLSourceLine(wdl_get_expr, ConversionException).makeError(
+            f"Get expressions with {member} are not yet handled."
+        )
 
     def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
         """Translate WDL Ident Expressions."""
@@ -549,12 +571,14 @@ class Converter:
             if dockerpull_expr is None or not isinstance(
                 dockerpull_expr, WDL.Expr.Ident
             ):
-                raise Exception(
+                raise WDLSourceLine(wdl_docker, ConversionException).makeError(
                     f"Unsupported type: {type(dockerpull_expr)}: {dockerpull_expr}"
                 )
             dockerpull_referee = dockerpull_expr.referee
             if dockerpull_referee is None:
-                raise Exception(f"Unsupported type: {type(dockerpull_referee)}")
+                raise WDLSourceLine(wdl_docker, ConversionException).makeError(
+                    f"Unsupported type: {type(dockerpull_referee)}"
+                )
             dockerpull = dockerpull_referee.expr.literal.value
         return cwl.DockerRequirement(dockerPull=dockerpull)
 
@@ -579,7 +603,9 @@ class Converter:
         cwl_command_str = ""
         expr = wdl_placeholder.expr
         if expr is None:
-            raise Exception(f"Placeholder '{wdl_placeholder}' has no expr.")
+            raise WDLSourceLine(wdl_placeholder, ConversionException).makeError(
+                f"Placeholder '{wdl_placeholder}' has no expr."
+            )
         placeholder_expr = self.get_expr(expr)
         options = wdl_placeholder.options
         if options:
@@ -619,11 +645,11 @@ class Converter:
                             + '"))'
                         )
                 else:
-                    raise Exception(
+                    raise WDLSourceLine(wdl_placeholder, ConversionException).makeError(
                         f"{wdl_placeholder} with expr of type {expr.type} is not yet handled"
                     )
             else:
-                raise Exception(
+                raise WDLSourceLine(wdl_placeholder, ConversionException).makeError(
                     f"Placeholders with options {options} are not yet handled."
                 )
         else:
@@ -649,14 +675,18 @@ class Converter:
     def get_expr_name(self, wdl_expr: WDL.Expr.Ident) -> str:
         """Extract name from WDL expr."""
         if wdl_expr is None or not hasattr(wdl_expr, "name"):
-            raise Exception(f"{type(wdl_expr)} has not attribute 'name'")
+            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
+                f"{type(wdl_expr)} has not attribute 'name'"
+            )
         expr_name = self.get_input(wdl_expr.name)
         return expr_name
 
     def get_expr_name_with_is_file_check(self, wdl_expr: WDL.Expr.Ident) -> str:
         """Extract name from WDL expr and check if it's a file path."""
         if wdl_expr is None or not hasattr(wdl_expr, "name"):
-            raise Exception(f"{type(wdl_expr)} has not attribute 'name'")
+            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
+                f"{type(wdl_expr)} has not attribute 'name'"
+            )
         expr_name = self.get_input(wdl_expr.name)
         is_file = isinstance(wdl_expr.type, WDL.Type.File)
         return expr_name if not is_file else f"{expr_name}.path"
@@ -723,7 +753,10 @@ class Converter:
         elif isinstance(input_type, WDL.Type.Float):
             type_of = "float"
         else:
-            raise Exception(f"Input of type {input_type} is not yet handled.")
+            print(type(input_type))
+            raise WDLSourceLine(input_type, ConversionException).makeError(
+                f"Input of type {input_type} is not yet handled."
+            )
         return type_of
 
     def get_cwl_task_outputs(
@@ -745,7 +778,9 @@ class Converter:
                 type_of = self.get_cwl_type(wdl_output.type)  # type: ignore
 
             if not wdl_output.expr:
-                raise ValueError("Missing expression")
+                raise WDLSourceLine(wdl_output, ConversionException).makeError(
+                    "Missing expression"
+                )
 
             if (
                 isinstance(wdl_output.expr, WDL.Expr.Apply)

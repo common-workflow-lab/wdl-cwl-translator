@@ -1,11 +1,11 @@
 """Tests for miniwdl."""
 import os.path
-from tempfile import NamedTemporaryFile
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+
 import pytest
 
-from ..main import main
-from ..main import Converter
+from ..main import Converter, main
 
 
 def get_file(path: str) -> str:
@@ -87,8 +87,6 @@ def test_wdl_stdout(capsys) -> None:  # type: ignore
 
 class TestObject:
     """Test object for creating WDL.Expr.String."""
-
-    pass
 
 
 testdata = [
