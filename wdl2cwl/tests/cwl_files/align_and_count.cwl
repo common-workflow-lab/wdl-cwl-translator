@@ -84,8 +84,7 @@ steps:
             outputBinding:
                 loadContents: true
                 glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
-                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.top_' +
-                    inputs.topNHits + '_hits.txt')
+                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.top.txt')
                 outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
           - id: viralngs_version
             type: string

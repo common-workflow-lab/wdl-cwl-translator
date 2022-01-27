@@ -334,7 +334,6 @@ class Converter:
             return expr.literal.value  # type: ignore
         parent_name = expr.parent.name  # type: ignore
         return self.get_input(parent_name)
-        # raise Exception(f"The parent expression for {expr} is not WDL.Expr.Apply")
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
@@ -752,7 +751,7 @@ class Converter:
                         1:-1
                     ]  # remove quotes from the string returned by get_expr_string
                 else:
-                    glob_expr = f"$({glob_expr})"
+                    glob_str = f"$({glob_expr})"
 
                 outputs.append(
                     cwl.CommandOutputParameter(
