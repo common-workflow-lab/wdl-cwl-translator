@@ -2,7 +2,7 @@
 
 import re
 from types import TracebackType
-from typing import Any, Callable, Optional, Tuple, Type, cast
+from typing import Any, Callable, Optional, Type, cast
 
 import WDL
 from WDL._error_util import SourcePosition
