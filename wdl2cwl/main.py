@@ -332,8 +332,7 @@ class Converter:
         # the literal value is what's needed
         if isinstance(expr.parent, WDL.Expr.Apply):  # type: ignore
             return expr.literal.value  # type: ignore
-        parent_name = expr.parent.name  # type: ignore
-        return self.get_input(parent_name)
+        raise Exception(f"The parent expression for {expr} is not WDL.Expr.Apply")
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
@@ -535,10 +534,19 @@ class Converter:
         self, wdl_docker: Union[WDL.Expr.Get, WDL.Expr.String]
     ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
-        if isinstance(wdl_docker, WDL.Expr.String):
-            dockerpull = wdl_docker.literal.value  # type: ignore
+        if isinstance(wdl_docker, WDL.Expr.String) and wdl_docker.literal:
+            dockerpull = wdl_docker.literal.value
         else:
-            dockerpull_expr = wdl_docker.expr
+            wdl_get_expr = wdl_docker
+            if isinstance(wdl_docker, WDL.Expr.String):
+                parts = wdl_docker.parts
+                docker_placeholder = [
+                    pl_holder
+                    for pl_holder in parts
+                    if isinstance(pl_holder, WDL.Expr.Placeholder)
+                ]
+                wdl_get_expr = docker_placeholder[0].expr  # type: ignore
+            dockerpull_expr = wdl_get_expr.expr  # type: ignore
             if dockerpull_expr is None or not isinstance(
                 dockerpull_expr, WDL.Expr.Ident
             ):

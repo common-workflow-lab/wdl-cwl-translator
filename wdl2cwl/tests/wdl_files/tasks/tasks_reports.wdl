@@ -312,7 +312,8 @@ task align_and_count {
   runtime {
     memory: "15 GB"
     cpu: 4
-    docker: docker
+    # docker: docker
+    docker: "${docker}"
     disks: "375"
     # disks: "local-disk 375 LOCAL"
     dx_instance_type: "mem1_ssd1_v2_x4"
