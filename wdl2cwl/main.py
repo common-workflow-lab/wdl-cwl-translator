@@ -38,7 +38,8 @@ def convert(doc: str) -> Dict[str, Any]:
     doc_tree = WDL.load(wdl_path)
 
     parser = Converter()
-
+    if doc_tree.workflow:
+        return parser.load_wdl_workflow(doc_tree.workflow).save()
     if len(doc_tree.tasks) == 1:
         return parser.load_wdl_objects(doc_tree.tasks[0]).save()
     else:
@@ -66,10 +67,65 @@ class Converter:
             f"Unimplemented type: {type(obj)}: {obj}"
         )
 
+    def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
+        """Load WDL workflow and convert to CWL."""
+        inputs: List[cwl.WorkflowInputParameter] = []
+        outputs: List[cwl.WorkflowOutputParameter] = []
+        wf_steps: List[cwl.WorkflowStep] = []
+        wf_name = obj.name
+        wf_description = obj.meta["description"]
+        for call in obj.body:
+            call_name = call.name  # type: ignore
+            callee = call.callee  # type: ignore
+            namespace, _ = call.callee_id  # type: ignore
+            cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
+            wf_step_inputs: List[cwl.WorkflowStepInput] = []
+            wf_step_outputs: List[cwl.WorkflowStepOutput] = []
+            for inp in cwl_call_inputs:
+                wf_step_inputs.append(
+                    cwl.WorkflowStepInput(
+                        id=inp.id, source=f"{namespace}.{call_name}.{inp.id}"
+                    )
+                )
+                inputs.append(
+                    cwl.WorkflowInputParameter(
+                        id=f"{namespace}.{call_name}.{inp.id}",
+                        type=inp.type,
+                        default=inp.default,
+                    )
+                )
+            cwl_call_ouputs = self.get_cwl_task_outputs(callee.outputs)
+            for output in cwl_call_ouputs:
+                wf_step_outputs.append(cwl.WorkflowStepOutput(id=output.id))
+                outputs.append(
+                    cwl.WorkflowOutputParameter(
+                        id=output.id,
+                        type=output.type,
+                        outputSource=f"{namespace}.{call_name}/{output.id}",
+                    )
+                )
+            wf_step_run = self.load_wdl_objects(callee)
+            wf_step = cwl.WorkflowStep(
+                wf_step_inputs,
+                id=f"{namespace}.{call_name}",
+                run=wf_step_run,
+                out=wf_step_outputs,
+            )
+            wf_steps.append(wf_step)
+
+        return cwl.Workflow(
+            id=wf_name,
+            cwlVersion="v1.2",
+            doc=wf_description,
+            inputs=inputs,
+            steps=wf_steps,
+            outputs=outputs,
+        )
+
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
-        cwl_inputs = self.get_cwl_inputs(obj.inputs)
-        cwl_outputs = self.get_cwl_outputs(obj.outputs)
+        cwl_inputs = self.get_cwl_task_inputs(obj.inputs)
+        cwl_outputs = self.get_cwl_task_outputs(obj.outputs)
         docker_requirement = (
             self.get_cwl_docker_requirements(obj.runtime["docker"])  # type: ignore
             if "docker" in obj.runtime
@@ -499,10 +555,19 @@ class Converter:
         self, wdl_docker: Union[WDL.Expr.Get, WDL.Expr.String]
     ) -> cwl.ProcessRequirement:
         """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
-        if isinstance(wdl_docker, WDL.Expr.String):
-            dockerpull = wdl_docker.literal.value  # type: ignore
+        if isinstance(wdl_docker, WDL.Expr.String) and wdl_docker.literal:
+            dockerpull = wdl_docker.literal.value
         else:
-            dockerpull_expr = wdl_docker.expr
+            wdl_get_expr = wdl_docker
+            if isinstance(wdl_docker, WDL.Expr.String):
+                parts = wdl_docker.parts
+                docker_placeholder = [
+                    pl_holder
+                    for pl_holder in parts
+                    if isinstance(pl_holder, WDL.Expr.Placeholder)
+                ]
+                wdl_get_expr = docker_placeholder[0].expr  # type: ignore
+            dockerpull_expr = wdl_get_expr.expr  # type: ignore
             if dockerpull_expr is None or not isinstance(
                 dockerpull_expr, WDL.Expr.Ident
             ):
@@ -626,7 +691,7 @@ class Converter:
         is_file = isinstance(wdl_expr.type, WDL.Type.File)
         return expr_name if not is_file else f"{expr_name}.path"
 
-    def get_cwl_inputs(
+    def get_cwl_task_inputs(
         self, wdl_inputs: Optional[List[WDL.Tree.Decl]]
     ) -> List[cwl.CommandInputParameter]:
         """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
@@ -694,7 +759,7 @@ class Converter:
             )
         return type_of
 
-    def get_cwl_outputs(
+    def get_cwl_task_outputs(
         self, wdl_outputs: List[WDL.Tree.Decl]
     ) -> List[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
@@ -722,9 +787,13 @@ class Converter:
                 and wdl_output.expr.function_name == "read_string"
             ):
                 glob_expr = self.get_expr(wdl_output)
-                glob_str = glob_expr[
-                    1:-1
-                ]  # remove quotes from the string returned by get_expr_string
+                is_literal = wdl_output.expr.arguments[0].literal
+                if is_literal:
+                    glob_str = glob_expr[
+                        1:-1
+                    ]  # remove quotes from the string returned by get_expr_string
+                else:
+                    glob_str = f"$({glob_expr})"
 
                 outputs.append(
                     cwl.CommandOutputParameter(

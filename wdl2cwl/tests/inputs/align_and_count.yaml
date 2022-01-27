@@ -1,0 +1,9 @@
+reports.align_and_count.reads_bam:
+  class: File
+  path: RP-929.NA12878.bam
+  doc: created from running https://github.com/mr-c/warp/blob/more_public_data/pipelines/broad/reprocessing/external/exome/test_inputs/Plumbing/RP-929.NA12878.json
+reports.align_and_count.ref_db:
+  class: File
+  path: Homo_sapiens_assembly38.fasta
+  checksum: sha1$2b9475654e19946c2067ee799f7a5b7115764b31
+  location: https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta

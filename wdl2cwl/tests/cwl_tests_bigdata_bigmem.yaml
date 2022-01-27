@@ -1,0 +1,21 @@
+# This file is a cwltest format file
+# https://github.com/common-workflow-language/cwltest/blob/main/cwltest/cwltest-schema.yml
+
+# takes more than 6GiB memory to execute, too big for GitHub Actions
+# about 15GiB usage on mr-c's machine
+- doc: align_and_count
+  tool: cwl_files/align_and_count.cwl
+  job: inputs/align_and_count.yaml
+  output:
+    report:
+      basename: RP-929.NA12878.count.Homo_sapiens_assembly38.txt
+      class: File
+      checksum: sha1$afa538f360ca62094cbba9835ead2e0f3b6607a8
+      size: 110541
+    report_top_hits:
+      basename: RP-929.NA12878.count.Homo_sapiens_assembly38.top_3_hits.txt
+      class: File
+      checksum: sha1$5b2aa070a547dc18b72412f066f7729929499153
+      size: 69
+    top_hit_id: chr1
+    viralngs_version: v2.1.33
