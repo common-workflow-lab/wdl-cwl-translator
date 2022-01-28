@@ -71,6 +71,7 @@ class Converter:
         """Load WDL workflow and convert to CWL."""
         inputs: List[cwl.WorkflowInputParameter] = []
         outputs: List[cwl.WorkflowOutputParameter] = []
+        seen: Set[str] = set()
         wf_steps: List[cwl.WorkflowStep] = []
         wf_name = obj.name
         wf_description = obj.meta["description"] if "description" in obj.meta else None
@@ -81,26 +82,32 @@ class Converter:
             wf_step_inputs: List[cwl.WorkflowStepInput] = []
             wf_step_outputs: List[cwl.WorkflowStepOutput] = []
             for inp in cwl_call_inputs:
+                call_inp_id = f"{callee_id}.{inp.id}"
                 wf_step_inputs.append(
-                    cwl.WorkflowStepInput(id=inp.id, source=f"{callee_id}.{inp.id}")
+                    cwl.WorkflowStepInput(id=inp.id, source=call_inp_id)
                 )
-                inputs.append(
-                    cwl.WorkflowInputParameter(
-                        id=f"{callee_id}.{inp.id}",
-                        type=inp.type,
-                        default=inp.default,
+                if call_inp_id not in seen:
+                    inputs.append(
+                        cwl.WorkflowInputParameter(
+                            id=f"{call_inp_id}",
+                            type=inp.type,
+                            default=inp.default,
+                        )
                     )
-                )
+                    seen.add(call_inp_id)
             cwl_call_ouputs = self.get_cwl_task_outputs(callee.outputs)
             for output in cwl_call_ouputs:
+                call_output_id = f"{callee_id}/{output.id}"
                 wf_step_outputs.append(cwl.WorkflowStepOutput(id=output.id))
-                outputs.append(
-                    cwl.WorkflowOutputParameter(
-                        id=output.id,
-                        type=output.type,
-                        outputSource=f"{callee_id}/{output.id}",
+                if call_output_id not in seen:
+                    outputs.append(
+                        cwl.WorkflowOutputParameter(
+                            id=output.id,
+                            type=output.type,
+                            outputSource=call_output_id,
+                        )
                     )
-                )
+                    seen.add(call_output_id)
             wf_step_run = self.load_wdl_objects(callee)
             wf_step = cwl.WorkflowStep(
                 wf_step_inputs,

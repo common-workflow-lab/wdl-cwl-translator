@@ -15,14 +15,6 @@ inputs:
     type:
       - File
       - 'null'
-  - id: Bowtie2Build.fasta_input
-    type: File
-  - id: Bowtie2Build.index_prefix
-    type: string
-  - id: Bowtie2Build.monitoring_script
-    type:
-      - File
-      - 'null'
   - id: CreateReferenceDictionary.reference_fasta
     type: File
   - id: CreateReferenceDictionary.monitoring_script
@@ -44,14 +36,6 @@ outputs:
     type: File
   - id: monitoring_log
     outputSource: BuildBisulfiteReferences/monitoring_log
-    type: File
-  - id: bowtie2_index_files
-    outputSource: Bowtie2Build/bowtie2_index_files
-    type:
-        items: File
-        type: array
-  - id: monitoring_log
-    outputSource: Bowtie2Build/monitoring_log
     type: File
   - id: bowtie2_index_files
     outputSource: Bowtie2Build/bowtie2_index_files
