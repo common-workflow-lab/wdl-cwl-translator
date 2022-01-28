@@ -1,25 +1,25 @@
 class: Workflow
 id: BuildCembaReferences
 inputs:
-  - id: Convert.fasta_input
+  - id: BuildBisulfiteReferences.fasta_input
     type: File
-  - id: Convert.monitoring_script
+  - id: BuildBisulfiteReferences.monitoring_script
     type:
       - File
       - 'null'
-  - id: IndexForward.fasta_input
+  - id: Bowtie2Build.fasta_input
     type: File
-  - id: IndexForward.index_prefix
+  - id: Bowtie2Build.index_prefix
     type: string
-  - id: IndexForward.monitoring_script
+  - id: Bowtie2Build.monitoring_script
     type:
       - File
       - 'null'
-  - id: IndexReverse.fasta_input
+  - id: Bowtie2Build.fasta_input
     type: File
-  - id: IndexReverse.index_prefix
+  - id: Bowtie2Build.index_prefix
     type: string
-  - id: IndexReverse.monitoring_script
+  - id: Bowtie2Build.monitoring_script
     type:
       - File
       - 'null'
@@ -37,29 +37,29 @@ inputs:
       - 'null'
 outputs:
   - id: fwd_converted_reference_fasta_output
-    outputSource: Convert/fwd_converted_reference_fasta_output
+    outputSource: BuildBisulfiteReferences/fwd_converted_reference_fasta_output
     type: File
   - id: rev_converted_reference_fasta_output
-    outputSource: Convert/rev_converted_reference_fasta_output
+    outputSource: BuildBisulfiteReferences/rev_converted_reference_fasta_output
     type: File
   - id: monitoring_log
-    outputSource: Convert/monitoring_log
+    outputSource: BuildBisulfiteReferences/monitoring_log
     type: File
   - id: bowtie2_index_files
-    outputSource: IndexForward/bowtie2_index_files
+    outputSource: Bowtie2Build/bowtie2_index_files
     type:
         items: File
         type: array
   - id: monitoring_log
-    outputSource: IndexForward/monitoring_log
+    outputSource: Bowtie2Build/monitoring_log
     type: File
   - id: bowtie2_index_files
-    outputSource: IndexReverse/bowtie2_index_files
+    outputSource: Bowtie2Build/bowtie2_index_files
     type:
         items: File
         type: array
   - id: monitoring_log
-    outputSource: IndexReverse/monitoring_log
+    outputSource: Bowtie2Build/monitoring_log
     type: File
   - id: ref_dict_output
     outputSource: CreateReferenceDictionary/ref_dict_output
@@ -75,12 +75,12 @@ outputs:
     type: File
 cwlVersion: v1.2
 steps:
-  - id: Convert
+  - id: BuildBisulfiteReferences
     in:
       - id: fasta_input
-        source: Convert.fasta_input
+        source: BuildBisulfiteReferences.fasta_input
       - id: monitoring_script
-        source: Convert.monitoring_script
+        source: BuildBisulfiteReferences.monitoring_script
     out:
       - id: fwd_converted_reference_fasta_output
       - id: rev_converted_reference_fasta_output
@@ -139,14 +139,14 @@ steps:
         baseCommand:
           - bash
           - example.sh
-  - id: IndexForward
+  - id: Bowtie2Build
     in:
       - id: fasta_input
-        source: IndexForward.fasta_input
+        source: Bowtie2Build.fasta_input
       - id: index_prefix
-        source: IndexForward.index_prefix
+        source: Bowtie2Build.index_prefix
       - id: monitoring_script
-        source: IndexForward.monitoring_script
+        source: Bowtie2Build.monitoring_script
     out:
       - id: bowtie2_index_files
       - id: monitoring_log
@@ -202,14 +202,14 @@ steps:
         baseCommand:
           - bash
           - example.sh
-  - id: IndexReverse
+  - id: Bowtie2Build
     in:
       - id: fasta_input
-        source: IndexReverse.fasta_input
+        source: Bowtie2Build.fasta_input
       - id: index_prefix
-        source: IndexReverse.index_prefix
+        source: Bowtie2Build.index_prefix
       - id: monitoring_script
-        source: IndexReverse.monitoring_script
+        source: Bowtie2Build.monitoring_script
     out:
       - id: bowtie2_index_files
       - id: monitoring_log
@@ -288,9 +288,8 @@ steps:
           - id: ref_dict_output
             type: File
             outputBinding:
-                glob: "$(inputs.ref_dict_output_name === null ? (inputs.reference_fasta.basename.replace(/\\\
-                    .fa$/, '') ).split('/').reverse()[0].replace(/\\.fasta$/, '')\
-                    \ + \".dict\" : inputs.ref_dict_output_name)"
+                glob: $(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/,
+                    '') + ".dict")
           - id: monitoring_log
             type: File
             outputBinding:
@@ -316,7 +315,7 @@ steps:
                     # create a reference dict
                     java -jar /picard-tools/picard.jar CreateSequenceDictionary \
                       REFERENCE=$(inputs.reference_fasta.path) \
-                      OUTPUT=$(inputs.ref_dict_output_name === null ? (inputs.reference_fasta.basename.replace(/\.fa$/, '') ).split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict" : inputs.ref_dict_output_name)
+                      OUTPUT=$(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")
 
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
@@ -352,8 +351,7 @@ steps:
           - id: ref_index_output
             type: File
             outputBinding:
-                glob: '$(inputs.ref_index_output_name === null ? inputs.reference_fasta.basename
-                    + ".fai" : inputs.ref_index_output_name)'
+                glob: $(inputs.reference_fasta.basename + ".fai")
           - id: monitoring_log
             type: File
             outputBinding:
@@ -383,7 +381,7 @@ steps:
                     samtools faidx \
                         $FASTA_TEMP
 
-                    mv $FASTA_TEMP.fai $(inputs.ref_index_output_name === null ? inputs.reference_fasta.basename + ".fai" : inputs.ref_index_output_name)
+                    mv $FASTA_TEMP.fai $(inputs.reference_fasta.basename + ".fai")
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true

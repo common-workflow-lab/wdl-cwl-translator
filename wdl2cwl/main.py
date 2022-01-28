@@ -75,24 +75,18 @@ class Converter:
         wf_name = obj.name
         wf_description = obj.meta["description"] if "description" in obj.meta else None
         for call in obj.body:
-            call_name = call.name  # type: ignore
             callee = call.callee  # type: ignore
-            namespace = ""
-            if len(call.callee_id) == 2:  # type: ignore
-                namespace, _ = call.callee_id  # type: ignore
-                namespace += "."
+            callee_id = ".".join(call.callee_id)  # type: ignore
             cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
             wf_step_inputs: List[cwl.WorkflowStepInput] = []
             wf_step_outputs: List[cwl.WorkflowStepOutput] = []
             for inp in cwl_call_inputs:
                 wf_step_inputs.append(
-                    cwl.WorkflowStepInput(
-                        id=inp.id, source=f"{namespace}{call_name}.{inp.id}"
-                    )
+                    cwl.WorkflowStepInput(id=inp.id, source=f"{callee_id}.{inp.id}")
                 )
                 inputs.append(
                     cwl.WorkflowInputParameter(
-                        id=f"{namespace}{call_name}.{inp.id}",
+                        id=f"{callee_id}.{inp.id}",
                         type=inp.type,
                         default=inp.default,
                     )
@@ -104,13 +98,13 @@ class Converter:
                     cwl.WorkflowOutputParameter(
                         id=output.id,
                         type=output.type,
-                        outputSource=f"{namespace}{call_name}/{output.id}",
+                        outputSource=f"{callee_id}/{output.id}",
                     )
                 )
             wf_step_run = self.load_wdl_objects(callee)
             wf_step = cwl.WorkflowStep(
                 wf_step_inputs,
-                id=f"{namespace}{call_name}",
+                id=f"{callee_id}",
                 run=wf_step_run,
                 out=wf_step_outputs,
             )
@@ -403,8 +397,8 @@ class Converter:
             right_operand = self.get_expr(right_operand)  # type: ignore
             left_operand_value = self.get_expr(left_operand)
             if getattr(left_operand, "function_name", None) == "basename":
-                treat_as_optional = True
                 referer = wdl_apply_expr.parent.name  # type: ignore
+                treat_as_optional = True if referer in self.non_static_values else False
             return (
                 f"{left_operand_value} + {right_operand}"
                 if not treat_as_optional
@@ -427,7 +421,7 @@ class Converter:
                 if isinstance(operand, WDL.Expr.Get):
                     operand = self.get_expr_name(operand.expr)  # type: ignore
                 elif isinstance(operand, WDL.Expr.Apply):
-                    operand = f"({self.get_expr(operand)})"  # type: ignore
+                    operand = f"{self.get_expr(operand)}"  # type: ignore
                 suffix_str = suffix.literal.value  # type: ignore
                 regex_str = re.escape(suffix_str)
                 return (
@@ -879,3 +873,6 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])  # pragma: no cover
+#     pass
+
+# convert("wdl2cwl/tests/wdl_files/BuildCembaReferences.wdl")
