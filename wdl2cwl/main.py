@@ -73,23 +73,26 @@ class Converter:
         outputs: List[cwl.WorkflowOutputParameter] = []
         wf_steps: List[cwl.WorkflowStep] = []
         wf_name = obj.name
-        wf_description = obj.meta["description"]
+        wf_description = obj.meta["description"] if "description" in obj.meta else None
         for call in obj.body:
             call_name = call.name  # type: ignore
             callee = call.callee  # type: ignore
-            namespace, _ = call.callee_id  # type: ignore
+            namespace = ""
+            if len(call.callee_id) == 2:  # type: ignore
+                namespace, _ = call.callee_id  # type: ignore
+                namespace += "."
             cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
             wf_step_inputs: List[cwl.WorkflowStepInput] = []
             wf_step_outputs: List[cwl.WorkflowStepOutput] = []
             for inp in cwl_call_inputs:
                 wf_step_inputs.append(
                     cwl.WorkflowStepInput(
-                        id=inp.id, source=f"{namespace}.{call_name}.{inp.id}"
+                        id=inp.id, source=f"{namespace}{call_name}.{inp.id}"
                     )
                 )
                 inputs.append(
                     cwl.WorkflowInputParameter(
-                        id=f"{namespace}.{call_name}.{inp.id}",
+                        id=f"{namespace}{call_name}.{inp.id}",
                         type=inp.type,
                         default=inp.default,
                     )
@@ -101,13 +104,13 @@ class Converter:
                     cwl.WorkflowOutputParameter(
                         id=output.id,
                         type=output.type,
-                        outputSource=f"{namespace}.{call_name}/{output.id}",
+                        outputSource=f"{namespace}{call_name}/{output.id}",
                     )
                 )
             wf_step_run = self.load_wdl_objects(callee)
             wf_step = cwl.WorkflowStep(
                 wf_step_inputs,
-                id=f"{namespace}.{call_name}",
+                id=f"{namespace}{call_name}",
                 run=wf_step_run,
                 out=wf_step_outputs,
             )
@@ -421,7 +424,10 @@ class Converter:
             elif len(arguments) == 2:
                 operand, suffix = arguments
                 is_file = isinstance(operand.type, WDL.Type.File)
-                operand = self.get_expr_name(operand.expr)  # type: ignore
+                if isinstance(operand, WDL.Expr.Get):
+                    operand = self.get_expr_name(operand.expr)  # type: ignore
+                elif isinstance(operand, WDL.Expr.Apply):
+                    operand = f"({self.get_expr(operand)})"  # type: ignore
                 suffix_str = suffix.literal.value  # type: ignore
                 regex_str = re.escape(suffix_str)
                 return (
@@ -833,7 +839,6 @@ class Converter:
                     and wdl_output.expr.literal is not None
                 ):
                     glob_str = glob_str[3:-2]
-
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
