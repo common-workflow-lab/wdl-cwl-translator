@@ -142,8 +142,11 @@ test: $(PYSOURCES)
 cwltest: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
 	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests.yaml -- --cachedir cache --debug
 
-cwltest_big: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
-	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests_big.yaml -- --cachedir cache --debug
+cwltest_bigdata: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
+	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests_bigdata.yaml -- --cachedir cache --debug
+
+cwltest_bigdata_bigmem: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
+	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests_bigdata_bigmem.yaml -- --cachedir cache --debug
 
 ## testcov     : run the ${MODULE} test suite and collect coverage
 testcov: $(PYSOURCES)

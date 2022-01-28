@@ -2,7 +2,7 @@
 
 import re
 from types import TracebackType
-from typing import Any, Callable, Optional, Tuple, Type, cast
+from typing import Any, Callable, Optional, Type, cast
 
 import WDL
 from WDL._error_util import SourcePosition
@@ -44,20 +44,10 @@ class WDLSourceLine:
             return
         raise self.makeError(str(exc_value)) from exc_value
 
-    def file(self) -> Optional[str]:
-        """Test if the item has file information attached."""
-        if hasattr(self.item, "pos"):
-            pos: SourcePosition = cast(SourcePosition, self.item.pos)
-            return pos.uri
-        return None
-
     def makeLead(self) -> str:
         """Caculate the error message prefix."""
-        file = self.file()
-        if file:
-            pos = cast(SourcePosition, self.item.pos)
-            return f"{file}:{pos.line}:{pos.column}:"
-        return ""
+        pos: SourcePosition = cast(SourcePosition, self.item.pos)
+        return f"{pos.uri}:{pos.line}:{pos.column}:"
 
     def makeError(self, msg: str) -> Any:
         """Add the source info to the msg and instantiate the raise_type with it."""
@@ -77,5 +67,5 @@ class WDLSourceLine:
             if bool(lineno_re.match(m)):
                 errs.append(m)
             else:
-                errs.append(f"{lead}{m}")
+                errs.append(f"{lead} {m}")
         return self.raise_type("\n".join(errs))
