@@ -18,16 +18,16 @@ inputs:
     default: quay.io/broadinstitute/viral-core:2.1.33
     type: string
 outputs:
-  - id: report
+  - id: reports.align_and_count.report
     outputSource: reports.align_and_count/report
     type: File
-  - id: report_top_hits
+  - id: reports.align_and_count.report_top_hits
     outputSource: reports.align_and_count/report_top_hits
     type: File
-  - id: top_hit_id
+  - id: reports.align_and_count.top_hit_id
     outputSource: reports.align_and_count/top_hit_id
     type: string
-  - id: viralngs_version
+  - id: reports.align_and_count.viralngs_version
     outputSource: reports.align_and_count/viralngs_version
     type: string
 cwlVersion: v1.2

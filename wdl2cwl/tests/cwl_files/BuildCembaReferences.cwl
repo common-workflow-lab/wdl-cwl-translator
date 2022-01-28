@@ -1,17 +1,25 @@
 class: Workflow
 id: BuildCembaReferences
 inputs:
-  - id: BuildBisulfiteReferences.fasta_input
+  - id: Convert.fasta_input
     type: File
-  - id: BuildBisulfiteReferences.monitoring_script
+  - id: Convert.monitoring_script
     type:
       - File
       - 'null'
-  - id: Bowtie2Build.fasta_input
+  - id: IndexForward.fasta_input
     type: File
-  - id: Bowtie2Build.index_prefix
+  - id: IndexForward.index_prefix
     type: string
-  - id: Bowtie2Build.monitoring_script
+  - id: IndexForward.monitoring_script
+    type:
+      - File
+      - 'null'
+  - id: IndexReverse.fasta_input
+    type: File
+  - id: IndexReverse.index_prefix
+    type: string
+  - id: IndexReverse.monitoring_script
     type:
       - File
       - 'null'
@@ -28,43 +36,51 @@ inputs:
       - File
       - 'null'
 outputs:
-  - id: fwd_converted_reference_fasta_output
-    outputSource: BuildBisulfiteReferences/fwd_converted_reference_fasta_output
+  - id: Convert.fwd_converted_reference_fasta_output
+    outputSource: Convert/fwd_converted_reference_fasta_output
     type: File
-  - id: rev_converted_reference_fasta_output
-    outputSource: BuildBisulfiteReferences/rev_converted_reference_fasta_output
+  - id: Convert.rev_converted_reference_fasta_output
+    outputSource: Convert/rev_converted_reference_fasta_output
     type: File
-  - id: monitoring_log
-    outputSource: BuildBisulfiteReferences/monitoring_log
+  - id: Convert.monitoring_log
+    outputSource: Convert/monitoring_log
     type: File
-  - id: bowtie2_index_files
-    outputSource: Bowtie2Build/bowtie2_index_files
+  - id: IndexForward.bowtie2_index_files
+    outputSource: IndexForward/bowtie2_index_files
     type:
         items: File
         type: array
-  - id: monitoring_log
-    outputSource: Bowtie2Build/monitoring_log
+  - id: IndexForward.monitoring_log
+    outputSource: IndexForward/monitoring_log
     type: File
-  - id: ref_dict_output
+  - id: IndexReverse.bowtie2_index_files
+    outputSource: IndexReverse/bowtie2_index_files
+    type:
+        items: File
+        type: array
+  - id: IndexReverse.monitoring_log
+    outputSource: IndexReverse/monitoring_log
+    type: File
+  - id: CreateReferenceDictionary.ref_dict_output
     outputSource: CreateReferenceDictionary/ref_dict_output
     type: File
-  - id: monitoring_log
+  - id: CreateReferenceDictionary.monitoring_log
     outputSource: CreateReferenceDictionary/monitoring_log
     type: File
-  - id: ref_index_output
+  - id: CreateReferenceFastaIndex.ref_index_output
     outputSource: CreateReferenceFastaIndex/ref_index_output
     type: File
-  - id: monitoring_log
+  - id: CreateReferenceFastaIndex.monitoring_log
     outputSource: CreateReferenceFastaIndex/monitoring_log
     type: File
 cwlVersion: v1.2
 steps:
-  - id: BuildBisulfiteReferences
+  - id: Convert
     in:
       - id: fasta_input
-        source: BuildBisulfiteReferences.fasta_input
+        source: Convert.fasta_input
       - id: monitoring_script
-        source: BuildBisulfiteReferences.monitoring_script
+        source: Convert.monitoring_script
     out:
       - id: fwd_converted_reference_fasta_output
       - id: rev_converted_reference_fasta_output
@@ -123,14 +139,14 @@ steps:
         baseCommand:
           - bash
           - example.sh
-  - id: Bowtie2Build
+  - id: IndexForward
     in:
       - id: fasta_input
-        source: Bowtie2Build.fasta_input
+        source: IndexForward.fasta_input
       - id: index_prefix
-        source: Bowtie2Build.index_prefix
+        source: IndexForward.index_prefix
       - id: monitoring_script
-        source: Bowtie2Build.monitoring_script
+        source: IndexForward.monitoring_script
     out:
       - id: bowtie2_index_files
       - id: monitoring_log
@@ -186,14 +202,14 @@ steps:
         baseCommand:
           - bash
           - example.sh
-  - id: Bowtie2Build
+  - id: IndexReverse
     in:
       - id: fasta_input
-        source: Bowtie2Build.fasta_input
+        source: IndexReverse.fasta_input
       - id: index_prefix
-        source: Bowtie2Build.index_prefix
+        source: IndexReverse.index_prefix
       - id: monitoring_script
-        source: Bowtie2Build.monitoring_script
+        source: IndexReverse.monitoring_script
     out:
       - id: bowtie2_index_files
       - id: monitoring_log

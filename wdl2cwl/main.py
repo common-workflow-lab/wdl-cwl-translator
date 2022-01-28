@@ -77,7 +77,8 @@ class Converter:
         wf_description = obj.meta["description"] if "description" in obj.meta else None
         for call in obj.body:
             callee = call.callee  # type: ignore
-            callee_id = ".".join(call.callee_id)  # type: ignore
+            local_call_name = call.name  # type: ignore
+            callee_id = f"{call.callee_id[0]}.{local_call_name}" if len(call.callee_id) == 2 else local_call_name  # type: ignore
             cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
             wf_step_inputs: List[cwl.WorkflowStepInput] = []
             wf_step_outputs: List[cwl.WorkflowStepOutput] = []
@@ -97,14 +98,14 @@ class Converter:
                     seen.add(call_inp_id)
             cwl_call_ouputs = self.get_cwl_task_outputs(callee.outputs)
             for output in cwl_call_ouputs:
-                call_output_id = f"{callee_id}/{output.id}"
+                call_output_id = f"{callee_id}.{output.id}"
                 wf_step_outputs.append(cwl.WorkflowStepOutput(id=output.id))
                 if call_output_id not in seen:
                     outputs.append(
                         cwl.WorkflowOutputParameter(
-                            id=output.id,
+                            id=call_output_id,
                             type=output.type,
-                            outputSource=call_output_id,
+                            outputSource=f"{callee_id}/{output.id}",
                         )
                     )
                     seen.add(call_output_id)
