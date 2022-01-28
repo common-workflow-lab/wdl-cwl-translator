@@ -89,7 +89,7 @@ class Converter:
                 if call_inp_id not in seen:
                     inputs.append(
                         cwl.WorkflowInputParameter(
-                            id=f"{call_inp_id}",
+                            id=call_inp_id,
                             type=inp.type,
                             default=inp.default,
                         )
@@ -111,7 +111,7 @@ class Converter:
             wf_step_run = self.load_wdl_objects(callee)
             wf_step = cwl.WorkflowStep(
                 wf_step_inputs,
-                id=f"{callee_id}",
+                id=callee_id,
                 run=wf_step_run,
                 out=wf_step_outputs,
             )
@@ -880,6 +880,3 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])  # pragma: no cover
-#     pass
-
-# convert("wdl2cwl/tests/wdl_files/BuildCembaReferences.wdl")
