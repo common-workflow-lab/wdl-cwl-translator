@@ -58,6 +58,7 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
         ("rtg_2_tasks.wdl"),
         ("bcftools.wdl"),
         ("align_and_count.wdl"),
+        ("BuildCembaReferences.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:

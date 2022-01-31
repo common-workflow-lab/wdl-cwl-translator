@@ -1,0 +1,6 @@
+reference_fasta:
+  class: File
+  path: truth_input_ref.fa
+  size: 34
+  checksum: sha1$ece4e7320ccd8a183c1ac5ab4f93cce5dc0c88c2
+  doc: From https://github.com/broadinstitute/warp/blob/15137244a4caae299dd2b766683ee78488f5db7f/tests/cemba/pr/truth_input_ref.fa under a BSD-3-Clause License
