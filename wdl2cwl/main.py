@@ -67,48 +67,73 @@ class Converter:
             f"Unimplemented type: {type(obj)}: {obj}"
         )
 
+    def get_workflow_input_expr(
+        self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]
+    ) -> str:
+        """Get name of expression referenced in workflow call inputs."""
+        if isinstance(wf_expr, WDL.Expr.String):
+            return self.get_expr_string(wf_expr)[1:-1]
+        wdl_expr = wf_expr.expr
+        if wdl_expr is None or not hasattr(wdl_expr, "name"):
+            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
+                f"{type(wdl_expr)} has not attribute 'name'"
+            )
+        expr_name = wdl_expr.name
+        return str(expr_name)
+
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
-        inputs: List[cwl.WorkflowInputParameter] = []
-        outputs: List[cwl.WorkflowOutputParameter] = []
-        seen: Set[str] = set()
-        wf_steps: List[cwl.WorkflowStep] = []
         wf_name = obj.name
+        inputs = [
+            cwl.WorkflowInputParameter(
+                id=inp.id,
+                type=inp.type,
+                default=inp.default,
+            )
+            for inp in self.get_cwl_task_inputs(obj.available_inputs)
+        ]
+        outputs = [
+            cwl.WorkflowOutputParameter(
+                id=f"{wf_name}.{output.id}",
+                type=output.type,
+                outputSource=output.outputBinding.glob.replace(".", "/")[2:-1],
+            )
+            for output in self.get_cwl_task_outputs(obj.effective_outputs)
+        ]
+        wf_steps: List[cwl.WorkflowStep] = []
         wf_description = obj.meta["description"] if "description" in obj.meta else None
         for call in obj.body:
             callee = call.callee  # type: ignore
             local_call_name = call.name  # type: ignore
             callee_id = f"{call.callee_id[0]}.{local_call_name}" if len(call.callee_id) == 2 else local_call_name  # type: ignore
-            cwl_call_inputs = self.get_cwl_task_inputs(callee.inputs)
+            cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)
+            call_inputs = call.inputs
+            inputs_from_call: Dict[str] = dict()
+            input_defaults = set()
+            if call_inputs:
+                for key, value in call_inputs.items():
+                    if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
+                        input_defaults.add(key)
+                    input_expr = self.get_workflow_input_expr(value)
+                    inputs_from_call[key] = input_expr
             wf_step_inputs: List[cwl.WorkflowStepInput] = []
             wf_step_outputs: List[cwl.WorkflowStepOutput] = []
-            for inp in cwl_call_inputs:
+            for inp in cwl_callee_inputs:
                 call_inp_id = f"{callee_id}.{inp.id}"
-                wf_step_inputs.append(
-                    cwl.WorkflowStepInput(id=inp.id, source=call_inp_id)
-                )
-                if call_inp_id not in seen:
-                    inputs.append(
-                        cwl.WorkflowInputParameter(
-                            id=call_inp_id,
-                            type=inp.type,
-                            default=inp.default,
-                        )
+                source_str = inputs_from_call.get(inp.id, call_inp_id)
+
+                if inp.id not in input_defaults:
+                    wf_step_inputs.append(
+                        cwl.WorkflowStepInput(id=inp.id, source=source_str,)
                     )
-                    seen.add(call_inp_id)
-            cwl_call_ouputs = self.get_cwl_task_outputs(callee.outputs)
-            for output in cwl_call_ouputs:
-                call_output_id = f"{callee_id}.{output.id}"
-                wf_step_outputs.append(cwl.WorkflowStepOutput(id=output.id))
-                if call_output_id not in seen:
-                    outputs.append(
-                        cwl.WorkflowOutputParameter(
-                            id=call_output_id,
-                            type=output.type,
-                            outputSource=f"{callee_id}/{output.id}",
-                        )
+                else:
+                    wf_step_inputs.append(
+                        cwl.WorkflowStepInput(id=inp.id, default=source_str,)
                     )
-                    seen.add(call_output_id)
+            wf_step_outputs = [
+                cwl.WorkflowStepOutput(id=output.id)
+                for output in self.get_cwl_task_outputs(callee.outputs)
+            ]
             wf_step_run = self.load_wdl_objects(callee)
             wf_step = cwl.WorkflowStep(
                 wf_step_inputs,
@@ -518,12 +543,14 @@ class Converter:
 
     def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
         """Translate WDL Ident Expressions."""
-        ident_name = wdl_ident_expr.name
-        ident_name = self.get_input(ident_name)
+        id_name = wdl_ident_expr.name
+        ident_name = self.get_input(id_name)
         referee = wdl_ident_expr.referee
         optional = wdl_ident_expr.type.optional
-        if referee and referee.expr:
-            if (
+        if referee:
+            if isinstance(referee, WDL.Tree.Call):
+                return id_name
+            if referee.expr and (
                 wdl_ident_expr.name in self.optional_cwl_null
                 or wdl_ident_expr.name not in self.non_static_values
             ):
@@ -714,6 +741,9 @@ class Converter:
             input_value = None
             type_of: Union[str, cwl.CommandInputArraySchema]
 
+            if hasattr(wdl_input, "value"):
+                wdl_input = wdl_input.value
+
             if isinstance(wdl_input.type, WDL.Type.Array):
                 array_items_type = wdl_input.type.item_type
                 input_type = self.get_cwl_type(array_items_type)  # type: ignore
@@ -778,6 +808,8 @@ class Converter:
 
         for wdl_output in wdl_outputs:
             output_name = wdl_output.name
+            if hasattr(wdl_output, "info"):
+                wdl_output = wdl_output.info
             if isinstance(wdl_output.type, WDL.Type.Array):
                 array_items_type = wdl_output.type.item_type
                 input_type = self.get_cwl_type(array_items_type)  # type: ignore
@@ -881,3 +913,4 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])  # pragma: no cover
+    # convert("wdl2cwl/tests/wdl_files/BuildCembaReferences.wdl")

@@ -1,86 +1,43 @@
 class: Workflow
 id: BuildCembaReferences
 inputs:
-  - id: Convert.fasta_input
+  - id: reference_fasta
     type: File
-  - id: Convert.monitoring_script
-    type:
-      - File
-      - 'null'
-  - id: IndexForward.fasta_input
-    type: File
-  - id: IndexForward.index_prefix
-    type: string
-  - id: IndexForward.monitoring_script
-    type:
-      - File
-      - 'null'
-  - id: IndexReverse.fasta_input
-    type: File
-  - id: IndexReverse.index_prefix
-    type: string
-  - id: IndexReverse.monitoring_script
-    type:
-      - File
-      - 'null'
-  - id: CreateReferenceDictionary.reference_fasta
-    type: File
-  - id: CreateReferenceDictionary.monitoring_script
-    type:
-      - File
-      - 'null'
-  - id: CreateReferenceFastaIndex.reference_fasta
-    type: File
-  - id: CreateReferenceFastaIndex.monitoring_script
+  - id: monitoring_script
     type:
       - File
       - 'null'
 outputs:
-  - id: Convert.fwd_converted_reference_fasta_output
+  - id: BuildCembaReferences.reference_fasta_dict
+    outputSource: CreateReferenceDictionary/ref_dict_output
+    type: File
+  - id: BuildCembaReferences.reference_fasta_index
+    outputSource: CreateReferenceFastaIndex/ref_index_output
+    type: File
+  - id: BuildCembaReferences.fwd_converted_reference_fasta
     outputSource: Convert/fwd_converted_reference_fasta_output
     type: File
-  - id: Convert.rev_converted_reference_fasta_output
+  - id: BuildCembaReferences.rev_converted_reference_fasta
     outputSource: Convert/rev_converted_reference_fasta_output
     type: File
-  - id: Convert.monitoring_log
-    outputSource: Convert/monitoring_log
-    type: File
-  - id: IndexForward.bowtie2_index_files
+  - id: BuildCembaReferences.fwd_bowtie2_index_files
     outputSource: IndexForward/bowtie2_index_files
     type:
         items: File
         type: array
-  - id: IndexForward.monitoring_log
-    outputSource: IndexForward/monitoring_log
-    type: File
-  - id: IndexReverse.bowtie2_index_files
+  - id: BuildCembaReferences.rev_bowtie2_index_files
     outputSource: IndexReverse/bowtie2_index_files
     type:
         items: File
         type: array
-  - id: IndexReverse.monitoring_log
-    outputSource: IndexReverse/monitoring_log
-    type: File
-  - id: CreateReferenceDictionary.ref_dict_output
-    outputSource: CreateReferenceDictionary/ref_dict_output
-    type: File
-  - id: CreateReferenceDictionary.monitoring_log
-    outputSource: CreateReferenceDictionary/monitoring_log
-    type: File
-  - id: CreateReferenceFastaIndex.ref_index_output
-    outputSource: CreateReferenceFastaIndex/ref_index_output
-    type: File
-  - id: CreateReferenceFastaIndex.monitoring_log
-    outputSource: CreateReferenceFastaIndex/monitoring_log
-    type: File
 cwlVersion: v1.2
 steps:
   - id: Convert
     in:
       - id: fasta_input
-        source: Convert.fasta_input
+        source: reference_fasta
       - id: monitoring_script
-        source: Convert.monitoring_script
+        source: monitoring_script
     out:
       - id: fwd_converted_reference_fasta_output
       - id: rev_converted_reference_fasta_output
@@ -142,11 +99,11 @@ steps:
   - id: IndexForward
     in:
       - id: fasta_input
-        source: IndexForward.fasta_input
+        source: Convert.fwd_converted_reference_fasta_output
       - id: index_prefix
-        source: IndexForward.index_prefix
+        default: BS_CT
       - id: monitoring_script
-        source: IndexForward.monitoring_script
+        source: monitoring_script
     out:
       - id: bowtie2_index_files
       - id: monitoring_log
@@ -205,11 +162,11 @@ steps:
   - id: IndexReverse
     in:
       - id: fasta_input
-        source: IndexReverse.fasta_input
+        source: Convert.rev_converted_reference_fasta_output
       - id: index_prefix
-        source: IndexReverse.index_prefix
+        default: BS_GA
       - id: monitoring_script
-        source: IndexReverse.monitoring_script
+        source: monitoring_script
     out:
       - id: bowtie2_index_files
       - id: monitoring_log
@@ -268,9 +225,9 @@ steps:
   - id: CreateReferenceDictionary
     in:
       - id: reference_fasta
-        source: CreateReferenceDictionary.reference_fasta
+        source: reference_fasta
       - id: monitoring_script
-        source: CreateReferenceDictionary.monitoring_script
+        source: monitoring_script
     out:
       - id: ref_dict_output
       - id: monitoring_log
@@ -332,9 +289,9 @@ steps:
   - id: CreateReferenceFastaIndex
     in:
       - id: reference_fasta
-        source: CreateReferenceFastaIndex.reference_fasta
+        source: reference_fasta
       - id: monitoring_script
-        source: CreateReferenceFastaIndex.monitoring_script
+        source: monitoring_script
     out:
       - id: ref_index_output
       - id: monitoring_log

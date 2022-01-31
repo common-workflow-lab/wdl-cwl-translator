@@ -3,32 +3,29 @@ id: align_and_count_report
 doc: Align reads to reference with minimap2 and count the number of hits. Results
     are returned in the format of 'samtools idxstats'.
 inputs:
-  - id: reports.align_and_count.reads_bam
+  - id: align_and_count.reads_bam
     type: File
-  - id: reports.align_and_count.ref_db
+  - id: align_and_count.ref_db
     type: File
-  - id: reports.align_and_count.topNHits
+  - id: align_and_count.topNHits
     default: 3
     type: int
-  - id: reports.align_and_count.machine_mem_gb
+  - id: align_and_count.machine_mem_gb
     type:
       - int
       - 'null'
-  - id: reports.align_and_count.docker
+  - id: align_and_count.docker
     default: quay.io/broadinstitute/viral-core:2.1.33
     type: string
 outputs:
-  - id: reports.align_and_count.report
-    outputSource: reports.align_and_count/report
+  - id: align_and_count_report.report
+    outputSource: align_and_count/report
     type: File
-  - id: reports.align_and_count.report_top_hits
-    outputSource: reports.align_and_count/report_top_hits
+  - id: align_and_count_report.report_top_hits
+    outputSource: align_and_count/report_top_hits
     type: File
-  - id: reports.align_and_count.top_hit_id
-    outputSource: reports.align_and_count/top_hit_id
-    type: string
-  - id: reports.align_and_count.viralngs_version
-    outputSource: reports.align_and_count/viralngs_version
+  - id: align_and_count_report.viral_core_version
+    outputSource: align_and_count/viralngs_version
     type: string
 cwlVersion: v1.2
 steps:
