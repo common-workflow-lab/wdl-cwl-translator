@@ -165,6 +165,7 @@ task CreateReferenceDictionary {
     java -jar /picard-tools/picard.jar CreateSequenceDictionary \
       REFERENCE=~{reference_fasta} \
       OUTPUT=~{ref_dict_output_name}
+    sed -i "s=$(dirname ~{reference_fasta})/==g" ~{ref_dict_output_name}  # for reproducibility
 
   >>>
 

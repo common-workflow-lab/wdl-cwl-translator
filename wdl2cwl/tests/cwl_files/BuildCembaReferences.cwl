@@ -316,6 +316,7 @@ steps:
                     java -jar /picard-tools/picard.jar CreateSequenceDictionary \
                       REFERENCE=$(inputs.reference_fasta.path) \
                       OUTPUT=$(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")
+                    sed -i "s=\$(dirname $(inputs.reference_fasta.path))/==g" $(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")  # for reproducibility
 
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
