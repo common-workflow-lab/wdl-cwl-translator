@@ -78,7 +78,7 @@ class Converter:
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"{type(wdl_expr)} has not attribute 'name'"
             )
-        expr_name = wdl_expr.name
+        expr_name = wdl_expr.name  # type: ignore
         return str(expr_name)
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
@@ -90,15 +90,15 @@ class Converter:
                 type=inp.type,
                 default=inp.default,
             )
-            for inp in self.get_cwl_task_inputs(obj.available_inputs)
+            for inp in self.get_cwl_task_inputs(obj.available_inputs)  # type: ignore
         ]
         outputs = [
             cwl.WorkflowOutputParameter(
                 id=f"{wf_name}.{output.id}",
                 type=output.type,
-                outputSource=output.outputBinding.glob.replace(".", "/")[2:-1],
+                outputSource=output.outputBinding.glob.replace(".", "/")[2:-1],  # type: ignore
             )
-            for output in self.get_cwl_task_outputs(obj.effective_outputs)
+            for output in self.get_cwl_task_outputs(obj.effective_outputs)  # type: ignore
         ]
         wf_steps: List[cwl.WorkflowStep] = []
         wf_description = obj.meta["description"] if "description" in obj.meta else None
@@ -107,15 +107,15 @@ class Converter:
             local_call_name = call.name  # type: ignore
             callee_id = f"{call.callee_id[0]}.{local_call_name}" if len(call.callee_id) == 2 else local_call_name  # type: ignore
             cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)
-            call_inputs = call.inputs
-            inputs_from_call: Dict[str] = dict()
+            call_inputs = call.inputs  # type: ignore
+            inputs_from_call: Dict[str] = dict()  # type: ignore
             input_defaults = set()
             if call_inputs:
                 for key, value in call_inputs.items():
                     if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
                         input_defaults.add(key)
                     input_expr = self.get_workflow_input_expr(value)
-                    inputs_from_call[key] = input_expr
+                    inputs_from_call[key] = input_expr.replace(".", "/")
             wf_step_inputs: List[cwl.WorkflowStepInput] = []
             wf_step_outputs: List[cwl.WorkflowStepOutput] = []
             for inp in cwl_callee_inputs:
@@ -124,11 +124,17 @@ class Converter:
 
                 if inp.id not in input_defaults:
                     wf_step_inputs.append(
-                        cwl.WorkflowStepInput(id=inp.id, source=source_str,)
+                        cwl.WorkflowStepInput(
+                            id=inp.id,
+                            source=source_str,
+                        )
                     )
                 else:
                     wf_step_inputs.append(
-                        cwl.WorkflowStepInput(id=inp.id, default=source_str,)
+                        cwl.WorkflowStepInput(
+                            id=inp.id,
+                            default=source_str,
+                        )
                     )
             wf_step_outputs = [
                 cwl.WorkflowStepOutput(id=output.id)
@@ -742,7 +748,7 @@ class Converter:
             type_of: Union[str, cwl.CommandInputArraySchema]
 
             if hasattr(wdl_input, "value"):
-                wdl_input = wdl_input.value
+                wdl_input = wdl_input.value  # type: ignore
 
             if isinstance(wdl_input.type, WDL.Type.Array):
                 array_items_type = wdl_input.type.item_type
@@ -809,7 +815,7 @@ class Converter:
         for wdl_output in wdl_outputs:
             output_name = wdl_output.name
             if hasattr(wdl_output, "info"):
-                wdl_output = wdl_output.info
+                wdl_output = wdl_output.info  # type: ignore
             if isinstance(wdl_output.type, WDL.Type.Array):
                 array_items_type = wdl_output.type.item_type
                 input_type = self.get_cwl_type(array_items_type)  # type: ignore

@@ -99,7 +99,7 @@ steps:
   - id: IndexForward
     in:
       - id: fasta_input
-        source: Convert.fwd_converted_reference_fasta_output
+        source: Convert/fwd_converted_reference_fasta_output
       - id: index_prefix
         default: BS_CT
       - id: monitoring_script
@@ -162,7 +162,7 @@ steps:
   - id: IndexReverse
     in:
       - id: fasta_input
-        source: Convert.rev_converted_reference_fasta_output
+        source: Convert/rev_converted_reference_fasta_output
       - id: index_prefix
         default: BS_GA
       - id: monitoring_script
