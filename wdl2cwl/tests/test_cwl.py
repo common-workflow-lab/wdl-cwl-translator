@@ -2,10 +2,11 @@
 import os.path
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import NamedTuple, Union, Any, cast
 
 import pytest
 
-from ..main import Converter, main
+from ..main import Converter, main, ConversionException
 
 
 def get_file(path: str) -> str:
@@ -86,8 +87,11 @@ def test_wdl_stdout(capsys) -> None:  # type: ignore
         )
 
 
-class TestObject:
+class TestObject(NamedTuple):
     """Test object for creating WDL.Expr.String."""
+
+    value: Union[Any, None]
+    literal: Union[Any, None]
 
 
 testdata = [
@@ -100,15 +104,19 @@ testdata = [
     ("15000 GiB", 15360000),
     ("5 TiB", 5242880),
     ("6000 MiB", 6000),
+    ("1 Altuve", ConversionException),
 ]
 
 
-@pytest.mark.parametrize("memory_runtime, expected_memory", testdata)
-def test_get_memory_literal(memory_runtime: str, expected_memory: float) -> None:
+@pytest.mark.parametrize("memory_runtime, expected_memory_or_error", testdata)
+def test_get_memory_literal(
+    memory_runtime: str, expected_memory_or_error: Union[float, int, Exception]
+) -> None:
     """Test get_memory_literal conditional statements."""
-    convert = Converter()
-    b = TestObject()
-    a = TestObject()
-    b.value = memory_runtime  # type: ignore
-    a.literal = b  # type: ignore
-    assert convert.get_memory_literal(a) == expected_memory  # type: ignore
+    b = TestObject(value=memory_runtime, literal=None)
+    a = TestObject(value=None, literal=b)
+    if isinstance(expected_memory_or_error, (float, int)):
+        assert Converter().get_memory_literal(a) == expected_memory_or_error  # type: ignore
+    else:
+        with pytest.raises(expected_memory_or_error):  # type: ignore
+            Converter().get_memory_literal(a)  # type: ignore
