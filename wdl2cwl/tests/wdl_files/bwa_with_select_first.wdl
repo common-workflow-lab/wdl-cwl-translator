@@ -2,7 +2,7 @@ version 1.0
 
 # Copyright (c) 2017 Leiden University Medical Center
 # 
-# Source: https://github.com/biowdl/tasks/blob/develop/bwa
+# Source: https://github.com/biowdl/tasks/blob/f234b0e8f46192d248e564f22bcd88912b890576/bwa.wdl
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
