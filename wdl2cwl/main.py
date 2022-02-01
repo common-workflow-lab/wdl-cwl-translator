@@ -125,7 +125,7 @@ def get_literal_name(
     # if the literal expr is used inside WDL.Expr.Apply
     # the literal value is what's needed
     parent = expr.parent  # type: ignore[union-attr]
-    if isinstance(parent, WDL.Expr.Apply):
+    if isinstance(parent, (WDL.Expr.Apply, WDL.Expr.IfThenElse)):
         return expr.literal.value  # type: ignore
     raise WDLSourceLine(expr, ConversionException).makeError(
         f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
@@ -379,10 +379,10 @@ class Converter:
         if memory_runtime.literal is None:
             _, placeholder, unit, _ = memory_runtime.parts
             with WDLSourceLine(placeholder, ConversionException):
-                if isinstance(placeholder.expr, WDL.Expr.Get):
+                if isinstance(placeholder.expr, WDL.Expr.Get):  # type: ignore
                     value_name = self.get_expr_get(placeholder.expr)  # type: ignore
                 else:
-                    value_name = self.get_expr_apply(placeholder.expr)
+                    value_name = self.get_expr_apply(placeholder.expr)  # type: ignore
                 return self.get_ram_min_js(value_name, unit.strip())  # type: ignore
 
         ram_min = self.get_expr_string(memory_runtime)[1:-1]
@@ -491,6 +491,7 @@ class Converter:
         raise WDLSourceLine(expr, ConversionException).makeError(
             f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
         )
+
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
         if wdl_expr_string.literal is not None:
@@ -521,9 +522,9 @@ class Converter:
 
     def get_expr_ifthenelse(self, wdl_ifthenelse: WDL.Expr.IfThenElse) -> str:
         """Translate WDL IfThenElse Expressions."""
-        condition = self.get_expr(wdl_ifthenelse.condition) 
-        if_true = self.get_expr(wdl_ifthenelse.consequent)  
-        if_false = self.get_expr(wdl_ifthenelse.alternative) 
+        condition = self.get_expr(wdl_ifthenelse.condition)
+        if_true = self.get_expr(wdl_ifthenelse.consequent)
+        if_false = self.get_expr(wdl_ifthenelse.alternative)
         return f"{condition} ? {if_true} : {if_false}"
 
     def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
@@ -628,8 +629,9 @@ class Converter:
             return self.get_expr(only_arg)
         elif function_name == "select_first":
             array_obj = arguments[0]
-            array_items = [self.get_expr(item) for item in array_obj.items]
-            return f"{array_items}.find(mem => mem !== null) "
+            array_items = [self.get_expr(item) for item in array_obj.items]  # type: ignore
+            items_str = ", ".join(array_items)
+            return f"[{items_str}].find(element => element !== null) "
         elif function_name == "_mul":
             left_operand, right_operand = arguments
             left_str = self.get_expr(left_operand)
@@ -641,33 +643,41 @@ class Converter:
             right_str = self.get_expr(right_operand)
             return f"{left_str} === {right_str}"
         elif function_name == "ceil":
-            only_arg = self.get_expr(arguments[0])
+            only_arg = self.get_expr(arguments[0])  # type: ignore
             return f"Math.ceil({only_arg}) "
         elif function_name == "_div":
             left_operand, right_operand = arguments
             left_str = self.get_expr(left_operand)
             right_str = self.get_expr(right_operand)
-            return f"{left_str}/{right_str}"        
+            return f"{left_str}/{right_str}"
         elif function_name == "size":
             left_operand, right_operand = arguments
             left_str = self.get_expr(left_operand)
             size_unit = self.get_expr(right_operand)[1:-1]
             with WDLSourceLine(size_unit, ConversionException):
                 if size_unit == "Ki" or size_unit == "K":
-                    unit_value = ""
+                    unit_value = "1024"
                 elif size_unit == "Mi" or size_unit == "M":
-                    unit_value = 2
+                    unit_value = "1024^2"
                 if size_unit == "Gi" or size_unit == "G":
-                    unit_value = 3
+                    unit_value = "1024^3"
                 elif size_unit == "Ti" or size_unit == "T":
-                    unit_value = 4
+                    unit_value = "1024^4"
                 elif size_unit == "Pi" or size_unit == "P":
-                    unit_value = 5
+                    unit_value = "1024^5"
                 else:
                     raise WDLSourceLine(size_unit, ConversionException).makeError(
                         f"Size Unit '{size_unit}' not yet handled."
                     )
-            return f"{left_str}.size / 1024^{unit_value}"
+            return (
+                "(function(size_of=0)"
+                + "{"
+                + f"{left_str}.forEach(function(element)"
+                + "{"
+                + "size_of += element.size"
+                + "})}"
+                + f") / {unit_value}"
+            )
 
         raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
             f"Function name '{function_name}' not yet handled."
@@ -678,7 +688,7 @@ class Converter:
         member = wdl_get_expr.member
 
         if not member:
-            return self.get_expr_ident(wdl_get_expr.expr)
+            return self.get_expr_ident(wdl_get_expr.expr)  # type: ignore
         struct_name = self.get_expr(wdl_get_expr.expr)
         member_str = f"{struct_name}.{member}"
         return (
@@ -838,10 +848,10 @@ class Converter:
                 input_type = get_cwl_type(wdl_input.type.item_type)
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             elif isinstance(wdl_input.type, WDL.Type.StructInstance):
-                type_of = {
+                type_of = {  # type: ignore
                     "type": "record",
                     "name": wdl_input.type.type_name,
-                    "items": self.get_struct_inputs(wdl_input.type.members)
+                    "items": self.get_struct_inputs(wdl_input.type.members),  # type: ignore
                 }
             else:
                 type_of = get_cwl_type(wdl_input.type)
@@ -873,22 +883,21 @@ class Converter:
             )
 
         return inputs
-    def get_struct_inputs(self, members) -> List[cwl.CommandInputParameter]:
+
+    def get_struct_inputs(
+        self, members: Dict[str, Any]
+    ) -> List[cwl.CommandInputParameter]:
         """Get member items of a WDL struct and return a list of cwl.CommandInputParameters."""
         inputs: List[cwl.CommandInputParameter] = []
         for member, value in members.items():
             input_name = member
             if isinstance(value, WDL.Type.Array):
                 array_items_type = value.item_type
-                input_type = self.get_cwl_type(array_items_type)  # type: ignore
-                type_of = cwl.CommandInputArraySchema(items=input_type, type="array") 
+                input_type = get_cwl_type(array_items_type)
+                type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             else:
-                type_of = self.get_cwl_type(value)
-            inputs.append(
-                cwl.CommandInputParameter(
-                    id=input_name, type=type_of
-                )
-            )
+                type_of = get_cwl_type(value)  # type: ignore
+            inputs.append(cwl.CommandInputParameter(id=input_name, type=type_of))
         return inputs
 
     def get_cwl_task_outputs(
@@ -1010,4 +1019,3 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])
-    # convert("wdl2cwl/tests/wdl_files/bwa_with_select_first.wdl")

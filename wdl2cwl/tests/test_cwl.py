@@ -59,6 +59,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("bcftools.wdl"),
         ("align_and_count.wdl"),
         ("BuildCembaReferences.wdl"),
+        ("bwa_with_select_first.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:

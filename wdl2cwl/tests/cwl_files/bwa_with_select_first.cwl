@@ -69,7 +69,7 @@ requirements:
     dockerPull: quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
             set -e
@@ -97,7 +97,7 @@ requirements:
     ramMin: |-
         ${
         var unit = "G";
-        var value = parseInt(`${['inputs.memoryGb', "10 + Math.ceil(inputs.bwaIndex.indexFiles.size / 1024^3*2)  + inputs.sortMemoryPerThreadGb*['inputs.sortThreads', 'inputs.threads === 1 ? 1 : 1 + Math.ceil(inputs.threads/4.0) '].find(mem => mem !== null) "].find(mem => mem !== null) }`.match(/[0-9]+/g));
+        var value = parseInt(`${[inputs.memoryGb, 10 + Math.ceil((function(size_of=0){inputs.bwaIndex.indexFiles.forEach(function(element){size_of += element.size})}) / 1024^3*2)  + inputs.sortMemoryPerThreadGb*[inputs.sortThreads, inputs.threads === 1 ? 1 : 1 + Math.ceil(inputs.threads/4.0) ].find(element => element !== null) ].find(element => element !== null) }`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -114,4 +114,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash
