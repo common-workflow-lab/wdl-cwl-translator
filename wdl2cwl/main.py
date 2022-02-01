@@ -60,13 +60,12 @@ class Converter:
 
     def load_wdl_objects(
         self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]
-    ) -> cwl.CommandLineTool:
+    ) -> Union[cwl.CommandLineTool, cwl.Workflow]:
         """Load a WDL SourceNode obj and returns either a Task or a Workflow."""
         if isinstance(obj, WDL.Tree.Task):
             return self.load_wdl_task(obj)
-        raise WDLSourceLine(obj, ConversionException).makeError(
-            f"Unimplemented type: {type(obj)}: {obj}"
-        )
+        elif isinstance(obj, WDL.Tree.Workflow):
+            return self.load_wdl_workflow(obj)
 
     def get_workflow_input_expr(
         self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]
@@ -183,10 +182,9 @@ class Converter:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_task_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_task_outputs(obj.outputs)
-        requirements = self.get_cwl_requirements(obj.command, obj.runtime)
+        requirements = self.get_cwl_requirements(obj)
         if obj.parameter_meta:
             _logger.warning("Skipping parameter_meta: %s", obj.parameter_meta)
-
         if obj.meta:
             _logger.warning("Skipping meta: %s", obj.meta)
         if len(obj.postinputs) > 0:
@@ -201,10 +199,10 @@ class Converter:
             baseCommand=["bash", "script.bash"],
         )
 
-    def get_cwl_requirements(
-        self, command: WDL.Expr.String, runtime: Dict[str, WDL.Expr.Base]
-    ) -> List[cwl.ProcessRequirement]:
+    def get_cwl_requirements(self, obj: WDL.Tree.Task) -> List[cwl.ProcessRequirement]:
         """Produce the CWL Requirements list."""
+        command = obj.command
+        runtime = obj.runtime
         requirements: List[cwl.ProcessRequirement] = []
         if "docker" in runtime:
             with WDLSourceLine(runtime["docker"], ConversionException):
@@ -250,12 +248,6 @@ class Converter:
                     timelimit=time_minutes,
                 )
             )
-        runtime_requirements = ["docker", "memory", "disks", "time_minutes", "cpu"]
-
-        for i in runtime_requirements:
-            if i not in runtime:
-                _logger.warning("Skiping requirement: %s", i)
-
         return requirements
 
     def get_time_minutes_requirement(
