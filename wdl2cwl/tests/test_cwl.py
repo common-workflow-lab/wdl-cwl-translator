@@ -37,7 +37,6 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("hisat2_2.wdl"),
         ("hisat2_3.wdl"),
         ("isoseq3.wdl"),
-        # ("length_function_error.wdl"), produces an error on purpose
         ("minCores.wdl"),
         ("pbmm2.wdl"),
         ("read_string_cornercase.wdl"),
