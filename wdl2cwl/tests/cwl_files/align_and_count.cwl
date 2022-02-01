@@ -94,7 +94,7 @@ steps:
             dockerPull: quay.io/broadinstitute/viral-core:2.1.33
           - class: InitialWorkDirRequirement
             listing:
-              - entryname: example.sh
+              - entryname: script.bash
                 entry: |4
 
                     set -ex -o pipefail
@@ -121,4 +121,4 @@ steps:
         cwlVersion: v1.2
         baseCommand:
           - bash
-          - example.sh
+          - script.bash

@@ -15,11 +15,9 @@ def test_wdlsourceline() -> None:
     doc_tree = WDL.load(get_file("wdl_files/minCores.wdl"))
     with pytest.raises(
         ConversionException,
-        match=re.escape(
-            "minCores.wdl:1:1: Unimplemented type: <class 'WDL.Tree.Document'>"
-        ),
+        match=re.escape("minCores.wdl:1:1: SourceLineTest"),
     ):
-        Converter().load_wdl_objects(doc_tree)  # type: ignore
+        raise WDLSourceLine(doc_tree, ConversionException).makeError("SourceLineTest")
 
 
 def test_wdlsourceline_non_wdl() -> None:
@@ -43,9 +41,9 @@ def test_nested_wdlsourceline() -> None:
     doc_tree = WDL.load(get_file("wdl_files/minCores.wdl"))
     with pytest.raises(
         ConversionException,
-        match=re.escape(
-            "minCores.wdl:1:1: Unimplemented type: <class 'WDL.Tree.Document'>"
-        ),
+        match=re.escape("minCores.wdl:3:1: SourceLineTest"),
     ):
         with WDLSourceLine(doc_tree.tasks[0], ConversionException):
-            Converter().load_wdl_objects(doc_tree)  # type: ignore
+            raise WDLSourceLine(
+                doc_tree.tasks[0].inputs, ConversionException
+            ).makeError("SourceLineTest")
