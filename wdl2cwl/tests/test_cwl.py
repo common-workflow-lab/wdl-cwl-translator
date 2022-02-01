@@ -81,9 +81,7 @@ def test_wdl_stdout(
         captured = capsys.readouterr()
         log = caplog.text
         assert captured.out == file.read()
-        assert "Skiping requirement: memory" in log
-        assert "Skiping requirement: disks" in log
-        assert "Skiping requirement: time_minutes" in log
+        assert "Skipping parameter_meta" in log
 
 
 class TestObject(NamedTuple):
