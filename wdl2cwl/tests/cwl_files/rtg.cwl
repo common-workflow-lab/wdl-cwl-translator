@@ -32,7 +32,7 @@ requirements:
     dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
             set -e
@@ -64,4 +64,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash

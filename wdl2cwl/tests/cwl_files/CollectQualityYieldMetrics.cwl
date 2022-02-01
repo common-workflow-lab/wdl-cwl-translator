@@ -17,7 +17,7 @@ requirements:
     dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
             java -Xms2000m -jar /usr/picard/picard.jar \
@@ -35,4 +35,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash

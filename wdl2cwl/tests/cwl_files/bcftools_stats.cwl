@@ -115,7 +115,7 @@ requirements:
     dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
             set -e
@@ -171,4 +171,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash
