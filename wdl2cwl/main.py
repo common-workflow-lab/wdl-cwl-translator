@@ -12,7 +12,8 @@ import WDL
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
-from wdl2cwl.errors import WDLSourceLine
+from . import _logger
+from .errors import WDLSourceLine
 
 valid_js_identifier = regex.compile(
     r"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|null|this|true|"
@@ -105,9 +106,12 @@ class Converter:
         wf_description = obj.meta["description"] if "description" in obj.meta else None
         for call in obj.body:
             if not isinstance(call, WDL.Tree.Call):
-                print(
-                    "Warning: unhandled Workflow node type: {type(call)}.",
-                    file=sys.stderr,
+                _logger.warning(
+                    WDLSourceLine(call).makeError(
+                        "Warning: unhandled Workflow node type:"
+                    )
+                    + " %s",
+                    type(call),
                 )
                 continue
             with WDLSourceLine(call, ConversionException):
@@ -180,16 +184,14 @@ class Converter:
         cwl_inputs = self.get_cwl_task_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_task_outputs(obj.outputs)
         requirements = self.get_cwl_requirements(obj.command, obj.runtime)
-        if not obj.parameter_meta:
-            print("----WARNING: SKIPPING PARAMETER_META----", file=sys.stderr)
+        if obj.parameter_meta:
+            _logger.warning("Skipping parameter_meta: %s", obj.parameter_meta)
 
-        if not obj.meta:
-            print("----WARNING: SKIPPING META----", file=sys.stderr)
+        if obj.meta:
+            _logger.warning("Skipping meta: %s", obj.meta)
         if len(obj.postinputs) > 0:
             for a in obj.postinputs:
-                print(
-                    "----WARNING: SKIPPING VARIABLE " + a.name + "----", file=sys.stderr
-                )
+                _logger.warning("Skipping variable: %s", a)
         return cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
@@ -252,9 +254,7 @@ class Converter:
 
         for i in runtime_requirements:
             if i not in runtime:
-                print(
-                    "----WARNING: SKIPPING REQUIREMENT " + i + "----", file=sys.stderr
-                )
+                _logger.warning("Skiping requirement: %s", i)
 
         return requirements
 

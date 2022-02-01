@@ -2,11 +2,11 @@
 import os.path
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import NamedTuple, Union, Any, cast
+from typing import Any, NamedTuple, Union, cast
 
 import pytest
 
-from ..main import Converter, main, ConversionException
+from ..main import ConversionException, Converter, main
 
 
 def get_file(path: str) -> str:
@@ -14,10 +14,10 @@ def get_file(path: str) -> str:
     return os.path.join(os.path.dirname(__file__), path)
 
 
-def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
+def test_meta(caplog: pytest.LogCaptureFixture) -> None:
     """Test meta warning."""
-    main([get_file("wdl_files/validateOptimus_3.wdl")])
-    assert "----WARNING: SKIPPING META----" in capsys.readouterr().err
+    main([get_file("wdl_files/TrimAdapters.wdl")])
+    assert "Skipping meta" in caplog.text
 
 
 # cd wdl2cwl/tests/wdl_files;  for file in *.wdl; do echo "        (\"${file}\"),"; done
@@ -73,18 +73,18 @@ def test_wdls(description_name: str) -> None:
             assert Path(output.name).read_text(encoding="utf-8") == file.read()
 
 
-def test_wdl_stdout(capsys) -> None:  # type: ignore
+def test_wdl_stdout(
+    caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Test WDL to CWL conversion using stdout."""
     with open(get_file("cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
         main([get_file("wdl_files/bowtie_1.wdl")])
         captured = capsys.readouterr()
+        log = caplog.text
         assert captured.out == file.read()
-        assert captured.err == (
-            "----WARNING: SKIPPING REQUIREMENT memory----\n"
-            "----WARNING: SKIPPING REQUIREMENT disks----\n"
-            "----WARNING: SKIPPING REQUIREMENT time_minutes----\n"
-            "----WARNING: SKIPPING META----\n"
-        )
+        assert "Skiping requirement: memory" in log
+        assert "Skiping requirement: disks" in log
+        assert "Skiping requirement: time_minutes" in log
 
 
 class TestObject(NamedTuple):
