@@ -12,8 +12,8 @@ import WDL
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
-from . import _logger
-from .errors import WDLSourceLine
+from wdl2cwl import _logger
+from wdl2cwl.errors import WDLSourceLine
 
 valid_js_identifier = regex.compile(
     r"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|null|this|true|"
@@ -848,11 +848,11 @@ class Converter:
                 input_type = get_cwl_type(wdl_input.type.item_type)
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             elif isinstance(wdl_input.type, WDL.Type.StructInstance):
-                type_of = {  # type: ignore
-                    "type": "record",
-                    "name": wdl_input.type.type_name,
-                    "items": self.get_struct_inputs(wdl_input.type.members),  # type: ignore
-                }
+                type_of = cwl.InputRecordSchema(
+                    type="record",
+                    name=wdl_input.type.type_name,
+                    fields=self.get_struct_inputs(wdl_input.type.members),  # type: ignore
+                )
             else:
                 type_of = get_cwl_type(wdl_input.type)
 
@@ -884,11 +884,9 @@ class Converter:
 
         return inputs
 
-    def get_struct_inputs(
-        self, members: Dict[str, Any]
-    ) -> List[cwl.CommandInputParameter]:
+    def get_struct_inputs(self, members: Dict[str, Any]) -> List[cwl.InputRecordSchema]:
         """Get member items of a WDL struct and return a list of cwl.CommandInputParameters."""
-        inputs: List[cwl.CommandInputParameter] = []
+        inputs: List[cwl.InputRecordSchema] = []
         for member, value in members.items():
             input_name = member
             if isinstance(value, WDL.Type.Array):
@@ -897,7 +895,7 @@ class Converter:
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             else:
                 type_of = get_cwl_type(value)  # type: ignore
-            inputs.append(cwl.CommandInputParameter(id=input_name, type=type_of))
+            inputs.append(cwl.InputRecordSchema(name=input_name, type=type_of))
         return inputs
 
     def get_cwl_task_outputs(

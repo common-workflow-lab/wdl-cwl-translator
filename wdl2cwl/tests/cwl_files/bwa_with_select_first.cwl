@@ -9,15 +9,15 @@ inputs:
       - 'null'
   - id: bwaIndex
     type:
-        type: record
         name: BwaIndex
-        items:
-          - id: fastaFile
+        fields:
+          - name: fastaFile
             type: File
-          - id: indexFiles
+          - name: indexFiles
             type:
                 items: File
                 type: array
+        type: record
   - id: outputPrefix
     type: string
   - id: sixtyFour
