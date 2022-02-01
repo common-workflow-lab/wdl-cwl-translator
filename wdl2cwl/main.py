@@ -179,66 +179,7 @@ class Converter:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_task_inputs(obj.inputs)
         cwl_outputs = self.get_cwl_task_outputs(obj.outputs)
-        if "docker" in obj.runtime:
-            with WDLSourceLine(obj.runtime["docker"], ConversionException):
-                docker_requirement = self.get_cwl_docker_requirements(
-                    obj.runtime["docker"]  # type: ignore[arg-type]
-                )
-        else:
-            docker_requirement = None
-        cwl_command_str = self.get_cwl_command_requirements(obj.command.parts)
-        base_command = ["bash", "example.sh"]
-        requirements: List[cwl.ProcessRequirement] = []
-        if docker_requirement:
-            requirements.append(docker_requirement)
-        if cwl_command_str:
-            requirements.append(cwl_command_str)
-        requirements.append(cwl.InlineJavascriptRequirement())
-        requirements.append(cwl.NetworkAccess(networkAccess=True))
-        cpu_requirement = (
-            self.get_cpu_requirement(obj.runtime["cpu"])
-            if "cpu" in obj.runtime
-            else None
-        )
-        if "memory" in obj.runtime:
-            with WDLSourceLine(obj.runtime["memory"], ConversionException):
-                memory_requirement = self.get_memory_requirement(
-                    obj.runtime["memory"]  # type: ignore[arg-type]
-                )
-        else:
-            memory_requirement = None
-        if "disks" in obj.runtime:
-            with WDLSourceLine(obj.runtime["memory"], ConversionException):
-                outdir_requirement = self.get_outdir_requirement(
-                    obj.runtime["disks"]  # type: ignore[arg-type]
-                )
-        else:
-            outdir_requirement = 1024
-
-        requirements.append(
-            cwl.ResourceRequirement(
-                coresMin=cpu_requirement,
-                ramMin=memory_requirement,
-                outdirMin=outdir_requirement,
-            )
-        )
-        if "time_minutes" in obj.runtime:
-            with WDLSourceLine(obj.runtime["time_minutes"], ConversionException):
-                time_minutes = self.get_time_minutes_requirement(
-                    obj.runtime["time_minutes"]  # type: ignore[arg-type]
-                )
-            requirements.append(
-                cwl.ToolTimeLimit(
-                    timelimit=time_minutes,
-                )
-            )
-        runtime_requirements = ["docker", "memory", "disks", "time_minutes", "cpu"]
-
-        for i in runtime_requirements:
-            if i not in obj.runtime:
-                print(
-                    "----WARNING: SKIPPING REQUIREMENT " + i + "----", file=sys.stderr
-                )
+        requirements = self.get_cwl_requirements(obj.command, obj.runtime)
         if not obj.parameter_meta:
             print("----WARNING: SKIPPING PARAMETER_META----", file=sys.stderr)
 
@@ -249,15 +190,73 @@ class Converter:
                 print(
                     "----WARNING: SKIPPING VARIABLE " + a.name + "----", file=sys.stderr
                 )
-
         return cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
             requirements=requirements,
             outputs=cwl_outputs,
             cwlVersion="v1.2",
-            baseCommand=base_command,
+            baseCommand=["bash", "example.sh"],
         )
+
+    def get_cwl_requirements(
+        self, command: WDL.Expr.String, runtime: Dict[str, WDL.Expr.Base]
+    ) -> List[cwl.ProcessRequirement]:
+        """Produce the CWL Requirements list."""
+        requirements: List[cwl.ProcessRequirement] = []
+        if "docker" in runtime:
+            with WDLSourceLine(runtime["docker"], ConversionException):
+                requirements.append(
+                    self.get_cwl_docker_requirements(
+                        runtime["docker"]  # type: ignore[arg-type]
+                    )
+                )
+        requirements.append(self.get_cwl_command_requirements(command.parts))
+        requirements.append(cwl.InlineJavascriptRequirement())
+        requirements.append(cwl.NetworkAccess(networkAccess=True))
+        cpu_requirement = (
+            self.get_cpu_requirement(runtime["cpu"]) if "cpu" in runtime else None
+        )
+        if "memory" in runtime:
+            with WDLSourceLine(runtime["memory"], ConversionException):
+                memory_requirement = self.get_memory_requirement(
+                    runtime["memory"]  # type: ignore[arg-type]
+                )
+        else:
+            memory_requirement = None
+        if "disks" in runtime:
+            with WDLSourceLine(runtime["memory"], ConversionException):
+                outdir_requirement = self.get_outdir_requirement(
+                    runtime["disks"]  # type: ignore[arg-type]
+                )
+        else:
+            outdir_requirement = 1024
+        requirements.append(
+            cwl.ResourceRequirement(
+                coresMin=cpu_requirement,
+                ramMin=memory_requirement,
+                outdirMin=outdir_requirement,
+            )
+        )
+        if "time_minutes" in runtime:
+            with WDLSourceLine(runtime["time_minutes"], ConversionException):
+                time_minutes = self.get_time_minutes_requirement(
+                    runtime["time_minutes"]  # type: ignore[arg-type]
+                )
+            requirements.append(
+                cwl.ToolTimeLimit(
+                    timelimit=time_minutes,
+                )
+            )
+        runtime_requirements = ["docker", "memory", "disks", "time_minutes", "cpu"]
+
+        for i in runtime_requirements:
+            if i not in runtime:
+                print(
+                    "----WARNING: SKIPPING REQUIREMENT " + i + "----", file=sys.stderr
+                )
+
+        return requirements
 
     def get_time_minutes_requirement(
         self, time_minutes: WDL.Expr.Get
@@ -279,7 +278,7 @@ class Converter:
             return int(outdir.literal.value) * 1024  # type: ignore
 
     def get_input(self, input_name: str) -> str:
-        """Produce a consise, valid CWL expr/param reference lookup string for a given input name."""
+        """Produce a concise, valid CWL expr/param reference lookup string for a given input name."""
         if valid_js_identifier.match(input_name):
             return f"inputs.{input_name}"
         return f'inputs["{input_name}"]'
@@ -328,6 +327,8 @@ class Converter:
             memory = (value * (1000 * 1000 * 1000)) / (1024 * 1024)
         elif unit == "TB" or unit == "T":
             memory = (value * (1000 * 1000 * 1000 * 1000)) / (1024 * 1024)
+        else:
+            raise ConversionException(f"Invalid memory unit: ${unit}")
 
         return memory
 
@@ -398,7 +399,7 @@ class Converter:
             WDL.Expr.Array,
         ],
     ) -> str:
-        """Translate WDL Boolean, Int or Float Expression."""
+        """Translate WDL Boolean, Int, Float, or Array Expression."""
         # if the literal expr is used inside WDL.Expr.Apply
         # the literal value is what's needed
         parent = expr.parent  # type: ignore[union-attr]
@@ -438,13 +439,9 @@ class Converter:
 
     def get_expr_ifthenelse(self, wdl_ifthenelse: WDL.Expr.IfThenElse) -> str:
         """Translate WDL IfThenElse Expressions."""
-        condition = wdl_ifthenelse.condition
-        if_true = wdl_ifthenelse.consequent
-        if_false = wdl_ifthenelse.alternative
-
-        condition = self.get_expr(condition)  # type: ignore
-        if_true = self.get_expr(if_true)  # type: ignore
-        if_false = self.get_expr(if_false)  # type: ignore
+        condition = self.get_expr(wdl_ifthenelse.condition)
+        if_true = self.get_expr(wdl_ifthenelse.consequent)
+        if_false = self.get_expr(wdl_ifthenelse.alternative)
         return f"{condition} ? {if_true} : {if_false}"
 
     def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
@@ -647,7 +644,7 @@ class Converter:
     def get_cwl_command_requirements(
         self, wdl_commands: List[Union[str, WDL.Expr.Placeholder]]
     ) -> cwl.InitialWorkDirRequirement:
-        """Translate WDL commands into CWL Initial WorkDir REquirement."""
+        """Translate WDL commands into CWL Initial WorkDir Requirement."""
         command_str: str = ""
         for wdl_command in wdl_commands:
             if isinstance(wdl_command, str):
@@ -716,7 +713,7 @@ class Converter:
                 )
         else:
             # for the one case where the $(input.some_input_name) is used within the placeholder_expr
-            # we return the placholder_expr without enclosing in another $()
+            # we return the placeholder_expr without enclosing in another $()
             cwl_command_str = (
                 f"$({placeholder_expr})"
                 if placeholder_expr[-1] != ")"
@@ -740,8 +737,7 @@ class Converter:
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"{type(wdl_expr)} has not attribute 'name'"
             )
-        expr_name = self.get_input(wdl_expr.name)
-        return expr_name
+        return self.get_input(wdl_expr.name)
 
     def get_expr_name_with_is_file_check(self, wdl_expr: WDL.Expr.Ident) -> str:
         """Extract name from WDL expr and check if it's a file path."""
@@ -819,7 +815,6 @@ class Converter:
         elif isinstance(input_type, WDL.Type.Float):
             type_of = "float"
         else:
-            print(type(input_type))
             raise WDLSourceLine(input_type, ConversionException).makeError(
                 f"Input of type {input_type} is not yet handled."
             )
