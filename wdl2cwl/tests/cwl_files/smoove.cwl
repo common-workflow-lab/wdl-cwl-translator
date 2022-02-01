@@ -33,7 +33,7 @@ requirements:
     dockerPull: quay.io/biocontainers/smoove:0.2.5--0
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
             set -e
@@ -69,4 +69,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash

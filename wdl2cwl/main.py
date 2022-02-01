@@ -196,7 +196,7 @@ class Converter:
             requirements=requirements,
             outputs=cwl_outputs,
             cwlVersion="v1.2",
-            baseCommand=["bash", "example.sh"],
+            baseCommand=["bash", "script.bash"],
         )
 
     def get_cwl_requirements(
@@ -654,7 +654,7 @@ class Converter:
 
         command_str = textwrap.dedent(command_str)
         return cwl.InitialWorkDirRequirement(
-            listing=[cwl.Dirent(entry=command_str, entryname="example.sh")]
+            listing=[cwl.Dirent(entry=command_str, entryname="script.bash")]
         )
 
     def translate_wdl_placeholder(self, wdl_placeholder: WDL.Expr.Placeholder) -> str:

@@ -40,7 +40,7 @@ requirements:
     dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
             # These are optionally generated, but need to exist for Cromwell's sake
@@ -69,4 +69,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash

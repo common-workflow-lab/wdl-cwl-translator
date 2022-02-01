@@ -138,6 +138,11 @@ diff-cover.html: coverage.xml
 test: $(PYSOURCES)
 	pytest
 
+vpath %.wdl wdl2cwl/tests/wdl_files
+
+wdl2cwl/tests/cwl_files/%.cwl: %.wdl wdl2cwl/main.py
+	wdl2cwl $< --output $@
+
 # See https://github.com/common-workflow-lab/wdl2cwl_test_cache
 cwltest: wdl2cwl/tests/cwl_files/*.cwl wdl2cwl/tests/*
 	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests.yaml -- --cachedir cache --debug

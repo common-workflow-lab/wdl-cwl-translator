@@ -31,7 +31,7 @@ outputs:
 requirements:
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
                     set -e -o pipefail
@@ -52,4 +52,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash
