@@ -50,6 +50,108 @@ def convert(doc: str) -> Dict[str, Any]:
         }
 
 
+def get_cwl_type(input_type: WDL.Type.Base) -> str:
+    """Determine the CWL type for a WDL input declaration."""
+    if isinstance(input_type, WDL.Type.File):
+        type_of = "File"
+    elif isinstance(input_type, WDL.Type.String):
+        type_of = "string"
+    elif isinstance(input_type, WDL.Type.Boolean):
+        type_of = "boolean"
+    elif isinstance(input_type, WDL.Type.Int):
+        type_of = "int"
+    elif isinstance(input_type, WDL.Type.Float):
+        type_of = "float"
+    else:
+        raise WDLSourceLine(input_type, ConversionException).makeError(
+            f"Input of type {input_type} is not yet handled."
+        )
+    return type_of
+
+
+def get_outdir_requirement(outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]) -> int:
+    """Produce the memory requirement for the output directory from WDL runtime disks."""
+    # This is yet to be implemented. After Feature Parity.
+    with WDLSourceLine(outdir, ConversionException):
+        return int(outdir.literal.value) * 1024  # type: ignore
+
+
+def get_input(input_name: str) -> str:
+    """Produce a concise, valid CWL expr/param reference lookup string for a given input name."""
+    if valid_js_identifier.match(input_name):
+        return f"inputs.{input_name}"
+    return f'inputs["{input_name}"]'
+
+
+def get_cwl_docker_requirements(
+    wdl_docker: Union[WDL.Expr.Get, WDL.Expr.String]
+) -> cwl.ProcessRequirement:
+    """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
+    if isinstance(wdl_docker, WDL.Expr.String) and wdl_docker.literal:
+        dockerpull = wdl_docker.literal.value
+    else:
+        wdl_get_expr = wdl_docker
+        if isinstance(wdl_docker, WDL.Expr.String):
+            parts = wdl_docker.parts
+            docker_placeholder = [
+                pl_holder
+                for pl_holder in parts
+                if isinstance(pl_holder, WDL.Expr.Placeholder)
+            ]
+            wdl_get_expr = docker_placeholder[0].expr  # type: ignore
+        dockerpull_expr = wdl_get_expr.expr  # type: ignore
+        if dockerpull_expr is None or not isinstance(dockerpull_expr, WDL.Expr.Ident):
+            raise WDLSourceLine(wdl_docker, ConversionException).makeError(
+                f"Unsupported type: {type(dockerpull_expr)}: {dockerpull_expr}"
+            )
+        dockerpull_referee = dockerpull_expr.referee
+        if dockerpull_referee is None:
+            raise WDLSourceLine(wdl_docker, ConversionException).makeError(
+                f"Unsupported type: {type(dockerpull_referee)}"
+            )
+        dockerpull = dockerpull_referee.expr.literal.value
+    return cwl.DockerRequirement(dockerPull=dockerpull)
+
+
+def get_literal_name(
+    expr: Union[
+        WDL.Expr.Boolean,
+        WDL.Expr.Int,
+        WDL.Expr.Float,
+        WDL.Expr.Array,
+    ],
+) -> str:
+    """Translate WDL Boolean, Int, Float, or Array Expression."""
+    # if the literal expr is used inside WDL.Expr.Apply
+    # the literal value is what's needed
+    parent = expr.parent  # type: ignore[union-attr]
+    if isinstance(parent, WDL.Expr.Apply):
+        return expr.literal.value  # type: ignore
+    raise WDLSourceLine(expr, ConversionException).makeError(
+        f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
+    )
+
+
+def get_expr_name(wdl_expr: WDL.Expr.Ident) -> str:
+    """Extract name from WDL expr."""
+    if not hasattr(wdl_expr, "name"):
+        raise WDLSourceLine(wdl_expr, ConversionException).makeError(
+            f"{type(wdl_expr)} has not attribute 'name'"
+        )
+    return get_input(wdl_expr.name)
+
+
+def get_expr_name_with_is_file_check(wdl_expr: WDL.Expr.Ident) -> str:
+    """Extract name from WDL expr and check if it's a file path."""
+    if wdl_expr is None or not hasattr(wdl_expr, "name"):
+        raise WDLSourceLine(wdl_expr, ConversionException).makeError(
+            f"{type(wdl_expr)} has not attribute 'name'"
+        )
+    expr_name = get_input(wdl_expr.name)
+    is_file = isinstance(wdl_expr.type, WDL.Type.File)
+    return expr_name if not is_file else f"{expr_name}.path"
+
+
 class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
@@ -207,7 +309,7 @@ class Converter:
         if "docker" in runtime:
             with WDLSourceLine(runtime["docker"], ConversionException):
                 requirements.append(
-                    self.get_cwl_docker_requirements(
+                    get_cwl_docker_requirements(
                         runtime["docker"]  # type: ignore[arg-type]
                     )
                 )
@@ -226,7 +328,7 @@ class Converter:
             memory_requirement = None
         if "disks" in runtime:
             with WDLSourceLine(runtime["memory"], ConversionException):
-                outdir_requirement = self.get_outdir_requirement(
+                outdir_requirement = get_outdir_requirement(
                     runtime["disks"]  # type: ignore[arg-type]
                 )
         else:
@@ -261,29 +363,15 @@ class Converter:
             time_minutes_str = self.get_expr(time_minutes)
         return f"$({time_minutes_str} * 60)"
 
-    def get_outdir_requirement(
-        self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]
-    ) -> int:
-        """Produce the memory requirement for the output directory from WDL runtime disks."""
-        # This is yet to be implemented. After Feature Parity.
-        with WDLSourceLine(outdir, ConversionException):
-            return int(outdir.literal.value) * 1024  # type: ignore
-
-    def get_input(self, input_name: str) -> str:
-        """Produce a concise, valid CWL expr/param reference lookup string for a given input name."""
-        if valid_js_identifier.match(input_name):
-            return f"inputs.{input_name}"
-        return f'inputs["{input_name}"]'
-
     def get_memory_requirement(
-        self, memory_runtime: Union[WDL.Expr.Ident, WDL.Expr.Get, WDL.Expr.String]
+        self, memory_runtime: Union[WDL.Expr.Get, WDL.Expr.String]
     ) -> Union[str, float]:
         """Translate WDL Runtime Memory requirement to CWL Resource Requirement."""
         with WDLSourceLine(memory_runtime, ConversionException):
             if isinstance(memory_runtime, WDL.Expr.String):
                 ram_min_literal = self.get_memory_literal(memory_runtime)
                 return ram_min_literal
-            ram_min = self.get_expr_name(memory_runtime.expr)  # type: ignore
+            ram_min = get_expr_name(memory_runtime.expr)  # type: ignore
             return self.get_ram_min_js(ram_min, "")
 
     def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> float:
@@ -376,30 +464,11 @@ class Converter:
                 WDL.Expr.Array,
             ),
         ):
-            return self.get_literal_name(wdl_expr)
+            return get_literal_name(wdl_expr)
         else:
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"The expression '{wdl_expr}' is not handled yet."
             )
-
-    def get_literal_name(
-        self,
-        expr: Union[
-            WDL.Expr.Boolean,
-            WDL.Expr.Int,
-            WDL.Expr.Float,
-            WDL.Expr.Array,
-        ],
-    ) -> str:
-        """Translate WDL Boolean, Int, Float, or Array Expression."""
-        # if the literal expr is used inside WDL.Expr.Apply
-        # the literal value is what's needed
-        parent = expr.parent  # type: ignore[union-attr]
-        if isinstance(parent, WDL.Expr.Apply):
-            return expr.literal.value  # type: ignore
-        raise WDLSourceLine(expr, ConversionException).makeError(
-            f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
-        )
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
@@ -446,23 +515,23 @@ class Converter:
             )
         treat_as_optional = wdl_apply_expr.type.optional
         if function_name == "_add":
-            left_operand, right_operand = arguments
-            right_operand = self.get_expr(right_operand)  # type: ignore
-            left_operand_value = self.get_expr(left_operand)
-            if getattr(left_operand, "function_name", None) == "basename":
+            add_left_operand = arguments[0]
+            add_right_operand = self.get_expr(arguments[1])
+            add_left_operand_value = self.get_expr(add_left_operand)
+            if getattr(add_left_operand, "function_name", None) == "basename":
                 referer = wdl_apply_expr.parent.name  # type: ignore
                 treat_as_optional = True if referer in self.non_static_values else False
             return (
-                f"{left_operand_value} + {right_operand}"
+                f"{add_left_operand_value} + {add_right_operand}"
                 if not treat_as_optional
-                else f"{self.get_input(referer)} === null ? {left_operand_value} + {right_operand} : {self.get_input(referer)}"
+                else f"{get_input(referer)} === null ? {add_left_operand_value} + {add_right_operand} : {get_input(referer)}"
             )
         elif function_name == "basename":
             if len(arguments) == 1:
                 only_operand = arguments[0]
                 is_file = isinstance(only_operand.type, WDL.Type.File)
                 with WDLSourceLine(only_operand, ConversionException):
-                    only_operand_name = self.get_expr_name(only_operand.expr)  # type: ignore[attr-defined]
+                    only_operand_name = get_expr_name(only_operand.expr)  # type: ignore[attr-defined]
                     return (
                         f"{only_operand_name}.basename"
                         if is_file
@@ -472,7 +541,7 @@ class Converter:
                 operand, suffix = arguments
                 is_file = isinstance(operand.type, WDL.Type.File)
                 if isinstance(operand, WDL.Expr.Get):
-                    operand = self.get_expr_name(operand.expr)  # type: ignore
+                    operand = get_expr_name(operand.expr)  # type: ignore
                 elif isinstance(operand, WDL.Expr.Apply):
                     operand = self.get_expr(operand)  # type: ignore
                 suffix_str = suffix.literal.value  # type: ignore
@@ -484,17 +553,15 @@ class Converter:
                 )
         elif function_name == "defined":
             only_operand = arguments[0]
-            return self.get_expr_name(only_operand.expr)  # type: ignore
+            return get_expr_name(only_operand.expr)  # type: ignore
         elif function_name == "_interpolation_add":
             arg_value, arg_name = arguments
             if isinstance(arg_name, WDL.Expr.String) and isinstance(
                 arg_value, WDL.Expr.Apply
             ):
-                arg_name2 = self.get_expr(arg_name)
-                arg_value2 = self.get_expr_apply(arg_value)
-                return self.get_pseudo_interpolation_add(arg_value2, arg_name2)
-            just_arg_name = self.get_expr_name(arg_name.expr)  # type: ignore
-            arg_name_with_file_check = self.get_expr_name_with_is_file_check(
+                return f"{self.get_expr_apply(arg_value)} + {self.get_expr(arg_name)}"
+            just_arg_name = get_expr_name(arg_name.expr)  # type: ignore
+            arg_name_with_file_check = get_expr_name_with_is_file_check(
                 arg_name.expr  # type: ignore
             )
             with WDLSourceLine(arg_value, ConversionException):
@@ -560,7 +627,7 @@ class Converter:
     def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
         """Translate WDL Ident Expressions."""
         id_name = wdl_ident_expr.name
-        ident_name = self.get_input(id_name)
+        ident_name = get_input(id_name)
         referee = wdl_ident_expr.referee
         optional = wdl_ident_expr.type.optional
         if referee:
@@ -574,19 +641,13 @@ class Converter:
                     return self.get_expr(referee.expr)
         if optional and isinstance(wdl_ident_expr.type, WDL.Type.File):
             # To prevent null showing on the terminal for inputs of type File
-            name_with_file_check = self.get_expr_name_with_is_file_check(wdl_ident_expr)
+            name_with_file_check = get_expr_name_with_is_file_check(wdl_ident_expr)
             return f'{ident_name} === null ? "" : {name_with_file_check}'
         return (
             ident_name
             if not isinstance(wdl_ident_expr.type, WDL.Type.File)
             else f"{ident_name}.path"
         )
-
-    def get_pseudo_interpolation_add(
-        self, left_operand: str, right_operand: str
-    ) -> str:
-        """Combine two strings in a _add function manner."""
-        return f"{left_operand} + {right_operand}"
 
     def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> str:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
@@ -601,37 +662,6 @@ class Converter:
                 return numeral  # type: ignore
         cpu_str = self.get_expr(cpu_runtime)
         return f"$({cpu_str})"
-
-    def get_cwl_docker_requirements(
-        self, wdl_docker: Union[WDL.Expr.Get, WDL.Expr.String]
-    ) -> cwl.ProcessRequirement:
-        """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
-        if isinstance(wdl_docker, WDL.Expr.String) and wdl_docker.literal:
-            dockerpull = wdl_docker.literal.value
-        else:
-            wdl_get_expr = wdl_docker
-            if isinstance(wdl_docker, WDL.Expr.String):
-                parts = wdl_docker.parts
-                docker_placeholder = [
-                    pl_holder
-                    for pl_holder in parts
-                    if isinstance(pl_holder, WDL.Expr.Placeholder)
-                ]
-                wdl_get_expr = docker_placeholder[0].expr  # type: ignore
-            dockerpull_expr = wdl_get_expr.expr  # type: ignore
-            if dockerpull_expr is None or not isinstance(
-                dockerpull_expr, WDL.Expr.Ident
-            ):
-                raise WDLSourceLine(wdl_docker, ConversionException).makeError(
-                    f"Unsupported type: {type(dockerpull_expr)}: {dockerpull_expr}"
-                )
-            dockerpull_referee = dockerpull_expr.referee
-            if dockerpull_referee is None:
-                raise WDLSourceLine(wdl_docker, ConversionException).makeError(
-                    f"Unsupported type: {type(dockerpull_referee)}"
-                )
-            dockerpull = dockerpull_referee.expr.literal.value
-        return cwl.DockerRequirement(dockerPull=dockerpull)
 
     def get_cwl_command_requirements(
         self, wdl_commands: List[Union[str, WDL.Expr.Placeholder]]
@@ -723,24 +753,6 @@ class Converter:
             else cwl_command_str[2:-1]
         )
 
-    def get_expr_name(self, wdl_expr: WDL.Expr.Ident) -> str:
-        """Extract name from WDL expr."""
-        if wdl_expr is None or not hasattr(wdl_expr, "name"):
-            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
-                f"{type(wdl_expr)} has not attribute 'name'"
-            )
-        return self.get_input(wdl_expr.name)
-
-    def get_expr_name_with_is_file_check(self, wdl_expr: WDL.Expr.Ident) -> str:
-        """Extract name from WDL expr and check if it's a file path."""
-        if wdl_expr is None or not hasattr(wdl_expr, "name"):
-            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
-                f"{type(wdl_expr)} has not attribute 'name'"
-            )
-        expr_name = self.get_input(wdl_expr.name)
-        is_file = isinstance(wdl_expr.type, WDL.Type.File)
-        return expr_name if not is_file else f"{expr_name}.path"
-
     def get_cwl_task_inputs(
         self, wdl_inputs: Optional[List[WDL.Tree.Decl]]
     ) -> List[cwl.CommandInputParameter]:
@@ -760,11 +772,10 @@ class Converter:
                 wdl_input = wdl_input.value  # type: ignore
 
             if isinstance(wdl_input.type, WDL.Type.Array):
-                array_items_type = wdl_input.type.item_type
-                input_type = self.get_cwl_type(array_items_type)  # type: ignore
+                input_type = get_cwl_type(wdl_input.type.item_type)
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             else:
-                type_of = self.get_cwl_type(wdl_input.type)  # type: ignore
+                type_of = get_cwl_type(wdl_input.type)
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
@@ -794,24 +805,6 @@ class Converter:
 
         return inputs
 
-    def get_cwl_type(self, input_type: WDL.Tree.Decl) -> str:
-        """Determine the CWL type for a WDL input declaration."""
-        if isinstance(input_type, WDL.Type.File):
-            type_of = "File"
-        elif isinstance(input_type, WDL.Type.String):
-            type_of = "string"
-        elif isinstance(input_type, WDL.Type.Boolean):
-            type_of = "boolean"
-        elif isinstance(input_type, WDL.Type.Int):
-            type_of = "int"
-        elif isinstance(input_type, WDL.Type.Float):
-            type_of = "float"
-        else:
-            raise WDLSourceLine(input_type, ConversionException).makeError(
-                f"Input of type {input_type} is not yet handled."
-            )
-        return type_of
-
     def get_cwl_task_outputs(
         self, wdl_outputs: List[WDL.Tree.Decl]
     ) -> List[cwl.CommandOutputParameter]:
@@ -827,10 +820,12 @@ class Converter:
                 wdl_output = wdl_output.info  # type: ignore
             if isinstance(wdl_output.type, WDL.Type.Array):
                 array_items_type = wdl_output.type.item_type
-                input_type = self.get_cwl_type(array_items_type)  # type: ignore
-                type_of = cwl.CommandOutputArraySchema(items=input_type, type="array")
+                input_type = get_cwl_type(array_items_type)
+                type_of: Union[
+                    cwl.CommandOutputArraySchema, str
+                ] = cwl.CommandOutputArraySchema(items=input_type, type="array")
             else:
-                type_of = self.get_cwl_type(wdl_output.type)  # type: ignore
+                type_of = get_cwl_type(wdl_output.type)
 
             if not wdl_output.expr:
                 raise WDLSourceLine(wdl_output, ConversionException).makeError(
