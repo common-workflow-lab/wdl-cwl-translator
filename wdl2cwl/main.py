@@ -862,10 +862,12 @@ class Converter:
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
-                    List[Union[str, cwl.CommandInputArraySchema, cwl.InputRecordSchema]],
+                    List[
+                        Union[str, cwl.CommandInputArraySchema, cwl.InputRecordSchema]
+                    ],
                     str,
                     cwl.CommandInputArraySchema,
-                    cwl.InputRecordSchema
+                    cwl.InputRecordSchema,
                 ] = [type_of, "null"]
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
                     self.optional_cwl_null.add(input_name)
