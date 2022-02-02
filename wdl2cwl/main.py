@@ -842,7 +842,9 @@ class Converter:
             input_name = wdl_input.name
             self.non_static_values.add(input_name)
             input_value = None
-            type_of: Union[str, cwl.CommandInputArraySchema, cwl.InputRecordSchema]
+            type_of: Union[
+                str, cwl.CommandInputArraySchema, cwl.CommandInputRecordSchema
+            ]
 
             if hasattr(wdl_input, "value"):
                 wdl_input = wdl_input.value  # type: ignore
@@ -851,10 +853,10 @@ class Converter:
                 input_type = get_cwl_type(wdl_input.type.item_type)
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             elif isinstance(wdl_input.type, WDL.Type.StructInstance):
-                type_of = cwl.InputRecordSchema(
+                type_of = cwl.CommandInputRecordSchema(
                     type="record",
                     name=wdl_input.type.type_name,
-                    fields=self.get_struct_inputs(wdl_input.type.members),  # type: ignore
+                    fields=self.get_struct_inputs(wdl_input.type.members),
                 )
             else:
                 type_of = get_cwl_type(wdl_input.type)
@@ -862,11 +864,15 @@ class Converter:
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
                     List[
-                        Union[str, cwl.CommandInputArraySchema, cwl.InputRecordSchema]
+                        Union[
+                            str,
+                            cwl.CommandInputArraySchema,
+                            cwl.CommandInputRecordSchema,
+                        ]
                     ],
                     str,
                     cwl.CommandInputArraySchema,
-                    cwl.InputRecordSchema,
+                    cwl.CommandInputRecordSchema,
                 ] = [type_of, "null"]
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
                     self.optional_cwl_null.add(input_name)
@@ -890,9 +896,13 @@ class Converter:
 
         return inputs
 
-    def get_struct_inputs(self, members: Dict[str, Any]) -> List[cwl.InputRecordSchema]:
-        """Get member items of a WDL struct and return a list of cwl.CommandInputParameters."""
-        inputs: List[cwl.InputRecordSchema] = []
+    def get_struct_inputs(
+        self, members: Optional[Dict[str, WDL.Type.Base]]
+    ) -> List[cwl.CommandInputRecordField]:
+        """Get member items of a WDL struct and return a list of cwl.CommandInputRecordField."""
+        inputs: List[cwl.CommandInputRecordField] = []
+        if not members:
+            return inputs
         for member, value in members.items():
             input_name = member
             if isinstance(value, WDL.Type.Array):
@@ -901,7 +911,7 @@ class Converter:
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             else:
                 type_of = get_cwl_type(value)  # type: ignore
-            inputs.append(cwl.InputRecordSchema(name=input_name, type=type_of))
+            inputs.append(cwl.CommandInputRecordField(name=input_name, type=type_of))
         return inputs
 
     def get_cwl_task_outputs(
