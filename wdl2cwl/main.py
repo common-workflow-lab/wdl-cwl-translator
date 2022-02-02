@@ -289,9 +289,6 @@ class Converter:
             _logger.warning("Skipping parameter_meta: %s", obj.parameter_meta)
         if obj.meta:
             _logger.warning("Skipping meta: %s", obj.meta)
-        if len(obj.postinputs) > 0:
-            for a in obj.postinputs:
-                _logger.warning("Skipping variable: %s", a)
         return cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
@@ -608,9 +605,25 @@ class Converter:
             return f"{iterable_object_expr}[{index_expr}]"
         elif function_name == "_gt":
             left_operand, right_operand = arguments
-            left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            if isinstance(left_operand, WDL.Expr.Get):
+                left_operand_expr = self.get_expr(left_operand)
+            else:
+                left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
             right_operand_expr = self.get_expr(right_operand)
             return f"{left_operand_expr} > {right_operand_expr}"
+        elif function_name == "_lt":
+            left_operand, right_operand = arguments
+            if isinstance(left_operand, WDL.Expr.Get):
+                left_operand_expr = self.get_expr(left_operand)
+            else:
+                left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            right_operand_expr = self.get_expr(right_operand)
+            return f"{left_operand_expr} < {right_operand_expr}"
+        elif function_name == "_lor":
+            left_operand, right_operand = arguments
+            left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            right_operand_expr = self.get_expr(right_operand)
+            return f"{left_operand_expr} || {right_operand_expr}"
         elif function_name == "length":
             only_arg_expr = self.get_expr_get(arguments[0])  # type: ignore
             return f"{only_arg_expr}.length"
@@ -622,6 +635,9 @@ class Converter:
                 right_operand = self.get_expr_apply(right_operand)  # type: ignore
             return f"{left_operand} !== {right_operand}"
         elif function_name == "read_string":
+            only_arg = arguments[0]
+            return self.get_expr(only_arg)
+        elif function_name == "read_float":
             only_arg = arguments[0]
             return self.get_expr(only_arg)
         elif function_name == "glob":
@@ -650,6 +666,11 @@ class Converter:
             left_str = self.get_expr(left_operand)
             right_str = self.get_expr(right_operand)
             return f"{left_str}/{right_str}"
+        elif function_name == "_sub":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str}-{right_str}"
         elif function_name == "size":
             left_operand, right_operand = arguments
             if isinstance(left_operand, WDL.Expr.Array):
@@ -660,13 +681,13 @@ class Converter:
                 left_str = self.get_expr(left_operand)
             size_unit = self.get_expr(right_operand)[1:-1]
             with WDLSourceLine(size_unit, ConversionException):
-                if size_unit == "Ki" or size_unit == "K":
+                if size_unit == "Ki" or size_unit == "K" or size_unit == "KiB":
                     unit_value = "1024"
-                elif size_unit == "Mi" or size_unit == "M":
+                elif size_unit == "Mi" or size_unit == "M" or size_unit == "MiB":
                     unit_value = "1024^2"
-                elif size_unit == "Gi" or size_unit == "G":
+                elif size_unit == "Gi" or size_unit == "G" or size_unit == "GiB":
                     unit_value = "1024^3"
-                elif size_unit == "Ti" or size_unit == "T":
+                elif size_unit == "Ti" or size_unit == "T" or size_unit == "TiB":
                     unit_value = "1024^4"
                 else:
                     raise WDLSourceLine(size_unit, ConversionException).makeError(
@@ -842,7 +863,9 @@ class Converter:
             input_name = wdl_input.name
             self.non_static_values.add(input_name)
             input_value = None
-            type_of: Union[str, cwl.CommandInputArraySchema, cwl.InputRecordSchema]
+            type_of: Union[
+                str, cwl.CommandInputArraySchema, cwl.CommandInputRecordSchema
+            ]
 
             if hasattr(wdl_input, "value"):
                 wdl_input = wdl_input.value  # type: ignore
@@ -851,10 +874,10 @@ class Converter:
                 input_type = get_cwl_type(wdl_input.type.item_type)
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             elif isinstance(wdl_input.type, WDL.Type.StructInstance):
-                type_of = cwl.InputRecordSchema(
+                type_of = cwl.CommandInputRecordSchema(
                     type="record",
                     name=wdl_input.type.type_name,
-                    fields=self.get_struct_inputs(wdl_input.type.members),  # type: ignore
+                    fields=self.get_struct_inputs(wdl_input.type.members),
                 )
             else:
                 type_of = get_cwl_type(wdl_input.type)
@@ -862,11 +885,15 @@ class Converter:
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
                     List[
-                        Union[str, cwl.CommandInputArraySchema, cwl.InputRecordSchema]
+                        Union[
+                            str,
+                            cwl.CommandInputArraySchema,
+                            cwl.CommandInputRecordSchema,
+                        ]
                     ],
                     str,
                     cwl.CommandInputArraySchema,
-                    cwl.InputRecordSchema,
+                    cwl.CommandInputRecordSchema,
                 ] = [type_of, "null"]
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
                     self.optional_cwl_null.add(input_name)
@@ -890,9 +917,13 @@ class Converter:
 
         return inputs
 
-    def get_struct_inputs(self, members: Dict[str, Any]) -> List[cwl.InputRecordSchema]:
-        """Get member items of a WDL struct and return a list of cwl.CommandInputParameters."""
-        inputs: List[cwl.InputRecordSchema] = []
+    def get_struct_inputs(
+        self, members: Optional[Dict[str, WDL.Type.Base]]
+    ) -> List[cwl.CommandInputRecordField]:
+        """Get member items of a WDL struct and return a list of cwl.CommandInputRecordField."""
+        inputs: List[cwl.CommandInputRecordField] = []
+        if not members:
+            return inputs
         for member, value in members.items():
             input_name = member
             if isinstance(value, WDL.Type.Array):
@@ -901,7 +932,7 @@ class Converter:
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
             else:
                 type_of = get_cwl_type(value)  # type: ignore
-            inputs.append(cwl.InputRecordSchema(name=input_name, type=type_of))
+            inputs.append(cwl.CommandInputRecordField(name=input_name, type=type_of))
         return inputs
 
     def get_cwl_task_outputs(
@@ -952,6 +983,30 @@ class Converter:
                             glob=glob_str,
                             loadContents=True,
                             outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
+                        ),
+                    )
+                )
+            elif (
+                isinstance(wdl_output.expr, WDL.Expr.Apply)
+                and wdl_output.expr.function_name == "read_float"
+            ):
+                glob_expr = self.get_expr(wdl_output)
+                is_literal = wdl_output.expr.arguments[0].literal
+                if is_literal:
+                    glob_str = glob_expr[
+                        1:-1
+                    ]  # remove quotes from the string returned by get_expr_string
+                else:
+                    glob_str = f"$({glob_expr})"
+
+                outputs.append(
+                    cwl.CommandOutputParameter(
+                        id=output_name,
+                        type=type_of,
+                        outputBinding=cwl.CommandOutputBinding(
+                            glob=glob_str,
+                            loadContents=True,
+                            outputEval=r"$(parseFloat(self[0].contents))",
                         ),
                     )
                 )
