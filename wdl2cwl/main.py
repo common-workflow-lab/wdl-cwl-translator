@@ -843,7 +843,7 @@ class Converter:
             input_name = wdl_input.name
             self.non_static_values.add(input_name)
             input_value = None
-            type_of: Union[str, cwl.CommandInputArraySchema]
+            type_of: Union[str, cwl.CommandInputArraySchema, cwl.InputRecordSchema]
 
             if hasattr(wdl_input, "value"):
                 wdl_input = wdl_input.value  # type: ignore
