@@ -865,6 +865,7 @@ class Converter:
                     List[Union[str, cwl.CommandInputArraySchema]],
                     str,
                     cwl.CommandInputArraySchema,
+                    cwl.InputRecordSchema
                 ] = [type_of, "null"]
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
                     self.optional_cwl_null.add(input_name)
