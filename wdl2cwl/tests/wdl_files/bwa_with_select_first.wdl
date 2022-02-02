@@ -39,7 +39,7 @@ task Mem {
 
         Int threads = 4
         Int? memoryGb
-        # Int timeMinutes = 10 + ceil(size([read1, read2], "G") * 300 / threads)
+        Int timeMinutes = 10 + ceil(size([read1, read2], "G") * 300 / threads)
         # Contains bwa 0.7.17 bwakit 0.7.17.dev1 and samtools 1.10.
         String dockerImage = "quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0"
     }
@@ -84,7 +84,7 @@ task Mem {
         # These only use 5-10% of compute power and not always simultaneously.
         cpu: threads
         memory: "~{select_first([memoryGb, estimatedMemoryGb])}G"
-        # time_minutes: timeMinutes
+        time_minutes: timeMinutes
         docker: dockerImage
     }
 

@@ -356,7 +356,7 @@ class Converter:
         self, time_minutes: WDL.Expr.Get
     ) -> Union[str, int]:
         """Produce the time limit expression from WDL runtime time minutes."""
-        with WDLSourceLine(time_minutes, WDLSourceLine):
+        with WDLSourceLine(time_minutes, ConversionException):
             if isinstance(time_minutes, (WDL.Expr.Int, WDL.Expr.Float)):
                 literal = time_minutes.literal.value  # type: ignore
                 return literal * 60  # type: ignore
@@ -652,7 +652,12 @@ class Converter:
             return f"{left_str}/{right_str}"
         elif function_name == "size":
             left_operand, right_operand = arguments
-            left_str = self.get_expr(left_operand)
+            if isinstance(left_operand, WDL.Expr.Array):
+                array_items = [self.get_expr(item) for item in left_operand.items]
+                left = ", ".join(array_items)
+                left_str = f"[{left}]"
+            else:
+                left_str = self.get_expr(left_operand)
             size_unit = self.get_expr(right_operand)[1:-1]
             with WDLSourceLine(size_unit, ConversionException):
                 if size_unit == "Ki" or size_unit == "K":
@@ -704,14 +709,13 @@ class Converter:
         referee = wdl_ident_expr.referee
         optional = wdl_ident_expr.type.optional
         if referee:
-            with WDLSourceLine(referee, ConversionException):
-                if isinstance(referee, WDL.Tree.Call):
-                    return id_name
-                if referee.expr and (
-                    wdl_ident_expr.name in self.optional_cwl_null
-                    or wdl_ident_expr.name not in self.non_static_values
-                ):
-                    return self.get_expr(referee.expr)
+            if isinstance(referee, WDL.Tree.Call):
+                return id_name
+            if referee.expr and (
+                wdl_ident_expr.name in self.optional_cwl_null
+                or wdl_ident_expr.name not in self.non_static_values
+            ):
+                return self.get_expr(referee.expr)
         if optional and isinstance(wdl_ident_expr.type, WDL.Type.File):
             # To prevent null showing on the terminal for inputs of type File
             name_with_file_check = get_expr_name_with_is_file_check(wdl_ident_expr)

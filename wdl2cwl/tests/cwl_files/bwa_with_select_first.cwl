@@ -50,6 +50,10 @@ inputs:
     type:
       - int
       - 'null'
+  - id: timeMinutes
+    type:
+      - int
+      - 'null'
   - id: dockerImage
     default: quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
     type: string
@@ -111,6 +115,10 @@ requirements:
         return parseInt(memory);
         }
     outdirMin: 1024
+  - class: ToolTimeLimit
+    timelimit: '$(10 + Math.ceil((function(size_of=0){[inputs.read1.path, inputs.read2
+        === null ? "" : inputs.read2.path].forEach(function(element){size_of += element.size})})
+        / 1024^3*300/inputs.threads)  * 60)'
 cwlVersion: v1.2
 baseCommand:
   - bash
