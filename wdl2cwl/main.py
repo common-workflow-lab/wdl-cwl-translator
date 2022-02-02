@@ -374,16 +374,21 @@ class Converter:
             ram_min = get_expr_name(memory_runtime.expr)  # type: ignore
             return self.get_ram_min_js(ram_min, "")
 
-    def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> float:
+    def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> Union[float, str]:
         """Get the literal value for memory requirement with type WDL.Expr.String."""
         if memory_runtime.literal is None:
             _, placeholder, unit, _ = memory_runtime.parts
-            with WDLSourceLine(placeholder, ConversionException):
-                if isinstance(placeholder.expr, WDL.Expr.Get):  # type: ignore
-                    value_name = self.get_expr_get(placeholder.expr)  # type: ignore
-                else:
-                    value_name = self.get_expr_apply(placeholder.expr)  # type: ignore
-                return self.get_ram_min_js(value_name, unit.strip())  # type: ignore
+            if isinstance(placeholder, WDL.Expr.Placeholder):
+                with WDLSourceLine(placeholder.expr, ConversionException):
+                    if isinstance(placeholder.expr, WDL.Expr.Get):
+                        value_name = self.get_expr_get(placeholder.expr)
+                    elif isinstance(placeholder.expr, WDL.Expr.Apply):
+                        value_name = self.get_expr_apply(placeholder.expr)
+                    else:
+                        raise ConversionException(f"Unhandled memory requirement expr placeholder: {type(placeholder.expr)}.")
+            if not isinstance(unit, str):
+                raise WDLSourceLine(memory_runtime, ConversionException).makeError("Unhandled non-string memory units")
+            return self.get_ram_min_js(value_name, unit.strip())
 
         ram_min = self.get_expr_string(memory_runtime)[1:-1]
         unit_result = re.search(r"[a-zA-Z]+", ram_min)
@@ -629,7 +634,7 @@ class Converter:
             return self.get_expr(only_arg)
         elif function_name == "select_first":
             array_obj = arguments[0]
-            array_items = [self.get_expr(item) for item in array_obj.items]  # type: ignore
+            array_items = [self.get_expr(item) for item in array_obj.items]
             items_str = ", ".join(array_items)
             return f"[{items_str}].find(element => element !== null) "
         elif function_name == "_mul":
