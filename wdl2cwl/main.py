@@ -664,12 +664,10 @@ class Converter:
                     unit_value = "1024"
                 elif size_unit == "Mi" or size_unit == "M":
                     unit_value = "1024^2"
-                if size_unit == "Gi" or size_unit == "G":
+                elif size_unit == "Gi" or size_unit == "G":
                     unit_value = "1024^3"
                 elif size_unit == "Ti" or size_unit == "T":
                     unit_value = "1024^4"
-                elif size_unit == "Pi" or size_unit == "P":
-                    unit_value = "1024^5"
                 else:
                     raise WDLSourceLine(size_unit, ConversionException).makeError(
                         f"Size Unit '{size_unit}' not yet handled."
