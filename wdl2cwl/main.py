@@ -676,9 +676,9 @@ class Converter:
                 "(function(size_of=0)"
                 + "{"
                 + f"{left_str}.forEach(function(element)"
-                + "{"
+                + "{ if (element) {"
                 + "size_of += element.size"
-                + "})}"
+                + "}})}"
                 + f") / {unit_value}"
             )
 
