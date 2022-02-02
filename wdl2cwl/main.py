@@ -707,13 +707,14 @@ class Converter:
         referee = wdl_ident_expr.referee
         optional = wdl_ident_expr.type.optional
         if referee:
-            if isinstance(referee, WDL.Tree.Call):
-                return id_name
-            if referee.expr and (
-                wdl_ident_expr.name in self.optional_cwl_null
-                or wdl_ident_expr.name not in self.non_static_values
-            ):
-                return self.get_expr(referee.expr)
+            with WDLSourceLine(referee, ConversionException):
+                if isinstance(referee, WDL.Tree.Call):
+                    return id_name
+                if referee.expr and (
+                    wdl_ident_expr.name in self.optional_cwl_null
+                    or wdl_ident_expr.name not in self.non_static_values
+                ):
+                    return self.get_expr(referee.expr)
         if optional and isinstance(wdl_ident_expr.type, WDL.Type.File):
             # To prevent null showing on the terminal for inputs of type File
             name_with_file_check = get_expr_name_with_is_file_check(wdl_ident_expr)
