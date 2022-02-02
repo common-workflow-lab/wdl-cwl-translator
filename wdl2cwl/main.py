@@ -862,7 +862,7 @@ class Converter:
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
-                    List[Union[str, cwl.CommandInputArraySchema]],
+                    List[Union[str, cwl.CommandInputArraySchema, cwl.InputRecordSchema]],
                     str,
                     cwl.CommandInputArraySchema,
                     cwl.InputRecordSchema
