@@ -7,7 +7,7 @@
     result: PASS
 
 - doc: CollectQualityYieldMetrics
-  tool: cwl_files/CollectQualityYieldMetrics.cwl
+  tool: cwl_files/Qc.cwl#CollectQualityYieldMetrics
   job: inputs/CollectQualityYieldMatrics.yaml
   output:
     quality_yield_metrics:
