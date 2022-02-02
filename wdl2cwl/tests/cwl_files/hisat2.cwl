@@ -99,7 +99,7 @@ requirements:
     ramMin: |-
         ${
         var unit = "G";
-        var value = parseInt(`${[inputs.memoryGb, 1 + Math.ceil((function(size_of=0){inputs.indexFiles.forEach(function(element){size_of += element.size})}) / 1024^3*1.2)  + inputs.sortMemoryPerThreadGb*[inputs.sortThreads, inputs.threads === 1 ? 1 : 1 + Math.ceil(inputs.threads/4.0) ].find(element => element !== null) ].find(element => element !== null) }`.match(/[0-9]+/g));
+        var value = parseInt(`${[inputs.memoryGb, 1 + Math.ceil((function(size_of=0){inputs.indexFiles.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3*1.2)  + inputs.sortMemoryPerThreadGb*[inputs.sortThreads, inputs.threads === 1 ? 1 : 1 + Math.ceil(inputs.threads/4.0) ].find(element => element !== null) ].find(element => element !== null) }`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;
@@ -115,8 +115,8 @@ requirements:
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: '$(1 + Math.ceil((function(size_of=0){[inputs.inputR1.path, inputs.inputR2
-        === null ? "" : inputs.inputR2.path].forEach(function(element){size_of +=
-        element.size})}) / 1024^3*180/inputs.threads)  * 60)'
+        === null ? "" : inputs.inputR2.path].forEach(function(element){ if (element)
+        {size_of += element.size}})}) / 1024^3*180/inputs.threads)  * 60)'
 cwlVersion: v1.2
 baseCommand:
   - bash

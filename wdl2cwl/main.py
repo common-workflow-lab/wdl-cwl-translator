@@ -470,25 +470,6 @@ class Converter:
                 f"The expression '{wdl_expr}' is not handled yet."
             )
 
-    def get_literal_name(
-        self,
-        expr: Union[
-            WDL.Expr.Boolean,
-            WDL.Expr.Int,
-            WDL.Expr.Float,
-            WDL.Expr.Array,
-        ],
-    ) -> str:
-        """Translate WDL Boolean, Int or Float Expression."""
-        # if the literal expr is used inside WDL.Expr.Apply
-        # the literal value is what's needed
-        parent = expr.parent  # type: ignore[union-attr]
-        if isinstance(parent, (WDL.Expr.Apply, WDL.Expr.IfThenElse)):
-            return expr.literal.value  # type: ignore
-        raise WDLSourceLine(expr, ConversionException).makeError(
-            f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
-        )
-
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
         if wdl_expr_string.literal is not None:

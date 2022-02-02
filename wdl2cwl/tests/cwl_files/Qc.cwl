@@ -731,7 +731,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms$(Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){size_of += element.size})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){size_of += element.size})}) / 1024^3)  + inputs.additional_disk < 110 ? 5 : 7*inputs.memory_multiplier) -1*1000)m -jar /usr/picard/picard.jar \
+                java -Xms$(Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk < 110 ? 5 : 7*inputs.memory_multiplier) -1*1000)m -jar /usr/picard/picard.jar \
                   CollectRawWgsMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   VALIDATION_STRINGENCY=SILENT \
@@ -748,7 +748,7 @@ $graph:
         ramMin: |-
             ${
             var unit = "GiB";
-            var value = parseInt(`${Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){size_of += element.size})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){size_of += element.size})}) / 1024^3)  + inputs.additional_disk < 110 ? 5 : 7*inputs.memory_multiplier) }`.match(/[0-9]+/g));
+            var value = parseInt(`${Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk < 110 ? 5 : 7*inputs.memory_multiplier) }`.match(/[0-9]+/g));
             var memory = "";
             if(unit==="KiB") memory = value/1024;
             else if(unit==="MiB") memory = value;
@@ -804,7 +804,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms$(Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + 0.5) *inputs.memory_multiplier)  < 7 ? 7 : Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + 0.5) *inputs.memory_multiplier) -1*1000)m -jar /usr/picard/picard.jar \
+                java -Xms$(Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5) *inputs.memory_multiplier)  < 7 ? 7 : Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5) *inputs.memory_multiplier) -1*1000)m -jar /usr/picard/picard.jar \
                   CollectHsMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   REFERENCE_SEQUENCE=$(inputs.ref_fasta.path) \
@@ -822,7 +822,7 @@ $graph:
         ramMin: |-
             ${
             var unit = "GiB";
-            var value = parseInt(`${Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + 0.5) *inputs.memory_multiplier)  < 7 ? 7 : Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){size_of += element.size})}) / 1024^3 + 0.5) *inputs.memory_multiplier) }`.match(/[0-9]+/g));
+            var value = parseInt(`${Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5) *inputs.memory_multiplier)  < 7 ? 7 : Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5) *inputs.memory_multiplier) }`.match(/[0-9]+/g));
             var memory = "";
             if(unit==="KiB") memory = value/1024;
             else if(unit==="MiB") memory = value;
