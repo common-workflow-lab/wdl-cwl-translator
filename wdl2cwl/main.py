@@ -12,8 +12,8 @@ import WDL
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
-from . import _logger
-from .errors import WDLSourceLine
+from wdl2cwl import _logger
+from wdl2cwl.errors import WDLSourceLine
 
 valid_js_identifier = regex.compile(
     r"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|null|this|true|"
@@ -67,6 +67,32 @@ def get_cwl_type(input_type: WDL.Type.Base) -> str:
             f"Input of type {input_type} is not yet handled."
         )
     return type_of
+
+
+def get_mem_in_bytes(unit: str) -> str:
+    """Determine the value of a memory unit in bytes."""
+    with WDLSourceLine(unit, ConversionException):
+        if unit == "KiB" or unit == "Ki":
+            mem_in_bytes = "1024^1"
+        elif unit == "MiB" or unit == "Mi":
+            mem_in_bytes = "1024^2"
+        elif unit == "GiB" or unit == "Gi":
+            mem_in_bytes = "1024^3"
+        elif unit == "TiB" or unit == "Ti":
+            mem_in_bytes = "1024^4"
+        elif unit == "B":
+            mem_in_bytes = "1024^0"
+        elif unit == "KB" or unit == "K":
+            mem_in_bytes = "1000^1"
+        elif unit == "MB" or unit == "M":
+            mem_in_bytes = "1000^2"
+        elif unit == "GB" or unit == "G":
+            mem_in_bytes = "1000^3"
+        elif unit == "TB" or unit == "T":
+            mem_in_bytes = "1000^4"
+        else:
+            raise ConversionException(f"Invalid memory unit: ${unit}")
+    return mem_in_bytes
 
 
 def get_outdir_requirement(outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]) -> int:
@@ -125,7 +151,7 @@ def get_literal_name(
     # if the literal expr is used inside WDL.Expr.Apply
     # the literal value is what's needed
     parent = expr.parent  # type: ignore[union-attr]
-    if isinstance(parent, WDL.Expr.Apply):
+    if isinstance(parent, (WDL.Expr.Apply, WDL.Expr.IfThenElse)):
         return expr.literal.value  # type: ignore
     raise WDLSourceLine(expr, ConversionException).makeError(
         f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
@@ -289,9 +315,6 @@ class Converter:
             _logger.warning("Skipping parameter_meta: %s", obj.parameter_meta)
         if obj.meta:
             _logger.warning("Skipping meta: %s", obj.meta)
-        if len(obj.postinputs) > 0:
-            for a in obj.postinputs:
-                _logger.warning("Skipping variable: %s", a)
         return cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
@@ -356,7 +379,7 @@ class Converter:
         self, time_minutes: WDL.Expr.Get
     ) -> Union[str, int]:
         """Produce the time limit expression from WDL runtime time minutes."""
-        with WDLSourceLine(time_minutes, WDLSourceLine):
+        with WDLSourceLine(time_minutes, ConversionException):
             if isinstance(time_minutes, (WDL.Expr.Int, WDL.Expr.Float)):
                 literal = time_minutes.literal.value  # type: ignore
                 return literal * 60  # type: ignore
@@ -379,7 +402,10 @@ class Converter:
         if memory_runtime.literal is None:
             _, placeholder, unit, _ = memory_runtime.parts
             with WDLSourceLine(placeholder, ConversionException):
-                value_name = self.get_expr_get(placeholder.expr)  # type: ignore
+                if isinstance(placeholder.expr, WDL.Expr.Get):  # type: ignore
+                    value_name = self.get_expr_get(placeholder.expr)  # type: ignore
+                else:
+                    value_name = self.get_expr_apply(placeholder.expr)  # type: ignore
                 return self.get_ram_min_js(value_name, unit.strip())  # type: ignore
 
         ram_min = self.get_expr_string(memory_runtime)[1:-1]
@@ -388,27 +414,8 @@ class Converter:
             raise ConversionException("Missing Memory units, yet still a string?")
         unit = unit_result.group()
         value = float(ram_min.split(unit)[0])
-
-        if unit == "KiB":
-            memory = value / 1024
-        elif unit == "MiB":
-            memory = value
-        elif unit == "GiB":
-            memory = value * 1024
-        elif unit == "TiB":
-            memory = value * 1024 * 1024
-        elif unit == "B":
-            memory = value / (1024 * 1024)
-        elif unit == "KB" or unit == "K":
-            memory = (value * 1000) / (1024 * 1024)
-        elif unit == "MB" or unit == "M":
-            memory = (value * (1000 * 1000)) / (1024 * 1024)
-        elif unit == "GB" or unit == "G":
-            memory = (value * (1000 * 1000 * 1000)) / (1024 * 1024)
-        elif unit == "TB" or unit == "T":
-            memory = (value * (1000 * 1000 * 1000 * 1000)) / (1024 * 1024)
-        else:
-            raise ConversionException(f"Invalid memory unit: ${unit}")
+        byte, power = get_mem_in_bytes(unit).split("^")
+        memory: float = value * float(byte) ** float(power) / (1024 * 1024)
 
         return memory
 
@@ -586,9 +593,25 @@ class Converter:
             return f"{iterable_object_expr}[{index_expr}]"
         elif function_name == "_gt":
             left_operand, right_operand = arguments
-            left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            if isinstance(left_operand, WDL.Expr.Get):
+                left_operand_expr = self.get_expr(left_operand)
+            else:
+                left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
             right_operand_expr = self.get_expr(right_operand)
             return f"{left_operand_expr} > {right_operand_expr}"
+        elif function_name == "_lt":
+            left_operand, right_operand = arguments
+            if isinstance(left_operand, WDL.Expr.Get):
+                left_operand_expr = self.get_expr(left_operand)
+            else:
+                left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            right_operand_expr = self.get_expr(right_operand)
+            return f"{left_operand_expr} < {right_operand_expr}"
+        elif function_name == "_lor":
+            left_operand, right_operand = arguments
+            left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            right_operand_expr = self.get_expr(right_operand)
+            return f"{left_operand_expr} || {right_operand_expr}"
         elif function_name == "length":
             only_arg_expr = self.get_expr_get(arguments[0])  # type: ignore
             return f"{only_arg_expr}.length"
@@ -602,9 +625,59 @@ class Converter:
         elif function_name == "read_string":
             only_arg = arguments[0]
             return self.get_expr(only_arg)
+        elif function_name == "read_float":
+            only_arg = arguments[0]
+            return self.get_expr(only_arg)
         elif function_name == "glob":
             only_arg = arguments[0]
             return self.get_expr(only_arg)
+        elif function_name == "select_first":
+            array_obj = arguments[0]
+            array_items = [self.get_expr(item) for item in array_obj.items]  # type: ignore
+            items_str = ", ".join(array_items)
+            return f"[{items_str}].find(element => element !== null) "
+        elif function_name == "_mul":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str}*{right_str}"
+        elif function_name == "_eqeq":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str} === {right_str}"
+        elif function_name == "ceil":
+            only_arg = self.get_expr(arguments[0])  # type: ignore
+            return f"Math.ceil({only_arg}) "
+        elif function_name == "_div":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str}/{right_str}"
+        elif function_name == "_sub":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str}-{right_str}"
+        elif function_name == "size":
+            left_operand, right_operand = arguments
+            if isinstance(left_operand, WDL.Expr.Array):
+                array_items = [self.get_expr(item) for item in left_operand.items]
+                left = ", ".join(array_items)
+                left_str = f"[{left}]"
+            else:
+                left_str = self.get_expr(left_operand)
+            size_unit = self.get_expr(right_operand)[1:-1]
+            unit_value = get_mem_in_bytes(size_unit)
+            return (
+                "(function(size_of=0)"
+                + "{"
+                + f"{left_str}.forEach(function(element)"
+                + "{ if (element) {"
+                + "size_of += element.size"
+                + "}})}"
+                + f") / {unit_value}"
+            )
 
         raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
             f"Function name '{function_name}' not yet handled."
@@ -612,17 +685,17 @@ class Converter:
 
     def get_expr_get(self, wdl_get_expr: WDL.Expr.Get) -> str:
         """Translate WDL Get Expressions."""
-        with WDLSourceLine(wdl_get_expr, ConversionException):
-            member = wdl_get_expr.member
-            if (
-                not member
-                and isinstance(wdl_get_expr.expr, WDL.Expr.Ident)
-                and wdl_get_expr.expr
-            ):
-                return self.get_expr_ident(wdl_get_expr.expr)
-            raise ConversionException(
-                f"Get expressions with {member} are not yet handled."
-            )
+        member = wdl_get_expr.member
+
+        if not member:
+            return self.get_expr_ident(wdl_get_expr.expr)  # type: ignore
+        struct_name = self.get_expr(wdl_get_expr.expr)
+        member_str = f"{struct_name}.{member}"
+        return (
+            member_str
+            if not isinstance(wdl_get_expr.type, WDL.Type.File)
+            else f"{member_str}.path"
+        )
 
     def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
         """Translate WDL Ident Expressions."""
@@ -766,7 +839,9 @@ class Converter:
             input_name = wdl_input.name
             self.non_static_values.add(input_name)
             input_value = None
-            type_of: Union[str, cwl.CommandInputArraySchema]
+            type_of: Union[
+                str, cwl.CommandInputArraySchema, cwl.CommandInputRecordSchema
+            ]
 
             if hasattr(wdl_input, "value"):
                 wdl_input = wdl_input.value  # type: ignore
@@ -774,14 +849,27 @@ class Converter:
             if isinstance(wdl_input.type, WDL.Type.Array):
                 input_type = get_cwl_type(wdl_input.type.item_type)
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
+            elif isinstance(wdl_input.type, WDL.Type.StructInstance):
+                type_of = cwl.CommandInputRecordSchema(
+                    type="record",
+                    name=wdl_input.type.type_name,
+                    fields=self.get_struct_inputs(wdl_input.type.members),
+                )
             else:
                 type_of = get_cwl_type(wdl_input.type)
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
-                    List[Union[str, cwl.CommandInputArraySchema]],
+                    List[
+                        Union[
+                            str,
+                            cwl.CommandInputArraySchema,
+                            cwl.CommandInputRecordSchema,
+                        ]
+                    ],
                     str,
                     cwl.CommandInputArraySchema,
+                    cwl.CommandInputRecordSchema,
                 ] = [type_of, "null"]
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
                     self.optional_cwl_null.add(input_name)
@@ -803,6 +891,24 @@ class Converter:
                 )
             )
 
+        return inputs
+
+    def get_struct_inputs(
+        self, members: Optional[Dict[str, WDL.Type.Base]]
+    ) -> List[cwl.CommandInputRecordField]:
+        """Get member items of a WDL struct and return a list of cwl.CommandInputRecordField."""
+        inputs: List[cwl.CommandInputRecordField] = []
+        if not members:
+            return inputs
+        for member, value in members.items():
+            input_name = member
+            if isinstance(value, WDL.Type.Array):
+                array_items_type = value.item_type
+                input_type = get_cwl_type(array_items_type)
+                type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
+            else:
+                type_of = get_cwl_type(value)  # type: ignore
+            inputs.append(cwl.CommandInputRecordField(name=input_name, type=type_of))
         return inputs
 
     def get_cwl_task_outputs(
@@ -853,6 +959,30 @@ class Converter:
                             glob=glob_str,
                             loadContents=True,
                             outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
+                        ),
+                    )
+                )
+            elif (
+                isinstance(wdl_output.expr, WDL.Expr.Apply)
+                and wdl_output.expr.function_name == "read_float"
+            ):
+                glob_expr = self.get_expr(wdl_output)
+                is_literal = wdl_output.expr.arguments[0].literal
+                if is_literal:
+                    glob_str = glob_expr[
+                        1:-1
+                    ]  # remove quotes from the string returned by get_expr_string
+                else:
+                    glob_str = f"$({glob_expr})"
+
+                outputs.append(
+                    cwl.CommandOutputParameter(
+                        id=output_name,
+                        type=type_of,
+                        outputBinding=cwl.CommandOutputBinding(
+                            glob=glob_str,
+                            loadContents=True,
+                            outputEval=r"$(parseFloat(self[0].contents))",
                         ),
                     )
                 )
