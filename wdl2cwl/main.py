@@ -69,6 +69,32 @@ def get_cwl_type(input_type: WDL.Type.Base) -> str:
     return type_of
 
 
+def get_mem_in_bytes(unit: str) -> str:
+    """Determine the value of a memory unit in bytes."""
+    with WDLSourceLine(unit, ConversionException):
+        if unit == "KiB" or unit == "Ki":
+            mem_in_bytes = "1024^1"
+        elif unit == "MiB" or unit == "Mi":
+            mem_in_bytes = "1024^2"
+        elif unit == "GiB" or unit == "Gi":
+            mem_in_bytes = "1024^3"
+        elif unit == "TiB" or unit == "Ti":
+            mem_in_bytes = "1024^4"
+        elif unit == "B":
+            mem_in_bytes = "1024^0"
+        elif unit == "KB" or unit == "K":
+            mem_in_bytes = "1000^1"
+        elif unit == "MB" or unit == "M":
+            mem_in_bytes = "1000^2"
+        elif unit == "GB" or unit == "G":
+            mem_in_bytes = "1000^3"
+        elif unit == "TB" or unit == "T":
+            mem_in_bytes = "1000^4"
+        else:
+            raise ConversionException(f"Invalid memory unit: ${unit}")
+    return mem_in_bytes
+
+
 def get_outdir_requirement(outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]) -> int:
     """Produce the memory requirement for the output directory from WDL runtime disks."""
     # This is yet to be implemented. After Feature Parity.
@@ -388,27 +414,8 @@ class Converter:
             raise ConversionException("Missing Memory units, yet still a string?")
         unit = unit_result.group()
         value = float(ram_min.split(unit)[0])
-
-        if unit == "KiB":
-            memory = value / 1024
-        elif unit == "MiB":
-            memory = value
-        elif unit == "GiB":
-            memory = value * 1024
-        elif unit == "TiB":
-            memory = value * 1024 * 1024
-        elif unit == "B":
-            memory = value / (1024 * 1024)
-        elif unit == "KB" or unit == "K":
-            memory = (value * 1000) / (1024 * 1024)
-        elif unit == "MB" or unit == "M":
-            memory = (value * (1000 * 1000)) / (1024 * 1024)
-        elif unit == "GB" or unit == "G":
-            memory = (value * (1000 * 1000 * 1000)) / (1024 * 1024)
-        elif unit == "TB" or unit == "T":
-            memory = (value * (1000 * 1000 * 1000 * 1000)) / (1024 * 1024)
-        else:
-            raise ConversionException(f"Invalid memory unit: ${unit}")
+        byte, power = get_mem_in_bytes(unit).split("^")
+        memory = value * float(byte) ** float(power) / 1024 ** 2
 
         return memory
 
@@ -661,19 +668,7 @@ class Converter:
             else:
                 left_str = self.get_expr(left_operand)
             size_unit = self.get_expr(right_operand)[1:-1]
-            with WDLSourceLine(size_unit, ConversionException):
-                if size_unit == "Ki" or size_unit == "K" or size_unit == "KiB":
-                    unit_value = "1024"
-                elif size_unit == "Mi" or size_unit == "M" or size_unit == "MiB":
-                    unit_value = "1024^2"
-                elif size_unit == "Gi" or size_unit == "G" or size_unit == "GiB":
-                    unit_value = "1024^3"
-                elif size_unit == "Ti" or size_unit == "T" or size_unit == "TiB":
-                    unit_value = "1024^4"
-                else:
-                    raise WDLSourceLine(size_unit, ConversionException).makeError(
-                        f"Size Unit '{size_unit}' not yet handled."
-                    )
+            unit_value = get_mem_in_bytes(size_unit)
             return (
                 "(function(size_of=0)"
                 + "{"
