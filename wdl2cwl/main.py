@@ -415,7 +415,7 @@ class Converter:
         unit = unit_result.group()
         value = float(ram_min.split(unit)[0])
         byte, power = get_mem_in_bytes(unit).split("^")
-        memory = value * float(byte) ** float(power) / (1024 * 1024)
+        memory: float = value * float(byte) ** float(power) / (1024 * 1024)
 
         return memory
 
