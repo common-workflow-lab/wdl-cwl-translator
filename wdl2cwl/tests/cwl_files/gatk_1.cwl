@@ -84,7 +84,7 @@ requirements:
     dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4+
 
             set -e
@@ -115,4 +115,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash

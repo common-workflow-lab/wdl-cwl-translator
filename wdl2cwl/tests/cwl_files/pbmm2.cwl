@@ -35,7 +35,7 @@ requirements:
     dockerPull: quay.io/biocontainers/pbmm2:1.3.0--h56fc30b_1
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
             pbmm2 align \
@@ -71,4 +71,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash

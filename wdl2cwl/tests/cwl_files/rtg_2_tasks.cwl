@@ -32,7 +32,7 @@ $graph:
         dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
       - class: InitialWorkDirRequirement
         listing:
-          - entryname: example.sh
+          - entryname: script.bash
             entry: |4
 
                 set -e
@@ -64,7 +64,7 @@ $graph:
     cwlVersion: v1.2
     baseCommand:
       - bash
-      - example.sh
+      - script.bash
   - class: CommandLineTool
     id: VcfEval
     inputs:
@@ -174,7 +174,7 @@ $graph:
         dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
       - class: InitialWorkDirRequirement
         listing:
-          - entryname: example.sh
+          - entryname: script.bash
             entry: |4
 
                 set -e
@@ -218,4 +218,4 @@ $graph:
     cwlVersion: v1.2
     baseCommand:
       - bash
-      - example.sh
+      - script.bash

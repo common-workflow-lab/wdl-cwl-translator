@@ -37,7 +37,7 @@ requirements:
     dockerPull: quay.io/humancellatlas/secondary-analysis-umitools:0.0.1
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4+
 
              set -e
@@ -95,4 +95,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash

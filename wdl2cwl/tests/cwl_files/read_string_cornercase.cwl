@@ -15,7 +15,7 @@ requirements:
     dockerPull: quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6
   - class: InitialWorkDirRequirement
     listing:
-      - entryname: example.sh
+      - entryname: script.bash
         entry: |4
 
             cacheInvalidationRandomString=4
@@ -44,4 +44,4 @@ requirements:
 cwlVersion: v1.2
 baseCommand:
   - bash
-  - example.sh
+  - script.bash

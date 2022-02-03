@@ -2,10 +2,11 @@
 import os.path
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import Any, NamedTuple, Union, cast
 
 import pytest
 
-from ..main import Converter, main
+from ..main import ConversionException, Converter, main
 
 
 def get_file(path: str) -> str:
@@ -13,10 +14,10 @@ def get_file(path: str) -> str:
     return os.path.join(os.path.dirname(__file__), path)
 
 
-def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
+def test_meta(caplog: pytest.LogCaptureFixture) -> None:
     """Test meta warning."""
-    main([get_file("wdl_files/validateOptimus_3.wdl")])
-    assert "----WARNING: SKIPPING META----" in capsys.readouterr().err
+    main([get_file("wdl_files/TrimAdapters.wdl")])
+    assert "Skipping meta" in caplog.text
 
 
 # cd wdl2cwl/tests/wdl_files;  for file in *.wdl; do echo "        (\"${file}\"),"; done
@@ -28,15 +29,11 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
         ("bowtie_1.wdl"),
         ("bowtie_2.wdl"),
         ("bowtie_3.wdl"),
-        ("CollectQualityYieldMetrics.wdl"),
-        ("CollectReadgroupBamQualityMetrics.wdl"),
+        ("Qc.wdl"),
         ("deepvariant.wdl"),
         ("gatk_1.wdl"),
-        ("hisat2_1.wdl"),
-        ("hisat2_2.wdl"),
-        ("hisat2_3.wdl"),
+        ("hisat2.wdl"),
         ("isoseq3.wdl"),
-        # ("length_function_error.wdl"), produces an error on purpose
         ("minCores.wdl"),
         ("pbmm2.wdl"),
         ("read_string_cornercase.wdl"),
@@ -59,6 +56,8 @@ def test_meta(capsys: pytest.CaptureFixture[str]) -> None:
         ("bcftools.wdl"),
         ("align_and_count.wdl"),
         ("BuildCembaReferences.wdl"),
+        ("bwa_with_select_first.wdl"),
+        ("bwa_test_size_function.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
@@ -72,22 +71,23 @@ def test_wdls(description_name: str) -> None:
             assert Path(output.name).read_text(encoding="utf-8") == file.read()
 
 
-def test_wdl_stdout(capsys) -> None:  # type: ignore
+def test_wdl_stdout(
+    caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Test WDL to CWL conversion using stdout."""
     with open(get_file("cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
         main([get_file("wdl_files/bowtie_1.wdl")])
         captured = capsys.readouterr()
+        log = caplog.text
         assert captured.out == file.read()
-        assert captured.err == (
-            "----WARNING: SKIPPING REQUIREMENT memory----\n"
-            "----WARNING: SKIPPING REQUIREMENT disks----\n"
-            "----WARNING: SKIPPING REQUIREMENT time_minutes----\n"
-            "----WARNING: SKIPPING META----\n"
-        )
+        assert "Skipping parameter_meta" in log
 
 
-class TestObject:
+class TestObject(NamedTuple):
     """Test object for creating WDL.Expr.String."""
+
+    value: Union[Any, None]
+    literal: Union[Any, None]
 
 
 testdata = [
@@ -100,15 +100,19 @@ testdata = [
     ("15000 GiB", 15360000),
     ("5 TiB", 5242880),
     ("6000 MiB", 6000),
+    ("1 Altuve", ConversionException),
 ]
 
 
-@pytest.mark.parametrize("memory_runtime, expected_memory", testdata)
-def test_get_memory_literal(memory_runtime: str, expected_memory: float) -> None:
+@pytest.mark.parametrize("memory_runtime, expected_memory_or_error", testdata)
+def test_get_memory_literal(
+    memory_runtime: str, expected_memory_or_error: Union[float, int, Exception]
+) -> None:
     """Test get_memory_literal conditional statements."""
-    convert = Converter()
-    b = TestObject()
-    a = TestObject()
-    b.value = memory_runtime  # type: ignore
-    a.literal = b  # type: ignore
-    assert convert.get_memory_literal(a) == expected_memory  # type: ignore
+    b = TestObject(value=memory_runtime, literal=None)
+    a = TestObject(value=None, literal=b)
+    if isinstance(expected_memory_or_error, (float, int)):
+        assert Converter().get_memory_literal(a) == expected_memory_or_error  # type: ignore
+    else:
+        with pytest.raises(expected_memory_or_error):  # type: ignore
+            Converter().get_memory_literal(a)  # type: ignore

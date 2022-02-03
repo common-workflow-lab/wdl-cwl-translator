@@ -70,7 +70,7 @@ steps:
             dockerPull: quay.io/broadinstitute/bisulfite-references:1.0
           - class: InitialWorkDirRequirement
             listing:
-              - entryname: example.sh
+              - entryname: script.bash
                 entry: |4
 
                     # if the WDL/task contains a monitoring script as input
@@ -95,7 +95,7 @@ steps:
         cwlVersion: v1.2
         baseCommand:
           - bash
-          - example.sh
+          - script.bash
   - id: IndexForward
     in:
       - id: fasta_input
@@ -135,7 +135,7 @@ steps:
             dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: InitialWorkDirRequirement
             listing:
-              - entryname: example.sh
+              - entryname: script.bash
                 entry: |4
 
                     # if the WDL/task contains a monitoring script as input
@@ -158,7 +158,7 @@ steps:
         cwlVersion: v1.2
         baseCommand:
           - bash
-          - example.sh
+          - script.bash
   - id: IndexReverse
     in:
       - id: fasta_input
@@ -198,7 +198,7 @@ steps:
             dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: InitialWorkDirRequirement
             listing:
-              - entryname: example.sh
+              - entryname: script.bash
                 entry: |4
 
                     # if the WDL/task contains a monitoring script as input
@@ -221,7 +221,7 @@ steps:
         cwlVersion: v1.2
         baseCommand:
           - bash
-          - example.sh
+          - script.bash
   - id: CreateReferenceDictionary
     in:
       - id: reference_fasta
@@ -256,7 +256,7 @@ steps:
             dockerPull: quay.io/broadinstitute/picard:2.18.23
           - class: InitialWorkDirRequirement
             listing:
-              - entryname: example.sh
+              - entryname: script.bash
                 entry: |4+
 
                     set -euo pipefail
@@ -285,7 +285,7 @@ steps:
         cwlVersion: v1.2
         baseCommand:
           - bash
-          - example.sh
+          - script.bash
   - id: CreateReferenceFastaIndex
     in:
       - id: reference_fasta
@@ -319,7 +319,7 @@ steps:
             dockerPull: quay.io/broadinstitute/samtools:1.9
           - class: InitialWorkDirRequirement
             listing:
-              - entryname: example.sh
+              - entryname: script.bash
                 entry: |4
 
                     set -euo pipefail
@@ -350,4 +350,4 @@ steps:
         cwlVersion: v1.2
         baseCommand:
           - bash
-          - example.sh
+          - script.bash
