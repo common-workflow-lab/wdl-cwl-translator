@@ -34,7 +34,9 @@ inputs:
       - string
       - 'null'
   - id: regions
-    type: string
+    type:
+      - File
+      - 'null'
   - id: sampleName
     type:
       - string
@@ -90,20 +92,20 @@ requirements:
 
             set -e
             mkdir reference_dir
-            ln -s $(inputs.referenceFasta.path) reference_dir/\$(basename $(inputs.referenceFasta.path))
-            ln -s $(inputs.referenceFastaIndex.path) reference_dir/\$(basename $(inputs.referenceFastaIndex.path))
+            ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
+            ln -s $(inputs.referenceFastaIndex.path) reference_dir/$(inputs.referenceFastaIndex.basename)
             mkdir bam_dir
-            ln -s $(inputs.inputBam.path) bam_dir/\$(basename $(inputs.inputBam.path))
-            ln -s $(inputs.inputBamIndex.path) bam_dir/\$(basename $(inputs.inputBamIndex.path))
+            ln -s $(inputs.inputBam.path) bam_dir/$(inputs.inputBam.basename)
+            ln -s $(inputs.inputBamIndex.path) bam_dir/$(inputs.inputBamIndex.basename)
             /opt/deepvariant/bin/run_deepvariant \
-            --ref reference_dir/\$(basename $(inputs.referenceFasta.path)) \
-            --reads bam_dir/\$(basename $(inputs.inputBam.path)) \
+            --ref reference_dir/$(inputs.referenceFasta.basename) \
+            --reads bam_dir/$(inputs.inputBam.basename) \
             --model_type $(inputs.modelType) \
             --output_vcf $(inputs.outputVcf) \
             $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf) \
             $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path) \
             $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards) \
-            --regions  $(inputs.regions) \
+            $(inputs.regions === null ? "" : "--regions " + inputs.regions.path) \
             $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName) \
             $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs) \
             $(inputs.VCFStatsReport === null ? "--novcf_stats_report" : "--vcf_stats_report")

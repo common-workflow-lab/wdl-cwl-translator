@@ -24,8 +24,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
 @pytest.mark.parametrize(
     "description_name",
     [
-        ("bcftools_annotate.wdl"),
-        ("bcftools_stats.wdl"),
+        ("bcftools.wdl"),
         ("bowtie_1.wdl"),
         ("bowtie_2.wdl"),
         ("bowtie_3.wdl"),
@@ -53,14 +52,10 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("vardict.wdl"),
         ("vt.wdl"),
         ("rtg_2_tasks.wdl"),
-        ("bcftools.wdl"),
         ("align_and_count.wdl"),
         ("BuildCembaReferences.wdl"),
         ("bwa_with_select_first.wdl"),
         ("bwa_test_size_function.wdl"),
-        ("Qc_with_disks.wdl"),
-        ("tasks_reports_with_disks.wdl"),
-        ("validateOptimus_with_disks.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:

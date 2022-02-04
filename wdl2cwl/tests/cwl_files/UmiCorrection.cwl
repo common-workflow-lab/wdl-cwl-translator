@@ -20,6 +20,10 @@ inputs:
   - id: cpu
     default: 1
     type: int
+  - id: disk
+    type:
+      - int
+      - 'null'
   - id: preemptible
     default: 3
     type: int
@@ -91,7 +95,8 @@ requirements:
         else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
         return parseInt(memory);
         }
-    outdirMin: 1024
+    outdirMin: $((Math.ceil((function(size_of=0){inputs.bam_input.path.forEach(function(element){
+        if (element) {size_of += element.size}})}) / 1024^3*6)  + 50) / 1024)
 cwlVersion: v1.2
 baseCommand:
   - bash
