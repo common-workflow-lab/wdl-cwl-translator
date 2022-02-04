@@ -144,7 +144,6 @@ def get_literal_name(
     return str(expr.literal.value)  # type: ignore
 
 
-
 def get_expr_name(wdl_expr: WDL.Expr.Ident) -> str:
     """Extract name from WDL expr."""
     if not hasattr(wdl_expr, "name"):
@@ -415,8 +414,14 @@ class Converter:
     ) -> Union[int, str]:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         with WDLSourceLine(outdir, ConversionException):
-            if isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String)) and outdir.literal is None:
-                if isinstance(outdir, WDL.Expr.Apply) and not outdir.function_name == "_add":
+            if (
+                isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String))
+                and outdir.literal is None
+            ):
+                if (
+                    isinstance(outdir, WDL.Expr.Apply)
+                    and not outdir.function_name == "_add"
+                ):
                     expr_str = self.get_expr(outdir)
                     return f"$(({expr_str}) / 1024"
                 list_object = (
@@ -1075,5 +1080,3 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])
-    # convert("wdl2cwl/tests/wdl_files/validateOptimus_5.wdl")
-
