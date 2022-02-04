@@ -58,6 +58,9 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("BuildCembaReferences.wdl"),
         ("bwa_with_select_first.wdl"),
         ("bwa_test_size_function.wdl"),
+        ("Qc_with_disks.wdl"),
+        ("tasks_reports_with_disks.wdl"),
+        ("validateOptimus_with_disks.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
