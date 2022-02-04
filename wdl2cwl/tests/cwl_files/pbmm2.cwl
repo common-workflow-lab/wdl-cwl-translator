@@ -18,6 +18,10 @@ inputs:
   - id: memory
     default: 30G
     type: string
+  - id: timeMinutes
+    type:
+      - int
+      - 'null'
   - id: dockerImage
     default: quay.io/biocontainers/pbmm2:1.3.0--h56fc30b_1
     type: string
@@ -68,6 +72,10 @@ requirements:
         return parseInt(memory);
         }
     outdirMin: 1024
+  - class: ToolTimeLimit
+    timelimit: $(1 + Math.ceil((function(size_of=0){inputs.queryFile.path.forEach(function(element){
+        if (element) {size_of += element.size}})}) / 1000^3*2000/inputs.cores)  *
+        60)
 cwlVersion: v1.2
 baseCommand:
   - bash

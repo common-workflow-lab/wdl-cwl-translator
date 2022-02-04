@@ -32,10 +32,18 @@ $graph:
             type: array
       - id: inputFile
         type: File
+      - id: inputFileIndex
+        type:
+          - File
+          - 'null'
       - id: outputPath
         default: output.vcf.gz
         type: string
       - id: annsFile
+        type:
+          - File
+          - 'null'
+      - id: annsFileIndex
         type:
           - File
           - 'null'
@@ -83,8 +91,12 @@ $graph:
         default: 0
         type: int
       - id: memory
-        default: 256M
+        default: 4G
         type: string
+      - id: timeMinutes
+        type:
+          - int
+          - 'null'
       - id: dockerImage
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
@@ -154,6 +166,97 @@ $graph:
             return parseInt(memory);
             }
         outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(60 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
+    cwlVersion: v1.2
+    baseCommand:
+      - bash
+      - script.bash
+  - class: CommandLineTool
+    id: Filter
+    inputs:
+      - id: vcf
+        type: File
+      - id: vcfIndex
+        type: File
+      - id: include
+        type:
+          - string
+          - 'null'
+      - id: exclude
+        type:
+          - string
+          - 'null'
+      - id: softFilter
+        type:
+          - string
+          - 'null'
+      - id: outputPath
+        default: ./filtered.vcf.gz
+        type: string
+      - id: memory
+        default: 256M
+        type: string
+      - id: timeMinutes
+        type:
+          - int
+          - 'null'
+      - id: dockerImage
+        default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
+        type: string
+    outputs:
+      - id: outputVcf
+        type: File
+        outputBinding:
+            glob: $(inputs.outputPath)
+      - id: outputVcfIndex
+        type: File
+        outputBinding:
+            glob: $(inputs.outputPath + ".tbi")
+    requirements:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e 
+                mkdir -p "\$(dirname $(inputs.outputPath))"
+                bcftools \
+                filter \
+                $(inputs.include === null ? "" : "-i " + inputs.include) \
+                $(inputs.exclude === null ? "" : "-e " + inputs.exclude) \
+                $(inputs.softFilter === null ? "" : "-s " + inputs.softFilter) \
+                $(inputs.vcf.path) \
+                -O z \
+                -o $(inputs.outputPath)
+                bcftools index --tbi $(inputs.outputPath)
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.vcf.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -172,6 +275,10 @@ $graph:
       - id: memory
         default: 256M
         type: string
+      - id: timeMinutes
+        type:
+          - int
+          - 'null'
       - id: dockerImage
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
@@ -224,6 +331,9 @@ $graph:
             return parseInt(memory);
             }
         outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -420,6 +530,10 @@ $graph:
       - id: memory
         default: 256M
         type: string
+      - id: timeMinutes
+        type:
+          - int
+          - 'null'
       - id: dockerImage
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
@@ -474,6 +588,9 @@ $graph:
             return parseInt(memory);
             }
         outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     cwlVersion: v1.2
     baseCommand:
       - bash

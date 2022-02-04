@@ -35,7 +35,7 @@ task RunDeepVariant {
         Int? numShards
         String? outputGVcf
         String? outputGVcfIndex
-        String regions
+        File? regions
         String? sampleName
         Boolean? VCFStatsReport = true
 
@@ -47,14 +47,14 @@ task RunDeepVariant {
     command {
         set -e
         mkdir reference_dir
-        ln -s ~{referenceFasta} reference_dir/$(basename ~{referenceFasta})
-        ln -s ~{referenceFastaIndex} reference_dir/$(basename ~{referenceFastaIndex})
+        ln -s ~{referenceFasta} reference_dir/~{basename(referenceFasta)}
+        ln -s ~{referenceFastaIndex} reference_dir/~{basename(referenceFastaIndex)}
         mkdir bam_dir
-        ln -s ~{inputBam} bam_dir/$(basename ~{inputBam})
-        ln -s ~{inputBamIndex} bam_dir/$(basename ~{inputBamIndex})
+        ln -s ~{inputBam} bam_dir/~{basename(inputBam)}
+        ln -s ~{inputBamIndex} bam_dir/~{basename(inputBamIndex)}
         /opt/deepvariant/bin/run_deepvariant \
-        --ref reference_dir/$(basename ~{referenceFasta}) \
-        --reads bam_dir/$(basename ${inputBam}) \
+        --ref reference_dir/~{basename(referenceFasta)} \
+        --reads bam_dir/~{basename(inputBam)} \
         --model_type ~{modelType} \
         --output_vcf ~{outputVcf} \
         ~{"--output_gvcf " + outputGVcf} \

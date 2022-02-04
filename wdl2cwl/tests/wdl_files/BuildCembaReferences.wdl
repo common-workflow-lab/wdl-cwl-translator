@@ -7,6 +7,8 @@ workflow BuildCembaReferences {
     File reference_fasta
     File? monitoring_script
   }
+  # version of this pipeline
+  String pipeline_version = "1.0.0"
 
   # prepare reference fasta for building indexes with bowtie2
   call BuildBisulfiteReferences as Convert {
@@ -79,7 +81,7 @@ task BuildBisulfiteReferences {
       echo "No monitoring script given as input" > monitoring.log &
     fi
 
-    python /build_bisulfite_references.py \
+    python3 /build_bisulfite_references.py \
       --input-fasta ~{fasta_input} \
       --forward-convert-out ~{fwd_converted_reference_fasta_output_name} \
       --reverse-convert-out ~{rev_converted_reference_fasta_output_name}
@@ -87,7 +89,7 @@ task BuildBisulfiteReferences {
 
   runtime {
     docker: "quay.io/broadinstitute/bisulfite-references:1.0"
-    # disks: "local-disk " + ceil(3.5 * (if input_size < 1 then 1 else input_size)) + " HDD"
+    #disks: "local-disk " + ceil(3.5 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
     memory: "3.5 GB"
   }
@@ -126,7 +128,7 @@ task Bowtie2Build {
 
   runtime {
     docker: "quay.io/broadinstitute/bowtie2:2.3.4.3"
-    # disks: "local-disk " + ceil(3 * (if input_size < 1 then 1 else input_size)) + " HDD"
+    #disks: "local-disk " + ceil(3 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
     memory: "7 GB"
   }
@@ -162,7 +164,7 @@ task CreateReferenceDictionary {
     fi
 
     # create a reference dict
-    java -jar /picard-tools/picard.jar CreateSequenceDictionary \
+    java -Xmx3500m -jar /picard-tools/picard.jar CreateSequenceDictionary \
       REFERENCE=~{reference_fasta} \
       OUTPUT=~{ref_dict_output_name}
     sed -i "s=$(dirname ~{reference_fasta})/==g" ~{ref_dict_output_name}  # for reproducibility
@@ -174,9 +176,9 @@ task CreateReferenceDictionary {
     docker: "quay.io/broadinstitute/picard:2.18.23"
     # if the input size is less than 1 GB adjust to min input size of 1 GB
     # disks should be set to 2 * input file size
-    # disks: "local-disk " + ceil(2 * (if input_size < 1 then 1 else input_size)) + " HDD"
+    #disks: "local-disk " + ceil(2 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
-    memory: "4 GB"
+    memory: "4000 MiB"
   }
 
   output {

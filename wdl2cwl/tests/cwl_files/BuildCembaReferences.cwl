@@ -81,7 +81,7 @@ steps:
                       echo "No monitoring script given as input" > monitoring.log &
                     fi
 
-                    python /build_bisulfite_references.py \
+                    python3 /build_bisulfite_references.py \
                       --input-fasta $(inputs.fasta_input.path) \
                       --forward-convert-out $("genome_mfa.CT_conversion.fa") \
                       --reverse-convert-out $("genome_mfa.GA_conversion.fa")
@@ -270,7 +270,7 @@ steps:
                     fi
 
                     # create a reference dict
-                    java -jar /picard-tools/picard.jar CreateSequenceDictionary \
+                    java -Xmx3500m -jar /picard-tools/picard.jar CreateSequenceDictionary \
                       REFERENCE=$(inputs.reference_fasta.path) \
                       OUTPUT=$(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")
                     sed -i "s=\$(dirname $(inputs.reference_fasta.path))/==g" $(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")  # for reproducibility
@@ -280,7 +280,7 @@ steps:
             networkAccess: true
           - class: ResourceRequirement
             coresMin: 1
-            ramMin: 3814.697265625
+            ramMin: 4000.0
             outdirMin: 1024
         cwlVersion: v1.2
         baseCommand:

@@ -22,7 +22,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms2000m -jar /usr/picard/picard.jar \
+                java -Xms2000m -Xmx3000m -jar /usr/picard/picard.jar \
                   CollectQualityYieldMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   OQ=true \
@@ -32,8 +32,9 @@ $graph:
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 3584.0
-        outdirMin: 1024
+        ramMin: 3500.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -88,7 +89,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms5000m -jar /usr/picard/picard.jar \
+                java -Xms5000m -Xmx6500m -jar /usr/picard/picard.jar \
                   CollectMultipleMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   OUTPUT=$(inputs.output_bam_prefix) \
@@ -107,8 +108,9 @@ $graph:
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 7168.0
-        outdirMin: 1024
+        ramMin: 7000.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -163,7 +165,7 @@ $graph:
                   $(inputs.output_bam_prefix).gc_bias.pdf \
                   $(inputs.output_bam_prefix).gc_bias.summary_metrics
 
-                java -Xms5000m -jar /usr/picard/picard.jar \
+                java -Xms5000m -Xmx6500m -jar /usr/picard/picard.jar \
                   CollectMultipleMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   REFERENCE_SEQUENCE=$(inputs.ref_fasta.path) \
@@ -179,8 +181,12 @@ $graph:
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 7168.0
-        outdirMin: 1024
+        ramMin: 7000.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -273,7 +279,7 @@ $graph:
                   $(inputs.output_bam_prefix).insert_size_metrics \
                   $(inputs.output_bam_prefix).insert_size_histogram.pdf
 
-                java -Xms5000m -jar /usr/picard/picard.jar \
+                java -Xms5000m -Xmx6500m -jar /usr/picard/picard.jar \
                   CollectMultipleMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   REFERENCE_SEQUENCE=$(inputs.ref_fasta.path) \
@@ -292,8 +298,12 @@ $graph:
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 7168.0
-        outdirMin: 1024
+        ramMin: 7000.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -332,7 +342,7 @@ $graph:
             entry: |4
 
                 input_base=\$(dirname $(inputs.pre_adapter_detail_metrics.path))/$(inputs.base_name)
-                java -Xms$(Math.ceil(4*inputs.memory_multiplier) -1*1000)m \
+                java -Xms$(Math.ceil(4000*inputs.memory_multiplier) -1000)m -Xmx$(Math.ceil(4000*inputs.memory_multiplier) -500)m \
                   -jar /usr/picard/picard.jar \
                   ConvertSequencingArtifactToOxoG \
                   --INPUT_BASE $input_base \
@@ -344,8 +354,8 @@ $graph:
       - class: ResourceRequirement
         ramMin: |-
             ${
-            var unit = "GiB";
-            var value = parseInt(`${Math.ceil(4*inputs.memory_multiplier) }`.match(/[0-9]+/g));
+            var unit = "MiB";
+            var value = parseInt(`${Math.ceil(4000*inputs.memory_multiplier) }`.match(/[0-9]+/g));
             var memory = "";
             if(unit==="KiB") memory = value/1024;
             else if(unit==="MiB") memory = value;
@@ -358,7 +368,12 @@ $graph:
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
             return parseInt(memory);
             }
-        outdirMin: 1024
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.pre_adapter_detail_metrics.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.bait_bias_detail_metrics.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -400,7 +415,7 @@ $graph:
             entry: |4
 
                 java -Dsamjdk.buffer_size=131072 \
-                  -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3000m \
+                  -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3000m -Xmx3000m \
                   -jar /usr/picard/picard.jar \
                   CrosscheckFingerprints \
                   OUTPUT=$(inputs.metrics_filename) \
@@ -413,8 +428,8 @@ $graph:
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 3584.0
-        outdirMin: 1024
+        ramMin: 3500.0
+        outdirMin: $((Math.ceil(inputs.total_input_size)  + 20) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -423,24 +438,53 @@ $graph:
     id: CheckFingerprint
     inputs:
       - id: input_bam
-        type: File
-      - id: input_bam_index
-        type: File
-      - id: output_basename
-        type: string
-      - id: haplotype_database_file
-        type: File
-      - id: genotypes
         type:
           - File
           - 'null'
+      - id: input_bam_index
+        type:
+          - File
+          - 'null'
+      - id: input_vcf
+        type:
+          - File
+          - 'null'
+      - id: input_vcf_index
+        type:
+          - File
+          - 'null'
+      - id: input_sample_alias
+        type:
+          - string
+          - 'null'
+      - id: genotypes
+        type: File
       - id: genotypes_index
         type:
           - File
           - 'null'
-      - id: sample
+      - id: expected_sample_alias
         type: string
+      - id: output_basename
+        type: string
+      - id: genotype_lod_threshold
+        default: 5.0
+        type: float
+      - id: haplotype_database_file
+        type: File
+      - id: ref_fasta
+        type:
+          - File
+          - 'null'
+      - id: ref_fasta_index
+        type:
+          - File
+          - 'null'
+      - id: memory_size
+        default: 2500
+        type: int
       - id: preemptible_tries
+        default: 3
         type: int
     outputs:
       - id: summary_metrics
@@ -451,32 +495,64 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.output_basename + '.fingerprinting_detail_metrics')
+      - id: lod
+        type: float
+        outputBinding:
+            loadContents: true
+            glob: lod
+            outputEval: $(parseFloat(self[0].contents))
     requirements:
       - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.26.4
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4+
+            entry: |4
 
-                java -Dsamjdk.buffer_size=131072 \
-                  -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3g  \
-                  -jar /usr/picard/picard.jar \
-                  CheckFingerprint \
-                  INPUT=$(inputs.input_bam.path) \
-                  SUMMARY_OUTPUT=$(inputs.output_basename + '.fingerprinting_summary_metrics') \
-                  DETAIL_OUTPUT=$(inputs.output_basename + '.fingerprinting_detail_metrics') \
-                  GENOTYPES=$(inputs.genotypes === null ? "" : inputs.genotypes.path) \
-                  HAPLOTYPE_MAP=$(inputs.haplotype_database_file.path) \
-                  SAMPLE_ALIAS="$(inputs.sample)" \
-                  IGNORE_READ_GROUPS=true
+                set -e
+                java -Xms$(inputs.memory_size-1000)m -Xmx$(inputs.memory_size-500)m -Dpicard.useLegacyParser=false -jar /usr/picard/picard.jar \
+                CheckFingerprint \
+                  --INPUT $([inputs.input_vcf === null ? "" : inputs.input_vcf.path, inputs.input_bam === null ? "" : inputs.input_bam.path].find(element => element !== null) ) \
+                  $(inputs.input_vcf ? inputs.input_sample_alias === null ? "" : "--OBSERVED_SAMPLE_ALIAS "" + inputs.input_sample_alias + """ : "") \
+                  --GENOTYPES $(inputs.genotypes.path) \
+                  --EXPECTED_SAMPLE_ALIAS "$(inputs.expected_sample_alias)" \
+                  $(inputs.input_bam ? "--IGNORE_READ_GROUPS true" : "") \
+                  --HAPLOTYPE_MAP $(inputs.haplotype_database_file.path) \
+                  --GENOTYPE_LOD_THRESHOLD $(inputs.genotype_lod_threshold) \
+                  --SUMMARY_OUTPUT $(inputs.output_basename + '.fingerprinting_summary_metrics') \
+                  --DETAIL_OUTPUT $(inputs.output_basename + '.fingerprinting_detail_metrics') \
+                  $(inputs.ref_fasta === null ? "" : "--REFERENCE_SEQUENCE " + inputs.ref_fasta.path)
 
+                CONTENT_LINE=\$(cat $(inputs.output_basename + '.fingerprinting_summary_metrics') |
+                grep -n "## METRICS CLASS\tpicard.analysis.FingerprintingSummaryMetrics" |
+                cut -f1 -d:)
+                CONTENT_LINE=\$(($CONTENT_LINE+2))
+                sed '8q;d' $(inputs.output_basename + '.fingerprinting_summary_metrics') | cut -f5 > lod
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 3584.0
-        outdirMin: 1024
+        ramMin: |-
+            ${
+            var unit = "MiB";
+            var value = parseInt(`${inputs.memory_size}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: '$((Math.ceil((function(size_of=0){inputs.input_bam === null ?
+            "" : inputs.input_bam.path.forEach(function(element){ if (element) {size_of
+            += element.size}})}) / 1024^3 + (function(size_of=0){inputs.input_vcf
+            === null ? "" : inputs.input_vcf.path.forEach(function(element){ if (element)
+            {size_of += element.size}})}) / 1024^3)  + 20) / 1024)'
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -514,7 +590,7 @@ $graph:
                 || "chimerism_value.txt" > inputs.max_chimerism_in_reasonable_sample)
     requirements:
       - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/python:2.7
+        dockerPull: us.gcr.io/broad-dsp-gcr-public/base/python:3.9-debian
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -526,7 +602,7 @@ $graph:
                 grep -A 1 PERCENT_DUPLICATION $(inputs.duplication_metrics.path) > duplication.csv
                 grep -A 3 PCT_CHIMERAS $(inputs.chimerism_metrics.path) | grep -v OF_PAIR > chimerism.csv
 
-                python <<CODE
+                python3 <<CODE
 
                 import csv
                 with open('duplication.csv') as dupfile:
@@ -606,7 +682,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms$(Math.ceil(7*inputs.memory_multiplier) -1*1000)m -jar /usr/picard/picard.jar \
+                java -Xms$(inputs.memory_size-1000)m -Xmx$(inputs.memory_size-500)m -jar /usr/picard/picard.jar \
                   ValidateSamFile \
                   INPUT=$(inputs.input_bam.path) \
                   OUTPUT=$(inputs.report_filename) \
@@ -622,8 +698,8 @@ $graph:
       - class: ResourceRequirement
         ramMin: |-
             ${
-            var unit = "GiB";
-            var value = parseInt(`${Math.ceil(7*inputs.memory_multiplier) }`.match(/[0-9]+/g));
+            var unit = "MiB";
+            var value = parseInt(`${inputs.memory_size}`.match(/[0-9]+/g));
             var memory = "";
             if(unit==="KiB") memory = value/1024;
             else if(unit==="MiB") memory = value;
@@ -636,7 +712,12 @@ $graph:
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
             return parseInt(memory);
             }
-        outdirMin: 1024
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
+            / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -673,7 +754,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms2000m -jar /usr/picard/picard.jar \
+                java -Xms2000m -Xmx2500m -jar /usr/picard/picard.jar \
                   CollectWgsMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   VALIDATION_STRINGENCY=SILENT \
@@ -687,8 +768,11 @@ $graph:
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 3072.0
-        outdirMin: 1024
+        ramMin: 3000.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -731,7 +815,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms$(Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk < 110 ? 5 : 7*inputs.memory_multiplier) -1*1000)m -jar /usr/picard/picard.jar \
+                java -Xms$(inputs.memory_size-1*1000)m -jar /usr/picard/picard.jar \
                   CollectRawWgsMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   VALIDATION_STRINGENCY=SILENT \
@@ -748,7 +832,7 @@ $graph:
         ramMin: |-
             ${
             var unit = "GiB";
-            var value = parseInt(`${Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk < 110 ? 5 : 7*inputs.memory_multiplier) }`.match(/[0-9]+/g));
+            var value = parseInt(`${inputs.memory_size}`.match(/[0-9]+/g));
             var memory = "";
             if(unit==="KiB") memory = value/1024;
             else if(unit==="MiB") memory = value;
@@ -761,7 +845,11 @@ $graph:
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
             return parseInt(memory);
             }
-        outdirMin: 1024
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
+            / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -804,7 +892,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms$(Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5) *inputs.memory_multiplier)  < 7 ? 7 : Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5) *inputs.memory_multiplier) -1*1000)m -jar /usr/picard/picard.jar \
+                java -Xms$(inputs.memory_size-1000)m -Xmx$(inputs.memory_size-500)m -jar /usr/picard/picard.jar \
                   CollectHsMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   REFERENCE_SEQUENCE=$(inputs.ref_fasta.path) \
@@ -821,8 +909,8 @@ $graph:
       - class: ResourceRequirement
         ramMin: |-
             ${
-            var unit = "GiB";
-            var value = parseInt(`${Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5) *inputs.memory_multiplier)  < 7 ? 7 : Math.ceil(Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5)  > 10 ? 10 : Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){ if (element) {size_of += element.size}})}) / 1024^3 + 0.5) *inputs.memory_multiplier) }`.match(/[0-9]+/g));
+            var unit = "MiB";
+            var value = parseInt(`${inputs.memory_size}`.match(/[0-9]+/g));
             var memory = "";
             if(unit==="KiB") memory = value/1024;
             else if(unit==="MiB") memory = value;
@@ -835,7 +923,11 @@ $graph:
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
             return parseInt(memory);
             }
-        outdirMin: 1024
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
+            / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -864,7 +956,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms1000m -jar /usr/picard/picard.jar \
+                java -Xms1000m -Xmx3500m -jar /usr/picard/picard.jar \
                   CalculateReadGroupChecksum \
                   INPUT=$(inputs.input_bam.path) \
                   OUTPUT=$(inputs.read_group_md5_filename)
@@ -872,8 +964,9 @@ $graph:
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 2048.0
-        outdirMin: 1024
+        ramMin: 4000.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 40) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -892,16 +985,29 @@ $graph:
       - id: ref_dict
         type: File
       - id: dbsnp_vcf
-        type: File
+        type:
+          - File
+          - 'null'
       - id: dbsnp_vcf_index
-        type: File
+        type:
+          - File
+          - 'null'
       - id: calling_interval_list
         type: File
+      - id: calling_interval_list_index
+        type:
+          - File
+          - 'null'
       - id: preemptible_tries
+        default: 3
         type: int
       - id: is_gvcf
         default: true
         type: boolean
+      - id: extra_args
+        type:
+          - string
+          - 'null'
       - id: gatk_docker
         default: us.gcr.io/broad-gatk/gatk:4.1.8.0
         type: string
@@ -914,20 +1020,28 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                gatk --java-options -Xms6000m \
+                # Note that WGS needs a lot of memory to do the -L *.vcf if an interval file is not supplied
+                gatk --java-options "-Xms6000m -Xmx6500m" \
                   ValidateVariants \
                   -V $(inputs.input_vcf.path) \
                   -R $(inputs.ref_fasta.path) \
                   -L $(inputs.calling_interval_list.path) \
                   $(inputs.is_gvcf ? "-gvcf" : "") \
                   --validation-type-to-exclude ALLELES \
-                  --dbsnp $(inputs.dbsnp_vcf.path)
+                  $(inputs.dbsnp_vcf === null ? "" : "--dbsnp " + inputs.dbsnp_vcf.path) \
+                  $(inputs.extra_args)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 7168.0
-        outdirMin: 1024
+        ramMin: 7000.0
+        outdirMin: '$((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf
+            === null ? "" : inputs.dbsnp_vcf.path.forEach(function(element){ if (element)
+            {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)'
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -971,7 +1085,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms2000m -jar /usr/picard/picard.jar \
+                java -Xms2000m -Xmx2500m -jar /usr/picard/picard.jar \
                   CollectVariantCallingMetrics \
                   INPUT=$(inputs.input_vcf.path) \
                   OUTPUT=$(inputs.metrics_basename) \
@@ -983,8 +1097,10 @@ $graph:
       - class: NetworkAccess
         networkAccess: true
       - class: ResourceRequirement
-        ramMin: 3072.0
-        outdirMin: 1024
+        ramMin: 3000.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
