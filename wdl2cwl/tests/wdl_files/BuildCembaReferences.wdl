@@ -224,7 +224,7 @@ task CreateReferenceFastaIndex {
     docker: "quay.io/broadinstitute/samtools:1.9"
     # if the input size is less than 1 GB adjust to min input size of 1 GB
     # disks should be set to 2.25 * input file size
-    # disks: "local-disk " + ceil(2.25 * (if input_size < 1 then 1 else input_size)) + " HDD"
+    disks: "local-disk " + ceil(2.25 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
     memory: "3.5 GB"
   }

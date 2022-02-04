@@ -141,14 +141,8 @@ def get_literal_name(
     ],
 ) -> str:
     """Translate WDL Boolean, Int, Float, or Array Expression."""
-    # if the literal expr is used inside WDL.Expr.Apply
-    # the literal value is what's needed
-    parent = expr.parent  # type: ignore[union-attr]
-    if isinstance(parent, (WDL.Expr.Apply, WDL.Expr.IfThenElse, WDL.Expr.Array)):
-        return expr.literal.value  # type: ignore
-    raise WDLSourceLine(expr, ConversionException).makeError(
-        f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
-    )
+    return str(expr.literal.value)  # type: ignore
+
 
 
 def get_expr_name(wdl_expr: WDL.Expr.Ident) -> str:
@@ -418,10 +412,13 @@ class Converter:
 
     def get_outdir_requirement(
         self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]
-    ) -> int:
+    ) -> Union[int, str]:
         """Produce the memory requirement for the output directory from WDL runtime disks."""
         with WDLSourceLine(outdir, ConversionException):
-            if isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String)):
+            if isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String)) and outdir.literal is None:
+                if isinstance(outdir, WDL.Expr.Apply) and not outdir.function_name == "_add":
+                    expr_str = self.get_expr(outdir)
+                    return f"$(({expr_str}) / 1024"
                 list_object = (
                     outdir.arguments if hasattr(outdir, "arguments") else outdir.parts  # type: ignore
                 )
@@ -435,7 +432,7 @@ class Converter:
                 expr_str = expr
                 if isinstance(outdir, (WDL.Expr.Placeholder)):
                     expr_str = expr[2:-1]
-                return f"$(({expr_str}) / 1024)"  # type: ignore
+                return f"$(({expr_str}) / 1024)"
             literal_value = outdir.literal.value  # type: ignore
             value = re.search(r"[0-9]+", literal_value).group()  # type: ignore
 
@@ -1078,3 +1075,5 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])
+    # convert("wdl2cwl/tests/wdl_files/validateOptimus_5.wdl")
+
