@@ -538,6 +538,7 @@ class Converter:
 
     def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
         """Translate WDL Apply Expressions."""
+        single_arg_fn = {"read_string", "read_float", "glob", "read_int"}
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
         if not arguments:
@@ -646,13 +647,7 @@ class Converter:
             if isinstance(right_operand, WDL.Expr.Apply):
                 right_operand = self.get_expr_apply(right_operand)  # type: ignore
             return f"{left_operand} !== {right_operand}"
-        elif function_name == "read_string":
-            only_arg = arguments[0]
-            return self.get_expr(only_arg)
-        elif function_name == "read_float":
-            only_arg = arguments[0]
-            return self.get_expr(only_arg)
-        elif function_name == "glob":
+        elif function_name in single_arg_fn:
             only_arg = arguments[0]
             return self.get_expr(only_arg)
         elif function_name == "select_first":
@@ -702,8 +697,6 @@ class Converter:
                 + "}})}"
                 + f") / {unit_value}"
             )
-        elif function_name == "read_int":
-            return self.get_expr(arguments[0])
 
         raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
             f"Function name '{function_name}' not yet handled."
