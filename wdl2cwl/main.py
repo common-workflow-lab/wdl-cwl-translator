@@ -1,6 +1,5 @@
 """Main entrypoint for WDL2CWL."""
 import argparse
-from curses.ascii import isdigit
 import os
 import re
 import sys
