@@ -51,7 +51,7 @@ requirements:
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 953.67431640625
-    outdirMin: $((1) * 1024)
+    outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
   - bash

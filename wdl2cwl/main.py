@@ -1,5 +1,6 @@
 """Main entrypoint for WDL2CWL."""
 import argparse
+from curses.ascii import isdigit
 import os
 import re
 import sys
@@ -411,7 +412,11 @@ class Converter:
                     and not outdir.function_name == "_add"
                 ):
                     expr_str = self.get_expr(outdir)
-                    return f"$(({expr_str}) * 1024)"
+                    return (
+                        f"$(({expr_str}) * 1024)"
+                        if not expr_str.isdigit()
+                        else int(expr_str) * 1024
+                    )
                 list_object = (
                     outdir.arguments if hasattr(outdir, "arguments") else outdir.parts  # type: ignore
                 )
@@ -425,7 +430,11 @@ class Converter:
                 expr_str = expr
                 if isinstance(outdir, (WDL.Expr.Placeholder)):
                     expr_str = expr[2:-1]
-                return f"$(({expr_str}) * 1024)"
+                return (
+                    f"$(({expr_str}) * 1024)"
+                    if not expr_str.isdigit()
+                    else int(expr_str) * 1024
+                )
             literal_value = outdir.literal.value  # type: ignore
             value = re.search(r"[0-9]+", literal_value).group()  # type: ignore
 
