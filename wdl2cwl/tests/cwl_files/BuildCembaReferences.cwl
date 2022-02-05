@@ -348,7 +348,7 @@ steps:
             ramMin: 3337.860107421875
             outdirMin: '$((Math.ceil(2.25*(function(size_of=0){inputs.reference_fasta.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.reference_fasta.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3) ) * 1024'
+                if (element) {size_of += element.size}})}) / 1000^3) ) / 1024'
         cwlVersion: v1.2
         baseCommand:
           - bash

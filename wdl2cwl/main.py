@@ -410,7 +410,7 @@ class Converter:
                     and not outdir.function_name == "_add"
                 ):
                     expr_str = self.get_expr(outdir)
-                    return f"$(({expr_str}) * 1024"
+                    return f"$(({expr_str}) / 1024"
                 list_object = (
                     outdir.arguments if hasattr(outdir, "arguments") else outdir.parts  # type: ignore
                 )
