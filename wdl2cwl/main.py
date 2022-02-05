@@ -131,19 +131,6 @@ def get_cwl_docker_requirements(
         dockerpull = dockerpull_referee.expr.literal.value
     return cwl.DockerRequirement(dockerPull=dockerpull)
 
-
-def get_literal_name(
-    expr: Union[
-        WDL.Expr.Boolean,
-        WDL.Expr.Int,
-        WDL.Expr.Float,
-        WDL.Expr.Array,
-    ],
-) -> str:
-    """Translate WDL Boolean, Int, Float, or Array Expression."""
-    return str(expr.literal.value)  # type: ignore
-
-
 def get_expr_name(wdl_expr: WDL.Expr.Ident) -> str:
     """Extract name from WDL expr."""
     if not hasattr(wdl_expr, "name"):
@@ -495,7 +482,7 @@ class Converter:
                 WDL.Expr.Array,
             ),
         ):
-            return get_literal_name(wdl_expr)
+            return str(wdl_expr.literal.value)  # type: ignore
         else:
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"The expression '{wdl_expr}' is not handled yet."
