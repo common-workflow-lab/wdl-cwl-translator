@@ -131,6 +131,7 @@ def get_cwl_docker_requirements(
         dockerpull = dockerpull_referee.expr.literal.value
     return cwl.DockerRequirement(dockerPull=dockerpull)
 
+
 def get_expr_name(wdl_expr: WDL.Expr.Ident) -> str:
     """Extract name from WDL expr."""
     if not hasattr(wdl_expr, "name"):
@@ -410,7 +411,7 @@ class Converter:
                     and not outdir.function_name == "_add"
                 ):
                     expr_str = self.get_expr(outdir)
-                    return f"$(({expr_str}) * 1024"
+                    return f"$(({expr_str}) * 1024)"
                 list_object = (
                     outdir.arguments if hasattr(outdir, "arguments") else outdir.parts  # type: ignore
                 )
