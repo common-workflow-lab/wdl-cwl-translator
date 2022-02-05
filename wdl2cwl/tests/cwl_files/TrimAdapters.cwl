@@ -92,7 +92,7 @@ requirements:
         }
     outdirMin: $((Math.ceil(2*(function(size_of=0){inputs.fastq1_input_files.forEach(function(element){
         if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq2_input_files.forEach(function(element){
-        if (element) {size_of += element.size}})}) / 1024^3)  + 10) / 1024)
+        if (element) {size_of += element.size}})}) / 1024^3)  + 10) * 1024)
 cwlVersion: v1.2
 baseCommand:
   - bash

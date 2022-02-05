@@ -34,7 +34,7 @@ $graph:
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -110,7 +110,7 @@ $graph:
       - class: ResourceRequirement
         ramMin: 7000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -186,7 +186,7 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -303,7 +303,7 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -373,7 +373,7 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -429,7 +429,7 @@ $graph:
         networkAccess: true
       - class: ResourceRequirement
         ramMin: 3500.0
-        outdirMin: $((Math.ceil(inputs.total_input_size)  + 20) / 1024)
+        outdirMin: $((Math.ceil(inputs.total_input_size)  + 20) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -552,7 +552,7 @@ $graph:
             "" : inputs.input_bam.path.forEach(function(element){ if (element) {size_of
             += element.size}})}) / 1024^3 + (function(size_of=0){inputs.input_vcf
             === null ? "" : inputs.input_vcf.path.forEach(function(element){ if (element)
-            {size_of += element.size}})}) / 1024^3)  + 20) / 1024)'
+            {size_of += element.size}})}) / 1024^3)  + 20) * 1024)'
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -717,7 +717,7 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
-            / 1024)
+            * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -772,7 +772,7 @@ $graph:
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -849,7 +849,7 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
-            / 1024)
+            * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -927,7 +927,7 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
-            / 1024)
+            * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -966,7 +966,7 @@ $graph:
       - class: ResourceRequirement
         ramMin: 4000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 40) / 1024)
+            if (element) {size_of += element.size}})}) / 1024^3)  + 40) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -1041,7 +1041,7 @@ $graph:
             {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)'
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)'
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -1100,7 +1100,7 @@ $graph:
         ramMin: 3000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) / 1024)
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     cwlVersion: v1.2
     baseCommand:
       - bash

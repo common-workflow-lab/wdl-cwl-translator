@@ -96,7 +96,7 @@ requirements:
         return parseInt(memory);
         }
     outdirMin: $((Math.ceil((function(size_of=0){inputs.bam_input.path.forEach(function(element){
-        if (element) {size_of += element.size}})}) / 1024^3*6)  + 50) / 1024)
+        if (element) {size_of += element.size}})}) / 1024^3*6)  + 50) * 1024)
 cwlVersion: v1.2
 baseCommand:
   - bash
