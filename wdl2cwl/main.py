@@ -537,7 +537,13 @@ class Converter:
 
     def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
         """Translate WDL Apply Expressions."""
-        single_arg_fn = {"read_string", "read_float", "glob", "read_int"}
+        single_arg_fn = {
+            "read_string",
+            "read_float",
+            "glob",
+            "read_int",
+            "read_boolean",
+        }
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
         if not arguments:
@@ -946,7 +952,8 @@ class Converter:
             output_name = item.name
             meta_name = None
             if isinstance(item, WDL.Env.Binding):
-                meta_name = item.info.expr.expr.name
+                with WDLSourceLine(item.info.expr, ConversionException):
+                    meta_name = item.info.expr.expr.name
                 wdl_output = item.info
             else:
                 wdl_output = item
@@ -1013,6 +1020,37 @@ class Converter:
                                 glob=glob_str,
                                 loadContents=True,
                                 outputEval=r"$(parseFloat(self[0].contents))",
+                            ),
+                        ),
+                        meta_name,
+                    )
+                )
+            elif (
+                isinstance(wdl_output.expr, WDL.Expr.Apply)
+                and wdl_output.expr.function_name == "read_boolean"
+            ):
+                glob_expr = self.get_expr(wdl_output)
+                is_literal = wdl_output.expr.arguments[0].literal
+                if is_literal:
+                    glob_str = glob_expr[
+                        1:-1
+                    ]  # remove quotes from the string returned by get_expr_string
+                else:
+                    glob_str = f"$({glob_expr})"
+
+                outputs.append(
+                    (
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type=type_of,
+                            outputBinding=cwl.CommandOutputBinding(
+                                glob=glob_str,
+                                loadContents=True,
+                                outputEval=r"""${
+if (self[0].contents == 'true') { return true;}
+if (self[0].contents == 'false') { return false;}
+throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+}""",
                             ),
                         ),
                         meta_name,
