@@ -4,7 +4,7 @@ import os
 import re
 import sys
 import textwrap
-from typing import Any, Dict, List, Optional, Set, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union, cast
 
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -197,11 +197,14 @@ class Converter:
             cwl.WorkflowOutputParameter(
                 id=f"{wf_name}.{output.id}",
                 type=output.type,
-                outputSource=output.outputBinding.glob.replace(".", "/")[2:-1]
-                if output.outputBinding
-                else None,
+                outputSource=meta_name[::-1].replace(".", "/", 1)[::-1]
+                if meta_name
+                else None
+                # replace just the last occurrence of a period with a slash
+                # by first reversing the string and the replace the first occurence
+                # then reversing the result
             )
-            for output in self.get_cwl_task_outputs(obj.effective_outputs)  # type: ignore
+            for output, meta_name in self.get_cwl_task_outputs(obj.effective_outputs)  # type: ignore
         ]
         wf_steps: List[cwl.WorkflowStep] = []
         wf_description = obj.meta["description"] if "description" in obj.meta else None
@@ -257,7 +260,7 @@ class Converter:
                 wf_step_outputs = (
                     [
                         cwl.WorkflowStepOutput(id=output.id)
-                        for output in self.get_cwl_task_outputs(callee.outputs)
+                        for output, _ in self.get_cwl_task_outputs(callee.outputs)
                     ]
                     if callee.outputs
                     else []
@@ -283,7 +286,7 @@ class Converter:
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_task_inputs(obj.inputs)
-        cwl_outputs = self.get_cwl_task_outputs(obj.outputs)
+        cwl_outputs = [output for output, _ in self.get_cwl_task_outputs(obj.outputs)]
         requirements = self.get_cwl_requirements(obj)
         if obj.parameter_meta:
             _logger.warning("Skipping parameter_meta: %s", obj.parameter_meta)
@@ -675,15 +678,18 @@ class Converter:
             right_str = self.get_expr(right_operand)
             return f"{left_str}-{right_str}"
         elif function_name == "size":
-            left_operand, right_operand = arguments
+            if len(arguments) == 1:
+                left_operand = arguments[0]
+                unit_value = "1"
+            else:
+                left_operand, right_operand = arguments
+                unit_value = get_mem_in_bytes(self.get_expr(right_operand)[1:-1])
             if isinstance(left_operand, WDL.Expr.Array):
                 array_items = [self.get_expr(item) for item in left_operand.items]
                 left = ", ".join(array_items)
                 left_str = f"[{left}]"
             else:
                 left_str = self.get_expr(left_operand)
-            size_unit = self.get_expr(right_operand)[1:-1]
-            unit_value = get_mem_in_bytes(size_unit)
             return (
                 "(function(size_of=0)"
                 + "{"
@@ -927,18 +933,23 @@ class Converter:
         return inputs
 
     def get_cwl_task_outputs(
-        self, wdl_outputs: List[WDL.Tree.Decl]
-    ) -> List[cwl.CommandOutputParameter]:
+        self,
+        wdl_outputs: Union[List[WDL.Tree.Decl], List[WDL.Env.Binding[WDL.Tree.Decl]]],
+    ) -> List[Tuple[cwl.CommandOutputParameter, Optional[str]]]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
-        outputs: List[cwl.CommandOutputParameter] = []
+        outputs: List[Tuple[cwl.CommandOutputParameter, Optional[str]]] = []
 
         if not wdl_outputs:
             return outputs
 
-        for wdl_output in wdl_outputs:
-            output_name = wdl_output.name
-            if hasattr(wdl_output, "info"):
-                wdl_output = wdl_output.info  # type: ignore
+        for item in wdl_outputs:
+            output_name = item.name
+            meta_name = None
+            if isinstance(item, WDL.Env.Binding):
+                meta_name = item.info.expr.expr.name
+                wdl_output = item.info
+            else:
+                wdl_output = item
             if isinstance(wdl_output.type, WDL.Type.Array):
                 array_items_type = wdl_output.type.item_type
                 input_type = get_cwl_type(array_items_type)
@@ -967,14 +978,17 @@ class Converter:
                     glob_str = f"$({glob_expr})"
 
                 outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        type=type_of,
-                        outputBinding=cwl.CommandOutputBinding(
-                            glob=glob_str,
-                            loadContents=True,
-                            outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
+                    (
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type=type_of,
+                            outputBinding=cwl.CommandOutputBinding(
+                                glob=glob_str,
+                                loadContents=True,
+                                outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
+                            ),
                         ),
+                        meta_name,
                     )
                 )
             elif (
@@ -991,14 +1005,17 @@ class Converter:
                     glob_str = f"$({glob_expr})"
 
                 outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        type=type_of,
-                        outputBinding=cwl.CommandOutputBinding(
-                            glob=glob_str,
-                            loadContents=True,
-                            outputEval=r"$(parseFloat(self[0].contents))",
+                    (
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type=type_of,
+                            outputBinding=cwl.CommandOutputBinding(
+                                glob=glob_str,
+                                loadContents=True,
+                                outputEval=r"$(parseFloat(self[0].contents))",
+                            ),
                         ),
+                        meta_name,
                     )
                 )
             elif (
@@ -1006,15 +1023,29 @@ class Converter:
                 and wdl_output.expr.function_name == "stdout"
             ):
                 outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        type="stdout",
+                    (
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type="stdout",
+                        ),
+                        meta_name,
                     )
                 )
             else:
-                glob_expr = self.get_expr(wdl_output)
-                glob_str = f"$({glob_expr})"
-
+                globs: List[str] = []
+                targets: Union[List[WDL.Expr.Base], List[WDL.Tree.Decl]] = (
+                    wdl_output.expr.items
+                    if isinstance(wdl_output.expr, WDL.Expr.Array)
+                    else [wdl_output]
+                )
+                for entry in targets:
+                    glob_str = f"$({self.get_expr(entry)})"
+                    if (
+                        isinstance(wdl_output.expr, WDL.Expr.String)
+                        and wdl_output.expr.literal is not None
+                    ):
+                        glob_str = glob_str[3:-2]
+                    globs.append(glob_str)
                 if wdl_output.type.optional:
                     final_type_of: Union[
                         List[Union[str, cwl.CommandOutputArraySchema]],
@@ -1024,16 +1055,15 @@ class Converter:
                     ] = [type_of, "null"]
                 else:
                     final_type_of = type_of
-                if (
-                    isinstance(wdl_output.expr, WDL.Expr.String)
-                    and wdl_output.expr.literal is not None
-                ):
-                    glob_str = glob_str[3:-2]
+                final_glob = globs if len(globs) > 1 else globs[0]
                 outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        type=final_type_of,
-                        outputBinding=cwl.CommandOutputBinding(glob=glob_str),
+                    (
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type=final_type_of,
+                            outputBinding=cwl.CommandOutputBinding(glob=final_glob),
+                        ),
+                        meta_name,
                     )
                 )
         return outputs
