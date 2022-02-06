@@ -1,3 +1,4 @@
 inputFile: 
   class: File
   path: bcftools/male.g.vcf.gz
+noVersion: true

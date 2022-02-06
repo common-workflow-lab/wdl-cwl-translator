@@ -271,6 +271,9 @@ task Stats {
     command {
         set -e
         mkdir -p $(dirname ~{outputPath})
+        mkdir fastaRef_dir  # to ensure correct localization
+        ln -s ~{fastaRef} fastaRef_dir/$(basename ~{fastaRef})
+        ln -s ~{fastaRefIndex} fastaRef_dir/$(basename ~{fastaRefIndex})
         bcftools stats \
         ~{"--af-bins " + afBins} \
         ~{"--af-tag " + afTag} \
@@ -280,7 +283,7 @@ task Stats {
         ~{"--exclude " + exclude} \
         ~{"--exons " + exons} \
         ~{"--apply-filters " + applyFilters} \
-        ~{"--fasta-ref " + fastaRef} \
+        ~{"--fasta-ref fastaRef_dir/$(basename " + fastaRef + ")"} \
         ~{"--include " + include} \
         ~{true="--split-by-ID" false="" splitByID} \
         ~{"--regions " + regions} \
@@ -293,6 +296,8 @@ task Stats {
         --threads ~{threads} \
         ~{true="--verbose" false="" verbose} \
         ~{inputVcf} ~{compareVcf} > ~{outputPath}
+        sed -i "s=$(dirname ~{inputVcf})/==g" ~{outputPath}  # for reproducibility
+        sed -i "s=$(dirname ~{fastaRef})/==g" ~{outputPath}  # for reproducibility
     }
 
     output {

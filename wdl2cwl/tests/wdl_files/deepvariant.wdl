@@ -35,7 +35,7 @@ task RunDeepVariant {
         Int? numShards
         String? outputGVcf
         String? outputGVcfIndex
-        File? regions
+        String regions
         String? sampleName
         Boolean? VCFStatsReport = true
 
