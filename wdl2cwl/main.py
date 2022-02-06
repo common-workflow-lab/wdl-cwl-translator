@@ -263,7 +263,7 @@ class Converter:
                         inputs_from_call[key] = input_expr.replace(".", "/")
                 wf_step_inputs: List[cwl.WorkflowStepInput] = []
                 for inp in cwl_callee_inputs:
-                    call_inp_id = f"{callee_id}.{inp.id}"
+                    call_inp_id = f"{local_call_name}.{inp.id}"
                     source_str = inputs_from_call.get(cast(str, inp.id), call_inp_id)
 
                     if inp.id not in input_defaults:
@@ -1063,3 +1063,4 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])
+    # convert("wdl2cwl/tests/wdl_files/align_and_count.wdl")

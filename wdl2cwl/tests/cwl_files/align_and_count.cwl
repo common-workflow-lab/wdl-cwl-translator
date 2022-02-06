@@ -32,15 +32,15 @@ steps:
   - id: reports.align_and_count
     in:
       - id: reads_bam
-        source: reports.align_and_count.reads_bam
+        source: align_and_count.reads_bam
       - id: ref_db
-        source: reports.align_and_count.ref_db
+        source: align_and_count.ref_db
       - id: topNHits
-        source: reports.align_and_count.topNHits
+        source: align_and_count.topNHits
       - id: machine_mem_gb
-        source: reports.align_and_count.machine_mem_gb
+        source: align_and_count.machine_mem_gb
       - id: docker
-        source: reports.align_and_count.docker
+        source: align_and_count.docker
     out:
       - id: report
       - id: report_top_hits
