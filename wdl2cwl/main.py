@@ -200,8 +200,8 @@ class Converter:
                 outputSource=meta_name[::-1].replace(".", "/", 1)[::-1]
                 if meta_name
                 else None
-                # replace just the last occurance of a period with a slash
-                # by first reversing the string and the replace the first occurance
+                # replace just the last occurrence of a period with a slash
+                # by first reversing the string and the replace the first occurence
                 # then reversing the result
             )
             for output, meta_name in self.get_cwl_task_outputs(obj.effective_outputs)  # type: ignore
