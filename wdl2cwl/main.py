@@ -1015,10 +1015,14 @@ class Converter:
                 ):
                     glob_str = glob_str[3:-2]
 
-                if isinstance(wdl_output.expr, WDL.Expr.Get) and isinstance(wdl_output.expr.expr.referee, WDL.Tree.Call):
+                if isinstance(wdl_output.expr, WDL.Expr.Get) and isinstance(
+                    wdl_output.expr.expr.referee, WDL.Tree.Call  # type: ignore
+                ):
                     glob_str = glob_str[2:-1].replace(".", "/")
-                    if len(wdl_output.expr.expr.referee.callee_id) == 2:
-                        glob_str = wdl_output.expr.expr.referee.callee_id[0] + "." + glob_str
+                    if len(wdl_output.expr.expr.referee.callee_id) == 2:  # type: ignore
+                        glob_str = (
+                            wdl_output.expr.expr.referee.callee_id[0] + "." + glob_str  # type: ignore
+                        )
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
