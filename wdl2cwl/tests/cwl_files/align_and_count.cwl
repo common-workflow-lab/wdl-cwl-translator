@@ -116,7 +116,22 @@ steps:
             networkAccess: true
           - class: ResourceRequirement
             coresMin: 4
-            ramMin: 14305.11474609375
+            ramMin: |-
+                ${
+                var unit = "GB";
+                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(element => element !== null) }`.match(/[0-9]+/g));
+                var memory = "";
+                if(unit==="KiB") memory = value/1024;
+                else if(unit==="MiB") memory = value;
+                else if(unit==="GiB") memory = value*1024;
+                else if(unit==="TiB") memory = value*1024*1024;
+                else if(unit==="B") memory = value/(1024*1024);
+                else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+                else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+                else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+                else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+                return parseInt(memory);
+                }
             outdirMin: 384000
         cwlVersion: v1.2
         baseCommand:

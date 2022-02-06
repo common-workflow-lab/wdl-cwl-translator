@@ -59,7 +59,9 @@ requirements:
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 953.67431640625
-    outdirMin: 1024
+    outdirMin: $((Math.ceil((function(size_of=0){inputs.cell_metrics.path.forEach(function(element){
+        if (element) {size_of += element.size}})}) / 1000^3 + (function(size_of=0){inputs.gene_metrics.path.forEach(function(element){
+        if (element) {size_of += element.size}})}) / 1000^3*1.1) ) * 1024)
 cwlVersion: v1.2
 baseCommand:
   - bash
