@@ -223,7 +223,7 @@ class Converter:
             cwl.WorkflowOutputParameter(
                 id=f"{wf_name}.{output.id}",
                 type=output.type,
-                outputSource=output.outputBinding.glob.replace(".", "/")[2:-1]
+                outputSource=output.outputBinding.glob
                 if output.outputBinding
                 else None,
             )
@@ -1014,6 +1014,11 @@ class Converter:
                     and wdl_output.expr.literal is not None
                 ):
                     glob_str = glob_str[3:-2]
+
+                if isinstance(wdl_output.expr, WDL.Expr.Get) and isinstance(wdl_output.expr.expr.referee, WDL.Tree.Call):
+                    glob_str = glob_str[2:-1].replace(".", "/")
+                    if len(wdl_output.expr.expr.referee.callee_id) == 2:
+                        glob_str = wdl_output.expr.expr.referee.callee_id[0] + "." + glob_str
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
