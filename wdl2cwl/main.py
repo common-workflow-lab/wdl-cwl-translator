@@ -95,13 +95,6 @@ def get_mem_in_bytes(unit: str) -> str:
     return mem_in_bytes
 
 
-def get_outdir_requirement(outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]) -> int:
-    """Produce the memory requirement for the output directory from WDL runtime disks."""
-    # This is yet to be implemented. After Feature Parity.
-    with WDLSourceLine(outdir, ConversionException):
-        return int(outdir.literal.value) * 1024  # type: ignore
-
-
 def get_input(input_name: str) -> str:
     """Produce a concise, valid CWL expr/param reference lookup string for a given input name."""
     if valid_js_identifier.match(input_name):
@@ -137,25 +130,6 @@ def get_cwl_docker_requirements(
             )
         dockerpull = dockerpull_referee.expr.literal.value
     return cwl.DockerRequirement(dockerPull=dockerpull)
-
-
-def get_literal_name(
-    expr: Union[
-        WDL.Expr.Boolean,
-        WDL.Expr.Int,
-        WDL.Expr.Float,
-        WDL.Expr.Array,
-    ],
-) -> str:
-    """Translate WDL Boolean, Int, Float, or Array Expression."""
-    # if the literal expr is used inside WDL.Expr.Apply
-    # the literal value is what's needed
-    parent = expr.parent  # type: ignore[union-attr]
-    if isinstance(parent, (WDL.Expr.Apply, WDL.Expr.IfThenElse)):
-        return expr.literal.value  # type: ignore
-    raise WDLSourceLine(expr, ConversionException).makeError(
-        f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
-    )
 
 
 def get_expr_name(wdl_expr: WDL.Expr.Ident) -> str:
@@ -351,7 +325,7 @@ class Converter:
             memory_requirement = None
         if "disks" in runtime:
             with WDLSourceLine(runtime["memory"], ConversionException):
-                outdir_requirement = get_outdir_requirement(
+                outdir_requirement = self.get_outdir_requirement(
                     runtime["disks"]  # type: ignore[arg-type]
                 )
         else:
@@ -394,6 +368,10 @@ class Converter:
             if isinstance(memory_runtime, WDL.Expr.String):
                 ram_min_literal = self.get_memory_literal(memory_runtime)
                 return ram_min_literal
+            elif isinstance(memory_runtime, WDL.Expr.Apply):
+                expr, unit = memory_runtime.arguments
+                ram_min = self.get_expr(expr)
+                return self.get_ram_min_js(ram_min, unit.literal.value.strip())  # type: ignore
             ram_min = get_expr_name(memory_runtime.expr)  # type: ignore
             return self.get_ram_min_js(ram_min, "")
 
@@ -418,6 +396,48 @@ class Converter:
         memory: float = value * float(byte) ** float(power) / (1024 * 1024)
 
         return memory
+
+    def get_outdir_requirement(
+        self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]
+    ) -> Union[int, str]:
+        """Produce the memory requirement for the output directory from WDL runtime disks."""
+        with WDLSourceLine(outdir, ConversionException):
+            if (
+                isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String))
+                and outdir.literal is None
+            ):
+                if (
+                    isinstance(outdir, WDL.Expr.Apply)
+                    and not outdir.function_name == "_add"
+                ):
+                    expr_str = self.get_expr(outdir)
+                    return (
+                        f"$(({expr_str}) * 1024)"
+                        if not expr_str.isdigit()
+                        else int(expr_str) * 1024
+                    )
+                list_object = (
+                    outdir.arguments if hasattr(outdir, "arguments") else outdir.parts  # type: ignore
+                )
+                for obj in list_object:
+                    if isinstance(
+                        obj, (WDL.Expr.Get, WDL.Expr.Apply, WDL.Expr.Placeholder)
+                    ):
+                        return self.get_outdir_requirement(obj)  # type: ignore
+            elif isinstance(outdir, (WDL.Expr.Get, WDL.Expr.Placeholder)):
+                expr = self.get_expr(outdir)
+                expr_str = expr
+                if isinstance(outdir, (WDL.Expr.Placeholder)):
+                    expr_str = expr[2:-1]
+                return (
+                    f"$(({expr_str}) * 1024)"
+                    if not expr_str.isdigit()
+                    else int(expr_str) * 1024
+                )
+            literal_value = outdir.literal.value  # type: ignore
+            value = re.search(r"[0-9]+", literal_value).group()  # type: ignore
+
+            return int(value) * 1024
 
     def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
         """Get memory requirement for user input."""
@@ -471,7 +491,7 @@ class Converter:
                 WDL.Expr.Array,
             ),
         ):
-            return get_literal_name(wdl_expr)
+            return str(wdl_expr.literal.value)  # type: ignore
         else:
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"The expression '{wdl_expr}' is not handled yet."
@@ -514,6 +534,7 @@ class Converter:
 
     def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
         """Translate WDL Apply Expressions."""
+        single_arg_fn = {"read_string", "read_float", "glob", "read_int"}
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
         if not arguments:
@@ -622,18 +643,12 @@ class Converter:
             if isinstance(right_operand, WDL.Expr.Apply):
                 right_operand = self.get_expr_apply(right_operand)  # type: ignore
             return f"{left_operand} !== {right_operand}"
-        elif function_name == "read_string":
-            only_arg = arguments[0]
-            return self.get_expr(only_arg)
-        elif function_name == "read_float":
-            only_arg = arguments[0]
-            return self.get_expr(only_arg)
-        elif function_name == "glob":
+        elif function_name in single_arg_fn:
             only_arg = arguments[0]
             return self.get_expr(only_arg)
         elif function_name == "select_first":
             array_obj = arguments[0]
-            array_items = [self.get_expr(item) for item in array_obj.items]  # type: ignore
+            array_items = [str(self.get_expr(item)) for item in array_obj.items]  # type: ignore
             items_str = ", ".join(array_items)
             return f"[{items_str}].find(element => element !== null) "
         elif function_name == "_mul":

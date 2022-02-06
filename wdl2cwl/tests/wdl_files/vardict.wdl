@@ -54,7 +54,7 @@ task VarDict {
         Int timeMinutes = 300
         String dockerImage = "quay.io/biocontainers/vardict-java:1.5.8--1"
     }
-    
+
     command {
         set -e -o pipefail
         export JAVA_OPTS="-Xmx~{javaXmx} -XX:ParallelGCThreads=1"

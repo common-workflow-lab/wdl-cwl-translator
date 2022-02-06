@@ -1,8 +1,6 @@
 class: CommandLineTool
 id: GenerateReport
 inputs:
-  - id: bam_validation_result
-    type: string
   - id: metric_and_index_validation_result
     type: string
   - id: matrix_validation_result
@@ -25,11 +23,6 @@ requirements:
 
             # test each output for equality, echoing any failure states to stdout
             fail=false
-
-            echo Bam Validation: $(inputs.bam_validation_result)
-            if [ "$(inputs.bam_validation_result)" == "FAIL" ]; then
-                fail=true
-            fi
 
             echo Metrics Validation: $(inputs.metric_and_index_validation_result)
             if [ $(inputs.metric_and_index_validation_result) == "FAIL" ]; then
