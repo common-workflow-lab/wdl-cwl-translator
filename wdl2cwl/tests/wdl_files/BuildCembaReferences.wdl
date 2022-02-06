@@ -89,7 +89,7 @@ task BuildBisulfiteReferences {
 
   runtime {
     docker: "quay.io/broadinstitute/bisulfite-references:1.0"
-    #disks: "local-disk " + ceil(3.5 * (if input_size < 1 then 1 else input_size)) + " HDD"
+    disks: "local-disk " + ceil(3.5 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
     memory: "3.5 GB"
   }
@@ -128,7 +128,7 @@ task Bowtie2Build {
 
   runtime {
     docker: "quay.io/broadinstitute/bowtie2:2.3.4.3"
-    #disks: "local-disk " + ceil(3 * (if input_size < 1 then 1 else input_size)) + " HDD"
+    disks: "local-disk " + ceil(3 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
     memory: "7 GB"
   }
@@ -176,7 +176,7 @@ task CreateReferenceDictionary {
     docker: "quay.io/broadinstitute/picard:2.18.23"
     # if the input size is less than 1 GB adjust to min input size of 1 GB
     # disks should be set to 2 * input file size
-    #disks: "local-disk " + ceil(2 * (if input_size < 1 then 1 else input_size)) + " HDD"
+    disks: "local-disk " + ceil(2 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
     memory: "4000 MiB"
   }
