@@ -1063,4 +1063,3 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])
-    # convert("wdl2cwl/tests/wdl_files/align_and_count.wdl")
