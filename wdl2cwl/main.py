@@ -173,6 +173,10 @@ def get_workflow_outputs(
         # replace just the last occurrence of a period with a slash
         # by first reversing the string and the replace the first occurence
         # then reversing the result
+        if len(item.info.expr.expr.referee.callee_id) == 2:
+            # this checks if the output belongs to a particular import.
+            # the imported task's namespace is the first index of the callee_id
+            meta_name = item.info.expr.expr.referee.callee_id[0] + "." + meta_name
         wdl_output = item.info
         if isinstance(wdl_output.type, WDL.Type.Array):
             array_items_type = wdl_output.type.item_type
@@ -271,7 +275,7 @@ class Converter:
                         inputs_from_call[key] = input_expr.replace(".", "/")
                 wf_step_inputs: List[cwl.WorkflowStepInput] = []
                 for inp in cwl_callee_inputs:
-                    call_inp_id = f"{callee_id}.{inp.id}"
+                    call_inp_id = f"{local_call_name}.{inp.id}"
                     source_str = inputs_from_call.get(cast(str, inp.id), call_inp_id)
 
                     if inp.id not in input_defaults:
