@@ -4,18 +4,7 @@ import os
 import re
 import sys
 import textwrap
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-    cast,
-    Iterator,
-)
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union, cast
 
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -572,7 +561,13 @@ class Converter:
 
     def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
         """Translate WDL Apply Expressions."""
-        single_arg_fn = {"read_string", "read_float", "glob", "read_int"}
+        single_arg_fn = {
+            "read_string",
+            "read_float",
+            "glob",
+            "read_int",
+            "read_boolean",
+        }
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
         if not arguments:
@@ -1042,6 +1037,35 @@ class Converter:
                             glob=glob_str,
                             loadContents=True,
                             outputEval=r"$(parseFloat(self[0].contents))",
+                        ),
+                    )
+                )
+            elif (
+                isinstance(wdl_output.expr, WDL.Expr.Apply)
+                and wdl_output.expr.function_name == "read_boolean"
+            ):
+                glob_expr = self.get_expr(wdl_output)
+                is_literal = wdl_output.expr.arguments[0].literal
+                if is_literal:
+                    glob_str = glob_expr[
+                        1:-1
+                    ]  # remove quotes from the string returned by get_expr_string
+                else:
+                    glob_str = f"$({glob_expr})"
+
+                outputs.append(
+                    cwl.CommandOutputParameter(
+                        id=output_name,
+                        type=type_of,
+                        outputBinding=cwl.CommandOutputBinding(
+                            glob=glob_str,
+                            loadContents=True,
+                            outputEval=r"""${
+var contents = self[0].contents.trim().toLowerCase()
+if (contents == 'true') { return true;}
+if (contents == 'false') { return false;}
+throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+}""",
                         ),
                     )
                 )
