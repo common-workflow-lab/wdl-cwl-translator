@@ -53,7 +53,6 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("align_and_count.wdl"),
         ("BuildCembaReferences.wdl"),
         ("bwa.wdl"),
-        ("bwa_test_size_function.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
