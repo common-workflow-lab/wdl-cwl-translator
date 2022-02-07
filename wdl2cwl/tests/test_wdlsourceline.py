@@ -6,7 +6,7 @@ import pytest
 import WDL
 
 from ..errors import WDLSourceLine
-from ..main import ConversionException, Converter
+from ..main import ConversionException
 from .test_cwl import get_file
 
 
