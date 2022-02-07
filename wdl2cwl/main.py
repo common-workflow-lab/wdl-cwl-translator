@@ -4,17 +4,7 @@ import os
 import re
 import sys
 import textwrap
-from typing import (
-    Any,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union, cast
 
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -1071,8 +1061,9 @@ class Converter:
                             glob=glob_str,
                             loadContents=True,
                             outputEval=r"""${
-if (self[0].contents == 'true') { return true;}
-if (self[0].contents == 'false') { return false;}
+var contents = self[0].contents.trim().toLowerCase()
+if (contents == 'true') { return true;}
+if (contents == 'false') { return false;}
 throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
 }""",
                         ),

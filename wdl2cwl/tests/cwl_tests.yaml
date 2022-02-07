@@ -116,3 +116,20 @@
       checksum: sha1$e1e8b4169a0d136bb5374981a0ba065fa489da62
       class: File
       size: 60
+
+- doc: basic read_boolean() test
+  tool: cwl_files/read_boolean.cwl#read_boolean
+  output:
+    good_true: true
+    good_false: false
+    mixed_case_false: false
+    mixed_case_true: true
+
+- doc: read_boolean() with a malformed file
+  tool: cwl_files/read_boolean.cwl#read_bad_boolean
+  should_fail: true
+
+- doc: read_boolean() with a dynamically named file
+  tool: cwl_files/read_boolean.cwl#read_dynamic_boolean
+  output:
+    dynamic_true: true

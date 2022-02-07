@@ -36,6 +36,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("minCores.wdl"),
         ("pbmm2.wdl"),
         ("read_string_cornercase.wdl"),
+        ("read_boolean.wdl"),
         ("rtg.wdl"),
         ("seqtk_1.wdl"),
         ("seqtk_2.wdl"),
@@ -53,6 +54,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("align_and_count.wdl"),
         ("BuildCembaReferences.wdl"),
         ("bwa.wdl"),
+        ("InternalTasks.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
