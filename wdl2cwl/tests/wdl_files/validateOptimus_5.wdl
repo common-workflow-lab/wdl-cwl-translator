@@ -1,6 +1,6 @@
 version 1.0
 
-# Source: https://github.com/broadinstitute/warp/blob/cec97750e3819fd88ba382534aaede8e05ec52df/tests/skylab/optimus/pr/ValidateOptimus.wdl
+# Source: https://github.com/broadinstitute/warp/blob/24274db3c6de25b1cdaecf4bc2f8d16be554d3e8/tests/skylab/optimus/pr/ValidateOptimus.wdl
 #
 # Copyright Broad Institute, 2020
 #
@@ -24,13 +24,12 @@ version 1.0
 # SOFTWARE.
 task GenerateReport {
   input {
-    String bam_validation_result
     String metric_and_index_validation_result
     String matrix_validation_result
     String loom_validation_result
   }
 
-      Int required_disk = 1
+  Int required_disk = 1
 
   command <<<
 
@@ -40,11 +39,6 @@ task GenerateReport {
 
     # test each output for equality, echoing any failure states to stdout
     fail=false
-
-    echo Bam Validation: ~{bam_validation_result}
-    if [ "~{bam_validation_result}" == "FAIL" ]; then
-        fail=true
-    fi
 
     echo Metrics Validation: ~{metric_and_index_validation_result}
     if [ ~{metric_and_index_validation_result} == "FAIL" ]; then
@@ -73,7 +67,7 @@ task GenerateReport {
     docker: "ubuntu:18.04"
     cpu: 1
     memory: "1.0 GB"
-    #disks: "local-disk ${required_disk} HDD"
+    disks: "local-disk ${required_disk} HDD"
   }
 
   output {}

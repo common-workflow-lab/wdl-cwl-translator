@@ -1,7 +1,7 @@
 # This file is a cwltest format file
 # https://github.com/common-workflow-language/cwltest/blob/main/cwltest/cwltest-schema.yml
 - doc: CollectReadgroupBamQualityMetrics
-  tool: cwl_files/CollectReadgroupBamQualityMetrics.cwl
+  tool: cwl_files/Qc.cwl#CollectReadgroupBamQualityMetrics
   job: inputs/CollectReadgroupBamQualityMetrics.yaml  # over 3 GiB
   output:
     alignment_summary_metrics:

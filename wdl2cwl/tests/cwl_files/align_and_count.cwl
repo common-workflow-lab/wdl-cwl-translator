@@ -19,28 +19,28 @@ inputs:
     type: string
 outputs:
   - id: align_and_count_report.report
-    outputSource: align_and_count/report
+    outputSource: reports.align_and_count/report
     type: File
   - id: align_and_count_report.report_top_hits
-    outputSource: align_and_count/report_top_hits
+    outputSource: reports.align_and_count/report_top_hits
     type: File
   - id: align_and_count_report.viral_core_version
-    outputSource: align_and_count/viralngs_version
+    outputSource: reports.align_and_count/viralngs_version
     type: string
 cwlVersion: v1.2
 steps:
   - id: reports.align_and_count
     in:
       - id: reads_bam
-        source: reports.align_and_count.reads_bam
+        source: align_and_count.reads_bam
       - id: ref_db
-        source: reports.align_and_count.ref_db
+        source: align_and_count.ref_db
       - id: topNHits
-        source: reports.align_and_count.topNHits
+        source: align_and_count.topNHits
       - id: machine_mem_gb
-        source: reports.align_and_count.machine_mem_gb
+        source: align_and_count.machine_mem_gb
       - id: docker
-        source: reports.align_and_count.docker
+        source: align_and_count.docker
     out:
       - id: report
       - id: report_top_hits
@@ -116,7 +116,22 @@ steps:
             networkAccess: true
           - class: ResourceRequirement
             coresMin: 4
-            ramMin: 14305.11474609375
+            ramMin: |-
+                ${
+                var unit = "GB";
+                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(element => element !== null) }`.match(/[0-9]+/g));
+                var memory = "";
+                if(unit==="KiB") memory = value/1024;
+                else if(unit==="MiB") memory = value;
+                else if(unit==="GiB") memory = value*1024;
+                else if(unit==="TiB") memory = value*1024*1024;
+                else if(unit==="B") memory = value/(1024*1024);
+                else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+                else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+                else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+                else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+                return parseInt(memory);
+                }
             outdirMin: 384000
         cwlVersion: v1.2
         baseCommand:

@@ -27,7 +27,7 @@ outputs:
   - id: smooveVcf
     type: File
     outputBinding:
-        glob: $(inputs.outputDir + "/" + inputs.sample + "-smoove.vcf.gz")
+        glob: $(inputs.outputDir + "/" + inputs.sample + "-smoove.genotyped.vcf.gz")
 requirements:
   - class: DockerRequirement
     dockerPull: quay.io/biocontainers/smoove:0.2.5--0
@@ -42,6 +42,8 @@ requirements:
             --outdir $(inputs.outputDir) \
             --name $(inputs.sample) \
             --fasta $(inputs.referenceFasta.path) \
+            --removepr \
+            --genotype \
             $(inputs.bamFile.path)
   - class: InlineJavascriptRequirement
   - class: NetworkAccess

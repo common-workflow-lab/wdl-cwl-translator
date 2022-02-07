@@ -1,7 +1,7 @@
 version 1.0
 
-# Source: https://github.com/biowdl/tasks/blob/bc1bacf11498d2d30b85591cfccdcf71ef0966a5/hisat2.wdl
-#
+# Source: https://github.com/biowdl/tasks/blob/f234b0e8f46192d248e564f22bcd88912b890576/hisat2.wdl
+
 # Copyright (c) 2017 Leiden University Medical Center
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,7 +41,7 @@ task Hisat2 {
 
         Int threads = 4
         Int? memoryGb
-        #Int timeMinutes = 1 + ceil(size([inputR1, inputR2], "G") * 180 / threads)
+        Int timeMinutes = 1 + ceil(size([inputR1, inputR2], "G") * 180 / threads)
         # quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1
         # is a combination of hisat2 and samtools hisat2=2.2.0 & samtools=1.10.
         String dockerImage = "quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0"
@@ -53,13 +53,13 @@ task Hisat2 {
     Int estimatedSortThreads = if threads == 1 then 1 else 1 + ceil(threads / 4.0)
     Int totalSortThreads = select_first([sortThreads, estimatedSortThreads])
     Int estimatedMemoryGb = 1 + ceil(size(indexFiles, "G") * 1.2) + sortMemoryPerThreadGb * totalSortThreads
-    ### NOTE: The following is not a valid command for Hisat2. 
+
     command {
         set -e -o pipefail
         mkdir -p "$(dirname ~{outputBam})"
         hisat2 \
         -p ~{threads} \
-        -x ~{indexFiles[0]} \
+        -x ~{sub(indexFiles[0], "\.[0-9]\.ht2", "")} \
         ~{true="-1" false="-U" defined(inputR2)} ~{inputR1} \
         ~{"-2" + inputR2} \
         --rg-id ~{readgroup} \
@@ -70,7 +70,7 @@ task Hisat2 {
         --new-summary \
         --summary-file ~{summaryFilePath} \
         | samtools sort \
-        "-@ " \
+        ~{"-@ " + totalSortThreads} \
         -m ~{sortMemoryPerThreadGb}G \
         -l ~{compressionLevel} \
         - \
@@ -84,8 +84,8 @@ task Hisat2 {
 
     runtime {
         cpu: threads
-        #memory: "~{select_first([memoryGb, estimatedMemoryGb])}G"
-        #time_minutes: timeMinutes
+        memory: "~{select_first([memoryGb, estimatedMemoryGb])}G"
+        time_minutes: timeMinutes
         docker: dockerImage
     }
 

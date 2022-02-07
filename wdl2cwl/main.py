@@ -4,7 +4,18 @@ import os
 import re
 import sys
 import textwrap
-from typing import Any, Dict, List, Optional, Set, Union, cast
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+    Iterator,
+)
 
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -12,8 +23,8 @@ import WDL
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
-from . import _logger
-from .errors import WDLSourceLine
+from wdl2cwl import _logger
+from wdl2cwl.errors import WDLSourceLine
 
 valid_js_identifier = regex.compile(
     r"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|null|this|true|"
@@ -69,11 +80,30 @@ def get_cwl_type(input_type: WDL.Type.Base) -> str:
     return type_of
 
 
-def get_outdir_requirement(outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]) -> int:
-    """Produce the memory requirement for the output directory from WDL runtime disks."""
-    # This is yet to be implemented. After Feature Parity.
-    with WDLSourceLine(outdir, ConversionException):
-        return int(outdir.literal.value) * 1024  # type: ignore
+def get_mem_in_bytes(unit: str) -> str:
+    """Determine the value of a memory unit in bytes."""
+    with WDLSourceLine(unit, ConversionException):
+        if unit == "KiB" or unit == "Ki":
+            mem_in_bytes = "1024^1"
+        elif unit == "MiB" or unit == "Mi":
+            mem_in_bytes = "1024^2"
+        elif unit == "GiB" or unit == "Gi":
+            mem_in_bytes = "1024^3"
+        elif unit == "TiB" or unit == "Ti":
+            mem_in_bytes = "1024^4"
+        elif unit == "B":
+            mem_in_bytes = "1024^0"
+        elif unit == "KB" or unit == "K":
+            mem_in_bytes = "1000^1"
+        elif unit == "MB" or unit == "M":
+            mem_in_bytes = "1000^2"
+        elif unit == "GB" or unit == "G":
+            mem_in_bytes = "1000^3"
+        elif unit == "TB" or unit == "T":
+            mem_in_bytes = "1000^4"
+        else:
+            raise ConversionException(f"Invalid memory unit: ${unit}")
+    return mem_in_bytes
 
 
 def get_input(input_name: str) -> str:
@@ -113,25 +143,6 @@ def get_cwl_docker_requirements(
     return cwl.DockerRequirement(dockerPull=dockerpull)
 
 
-def get_literal_name(
-    expr: Union[
-        WDL.Expr.Boolean,
-        WDL.Expr.Int,
-        WDL.Expr.Float,
-        WDL.Expr.Array,
-    ],
-) -> str:
-    """Translate WDL Boolean, Int, Float, or Array Expression."""
-    # if the literal expr is used inside WDL.Expr.Apply
-    # the literal value is what's needed
-    parent = expr.parent  # type: ignore[union-attr]
-    if isinstance(parent, WDL.Expr.Apply):
-        return expr.literal.value  # type: ignore
-    raise WDLSourceLine(expr, ConversionException).makeError(
-        f"The parent expression for {expr} is not WDL.Expr.Apply, but {parent}."
-    )
-
-
 def get_expr_name(wdl_expr: WDL.Expr.Ident) -> str:
     """Extract name from WDL expr."""
     if not hasattr(wdl_expr, "name"):
@@ -150,6 +161,33 @@ def get_expr_name_with_is_file_check(wdl_expr: WDL.Expr.Ident) -> str:
     expr_name = get_input(wdl_expr.name)
     is_file = isinstance(wdl_expr.type, WDL.Type.File)
     return expr_name if not is_file else f"{expr_name}.path"
+
+
+def get_workflow_outputs(
+    outputs: WDL.Env.Bindings[WDL.Type.Base],
+) -> Iterator[Tuple[str, Union[cwl.OutputArraySchema, str], str]]:
+    """Return the name, CWL type, and source for a workflow's effective_outputs()."""
+    for item in outputs:
+        output_name = item.name
+        meta_name = item.info.expr.expr.name[::-1].replace(".", "/", 1)[::-1]
+        # replace just the last occurrence of a period with a slash
+        # by first reversing the string and the replace the first occurence
+        # then reversing the result
+        if len(item.info.expr.expr.referee.callee_id) == 2:
+            # this checks if the output belongs to a particular import.
+            # the imported task's namespace is the first index of the callee_id
+            meta_name = item.info.expr.expr.referee.callee_id[0] + "." + meta_name
+        wdl_output = item.info
+        if isinstance(wdl_output.type, WDL.Type.Array):
+            array_items_type = wdl_output.type.item_type
+            input_type = get_cwl_type(array_items_type)
+            type_of: Union[cwl.OutputArraySchema, str] = cwl.OutputArraySchema(
+                items=input_type, type="array"
+            )
+        else:
+            type_of = get_cwl_type(wdl_output.type)
+
+        yield (output_name, type_of, meta_name)
 
 
 class Converter:
@@ -195,13 +233,13 @@ class Converter:
         ]
         outputs = [
             cwl.WorkflowOutputParameter(
-                id=f"{wf_name}.{output.id}",
-                type=output.type,
-                outputSource=output.outputBinding.glob.replace(".", "/")[2:-1]
-                if output.outputBinding
-                else None,
+                id=f"{wf_name}.{output_id}",
+                type=output_type,
+                outputSource=output_source,
             )
-            for output in self.get_cwl_task_outputs(obj.effective_outputs)  # type: ignore
+            for output_id, output_type, output_source in get_workflow_outputs(
+                obj.effective_outputs
+            )
         ]
         wf_steps: List[cwl.WorkflowStep] = []
         wf_description = obj.meta["description"] if "description" in obj.meta else None
@@ -237,7 +275,7 @@ class Converter:
                         inputs_from_call[key] = input_expr.replace(".", "/")
                 wf_step_inputs: List[cwl.WorkflowStepInput] = []
                 for inp in cwl_callee_inputs:
-                    call_inp_id = f"{callee_id}.{inp.id}"
+                    call_inp_id = f"{local_call_name}.{inp.id}"
                     source_str = inputs_from_call.get(cast(str, inp.id), call_inp_id)
 
                     if inp.id not in input_defaults:
@@ -256,8 +294,8 @@ class Converter:
                         )
                 wf_step_outputs = (
                     [
-                        cwl.WorkflowStepOutput(id=output.id)
-                        for output in self.get_cwl_task_outputs(callee.outputs)
+                        cwl.WorkflowStepOutput(id=output.name)
+                        for output in callee.outputs
                     ]
                     if callee.outputs
                     else []
@@ -283,15 +321,12 @@ class Converter:
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
         cwl_inputs = self.get_cwl_task_inputs(obj.inputs)
-        cwl_outputs = self.get_cwl_task_outputs(obj.outputs)
+        cwl_outputs = [output for output in self.get_cwl_task_outputs(obj.outputs)]
         requirements = self.get_cwl_requirements(obj)
         if obj.parameter_meta:
             _logger.warning("Skipping parameter_meta: %s", obj.parameter_meta)
         if obj.meta:
             _logger.warning("Skipping meta: %s", obj.meta)
-        if len(obj.postinputs) > 0:
-            for a in obj.postinputs:
-                _logger.warning("Skipping variable: %s", a)
         return cwl.CommandLineTool(
             id=obj.name,
             inputs=cwl_inputs,
@@ -328,7 +363,7 @@ class Converter:
             memory_requirement = None
         if "disks" in runtime:
             with WDLSourceLine(runtime["memory"], ConversionException):
-                outdir_requirement = get_outdir_requirement(
+                outdir_requirement = self.get_outdir_requirement(
                     runtime["disks"]  # type: ignore[arg-type]
                 )
         else:
@@ -356,7 +391,7 @@ class Converter:
         self, time_minutes: WDL.Expr.Get
     ) -> Union[str, int]:
         """Produce the time limit expression from WDL runtime time minutes."""
-        with WDLSourceLine(time_minutes, WDLSourceLine):
+        with WDLSourceLine(time_minutes, ConversionException):
             if isinstance(time_minutes, (WDL.Expr.Int, WDL.Expr.Float)):
                 literal = time_minutes.literal.value  # type: ignore
                 return literal * 60  # type: ignore
@@ -371,6 +406,10 @@ class Converter:
             if isinstance(memory_runtime, WDL.Expr.String):
                 ram_min_literal = self.get_memory_literal(memory_runtime)
                 return ram_min_literal
+            elif isinstance(memory_runtime, WDL.Expr.Apply):
+                expr, unit = memory_runtime.arguments
+                ram_min = self.get_expr(expr)
+                return self.get_ram_min_js(ram_min, unit.literal.value.strip())  # type: ignore
             ram_min = get_expr_name(memory_runtime.expr)  # type: ignore
             return self.get_ram_min_js(ram_min, "")
 
@@ -379,7 +418,10 @@ class Converter:
         if memory_runtime.literal is None:
             _, placeholder, unit, _ = memory_runtime.parts
             with WDLSourceLine(placeholder, ConversionException):
-                value_name = self.get_expr_get(placeholder.expr)  # type: ignore
+                if isinstance(placeholder.expr, WDL.Expr.Get):  # type: ignore
+                    value_name = self.get_expr_get(placeholder.expr)  # type: ignore
+                else:
+                    value_name = self.get_expr_apply(placeholder.expr)  # type: ignore
                 return self.get_ram_min_js(value_name, unit.strip())  # type: ignore
 
         ram_min = self.get_expr_string(memory_runtime)[1:-1]
@@ -388,29 +430,52 @@ class Converter:
             raise ConversionException("Missing Memory units, yet still a string?")
         unit = unit_result.group()
         value = float(ram_min.split(unit)[0])
-
-        if unit == "KiB":
-            memory = value / 1024
-        elif unit == "MiB":
-            memory = value
-        elif unit == "GiB":
-            memory = value * 1024
-        elif unit == "TiB":
-            memory = value * 1024 * 1024
-        elif unit == "B":
-            memory = value / (1024 * 1024)
-        elif unit == "KB" or unit == "K":
-            memory = (value * 1000) / (1024 * 1024)
-        elif unit == "MB" or unit == "M":
-            memory = (value * (1000 * 1000)) / (1024 * 1024)
-        elif unit == "GB" or unit == "G":
-            memory = (value * (1000 * 1000 * 1000)) / (1024 * 1024)
-        elif unit == "TB" or unit == "T":
-            memory = (value * (1000 * 1000 * 1000 * 1000)) / (1024 * 1024)
-        else:
-            raise ConversionException(f"Invalid memory unit: ${unit}")
+        byte, power = get_mem_in_bytes(unit).split("^")
+        memory: float = value * float(byte) ** float(power) / (1024 * 1024)
 
         return memory
+
+    def get_outdir_requirement(
+        self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply]
+    ) -> Union[int, str]:
+        """Produce the memory requirement for the output directory from WDL runtime disks."""
+        with WDLSourceLine(outdir, ConversionException):
+            if (
+                isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String))
+                and outdir.literal is None
+            ):
+                if (
+                    isinstance(outdir, WDL.Expr.Apply)
+                    and not outdir.function_name == "_add"
+                ):
+                    expr_str = self.get_expr(outdir)
+                    return (
+                        f"$(({expr_str}) * 1024)"
+                        if not expr_str.isdigit()
+                        else int(expr_str) * 1024
+                    )
+                list_object = (
+                    outdir.arguments if hasattr(outdir, "arguments") else outdir.parts  # type: ignore
+                )
+                for obj in list_object:
+                    if isinstance(
+                        obj, (WDL.Expr.Get, WDL.Expr.Apply, WDL.Expr.Placeholder)
+                    ):
+                        return self.get_outdir_requirement(obj)  # type: ignore
+            elif isinstance(outdir, (WDL.Expr.Get, WDL.Expr.Placeholder)):
+                expr = self.get_expr(outdir)
+                expr_str = expr
+                if isinstance(outdir, (WDL.Expr.Placeholder)):
+                    expr_str = expr[2:-1]
+                return (
+                    f"$(({expr_str}) * 1024)"
+                    if not expr_str.isdigit()
+                    else int(expr_str) * 1024
+                )
+            literal_value = outdir.literal.value  # type: ignore
+            value = re.search(r"[0-9]+", literal_value).group()  # type: ignore
+
+            return int(value) * 1024
 
     def get_ram_min_js(self, ram_min_ref_name: str, unit: str) -> str:
         """Get memory requirement for user input."""
@@ -464,7 +529,7 @@ class Converter:
                 WDL.Expr.Array,
             ),
         ):
-            return get_literal_name(wdl_expr)
+            return str(wdl_expr.literal.value)  # type: ignore
         else:
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"The expression '{wdl_expr}' is not handled yet."
@@ -507,6 +572,7 @@ class Converter:
 
     def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
         """Translate WDL Apply Expressions."""
+        single_arg_fn = {"read_string", "read_float", "glob", "read_int"}
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
         if not arguments:
@@ -586,9 +652,25 @@ class Converter:
             return f"{iterable_object_expr}[{index_expr}]"
         elif function_name == "_gt":
             left_operand, right_operand = arguments
-            left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            if isinstance(left_operand, WDL.Expr.Get):
+                left_operand_expr = self.get_expr(left_operand)
+            else:
+                left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
             right_operand_expr = self.get_expr(right_operand)
             return f"{left_operand_expr} > {right_operand_expr}"
+        elif function_name == "_lt":
+            left_operand, right_operand = arguments
+            if isinstance(left_operand, WDL.Expr.Get):
+                left_operand_expr = self.get_expr(left_operand)
+            else:
+                left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            right_operand_expr = self.get_expr(right_operand)
+            return f"{left_operand_expr} < {right_operand_expr}"
+        elif function_name == "_lor":
+            left_operand, right_operand = arguments
+            left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            right_operand_expr = self.get_expr(right_operand)
+            return f"{left_operand_expr} || {right_operand_expr}"
         elif function_name == "length":
             only_arg_expr = self.get_expr_get(arguments[0])  # type: ignore
             return f"{only_arg_expr}.length"
@@ -599,12 +681,59 @@ class Converter:
             if isinstance(right_operand, WDL.Expr.Apply):
                 right_operand = self.get_expr_apply(right_operand)  # type: ignore
             return f"{left_operand} !== {right_operand}"
-        elif function_name == "read_string":
+        elif function_name in single_arg_fn:
             only_arg = arguments[0]
             return self.get_expr(only_arg)
-        elif function_name == "glob":
-            only_arg = arguments[0]
-            return self.get_expr(only_arg)
+        elif function_name == "select_first":
+            array_obj = arguments[0]
+            array_items = [str(self.get_expr(item)) for item in array_obj.items]  # type: ignore
+            items_str = ", ".join(array_items)
+            return f"[{items_str}].find(element => element !== null) "
+        elif function_name == "_mul":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str}*{right_str}"
+        elif function_name == "_eqeq":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str} === {right_str}"
+        elif function_name == "ceil":
+            only_arg = self.get_expr(arguments[0])  # type: ignore
+            return f"Math.ceil({only_arg}) "
+        elif function_name == "_div":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str}/{right_str}"
+        elif function_name == "_sub":
+            left_operand, right_operand = arguments
+            left_str = self.get_expr(left_operand)
+            right_str = self.get_expr(right_operand)
+            return f"{left_str}-{right_str}"
+        elif function_name == "size":
+            if len(arguments) == 1:
+                left_operand = arguments[0]
+                unit_value = "1"
+            else:
+                left_operand, right_operand = arguments
+                unit_value = get_mem_in_bytes(self.get_expr(right_operand)[1:-1])
+            if isinstance(left_operand, WDL.Expr.Array):
+                array_items = [self.get_expr(item) for item in left_operand.items]
+                left = ", ".join(array_items)
+                left_str = f"[{left}]"
+            else:
+                left_str = self.get_expr(left_operand)
+            return (
+                "(function(size_of=0)"
+                + "{"
+                + f"{left_str}.forEach(function(element)"
+                + "{ if (element) {"
+                + "size_of += element.size"
+                + "}})}"
+                + f") / {unit_value}"
+            )
 
         raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
             f"Function name '{function_name}' not yet handled."
@@ -612,17 +741,17 @@ class Converter:
 
     def get_expr_get(self, wdl_get_expr: WDL.Expr.Get) -> str:
         """Translate WDL Get Expressions."""
-        with WDLSourceLine(wdl_get_expr, ConversionException):
-            member = wdl_get_expr.member
-            if (
-                not member
-                and isinstance(wdl_get_expr.expr, WDL.Expr.Ident)
-                and wdl_get_expr.expr
-            ):
-                return self.get_expr_ident(wdl_get_expr.expr)
-            raise ConversionException(
-                f"Get expressions with {member} are not yet handled."
-            )
+        member = wdl_get_expr.member
+
+        if not member:
+            return self.get_expr_ident(wdl_get_expr.expr)  # type: ignore
+        struct_name = self.get_expr(wdl_get_expr.expr)
+        member_str = f"{struct_name}.{member}"
+        return (
+            member_str
+            if not isinstance(wdl_get_expr.type, WDL.Type.File)
+            else f"{member_str}.path"
+        )
 
     def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
         """Translate WDL Ident Expressions."""
@@ -766,7 +895,9 @@ class Converter:
             input_name = wdl_input.name
             self.non_static_values.add(input_name)
             input_value = None
-            type_of: Union[str, cwl.CommandInputArraySchema]
+            type_of: Union[
+                str, cwl.CommandInputArraySchema, cwl.CommandInputRecordSchema
+            ]
 
             if hasattr(wdl_input, "value"):
                 wdl_input = wdl_input.value  # type: ignore
@@ -774,14 +905,27 @@ class Converter:
             if isinstance(wdl_input.type, WDL.Type.Array):
                 input_type = get_cwl_type(wdl_input.type.item_type)
                 type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
+            elif isinstance(wdl_input.type, WDL.Type.StructInstance):
+                type_of = cwl.CommandInputRecordSchema(
+                    type="record",
+                    name=wdl_input.type.type_name,
+                    fields=self.get_struct_inputs(wdl_input.type.members),
+                )
             else:
                 type_of = get_cwl_type(wdl_input.type)
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
-                    List[Union[str, cwl.CommandInputArraySchema]],
+                    List[
+                        Union[
+                            str,
+                            cwl.CommandInputArraySchema,
+                            cwl.CommandInputRecordSchema,
+                        ]
+                    ],
                     str,
                     cwl.CommandInputArraySchema,
+                    cwl.CommandInputRecordSchema,
                 ] = [type_of, "null"]
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
                     self.optional_cwl_null.add(input_name)
@@ -805,8 +949,27 @@ class Converter:
 
         return inputs
 
+    def get_struct_inputs(
+        self, members: Optional[Dict[str, WDL.Type.Base]]
+    ) -> List[cwl.CommandInputRecordField]:
+        """Get member items of a WDL struct and return a list of cwl.CommandInputRecordField."""
+        inputs: List[cwl.CommandInputRecordField] = []
+        if not members:
+            return inputs
+        for member, value in members.items():
+            input_name = member
+            if isinstance(value, WDL.Type.Array):
+                array_items_type = value.item_type
+                input_type = get_cwl_type(array_items_type)
+                type_of = cwl.CommandInputArraySchema(items=input_type, type="array")
+            else:
+                type_of = get_cwl_type(value)  # type: ignore
+            inputs.append(cwl.CommandInputRecordField(name=input_name, type=type_of))
+        return inputs
+
     def get_cwl_task_outputs(
-        self, wdl_outputs: List[WDL.Tree.Decl]
+        self,
+        wdl_outputs: Union[List[WDL.Tree.Decl], List[WDL.Env.Binding[WDL.Tree.Decl]]],
     ) -> List[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
         outputs: List[cwl.CommandOutputParameter] = []
@@ -814,10 +977,12 @@ class Converter:
         if not wdl_outputs:
             return outputs
 
-        for wdl_output in wdl_outputs:
-            output_name = wdl_output.name
-            if hasattr(wdl_output, "info"):
-                wdl_output = wdl_output.info  # type: ignore
+        for item in wdl_outputs:
+            output_name = item.name
+            if isinstance(item, WDL.Env.Binding):
+                wdl_output = item.info
+            else:
+                wdl_output = item
             if isinstance(wdl_output.type, WDL.Type.Array):
                 array_items_type = wdl_output.type.item_type
                 input_type = get_cwl_type(array_items_type)
@@ -858,18 +1023,53 @@ class Converter:
                 )
             elif (
                 isinstance(wdl_output.expr, WDL.Expr.Apply)
+                and wdl_output.expr.function_name == "read_float"
+            ):
+                glob_expr = self.get_expr(wdl_output)
+                is_literal = wdl_output.expr.arguments[0].literal
+                if is_literal:
+                    glob_str = glob_expr[
+                        1:-1
+                    ]  # remove quotes from the string returned by get_expr_string
+                else:
+                    glob_str = f"$({glob_expr})"
+
+                outputs.append(
+                    cwl.CommandOutputParameter(
+                        id=output_name,
+                        type=type_of,
+                        outputBinding=cwl.CommandOutputBinding(
+                            glob=glob_str,
+                            loadContents=True,
+                            outputEval=r"$(parseFloat(self[0].contents))",
+                        ),
+                    )
+                )
+            elif (
+                isinstance(wdl_output.expr, WDL.Expr.Apply)
                 and wdl_output.expr.function_name == "stdout"
             ):
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
                         type="stdout",
-                    )
+                    ),
                 )
             else:
-                glob_expr = self.get_expr(wdl_output)
-                glob_str = f"$({glob_expr})"
-
+                globs: List[str] = []
+                targets: Union[List[WDL.Expr.Base], List[WDL.Tree.Decl]] = (
+                    wdl_output.expr.items
+                    if isinstance(wdl_output.expr, WDL.Expr.Array)
+                    else [wdl_output]
+                )
+                for entry in targets:
+                    glob_str = f"$({self.get_expr(entry)})"
+                    if (
+                        isinstance(wdl_output.expr, WDL.Expr.String)
+                        and wdl_output.expr.literal is not None
+                    ):
+                        glob_str = glob_str[3:-2]
+                    globs.append(glob_str)
                 if wdl_output.type.optional:
                     final_type_of: Union[
                         List[Union[str, cwl.CommandOutputArraySchema]],
@@ -879,16 +1079,12 @@ class Converter:
                     ] = [type_of, "null"]
                 else:
                     final_type_of = type_of
-                if (
-                    isinstance(wdl_output.expr, WDL.Expr.String)
-                    and wdl_output.expr.literal is not None
-                ):
-                    glob_str = glob_str[3:-2]
+                final_glob = globs if len(globs) > 1 else globs[0]
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
                         type=final_type_of,
-                        outputBinding=cwl.CommandOutputBinding(glob=glob_str),
+                        outputBinding=cwl.CommandOutputBinding(glob=final_glob),
                     )
                 )
         return outputs
