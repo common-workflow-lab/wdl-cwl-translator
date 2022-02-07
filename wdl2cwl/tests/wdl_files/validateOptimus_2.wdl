@@ -1,6 +1,6 @@
 version 1.0
 
-# Source: https://github.com/broadinstitute/warp/blob/cec97750e3819fd88ba382534aaede8e05ec52df/tests/skylab/optimus/pr/ValidateOptimus.wdl
+# Source: https://github.com/broadinstitute/warp/blob/24274db3c6de25b1cdaecf4bc2f8d16be554d3e8/tests/skylab/optimus/pr/ValidateOptimus.wdl
 #
 # Copyright Broad Institute, 2020
 #
@@ -54,7 +54,7 @@ task ValidateLoom {
        docker: "ubuntu:16.04"
        cpu: 1
        memory: "3.75 GB"
-       #disks: "local-disk ${required_disk} HDD"
+       disks: "local-disk ${required_disk} HDD"
    }
 
    output {
