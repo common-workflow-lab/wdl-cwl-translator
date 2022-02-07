@@ -4,7 +4,7 @@ import os
 import re
 import sys
 import textwrap
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -654,6 +654,11 @@ class Converter:
             array_items = [str(self.get_expr(item)) for item in array_obj.items]  # type: ignore
             items_str = ", ".join(array_items)
             return f"[{items_str}].find(element => element !== null) "
+        elif function_name == "select_all":
+            array_obj = cast(WDL.Expr.Array, arguments[0])
+            array_items = [str(self.get_expr(item)) for item in array_obj.items]
+            items_str = ", ".join(array_items)
+            return f"[{items_str}].filter(element => element !== null) "
         elif function_name == "_mul":
             left_operand, right_operand = arguments
             left_str = self.get_expr(left_operand)
