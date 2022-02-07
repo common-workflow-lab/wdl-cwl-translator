@@ -173,12 +173,10 @@ def get_workflow_outputs(
         # replace just the last occurrence of a period with a slash
         # by first reversing the string and the replace the first occurence
         # then reversing the result
-        if len(item.info.expr.expr.referee.callee_id) == 2: 
+        if len(item.info.expr.expr.referee.callee_id) == 2:
             # this checks if the output belongs to a particular import.
             # the imported task's namespace is the first index of the callee_id
-            meta_name = (
-                item.info.expr.expr.referee.callee_id[0] + "." + meta_name
-            )
+            meta_name = item.info.expr.expr.referee.callee_id[0] + "." + meta_name
         wdl_output = item.info
         if isinstance(wdl_output.type, WDL.Type.Array):
             array_items_type = wdl_output.type.item_type
