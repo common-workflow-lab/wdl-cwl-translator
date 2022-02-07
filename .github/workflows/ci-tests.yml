@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         py-ver-major: [3]
-        py-ver-minor: [7, 8, 9]
+        py-ver-minor: [7, 8, 9, 10]
         step: [lint, unit, mypy]
 
     env:
@@ -65,7 +65,7 @@ jobs:
 
     strategy:
       matrix:
-        step: [lint-readme, pydocstyle]
+        step: [pydocstyle]
 
     env:
       py-semver: 3.9
