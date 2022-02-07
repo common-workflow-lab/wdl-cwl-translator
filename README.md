@@ -2,6 +2,8 @@
 
 [![codecov](https://codecov.io/gh/common-workflow-lab/wdl-cwl-translator/branch/main/graph/badge.svg?token=lvcnJHP1hj)](https://codecov.io/gh/common-workflow-lab/wdl-cwl-translator)
 
+## Background
+
 Workflow Definition Language (WDL) and Common Workflow Language (CWL)
 are high-level languages for describing how to run a sequence of
 programs to perform a data analysis task.  A workflow consists of a
@@ -52,6 +54,36 @@ source env/bin/activate
 pip install -U pip setuptools wheel
 pip install -e .
 ```
+
+## Usage
+
+``` shell
+wdl2cwl path_to_wdl_file
+```
+To output the CWL version to your terminal/stdout.
+
+``` shell
+wdl2cwl path_to_workflow.wdl --output path_to_new_workflow.cwl
+```
+
+## Limitations
+
+WDL features not yet supported
+- [Scatter](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/146)
+- [Map](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/77) types
+- [Nested structs](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/158)
+
+Localization:
+
+(Open)WDL assumes that users will configure localization by placing
+input files in the same directory. Descriptions that require this will need
+modification before conversion to CWL, as CWL has explicit constructs for
+achieving localization (`secondaryFiles`, `InitialWorkDirRequirement`, and/or
+explicit staging).
+
+See [this example](https://github.com/biowdl/tasks/pull/291/files#diff-c76c01f3ca967cdb9c157a75e7fb1a08d0037543b455c2107398601a2f526ebfR45)
+for one method using explicit staging of input files in the `command` block to
+achieve the localization required by the tool(s) being called.
 
 ## Development
 
