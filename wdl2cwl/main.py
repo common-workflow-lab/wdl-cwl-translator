@@ -433,13 +433,13 @@ class Converter:
                 isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String))
                 and outdir.literal is None
             ):
-            # runtime["disks"] usually have strings chars like local, HDD, SDD that are not needed by CWL
+                # runtime["disks"] usually have strings chars like local, HDD, SDD that are not needed by CWL
                 if (
                     isinstance(outdir, WDL.Expr.Apply)
                     and not outdir.function_name == "_add"
                 ):
-                # If it contains an apply expr we don't want to process the _add function
-                # that concatenates it to the chars in the string
+                    # If it contains an apply expr we don't want to process the _add function
+                    # that concatenates it to the chars in the string
                     expr_str = self.get_expr(outdir)
                     # if the expr_str returns an integer that is declared as a static variable
                     # return the result from the multiplication with 1024
@@ -457,7 +457,7 @@ class Converter:
                     if isinstance(
                         obj, (WDL.Expr.Get, WDL.Expr.Apply, WDL.Expr.Placeholder)
                     ):
-                    # avoid python strings only WDL expressions are handled.
+                        # avoid python strings only WDL expressions are handled.
                         return self.get_outdir_requirement(obj)  # type: ignore
             elif isinstance(outdir, (WDL.Expr.Get, WDL.Expr.Placeholder)):
                 expr = self.get_expr(outdir)
@@ -1119,6 +1119,5 @@ def main(args: Union[List[str], None] = None) -> None:
 
 
 if __name__ == "__main__":
-
 
     main(sys.argv[1:])
