@@ -67,7 +67,7 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFiles.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1*2)  * 60)
+            if (element) {size_of += element.size}})}) / 1 * 2)  * 60)
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -246,7 +246,7 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(1 + Math.ceil((function(size_of=0){[inputs.baseline.path, inputs.calls.path].forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1000^3*5)  * 60)
+            if (element) {size_of += element.size}})}) / 1000^3 * 5)  * 60)
     cwlVersion: v1.2
     baseCommand:
       - bash

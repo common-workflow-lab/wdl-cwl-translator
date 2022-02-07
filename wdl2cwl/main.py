@@ -409,16 +409,23 @@ class Converter:
                 isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String))
                 and outdir.literal is None
             ):
+            # runtime["disks"] usually have strings chars like local, HDD, SDD that are not needed by CWL
                 if (
                     isinstance(outdir, WDL.Expr.Apply)
                     and not outdir.function_name == "_add"
                 ):
+                # If it contains an apply expr we don't want to process the _add function
+                # that concatenates it to the chars in the string
                     expr_str = self.get_expr(outdir)
+                    # if the expr_str returns an integer that is declared as a static variable
+                    # return the result from the multiplication with 1024
                     return (
                         f"$(({expr_str}) * 1024)"
                         if not expr_str.isdigit()
                         else int(expr_str) * 1024
                     )
+                # apply exprs contain arguments and strings contain parts both are lists
+                # they could contain expressions that represent the runtime disk
                 list_object = (
                     outdir.arguments if hasattr(outdir, "arguments") else outdir.parts  # type: ignore
                 )
@@ -426,11 +433,13 @@ class Converter:
                     if isinstance(
                         obj, (WDL.Expr.Get, WDL.Expr.Apply, WDL.Expr.Placeholder)
                     ):
+                    # avoid python strings only WDL expressions are handled.
                         return self.get_outdir_requirement(obj)  # type: ignore
             elif isinstance(outdir, (WDL.Expr.Get, WDL.Expr.Placeholder)):
                 expr = self.get_expr(outdir)
                 expr_str = expr
                 if isinstance(outdir, (WDL.Expr.Placeholder)):
+                    # expr returns a string that contains $(). This has to be removed.
                     expr_str = expr[2:-1]
                 return (
                     f"$(({expr_str}) * 1024)"
@@ -509,7 +518,7 @@ class Converter:
         for index, part in enumerate(parts[1:-1], start=1):
             if isinstance(
                 part,
-                (WDL.Expr.Placeholder, WDL.Expr.Apply, WDL.Expr.Get, WDL.Expr.Ident),
+                WDL.Expr.Placeholder,
             ):
                 placeholder = self.get_expr(part)
                 part = (
@@ -538,6 +547,16 @@ class Converter:
     def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
         """Translate WDL Apply Expressions."""
         single_arg_fn = {"read_string", "read_float", "glob", "read_int"}
+        binary_ops = {
+            "_gt": ">",
+            "_lor": "||",
+            "_neq": "!==",
+            "_lt": "<",
+            "_mul": "*",
+            "_eqeq": "===",
+            "_div": "/",
+            "_sub": "-",
+        }
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
         if not arguments:
@@ -611,41 +630,19 @@ class Converter:
 
         elif function_name == "_at":
             iterable_object, index = arguments
-            iterable_object_expr, index_expr = self.get_expr(
-                iterable_object
-            ), self.get_expr(index)
+            iterable_object_expr = self.get_expr(iterable_object)
+            index_expr = self.get_expr(index)
             return f"{iterable_object_expr}[{index_expr}]"
-        elif function_name == "_gt":
+        elif function_name in binary_ops:
             left_operand, right_operand = arguments
-            if isinstance(left_operand, WDL.Expr.Get):
-                left_operand_expr = self.get_expr(left_operand)
-            else:
-                left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
+            left_operand_expr = self.get_expr(left_operand)
             right_operand_expr = self.get_expr(right_operand)
-            return f"{left_operand_expr} > {right_operand_expr}"
-        elif function_name == "_lt":
-            left_operand, right_operand = arguments
-            if isinstance(left_operand, WDL.Expr.Get):
-                left_operand_expr = self.get_expr(left_operand)
-            else:
-                left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
-            right_operand_expr = self.get_expr(right_operand)
-            return f"{left_operand_expr} < {right_operand_expr}"
-        elif function_name == "_lor":
-            left_operand, right_operand = arguments
-            left_operand_expr = self.get_expr_apply(left_operand)  # type: ignore
-            right_operand_expr = self.get_expr(right_operand)
-            return f"{left_operand_expr} || {right_operand_expr}"
+            return (
+                f"{left_operand_expr} {binary_ops[function_name]} {right_operand_expr}"
+            )
         elif function_name == "length":
             only_arg_expr = self.get_expr_get(arguments[0])  # type: ignore
             return f"{only_arg_expr}.length"
-        elif function_name == "_neq":
-            left_operand, right_operand = arguments
-            if isinstance(left_operand, WDL.Expr.Apply):
-                left_operand = self.get_expr_apply(left_operand)  # type: ignore
-            if isinstance(right_operand, WDL.Expr.Apply):
-                right_operand = self.get_expr_apply(right_operand)  # type: ignore
-            return f"{left_operand} !== {right_operand}"
         elif function_name in single_arg_fn:
             only_arg = arguments[0]
             return self.get_expr(only_arg)
@@ -654,29 +651,9 @@ class Converter:
             array_items = [str(self.get_expr(item)) for item in array_obj.items]  # type: ignore
             items_str = ", ".join(array_items)
             return f"[{items_str}].find(element => element !== null) "
-        elif function_name == "_mul":
-            left_operand, right_operand = arguments
-            left_str = self.get_expr(left_operand)
-            right_str = self.get_expr(right_operand)
-            return f"{left_str}*{right_str}"
-        elif function_name == "_eqeq":
-            left_operand, right_operand = arguments
-            left_str = self.get_expr(left_operand)
-            right_str = self.get_expr(right_operand)
-            return f"{left_str} === {right_str}"
         elif function_name == "ceil":
             only_arg = self.get_expr(arguments[0])  # type: ignore
             return f"Math.ceil({only_arg}) "
-        elif function_name == "_div":
-            left_operand, right_operand = arguments
-            left_str = self.get_expr(left_operand)
-            right_str = self.get_expr(right_operand)
-            return f"{left_str}/{right_str}"
-        elif function_name == "_sub":
-            left_operand, right_operand = arguments
-            left_str = self.get_expr(left_operand)
-            right_str = self.get_expr(right_operand)
-            return f"{left_str}-{right_str}"
         elif function_name == "size":
             if len(arguments) == 1:
                 left_operand = arguments[0]
