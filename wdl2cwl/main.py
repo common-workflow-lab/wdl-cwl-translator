@@ -433,7 +433,6 @@ class Converter:
                 isinstance(outdir, (WDL.Expr.Apply, WDL.Expr.String))
                 and outdir.literal is None
             ):
-                # runtime["disks"] usually have strings chars like local, HDD, SDD that are not needed by CWL
                 if (
                     isinstance(outdir, WDL.Expr.Apply)
                     and not outdir.function_name == "_add"
@@ -442,7 +441,7 @@ class Converter:
                     # that concatenates it to the chars in the string
                     expr_str = self.get_expr(outdir)
                     # if the expr_str returns an integer that is declared as a static variable
-                    # return the result from the multiplication with 1024
+                    # multiply with 1024 to obtain the value in mebibytes
                     return (
                         f"$(({expr_str}) * 1024)"
                         if not expr_str.isdigit()
@@ -460,11 +459,7 @@ class Converter:
                         # avoid python strings only WDL expressions are handled.
                         return self.get_outdir_requirement(obj)  # type: ignore
             elif isinstance(outdir, (WDL.Expr.Get, WDL.Expr.Placeholder)):
-                expr = self.get_expr(outdir)
-                expr_str = expr
-                if isinstance(outdir, (WDL.Expr.Placeholder)):
-                    # expr returns a string that contains $(). This has to be removed.
-                    expr_str = expr[2:-1]
+                expr_str = self.get_expr(outdir)
                 return (
                     f"$(({expr_str}) * 1024)"
                     if not expr_str.isdigit()
@@ -773,7 +768,12 @@ class Converter:
             if isinstance(wdl_command, str):
                 command_str += wdl_command.replace("$(", "\\$(")
             elif isinstance(wdl_command, WDL.Expr.Placeholder):
-                command_str += self.translate_wdl_placeholder(wdl_command)
+                pl_holder_str = self.translate_wdl_placeholder(wdl_command)
+                command_str += (
+                    f"$({pl_holder_str})"
+                    if " $(" not in pl_holder_str
+                    else pl_holder_str
+                )
 
         command_str = textwrap.dedent(command_str)
         return cwl.InitialWorkDirRequirement(
@@ -782,7 +782,7 @@ class Converter:
 
     def translate_wdl_placeholder(self, wdl_placeholder: WDL.Expr.Placeholder) -> str:
         """Translate WDL Expr Placeholder to a valid CWL command string."""
-        cwl_command_str = ""
+        pl_holder_str = ""
         expr = wdl_placeholder.expr
         if expr is None:
             raise WDLSourceLine(wdl_placeholder, ConversionException).makeError(
@@ -806,25 +806,23 @@ class Converter:
                 elif isinstance(expr, WDL.Expr.Apply):
                     is_optional = expr.arguments[0].type.optional
                 if not is_optional:
-                    cwl_command_str = (
-                        f"$({placeholder_expr} ? {true_str} : {false_str})"
-                    )
+                    pl_holder_str = f"{placeholder_expr} ? {true_str} : {false_str}"
                 else:
-                    cwl_command_str = (
-                        f"$({placeholder_expr} === null ? {false_str} : {true_str})"
+                    pl_holder_str = (
+                        f"{placeholder_expr} === null ? {false_str} : {true_str}"
                     )
             elif "sep" in options:
                 seperator = options["sep"]
                 if isinstance(expr.type, WDL.Type.Array):
                     item_type = expr.type.item_type
                     if isinstance(item_type, WDL.Type.String):
-                        cwl_command_str = f'$({placeholder_expr}.join("{seperator}"))'
+                        pl_holder_str = f'{placeholder_expr}.join("{seperator}")'
                     elif isinstance(item_type, WDL.Type.File):
-                        cwl_command_str = (
-                            f"$({placeholder_expr}.map("
+                        pl_holder_str = (
+                            f"{placeholder_expr}.map("
                             + 'function(el) {return el.path}).join("'
                             + seperator
-                            + '"))'
+                            + '")'
                         )
                 else:
                     raise WDLSourceLine(wdl_placeholder, ConversionException).makeError(
@@ -835,24 +833,9 @@ class Converter:
                     f"Placeholders with options {options} are not yet handled."
                 )
         else:
-            # for the one case where the $(input.some_input_name) is used within the placeholder_expr
-            # we return the placeholder_expr without enclosing in another $()
-            cwl_command_str = (
-                f"$({placeholder_expr})"
-                if placeholder_expr[-1] != ")"
-                else placeholder_expr
-            )
-        # sometimes placeholders are used inside WDL.Expr.String.
-        # with the parent and grand_parent we can confirm that we are in
-        # the command string (WDL.Expr.String) and task (WDL.Tree.Task) respectively
-        parent = wdl_placeholder.parent  # type: ignore
-        grand_parent = parent.parent
-        return (
-            cwl_command_str
-            if isinstance(parent, WDL.Expr.String)
-            and isinstance(grand_parent, WDL.Tree.Task)
-            else cwl_command_str[2:-1]
-        )
+            pl_holder_str = placeholder_expr
+
+        return pl_holder_str
 
     def get_cwl_task_inputs(
         self, wdl_inputs: Optional[List[WDL.Tree.Decl]]
