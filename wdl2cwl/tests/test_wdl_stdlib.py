@@ -18,7 +18,7 @@ def test_select_all() -> None:
       }
       command {}
       output {
-        Array[Int] first1 = select_all([one, two])
+        Array[Int] first1 = select_all([one, two, 1, select_first([two, one])])
       }
     }
     """

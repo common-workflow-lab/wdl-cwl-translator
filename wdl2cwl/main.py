@@ -650,15 +650,15 @@ class Converter:
             only_arg = arguments[0]
             return self.get_expr(only_arg)
         elif function_name == "select_first":
-            array_obj = arguments[0]
-            array_items = [str(self.get_expr(item)) for item in array_obj.items]  # type: ignore
+            array_obj = cast(WDL.Expr.Array, arguments[0])
+            array_items = [str(self.get_expr(item)) for item in array_obj.items]
             items_str = ", ".join(array_items)
-            return f"[{items_str}].find(element => element !== null) "
+            return f"[{items_str}].find(function(element) {{ element !== null }}) "
         elif function_name == "select_all":
             array_obj = cast(WDL.Expr.Array, arguments[0])
             array_items = [str(self.get_expr(item)) for item in array_obj.items]
             items_str = ", ".join(array_items)
-            return f"[{items_str}].filter(element => element !== null) "
+            return f"[{items_str}].filter(function(element) {{ element !== null }}) "
         elif function_name == "_mul":
             left_operand, right_operand = arguments
             left_str = self.get_expr(left_operand)
