@@ -74,7 +74,7 @@ requirements:
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(1 + Math.ceil((function(size_of=0){inputs.queryFile.path.forEach(function(element){
-        if (element) {size_of += element.size}})}) / 1000^3*2000/inputs.cores)  *
+        if (element) {size_of += element.size}})}) / 1000^3 * 2000 / inputs.cores)  *
         60)
 cwlVersion: v1.2
 baseCommand:
