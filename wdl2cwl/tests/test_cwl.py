@@ -50,6 +50,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("BuildCembaReferences.wdl"),
         ("bwa.wdl"),
         ("InternalTasks.wdl"),
+        ("flatten.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:

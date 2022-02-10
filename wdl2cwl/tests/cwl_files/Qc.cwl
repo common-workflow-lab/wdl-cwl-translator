@@ -586,7 +586,7 @@ $graph:
       - id: is_outlier_data
         type: boolean
         outputBinding:
-            glob: $("duplication_value.txt" > inputs.max_duplication_in_reasonable_sample
+            outputEval: $("duplication_value.txt" > inputs.max_duplication_in_reasonable_sample
                 || "chimerism_value.txt" > inputs.max_chimerism_in_reasonable_sample)
     requirements:
       - class: DockerRequirement

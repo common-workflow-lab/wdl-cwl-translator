@@ -533,10 +533,13 @@ class Converter:
                 WDL.Expr.Boolean,
                 WDL.Expr.Int,
                 WDL.Expr.Float,
-                WDL.Expr.Array,
             ),
         ):
             return str(wdl_expr.literal.value)  # type: ignore
+        elif isinstance(wdl_expr, WDL.Expr.Array):
+            return (
+                "[ " + ", ".join(self.get_expr(item) for item in wdl_expr.items) + " ]"
+            )
         else:
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"The expression '{wdl_expr}' is not handled yet."
@@ -715,6 +718,18 @@ class Converter:
                 + "}})}"
                 + f") / {unit_value}"
             )
+        elif function_name == "flatten":
+            array_obj = arguments[0]
+            with WDLSourceLine(array_obj, ConversionException):
+                items_str = self.get_expr(array_obj)
+            result = (
+                "(function () {var new_array = []; "
+                + items_str
+                + ".forEach(function(value, index, obj) "
+                "{value.forEach(function(sub_value, sub_index, sub_obj) "
+                "{new_array.push(sub_value);});}); return new_array;})()"
+            )
+            return result
 
         raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
             f"Function name '{function_name}' not yet handled."
@@ -952,14 +967,18 @@ class Converter:
                 wdl_output = item.info
             else:
                 wdl_output = item
+            glob = False
             if isinstance(wdl_output.type, WDL.Type.Array):
-                array_items_type = wdl_output.type.item_type
-                input_type = get_cwl_type(array_items_type)
+                input_type = get_cwl_type(wdl_output.type.item_type)
+                if input_type == "File":
+                    glob = True
                 type_of: Union[
                     cwl.CommandOutputArraySchema, str
                 ] = cwl.CommandOutputArraySchema(items=input_type, type="array")
             else:
                 type_of = get_cwl_type(wdl_output.type)
+                if type_of == "File":
+                    glob = True
 
             if not wdl_output.expr:
                 raise WDLSourceLine(wdl_output, ConversionException).makeError(
@@ -1054,20 +1073,6 @@ throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                     ),
                 )
             else:
-                globs: List[str] = []
-                targets: Union[List[WDL.Expr.Base], List[WDL.Tree.Decl]] = (
-                    wdl_output.expr.items
-                    if isinstance(wdl_output.expr, WDL.Expr.Array)
-                    else [wdl_output]
-                )
-                for entry in targets:
-                    glob_str = f"$({self.get_expr(entry)})"
-                    if (
-                        isinstance(wdl_output.expr, WDL.Expr.String)
-                        and wdl_output.expr.literal is not None
-                    ):
-                        glob_str = glob_str[3:-2]
-                    globs.append(glob_str)
                 if wdl_output.type.optional:
                     final_type_of: Union[
                         List[Union[str, cwl.CommandOutputArraySchema]],
@@ -1077,14 +1082,40 @@ throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                     ] = [type_of, "null"]
                 else:
                     final_type_of = type_of
-                final_glob = globs if len(globs) > 1 else globs[0]
-                outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        type=final_type_of,
-                        outputBinding=cwl.CommandOutputBinding(glob=final_glob),
+                if glob:
+                    globs: List[str] = []
+                    targets: Union[List[WDL.Expr.Base], List[WDL.Tree.Decl]] = (
+                        wdl_output.expr.items
+                        if isinstance(wdl_output.expr, WDL.Expr.Array)
+                        else [wdl_output]
                     )
-                )
+                    for entry in targets:
+                        glob_str = f"$({self.get_expr(entry)})"
+                        if (
+                            isinstance(wdl_output.expr, WDL.Expr.String)
+                            and wdl_output.expr.literal is not None
+                        ):
+                            glob_str = glob_str[3:-2]
+                        globs.append(glob_str)
+                    final_glob = globs if len(globs) > 1 else globs[0]
+                    outputs.append(
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type=final_type_of,
+                            outputBinding=cwl.CommandOutputBinding(glob=final_glob),
+                        )
+                    )
+                else:
+                    outputEval = f"$({self.get_expr(wdl_output)})"
+                    outputs.append(
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type=final_type_of,
+                            outputBinding=cwl.CommandOutputBinding(
+                                outputEval=outputEval
+                            ),
+                        )
+                    )
         return outputs
 
 
