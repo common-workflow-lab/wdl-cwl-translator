@@ -10,6 +10,7 @@ task echo {
 
     output {
         Array[String]+ out_s = flatten([a_s, a_s2])
+        Array[String] out_a_s = a_s
     }
 }
 

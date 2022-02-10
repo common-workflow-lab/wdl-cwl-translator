@@ -154,3 +154,4 @@
   job: inputs/flatten.yaml
   output:
     out_s: [ Hello, World, How, are, you? ]
+    out_a_s: [ Hello, World ]
