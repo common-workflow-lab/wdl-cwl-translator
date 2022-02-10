@@ -73,7 +73,7 @@ WDL features not yet supported
 - [Map](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/77) types
 - [Nested structs](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/158)
 
-Localization:
+File Localization:
 
 (Open)WDL assumes that users will configure localization by placing
 input files in the same directory. Descriptions that require this will need
@@ -81,7 +81,7 @@ modification before conversion to CWL, as CWL has explicit constructs for
 achieving localization (`secondaryFiles`, `InitialWorkDirRequirement`, and/or
 explicit staging).
 
-See [this example](https://github.com/biowdl/tasks/pull/291/files#diff-c76c01f3ca967cdb9c157a75e7fb1a08d0037543b455c2107398601a2f526ebfR45)
+See [this example](https://github.com/mr-c/biowdl_tasks_cwlcompat/commit/0dd4704ec8969e491e6358fe2e8283272cafde21#diff-c76c01f3ca967cdb9c157a75e7fb1a08d0037543b455c2107398601a2f526ebfR45)
 for one method using explicit staging of input files in the `command` block to
 achieve the localization required by the tool(s) being called.
 
