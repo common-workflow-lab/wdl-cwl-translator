@@ -1,5 +1,4 @@
 """Tests for miniwdl."""
-import os.path
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, NamedTuple, Union
@@ -7,16 +6,12 @@ from typing import Any, NamedTuple, Union
 import pytest
 
 from ..main import ConversionException, Converter, main
-
-
-def get_file(path: str) -> str:
-    """Get file."""
-    return os.path.join(os.path.dirname(__file__), path)
+from .util import get_data
 
 
 def test_meta(caplog: pytest.LogCaptureFixture) -> None:
     """Test meta warning."""
-    main([get_file("wdl_files/TrimAdapters.wdl")])
+    main([get_data("wdl_files/TrimAdapters.wdl")])
     assert "Skipping meta" in caplog.text
 
 
@@ -60,10 +55,10 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
 def test_wdls(description_name: str) -> None:
     """Test WDL to CWL conversion."""
     with open(
-        get_file(f"cwl_files/{description_name[:-3]}cwl"), encoding="utf-8"
+        get_data(f"cwl_files/{description_name[:-3]}cwl"), encoding="utf-8"
     ) as file:
         with NamedTemporaryFile(mode="w", encoding="utf-8") as output:
-            main(["-o", output.name, get_file(f"wdl_files/{description_name}")])
+            main(["-o", output.name, get_data(f"wdl_files/{description_name}")])
             output.flush()
             assert Path(output.name).read_text(encoding="utf-8") == file.read()
 
@@ -72,8 +67,8 @@ def test_wdl_stdout(
     caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Test WDL to CWL conversion using stdout."""
-    with open(get_file("cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
-        main([get_file("wdl_files/bowtie_1.wdl")])
+    with open(get_data("cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
+        main([get_data("wdl_files/bowtie_1.wdl")])
         captured = capsys.readouterr()
         log = caplog.text
         assert captured.out == file.read()

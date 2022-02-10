@@ -9,6 +9,8 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union, cast
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
 import WDL
+import WDL.CLI
+import WDL._parser  # delete when reloading bug is fixed upstream
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
@@ -36,7 +38,19 @@ class ConversionException(Exception):
 def convert(doc: str) -> Dict[str, Any]:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
     wdl_path = os.path.relpath(doc)
-    doc_tree = WDL.load(wdl_path)
+    WDL._parser._lark_comments_buffer.clear()
+    try:
+        doc_tree = WDL.load(
+            wdl_path, read_source=WDL.CLI.make_read_source(False), check_quant=False  # type: ignore[no-untyped-call]
+        )
+    except (
+        WDL.Error.SyntaxError,
+        WDL.Error.ImportError,
+        WDL.Error.ValidationError,
+        WDL.Error.MultipleValidationErrors,
+    ) as exn:
+        WDL.CLI.print_error(exn)  # type: ignore[no-untyped-call]
+        raise exn
 
     parser = Converter()
     if doc_tree.workflow:
