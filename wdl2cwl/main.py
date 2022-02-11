@@ -9,8 +9,8 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union, cast
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
 import WDL
-import WDL.CLI
 import WDL._parser  # delete when reloading bug is fixed upstream
+import WDL.CLI
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
@@ -172,16 +172,17 @@ def get_workflow_outputs(
     for item in outputs:
         with WDLSourceLine(item.info, ConversionException):
             output_name = item.name
-            meta_name = item.info.expr.expr.name[::-1].replace(".", "/", 1)[::-1]
+            item_expr = item.info.expr
+            output_source = item_expr.expr.name[::-1].replace(".", "/", 1)[::-1]
             # replace just the last occurrence of a period with a slash
             # by first reversing the string and the replace the first occurence
             # then reversing the result
-            if "/" in meta_name:
+            if "/" in output_source:
                 if len(item.info.expr.expr.referee.callee_id) == 2:
                     # this checks if the output belongs to a particular import.
                     # the imported task's namespace is the first index of the callee_id
-                    meta_name = (
-                        item.info.expr.expr.referee.callee_id[0] + "." + meta_name
+                    output_source = (
+                        item.info.expr.expr.referee.callee_id[0] + "." + output_source
                     )
             wdl_output = item.info
             if isinstance(wdl_output.type, WDL.Type.Array):
@@ -193,7 +194,7 @@ def get_workflow_outputs(
             else:
                 type_of = get_cwl_type(wdl_output.type)
 
-            yield (output_name, type_of, meta_name)
+            yield (output_name, type_of, output_source)
 
 
 class Converter:
@@ -214,13 +215,11 @@ class Converter:
             return self.load_wdl_workflow(obj)
 
     def get_workflow_input_expr(
-        self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String, WDL.Expr.Apply]
+        self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]
     ) -> str:
         """Get name of expression referenced in workflow call inputs."""
         if isinstance(wf_expr, WDL.Expr.String):
             return self.get_expr_string(wf_expr)[1:-1]
-        if isinstance(wf_expr, WDL.Expr.Apply):
-            return self.get_expr(wf_expr)
         wdl_expr = wf_expr.expr
         if not isinstance(wdl_expr, WDL.Expr.Ident):
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
@@ -279,11 +278,8 @@ class Converter:
                     for key, value in call_inputs.items():
                         if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
                             input_defaults.add(key)
-                        if isinstance(
-                            value, (WDL.Expr.Get, WDL.Expr.String, WDL.Expr.Apply)
-                        ):
-                            input_expr = self.get_workflow_input_expr(value)
-                            inputs_from_call[key] = input_expr.replace(".", "/")
+                        input_expr = self.get_workflow_input_expr(value)  # type: ignore[arg-type]
+                        inputs_from_call[key] = input_expr.replace(".", "/")
                 wf_step_inputs: List[cwl.WorkflowStepInput] = []
                 for inp in cwl_callee_inputs:
                     call_inp_id = f"{local_call_name}.{inp.id}"
