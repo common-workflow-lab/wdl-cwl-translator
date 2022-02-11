@@ -1,7 +1,7 @@
+# source https://github.com/biowdl/tasks/raw/c5cfd2f5acc2ff729987b86d38b29af046677fdc/bowtie.wdl
+
 version 1.0
 
-# Source: https://github.com/biowdl/tasks/blob/bc1bacf11498d2d30b85591cfccdcf71ef0966a5/bowtie.wdl
-#
 # Copyright (c) 2018 Leiden University Medical Center
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +25,7 @@ version 1.0
 task Bowtie {
     input {
         Array[File]+ readsUpstream
-        #Array[File] readsDownstream = []
+        Array[File] readsDownstream = []
         String outputPath = "mapped.bam"
         Array[File]+ indexFiles
         Boolean best = false
@@ -39,8 +39,8 @@ task Bowtie {
 
         String picardXmx = "4G"
         Int threads = 1
-        #String memory = "~{5 + ceil(size(indexFiles, "G"))}G"
-        #Int timeMinutes = 1 + ceil(size(flatten([readsUpstream, readsDownstream]), "G") * 300 / threads)
+        String memory = "~{5 + ceil(size(indexFiles, "G"))}G"
+        Int timeMinutes = 1 + ceil(size(flatten([readsUpstream, readsDownstream]), "G") * 300 / threads)
         # Image contains bowtie=1.2.2 and picard=2.9.2
         String dockerImage = "quay.io/biocontainers/mulled-v2-bfe71839265127576d3cd749c056e7b168308d56:1d8bec77b352cdcf3e9ff3d20af238b33ed96eae-0"
     }
@@ -48,7 +48,6 @@ task Bowtie {
     # Assume fastq input with -q flag.
     # The output always needs to be SAM as it is piped into Picard SortSam.
     # Hence, the --sam flag is used.
-    ### NOTE: The following command is not valid for Bowtir
     command {
         set -e -o pipefail
         mkdir -p "$(dirname ~{outputPath})"
@@ -64,7 +63,8 @@ task Bowtie {
         ~{"--threads " + threads} \
         ~{"--sam-RG '" + samRG}~{true="'" false="" defined(samRG)} \
         ~{sub(indexFiles[0], "(\.rev)?\.[0-9]\.ebwt$", "")} \
-        ~{sep="," readsUpstream} \
+        ~{true="-1" false="" length(readsDownstream) > 0} ~{sep="," readsUpstream} \
+        ~{true="-2" false="" length(readsDownstream) > 0} ~{sep="," readsDownstream} \
         | picard -Xmx~{picardXmx} SortSam \
         INPUT=/dev/stdin \
         OUTPUT=~{outputPath} \
@@ -74,20 +74,20 @@ task Bowtie {
 
     output {
         File outputBam = outputPath
-        #File outputBamIndex = sub(outputPath, "\.bam$", ".bai")
+        File outputBamIndex = sub(outputPath, "\.bam$", ".bai")
     }
 
     runtime {
         cpu: threads
-        #memory: memory
-        #time_minutes: timeMinutes
+        memory: memory
+        time_minutes: timeMinutes
         docker: dockerImage
     }
 
     parameter_meta {
         # inputs
         readsUpstream: {description: "The first-/single-end fastq files.", category: "required"}
-        #readsDownstream: {description: "The second-end fastq files.", category: "common"}
+        readsDownstream: {description: "The second-end fastq files.", category: "common"}
         outputPath: {description: "The location the output BAM file should be written to.", category: "common"}
         indexFiles: {description: "The index files for bowtie.", category: "required"}
         best: {description: "Equivalent to bowtie's `--best` flag.", category: "advanced"}
@@ -100,11 +100,11 @@ task Bowtie {
         picardXmx: {description: "The maximum memory available to the picard (used for sorting the output). Should be lower than `memory` to accommodate JVM overhead and bowtie's memory usage.", category: "advanced"}
         threads: {description: "The number of threads to use.", category: "advanced"}
         memory: {description: "The amount of memory this job will use.", category: "advanced"}
-        #timeMinutes: {description: "The maximum amount of time the job will run in minutes.", category: "advanced"}
+        timeMinutes: {description: "The maximum amount of time the job will run in minutes.", category: "advanced"}
         dockerImage: {description: "The docker image used for this task. Changing this may result in errors which the developers may choose not to address.", category: "advanced"}
 
         # outputs
         outputBam: {description: "Output alignment file."}
-        #outputBamIndex: {description: "Index of output alignment file."}
+        outputBamIndex: {description: "Index of output alignment file."}
     }
 }

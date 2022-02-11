@@ -9,8 +9,6 @@ inputs:
     type: string
 outputs: []
 requirements:
-  - class: DockerRequirement
-    dockerPull: ubuntu:18.04
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -48,6 +46,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: ubuntu:18.04
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 953.67431640625

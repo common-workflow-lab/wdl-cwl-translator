@@ -65,6 +65,7 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
       - class: ResourceRequirement
         outdirMin: 1024
     cwlVersion: v1.2
@@ -110,6 +111,7 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
       - class: ResourceRequirement
         outdirMin: 1024
     cwlVersion: v1.2
@@ -145,6 +147,7 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
       - class: ResourceRequirement
         outdirMin: 1024
     cwlVersion: v1.2

@@ -112,8 +112,6 @@ $graph:
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
     requirements:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -148,6 +146,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -215,8 +216,6 @@ $graph:
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
     requirements:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -236,6 +235,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -294,8 +296,6 @@ $graph:
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
     requirements:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -313,6 +313,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -441,6 +444,10 @@ $graph:
       - id: memory
         default: 256M
         type: string
+      - id: timeMinutes
+        type:
+          - int
+          - 'null'
       - id: dockerImage
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
@@ -451,8 +458,6 @@ $graph:
             glob: '$(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats"
                 : inputs.outputPath)'
     requirements:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -490,6 +495,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         coresMin: $(inputs.threads + 1)
         ramMin: |-
@@ -509,6 +517,11 @@ $graph:
             return parseInt(memory);
             }
         outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: '$(1 + 2 * Math.ceil((function(size_of=0){[inputs.inputVcf.path,
+            inputs.compareVcf === null ? "" : inputs.compareVcf.path].filter(function(element)
+            { return element !== null }) .forEach(function(element){ if (element)
+            {size_of += element.size}})}) / 1000^3)  * 60)'
     cwlVersion: v1.2
     baseCommand:
       - bash
@@ -554,8 +567,6 @@ $graph:
         outputBinding:
             glob: $("output.vcf" + ".tbi")
     requirements:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -575,6 +586,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         ramMin: |-
             ${

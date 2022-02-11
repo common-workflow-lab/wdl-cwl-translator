@@ -264,7 +264,7 @@ task Stats {
 
         Int threads = 0
         String memory = "256M"
-        #Int timeMinutes = 1 + 2* ceil(size(select_all([inputVcf, compareVcf]), "G")) # TODO: Estimate, 2 minutes per GB, refine later.
+        Int timeMinutes = 1 + 2* ceil(size(select_all([inputVcf, compareVcf]), "G")) # TODO: Estimate, 2 minutes per GB, refine later.
         String dockerImage = "quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2"
     }
 
@@ -307,7 +307,7 @@ task Stats {
     runtime {
         cpu: threads + 1
         memory: memory
-        #time_minutes: timeMinutes
+        time_minutes: timeMinutes
         docker: dockerImage
     }
 
@@ -340,7 +340,7 @@ task Stats {
         userTsTv: {description: "<TAG[:min:max:n]>. Collect Ts/Tv stats for any tag using the given binning [0:1:100].", category: "advanced"}
         threads: {description: "Number of extra decompression threads [0].", category: "advanced"}
         memory: {description: "The amount of memory this job will use.", category: "advanced"}
-        #timeMinutes: {description: "The maximum amount of time the job will run in minutes.", category: "advanced"}
+        timeMinutes: {description: "The maximum amount of time the job will run in minutes.", category: "advanced"}
         dockerImage: {description: "The docker image used for this task. Changing this may result in errors which the developers may choose not to address.", category: "advanced"}
 
         # outputs

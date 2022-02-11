@@ -33,19 +33,20 @@ requirements:
       - entryname: script.bash
         entry: |4
 
-                    set -e -o pipefail
-                    mkdir -p "\$(dirname $(inputs.outFilePath))"
-                    $(inputs.preCommand)
-                    seqtk sample \
-            	    $(inputs.seed === null ? "" : "-s " + inputs.seed) \
-                    $(inputs.twoPassMode ? "-2 " : "") \
-                    $(inputs.sequenceFile.path) \
-                    $(inputs.fractionOrNumber) \
-                    $(inputs.zip ? "| gzip" : "") \
-                    >  $(inputs.outFilePath)
+            set -e -o pipefail
+            mkdir -p "\$(dirname $(inputs.outFilePath))"
+            $(inputs.preCommand)
+            seqtk sample \
+            $(inputs.seed === null ? "" : "-s " + inputs.seed) \
+            $(inputs.twoPassMode ? "-2 " : "") \
+            $(inputs.sequenceFile.path) \
+            $(inputs.fractionOrNumber) \
+            $(inputs.zip ? "| gzip" : "") \
+            >  $(inputs.outFilePath)
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
   - class: ResourceRequirement
     outdirMin: 1024
 cwlVersion: v1.2

@@ -13,8 +13,6 @@ $graph:
             glob: safe_name.txt
             outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
     requirements:
-      - class: DockerRequirement
-        dockerPull: gcr.io/gcp-runtimes/ubuntu_16_0_4:latest
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -24,6 +22,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: gcr.io/gcp-runtimes/ubuntu_16_0_4:latest
       - class: ResourceRequirement
         ramMin: 1024.0
         outdirMin: 10240
@@ -94,8 +95,6 @@ $graph:
             glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf"
                 + inputs.compress ? ".tbi" : ".idx")'
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -153,6 +152,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: 1024
@@ -181,8 +183,6 @@ $graph:
           - 'null'
     outputs: []
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -213,6 +213,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: 1024

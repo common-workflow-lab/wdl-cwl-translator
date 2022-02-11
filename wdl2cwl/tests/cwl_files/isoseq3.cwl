@@ -58,8 +58,6 @@ outputs:
     outputBinding:
         glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".stderr.log")
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/isoseq3:3.4.0--0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -79,6 +77,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/isoseq3:3.4.0--0
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
     ramMin: |-

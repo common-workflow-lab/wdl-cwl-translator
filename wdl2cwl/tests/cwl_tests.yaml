@@ -161,3 +161,8 @@
   job: inputs/select_all_1.yaml
   output:
     first1: [1, 2, 1, 2 ]
+
+- doc: literals in inputs of different types
+  tool: cwl_files/literal_test.cwl
+  output:
+    result: "true 42 6.022 hoopla README.md true,false 42,23 6.022,10,23 Hello,World README.md,LICENSE"

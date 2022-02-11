@@ -29,8 +29,6 @@ outputs:
     outputBinding:
         glob: $(inputs.outputDir + "/" + inputs.sample + "-smoove.genotyped.vcf.gz")
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/smoove:0.2.5--0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -48,6 +46,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/smoove:0.2.5--0
   - class: ResourceRequirement
     ramMin: |-
         ${

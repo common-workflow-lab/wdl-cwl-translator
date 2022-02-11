@@ -17,16 +17,12 @@ outputs:
             { return element !== null }) ].filter(function(element) { return element
             !== null }) )
 requirements:
-  - class: InitialWorkDirRequirement
-    listing:
-      - entryname: script.bash
-        entry: ''
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
   - class: ResourceRequirement
     outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
-  - bash
-  - script.bash
+  - 'true'
