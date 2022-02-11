@@ -119,7 +119,7 @@ steps:
             ramMin: |-
                 ${
                 var unit = "GB";
-                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(element => element !== null) }`.match(/[0-9]+/g));
+                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(function(element) { return element !== null }) }`.match(/[0-9]+/g));
                 var memory = "";
                 if(unit==="KiB") memory = value/1024;
                 else if(unit==="MiB") memory = value;

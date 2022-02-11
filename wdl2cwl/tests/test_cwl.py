@@ -51,6 +51,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("bwa.wdl"),
         ("InternalTasks.wdl"),
         ("flatten.wdl"),
+        ("select_all_1.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
