@@ -9,8 +9,8 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union, cast
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
 import WDL
-import WDL.CLI
 import WDL._parser  # delete when reloading bug is fixed upstream
+import WDL.CLI
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
 
@@ -37,11 +37,10 @@ class ConversionException(Exception):
 
 def convert(doc: str) -> Dict[str, Any]:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
-    wdl_path = os.path.relpath(doc)
     WDL._parser._lark_comments_buffer.clear()
     try:
         doc_tree = WDL.load(
-            wdl_path, read_source=WDL.CLI.make_read_source(False), check_quant=False  # type: ignore[no-untyped-call]
+            doc, [], read_source=WDL.CLI.make_read_source(False), check_quant=True  # type: ignore[no-untyped-call]
         )
     except (
         WDL.Error.SyntaxError,
@@ -171,26 +170,31 @@ def get_workflow_outputs(
 ) -> Iterator[Tuple[str, Union[cwl.OutputArraySchema, str], str]]:
     """Return the name, CWL type, and source for a workflow's effective_outputs()."""
     for item in outputs:
-        output_name = item.name
-        meta_name = item.info.expr.expr.name[::-1].replace(".", "/", 1)[::-1]
-        # replace just the last occurrence of a period with a slash
-        # by first reversing the string and the replace the first occurence
-        # then reversing the result
-        if len(item.info.expr.expr.referee.callee_id) == 2:
-            # this checks if the output belongs to a particular import.
-            # the imported task's namespace is the first index of the callee_id
-            meta_name = item.info.expr.expr.referee.callee_id[0] + "." + meta_name
-        wdl_output = item.info
-        if isinstance(wdl_output.type, WDL.Type.Array):
-            array_items_type = wdl_output.type.item_type
-            input_type = get_cwl_type(array_items_type)
-            type_of: Union[cwl.OutputArraySchema, str] = cwl.OutputArraySchema(
-                items=input_type, type="array"
-            )
-        else:
-            type_of = get_cwl_type(wdl_output.type)
+        with WDLSourceLine(item.info, ConversionException):
+            output_name = item.name
+            item_expr = item.info.expr
+            output_source = item_expr.expr.name[::-1].replace(".", "/", 1)[::-1]
+            # replace just the last occurrence of a period with a slash
+            # by first reversing the string and the replace the first occurence
+            # then reversing the result
+            if "/" in output_source:
+                if len(item.info.expr.expr.referee.callee_id) == 2:
+                    # this checks if the output belongs to a particular import.
+                    # the imported task's namespace is the first index of the callee_id
+                    output_source = (
+                        item.info.expr.expr.referee.callee_id[0] + "." + output_source
+                    )
+            wdl_output = item.info
+            if isinstance(wdl_output.type, WDL.Type.Array):
+                array_items_type = wdl_output.type.item_type
+                input_type = get_cwl_type(array_items_type)
+                type_of: Union[cwl.OutputArraySchema, str] = cwl.OutputArraySchema(
+                    items=input_type, type="array"
+                )
+            else:
+                type_of = get_cwl_type(wdl_output.type)
 
-        yield (output_name, type_of, meta_name)
+            yield (output_name, type_of, output_source)
 
 
 class Converter:
@@ -533,10 +537,13 @@ class Converter:
                 WDL.Expr.Boolean,
                 WDL.Expr.Int,
                 WDL.Expr.Float,
-                WDL.Expr.Array,
             ),
         ):
             return str(wdl_expr.literal.value)  # type: ignore
+        elif isinstance(wdl_expr, WDL.Expr.Array):
+            return (
+                "[ " + ", ".join(self.get_expr(item) for item in wdl_expr.items) + " ]"
+            )
         else:
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"The expression '{wdl_expr}' is not handled yet."
@@ -654,7 +661,8 @@ class Converter:
                 arg_name.expr  # type: ignore
             )
             with WDLSourceLine(arg_value, ConversionException):
-                arg_value = arg_value.literal.value  # type: ignore
+                if arg_value.literal:
+                    arg_value = arg_value.literal.value
                 return (
                     f'{just_arg_name} === null ? "" : "{arg_value}" + {arg_name_with_file_check}'
                     if treat_as_optional
@@ -715,6 +723,18 @@ class Converter:
                 + "}})}"
                 + f") / {unit_value}"
             )
+        elif function_name == "flatten":
+            array_obj = arguments[0]
+            with WDLSourceLine(array_obj, ConversionException):
+                items_str = self.get_expr(array_obj)
+            result = (
+                "(function () {var new_array = []; "
+                + items_str
+                + ".forEach(function(value, index, obj) "
+                "{value.forEach(function(sub_value, sub_index, sub_obj) "
+                "{new_array.push(sub_value);});}); return new_array;})()"
+            )
+            return result
 
         raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
             f"Function name '{function_name}' not yet handled."
@@ -906,9 +926,10 @@ class Converter:
                     input_value = None
                 else:
                     with WDLSourceLine(wdl_input.expr, ConversionException):
-                        input_value = wdl_input.expr.literal.value  # type: ignore
-                        if final_type_of == "float":
-                            input_value = float(input_value)
+                        if wdl_input.expr.literal:
+                            input_value = wdl_input.expr.literal.value
+                            if final_type_of == "float":
+                                input_value = float(input_value)
 
             inputs.append(
                 cwl.CommandInputParameter(
@@ -952,14 +973,18 @@ class Converter:
                 wdl_output = item.info
             else:
                 wdl_output = item
+            glob = False
             if isinstance(wdl_output.type, WDL.Type.Array):
-                array_items_type = wdl_output.type.item_type
-                input_type = get_cwl_type(array_items_type)
+                input_type = get_cwl_type(wdl_output.type.item_type)
+                if input_type == "File":
+                    glob = True
                 type_of: Union[
                     cwl.CommandOutputArraySchema, str
                 ] = cwl.CommandOutputArraySchema(items=input_type, type="array")
             else:
                 type_of = get_cwl_type(wdl_output.type)
+                if type_of == "File":
+                    glob = True
 
             if not wdl_output.expr:
                 raise WDLSourceLine(wdl_output, ConversionException).makeError(
@@ -1054,20 +1079,6 @@ throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                     ),
                 )
             else:
-                globs: List[str] = []
-                targets: Union[List[WDL.Expr.Base], List[WDL.Tree.Decl]] = (
-                    wdl_output.expr.items
-                    if isinstance(wdl_output.expr, WDL.Expr.Array)
-                    else [wdl_output]
-                )
-                for entry in targets:
-                    glob_str = f"$({self.get_expr(entry)})"
-                    if (
-                        isinstance(wdl_output.expr, WDL.Expr.String)
-                        and wdl_output.expr.literal is not None
-                    ):
-                        glob_str = glob_str[3:-2]
-                    globs.append(glob_str)
                 if wdl_output.type.optional:
                     final_type_of: Union[
                         List[Union[str, cwl.CommandOutputArraySchema]],
@@ -1077,14 +1088,40 @@ throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                     ] = [type_of, "null"]
                 else:
                     final_type_of = type_of
-                final_glob = globs if len(globs) > 1 else globs[0]
-                outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        type=final_type_of,
-                        outputBinding=cwl.CommandOutputBinding(glob=final_glob),
+                if glob:
+                    globs: List[str] = []
+                    targets: Union[List[WDL.Expr.Base], List[WDL.Tree.Decl]] = (
+                        wdl_output.expr.items
+                        if isinstance(wdl_output.expr, WDL.Expr.Array)
+                        else [wdl_output]
                     )
-                )
+                    for entry in targets:
+                        glob_str = f"$({self.get_expr(entry)})"
+                        if (
+                            isinstance(wdl_output.expr, WDL.Expr.String)
+                            and wdl_output.expr.literal is not None
+                        ):
+                            glob_str = glob_str[3:-2]
+                        globs.append(glob_str)
+                    final_glob = globs if len(globs) > 1 else globs[0]
+                    outputs.append(
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type=final_type_of,
+                            outputBinding=cwl.CommandOutputBinding(glob=final_glob),
+                        )
+                    )
+                else:
+                    outputEval = f"$({self.get_expr(wdl_output)})"
+                    outputs.append(
+                        cwl.CommandOutputParameter(
+                            id=output_name,
+                            type=final_type_of,
+                            outputBinding=cwl.CommandOutputBinding(
+                                outputEval=outputEval
+                            ),
+                        )
+                    )
         return outputs
 
 

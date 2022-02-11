@@ -50,6 +50,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("BuildCembaReferences.wdl"),
         ("bwa.wdl"),
         ("InternalTasks.wdl"),
+        ("flatten.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
@@ -69,6 +70,22 @@ def test_wdl_stdout(
     """Test WDL to CWL conversion using stdout."""
     with open(get_data("cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
         main([get_data("wdl_files/bowtie_1.wdl")])
+        captured = capsys.readouterr()
+        log = caplog.text
+        assert captured.out == file.read()
+        assert "Skipping parameter_meta" in log
+
+
+def test_wdl_url(
+    caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test WDL to CWL conversion using a HTTPS URL."""
+    with open(get_data("cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
+        main(
+            [
+                "https://github.com/common-workflow-lab/wdl-cwl-translator/raw/main/wdl2cwl/tests/wdl_files/bowtie_1.wdl"
+            ]
+        )
         captured = capsys.readouterr()
         log = caplog.text
         assert captured.out == file.read()
