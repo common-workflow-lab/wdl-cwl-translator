@@ -19,17 +19,17 @@ inputs:
     type: string
 outputs:
   - id: align_and_count_report.report
-    outputSource: reports.align_and_count/report
+    outputSource: align_and_count/report
     type: File
   - id: align_and_count_report.report_top_hits
-    outputSource: reports.align_and_count/report_top_hits
+    outputSource: align_and_count/report_top_hits
     type: File
   - id: align_and_count_report.viral_core_version
-    outputSource: reports.align_and_count/viralngs_version
+    outputSource: align_and_count/viralngs_version
     type: string
 cwlVersion: v1.2
 steps:
-  - id: reports.align_and_count
+  - id: align_and_count
     in:
       - id: reads_bam
         source: align_and_count.reads_bam
@@ -119,7 +119,7 @@ steps:
             ramMin: |-
                 ${
                 var unit = "GB";
-                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(element => element !== null) }`.match(/[0-9]+/g));
+                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(function(element) { return element !== null }) }`.match(/[0-9]+/g));
                 var memory = "";
                 if(unit==="KiB") memory = value/1024;
                 else if(unit==="MiB") memory = value;

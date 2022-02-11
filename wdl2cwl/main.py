@@ -4,7 +4,18 @@ import os
 import re
 import sys
 import textwrap
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -177,13 +188,6 @@ def get_workflow_outputs(
             # replace just the last occurrence of a period with a slash
             # by first reversing the string and the replace the first occurence
             # then reversing the result
-            if "/" in output_source:
-                if len(item.info.expr.expr.referee.callee_id) == 2:
-                    # this checks if the output belongs to a particular import.
-                    # the imported task's namespace is the first index of the callee_id
-                    output_source = (
-                        item.info.expr.expr.referee.callee_id[0] + "." + output_source
-                    )
             wdl_output = item.info
             if isinstance(wdl_output.type, WDL.Type.Array):
                 array_items_type = wdl_output.type.item_type
@@ -214,9 +218,7 @@ class Converter:
         elif isinstance(obj, WDL.Tree.Workflow):
             return self.load_wdl_workflow(obj)
 
-    def get_workflow_input_expr(
-        self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]
-    ) -> str:
+    def get_step_input_expr(self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]) -> str:
         """Get name of expression referenced in workflow call inputs."""
         if isinstance(wf_expr, WDL.Expr.String):
             return self.get_expr_string(wf_expr)[1:-1]
@@ -264,39 +266,57 @@ class Converter:
                 callee = call.callee
                 if not callee:
                     continue  # shouldn't be possible?
-                local_call_name = call.name
-                callee_id = (
-                    f"{call.callee_id[0]}.{local_call_name}"
-                    if len(call.callee_id) == 2
-                    else local_call_name
-                )
                 cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)
                 call_inputs = call.inputs
-                inputs_from_call: Dict[str, str] = {}
+                inputs_from_call: Dict[str, Tuple[str, Dict[str, Any]]] = {}
                 input_defaults = set()
                 if call_inputs:
                     for key, value in call_inputs.items():
-                        if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
-                            input_defaults.add(key)
-                        input_expr = self.get_workflow_input_expr(value)  # type: ignore[arg-type]
-                        inputs_from_call[key] = input_expr.replace(".", "/")
+                        with WDLSourceLine(value, ConversionException):
+                            if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
+                                input_defaults.add(key)
+                            if (
+                                isinstance(value, WDL.Expr.Apply)
+                                and value.function_name == "select_all"
+                                and isinstance(value.arguments[0], WDL.Expr.Array)
+                                and isinstance(
+                                    value.arguments[0].items[0],
+                                    (WDL.Expr.Get, WDL.Expr.String),
+                                )
+                            ):
+                                input_expr = self.get_step_input_expr(
+                                    value.arguments[0].items[0]
+                                )
+                                inputs_from_call[key] = (
+                                    input_expr.replace(".", "/"),
+                                    {
+                                        "pickValue": "all_non_null",
+                                        "valueFrom": "$([self])",
+                                    },
+                                )
+                            else:
+                                input_expr = self.get_step_input_expr(value)  # type: ignore[arg-type]
+                                inputs_from_call[key] = (
+                                    input_expr.replace(".", "/"),
+                                    {},
+                                )
                 wf_step_inputs: List[cwl.WorkflowStepInput] = []
                 for inp in cwl_callee_inputs:
-                    call_inp_id = f"{local_call_name}.{inp.id}"
-                    source_str = inputs_from_call.get(cast(str, inp.id), call_inp_id)
+                    call_inp_id = f"{call.name}.{inp.id}"
+                    source_str, extras = inputs_from_call.get(
+                        cast(str, inp.id), (call_inp_id, {})
+                    )
 
                     if inp.id not in input_defaults:
                         wf_step_inputs.append(
                             cwl.WorkflowStepInput(
-                                id=inp.id,
-                                source=source_str,
+                                id=inp.id, source=source_str, **extras
                             )
                         )
                     else:
                         wf_step_inputs.append(
                             cwl.WorkflowStepInput(
-                                id=inp.id,
-                                default=source_str,
+                                id=inp.id, default=source_str, **extras
                             )
                         )
                 wf_step_outputs = (
@@ -310,7 +330,7 @@ class Converter:
                 wf_step_run = self.load_wdl_objects(callee)
                 wf_step = cwl.WorkflowStep(
                     wf_step_inputs,
-                    id=callee_id,
+                    id=call.name,
                     run=wf_step_run,
                     out=wf_step_outputs,
                 )
@@ -690,14 +710,24 @@ class Converter:
         elif function_name == "length":
             only_arg_expr = self.get_expr_get(arguments[0])  # type: ignore
             return f"{only_arg_expr}.length"
+        elif function_name == "round":
+            only_arg_expr = self.get_expr(arguments[0])
+            return f"Math.round({only_arg_expr})"
         elif function_name in single_arg_fn:
             only_arg = arguments[0]
             return self.get_expr(only_arg)
         elif function_name == "select_first":
-            array_obj = arguments[0]
-            array_items = [str(self.get_expr(item)) for item in array_obj.items]  # type: ignore
+            array_obj = cast(WDL.Expr.Array, arguments[0])
+            array_items = [str(self.get_expr(item)) for item in array_obj.items]
             items_str = ", ".join(array_items)
-            return f"[{items_str}].find(element => element !== null) "
+            return (
+                f"[{items_str}].find(function(element) {{ return element !== null }}) "
+            )
+        elif function_name == "select_all":
+            array_obj = cast(WDL.Expr.Array, arguments[0])
+            array_items = [str(self.get_expr(item)) for item in array_obj.items]
+            items_str = ", ".join(array_items)
+            return f"[{items_str}].filter(function(element) {{ return element !== null }}) "
         elif function_name == "ceil":
             only_arg = self.get_expr(arguments[0])  # type: ignore
             return f"Math.ceil({only_arg}) "
@@ -724,9 +754,9 @@ class Converter:
                 + f") / {unit_value}"
             )
         elif function_name == "flatten":
-            array_obj = arguments[0]
-            with WDLSourceLine(array_obj, ConversionException):
-                items_str = self.get_expr(array_obj)
+            flatten_array = arguments[0]
+            with WDLSourceLine(flatten_array, ConversionException):
+                items_str = self.get_expr(flatten_array)
             result = (
                 "(function () {var new_array = []; "
                 + items_str

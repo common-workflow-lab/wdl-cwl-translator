@@ -101,7 +101,7 @@ requirements:
     ramMin: |-
         ${
         var unit = "G";
-        var value = parseInt(`${[inputs.memoryGb, 10 + Math.ceil((function(size_of=0){inputs.bwaIndex.indexFiles.forEach(function(element){ if (element) {size_of += element.size}})}) / 1000^3 * 2)  + inputs.sortMemoryPerThreadGb * [inputs.sortThreads, inputs.threads === 1 ? 1 : 1 + Math.ceil(inputs.threads / 4.0) ].find(element => element !== null) ].find(element => element !== null) }`.match(/[0-9]+/g));
+        var value = parseInt(`${[inputs.memoryGb, 10 + Math.ceil((function(size_of=0){inputs.bwaIndex.indexFiles.forEach(function(element){ if (element) {size_of += element.size}})}) / 1000^3 * 2)  + inputs.sortMemoryPerThreadGb * [inputs.sortThreads, inputs.threads === 1 ? 1 : 1 + Math.ceil(inputs.threads / 4.0) ].find(function(element) { return element !== null }) ].find(function(element) { return element !== null }) }`.match(/[0-9]+/g));
         var memory = "";
         if(unit==="KiB") memory = value/1024;
         else if(unit==="MiB") memory = value;

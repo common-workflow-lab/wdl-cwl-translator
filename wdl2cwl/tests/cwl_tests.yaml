@@ -155,3 +155,9 @@
   output:
     out_s: [ Hello, World, How, are, you? ]
     out_a_s: [ Hello, World ]
+
+- doc: simple select_all() support
+  tool: cwl_files/select_all_1.cwl
+  job: inputs/select_all_1.yaml
+  output:
+    first1: [1, 2, 1, 2 ]
