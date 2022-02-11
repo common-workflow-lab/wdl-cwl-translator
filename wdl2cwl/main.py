@@ -37,11 +37,10 @@ class ConversionException(Exception):
 
 def convert(doc: str) -> Dict[str, Any]:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
-    wdl_path = os.path.relpath(doc)
     WDL._parser._lark_comments_buffer.clear()
     try:
         doc_tree = WDL.load(
-            wdl_path, read_source=WDL.CLI.make_read_source(False), check_quant=False  # type: ignore[no-untyped-call]
+            doc, [], read_source=WDL.CLI.make_read_source(False), check_quant=True  # type: ignore[no-untyped-call]
         )
     except (
         WDL.Error.SyntaxError,
