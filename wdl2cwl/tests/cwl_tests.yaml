@@ -133,3 +133,18 @@
   tool: cwl_files/read_boolean.cwl#read_dynamic_boolean
   output:
     dynamic_true: true
+
+- doc: GA4GH 2020 plenary demonstration workflow
+  tool: cwl_files/gwas.cwl
+  job: inputs/gwas.yaml
+  output:
+    gwas.logistic:
+      class: File
+      basename: ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.assoc.logistic
+      checksum: sha1$afd49c06594c285bca785e6f20d9695a34fb8a05
+      size: 38122
+    gwas.manhattan_plot:
+      class: File
+      basename: ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.png
+      checksum: sha1$a26b178dfa0be82f991dc2b28b9f2e6403cbfc51
+      size: 51977
