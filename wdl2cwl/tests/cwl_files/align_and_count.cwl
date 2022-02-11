@@ -19,17 +19,17 @@ inputs:
     type: string
 outputs:
   - id: align_and_count_report.report
-    outputSource: reports.align_and_count/report
+    outputSource: align_and_count/report
     type: File
   - id: align_and_count_report.report_top_hits
-    outputSource: reports.align_and_count/report_top_hits
+    outputSource: align_and_count/report_top_hits
     type: File
   - id: align_and_count_report.viral_core_version
-    outputSource: reports.align_and_count/viralngs_version
+    outputSource: align_and_count/viralngs_version
     type: string
 cwlVersion: v1.2
 steps:
-  - id: reports.align_and_count
+  - id: align_and_count
     in:
       - id: reads_bam
         source: align_and_count.reads_bam
