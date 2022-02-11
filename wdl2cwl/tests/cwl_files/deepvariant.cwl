@@ -81,8 +81,6 @@ outputs:
     outputBinding:
         glob: $(inputs.outputGVcfIndex)
 requirements:
-  - class: DockerRequirement
-    dockerPull: google/deepvariant:1.0.0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -110,6 +108,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: google/deepvariant:1.0.0
   - class: ResourceRequirement
     ramMin: |-
         ${

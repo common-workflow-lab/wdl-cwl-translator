@@ -54,7 +54,7 @@ task ValidateBam {
         docker: "quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6"
         cpu: 1
         memory: "3.75 GB"
-        #disks: "local-disk ${required_disk} HDD"
+        disks: "local-disk ${required_disk} HDD"
     }
 
     output {

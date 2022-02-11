@@ -32,8 +32,6 @@ $graph:
         outputBinding:
             glob: $(inputs.outputPath)
     requirements:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -47,6 +45,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -199,8 +200,6 @@ $graph:
               - $(inputs.outputDir + "/phasing.txt")
               - $(inputs.outputDir + "/weighted_roc.tsv.gz")
     requirements:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -225,6 +224,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/rtg-tools:3.10.1--0
       - class: ResourceRequirement
         coresMin: $(inputs.threads)
         ramMin: |-

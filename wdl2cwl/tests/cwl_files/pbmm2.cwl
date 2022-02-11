@@ -35,8 +35,6 @@ outputs:
     outputBinding:
         glob: $(inputs.sample + ".align.bam.bai")
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/pbmm2:1.3.0--h56fc30b_1
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -53,6 +51,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/pbmm2:1.3.0--h56fc30b_1
   - class: ResourceRequirement
     coresMin: $(inputs.cores)
     ramMin: |-

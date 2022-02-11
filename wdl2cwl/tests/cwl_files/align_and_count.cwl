@@ -90,8 +90,6 @@ steps:
                 glob: VERSION
                 outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/viral-core:2.1.33
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -114,6 +112,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/viral-core:2.1.33
           - class: ResourceRequirement
             coresMin: 4
             ramMin: |-

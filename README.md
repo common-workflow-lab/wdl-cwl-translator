@@ -66,12 +66,28 @@ To output the CWL version to your terminal/stdout.
 wdl2cwl path_to_workflow.wdl --output path_to_new_workflow.cwl
 ```
 
-## Limitations
+## Temporary Limitations
 
 WDL features not yet supported
 - [Scatter](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/146)
 - [Map](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/77) types
 - [Nested structs](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/158)
+
+## Incompatibilities possibly requiring manual intervention
+
+1. Dynamic specification of Docker containers. As of CWL v1.2, CWL's DockerRequirement
+has no support for dynamic specifications, only fixed values. If a WDL task has a
+`runtime.docker` that references an input with a default value, then `wdl2cwl` does
+try to copy that to the CWL `DockerRequirement.dockerPull`.
+
+If changing the software container is needed, there are several workarounds:
+1. Use workflow runner/engine provided overrides: many CWL runners
+(including those based upon the CWL reference runner, `cwltool`) support overriding
+requirements at any level at run time. See
+https://github.com/common-workflow-language/cwltool#overriding-workflow-requirements-at-load-time
+2. Manually override the `DockerRequirement` in `hints` by specifying your own container
+at the CWL workflow step level under `requirements`
+3. Manually editing the CommandLineTool definition yourself.
 
 ### File Localization
 

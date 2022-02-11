@@ -37,8 +37,6 @@ outputs:
     outputBinding:
         glob: $(inputs.groupout_filename)
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/humancellatlas/secondary-analysis-umitools:0.0.1
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -77,6 +75,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/humancellatlas/secondary-analysis-umitools:0.0.1
   - class: ResourceRequirement
     coresMin: $(inputs.cpu)
     ramMin: |-

@@ -11,8 +11,6 @@ outputs:
     outputBinding:
         glob: read_string.txt
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -37,6 +35,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 3576.2786865234375

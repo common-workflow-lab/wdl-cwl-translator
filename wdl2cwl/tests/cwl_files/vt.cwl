@@ -30,8 +30,6 @@ outputs:
     outputBinding:
         glob: $(inputs.outputPath)
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/vt:0.57721--hdf88d34_2
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -46,6 +44,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/vt:0.57721--hdf88d34_2
   - class: ResourceRequirement
     ramMin: |-
         ${

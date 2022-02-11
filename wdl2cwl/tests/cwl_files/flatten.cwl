@@ -25,17 +25,12 @@ outputs:
     outputBinding:
         outputEval: $(inputs.a_s)
 requirements:
-  - class: InitialWorkDirRequirement
-    listing:
-      - entryname: script.bash
-        entry: |4+
-
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
   - class: ResourceRequirement
     outdirMin: 1024
 cwlVersion: v1.2
 baseCommand:
-  - bash
-  - script.bash
+  - 'true'

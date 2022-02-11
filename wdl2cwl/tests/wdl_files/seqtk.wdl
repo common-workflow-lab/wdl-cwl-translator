@@ -39,7 +39,7 @@ task Sample {
         mkdir -p "$(dirname ~{outFilePath})"
         ~{preCommand}
         seqtk sample \
-	    ~{"-s " + seed} \
+        ~{"-s " + seed} \
         ~{true="-2 " false="" twoPassMode} \
         ~{sequenceFile} \
         ~{fractionOrNumber} \
@@ -50,5 +50,4 @@ task Sample {
     output {
         File subsampledReads = outFilePath
     }
-
 }

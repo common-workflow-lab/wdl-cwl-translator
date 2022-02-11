@@ -64,8 +64,6 @@ outputs:
         glob: "$(inputs.summaryFilePath === null ? inputs.outputBam.split('/').reverse()[0].replace(/\\\
             .bam$/, '') + \".summary.txt\" : inputs.summaryFilePath)"
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -94,6 +92,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
     ramMin: |-

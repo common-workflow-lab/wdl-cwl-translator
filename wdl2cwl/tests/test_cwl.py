@@ -20,12 +20,10 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
     "description_name",
     [
         ("bcftools.wdl"),
-        ("bowtie_1.wdl"),
-        ("bowtie_2.wdl"),
-        ("bowtie_3.wdl"),
+        ("bowtie.wdl"),
         ("Qc.wdl"),
         ("deepvariant.wdl"),
-        ("gatk_1.wdl"),
+        ("gatk.wdl"),
         ("hisat2.wdl"),
         ("isoseq3.wdl"),
         ("minCores.wdl"),
@@ -33,10 +31,9 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("read_string_cornercase.wdl"),
         ("read_boolean.wdl"),
         ("rtg.wdl"),
-        ("seqtk_1.wdl"),
-        ("seqtk_2.wdl"),
+        ("seqtk.wdl"),
         ("smoove.wdl"),
-        ("transcriptclean_1.wdl"),
+        ("transcriptclean.wdl"),
         ("TrimAdapters.wdl"),
         ("UmiCorrection.wdl"),
         ("validateOptimus_1.wdl"),
@@ -53,6 +50,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("flatten.wdl"),
         ("select_all_1.wdl"),
         ("merge_svs.wdl"),
+        ("literal_test.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
@@ -70,8 +68,8 @@ def test_wdl_stdout(
     caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Test WDL to CWL conversion using stdout."""
-    with open(get_data("cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
-        main([get_data("wdl_files/bowtie_1.wdl")])
+    with open(get_data("cwl_files/bowtie.cwl"), encoding="utf-8") as file:
+        main([get_data("wdl_files/bowtie.wdl")])
         captured = capsys.readouterr()
         log = caplog.text
         assert captured.out == file.read()
@@ -82,10 +80,10 @@ def test_wdl_url(
     caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Test WDL to CWL conversion using a HTTPS URL."""
-    with open(get_data("cwl_files/bowtie_1.cwl"), encoding="utf-8") as file:
+    with open(get_data("cwl_files/bowtie.cwl"), encoding="utf-8") as file:
         main(
             [
-                "https://github.com/common-workflow-lab/wdl-cwl-translator/raw/main/wdl2cwl/tests/wdl_files/bowtie_1.wdl"
+                "https://github.com/biowdl/tasks/raw/c5cfd2f5acc2ff729987b86d38b29af046677fdc/bowtie.wdl"
             ]
         )
         captured = capsys.readouterr()

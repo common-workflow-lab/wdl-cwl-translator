@@ -33,8 +33,6 @@ outputs:
     outputBinding:
         glob: number_of_genes_per_cell.png
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/humancellatlas/optimus-matrix-test:0.0.7
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -61,6 +59,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/humancellatlas/optimus-matrix-test:0.0.7
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 15258.7890625

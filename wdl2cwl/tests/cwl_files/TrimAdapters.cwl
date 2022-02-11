@@ -45,8 +45,6 @@ outputs:
     outputBinding:
         glob: $("*trimmed_R2.fastq.gz")
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/humancellatlas/snss2-trim-adapters:0.1.0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -72,6 +70,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/humancellatlas/snss2-trim-adapters:0.1.0
   - class: ResourceRequirement
     coresMin: $(inputs.cpu)
     ramMin: |-

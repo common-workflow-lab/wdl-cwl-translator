@@ -66,8 +66,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bisulfite-references:1.0
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -88,6 +86,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/bisulfite-references:1.0
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3337.860107421875
@@ -133,8 +134,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -153,6 +152,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 6675.72021484375
@@ -198,8 +200,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -218,6 +218,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 6675.72021484375
@@ -258,8 +261,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/picard:2.18.23
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -284,6 +285,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/picard:2.18.23
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 4000.0
@@ -323,8 +327,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/samtools:1.9
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -351,6 +353,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/samtools:1.9
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3337.860107421875

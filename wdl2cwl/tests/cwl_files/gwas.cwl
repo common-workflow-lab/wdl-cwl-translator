@@ -47,8 +47,6 @@ steps:
             outputBinding:
                 glob: ids.txt
         requirements:
-          - class: DockerRequirement
-            dockerPull: dnastack/plink:1.9
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -59,6 +57,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: dnastack/plink:1.9
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3576.2786865234375
@@ -102,8 +103,6 @@ steps:
                 glob: $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/,
                     '') + '.assoc.logistic')
         requirements:
-          - class: DockerRequirement
-            dockerPull: dnastack/plink:1.9
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -140,6 +139,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: dnastack/plink:1.9
           - class: ResourceRequirement
             coresMin: 4
             ramMin: 15258.7890625
@@ -167,8 +169,6 @@ steps:
                 glob: $(inputs.assoc_file.basename.replace(/\.assoc\.logistic$/, '')  +
                     '.png')
         requirements:
-          - class: DockerRequirement
-            dockerPull: dnastack/plink:1.9
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -180,6 +180,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: dnastack/plink:1.9
           - class: ResourceRequirement
             coresMin: 2
             ramMin: 7152.557373046875

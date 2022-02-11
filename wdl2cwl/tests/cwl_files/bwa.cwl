@@ -69,8 +69,6 @@ outputs:
     outputBinding:
         glob: $(inputs.outputPrefix + ".hla")
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -96,6 +94,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
     ramMin: |-

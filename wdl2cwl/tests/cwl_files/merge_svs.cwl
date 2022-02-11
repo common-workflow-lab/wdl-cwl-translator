@@ -115,8 +115,6 @@ steps:
             outputBinding:
                 glob: $(inputs.cohort_name)
         requirements:
-          - class: DockerRequirement
-            dockerPull: mgibio/survivor-cwl:1.0.6.2
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -131,6 +129,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: mgibio/survivor-cwl:1.0.6.2
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 1907.3486328125
@@ -178,8 +179,6 @@ steps:
             outputBinding:
                 glob: $(inputs.output_vcf_basename + ".vcf.gz.tbi")
         requirements:
-          - class: DockerRequirement
-            dockerPull: mgibio/basespace_chromoseq:v12
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -215,6 +214,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: mgibio/basespace_chromoseq:v12
           - class: ResourceRequirement
             ramMin: 7629.39453125
             outdirMin: 10240
@@ -257,8 +259,6 @@ steps:
             outputBinding:
                 glob: $(inputs.output_tsv_name)
         requirements:
-          - class: DockerRequirement
-            dockerPull: mgibio/annotsv-cwl:2.1
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -272,6 +272,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: mgibio/annotsv-cwl:2.1
           - class: ResourceRequirement
             ramMin: 7629.39453125
             outdirMin: $((10 + Math.round((function(size_of=0){inputs.snps_vcf.forEach(function(element){
@@ -326,8 +329,6 @@ steps:
             outputBinding:
                 glob: $(inputs.output_vcf_name)
         requirements:
-          - class: DockerRequirement
-            dockerPull: mgibio/bcftools-cwl:1.12
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -343,6 +344,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: mgibio/bcftools-cwl:1.12
           - class: ResourceRequirement
             ramMin: 3814.697265625
             outdirMin: $((10 + Math.round(2 * (function(size_of=0){inputs.vcfs.forEach(function(element){
@@ -390,8 +394,6 @@ steps:
             outputBinding:
                 glob: $(inputs.output_vcf_basename + ".vcf.gz.tbi")
         requirements:
-          - class: DockerRequirement
-            dockerPull: mgibio/basespace_chromoseq:v12
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -427,6 +429,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: mgibio/basespace_chromoseq:v12
           - class: ResourceRequirement
             ramMin: 7629.39453125
             outdirMin: 10240
@@ -469,8 +474,6 @@ steps:
             outputBinding:
                 glob: $(inputs.output_tsv_name)
         requirements:
-          - class: DockerRequirement
-            dockerPull: mgibio/annotsv-cwl:2.1
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -484,6 +487,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: mgibio/annotsv-cwl:2.1
           - class: ResourceRequirement
             ramMin: 7629.39453125
             outdirMin: $((10 + Math.round((function(size_of=0){inputs.snps_vcf.forEach(function(element){
@@ -531,8 +537,6 @@ steps:
             outputBinding:
                 glob: $(inputs.output_tsv_name)
         requirements:
-          - class: DockerRequirement
-            dockerPull: python:3
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -570,6 +574,9 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: python:3
           - class: ResourceRequirement
             ramMin: 3814.697265625
             outdirMin: $((10 + Math.round(2 * (function(size_of=0){inputs.annotsv_tsv.path.forEach(function(element){

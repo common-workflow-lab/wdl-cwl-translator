@@ -15,8 +15,6 @@ $graph:
         outputBinding:
             glob: $(inputs.metrics_filename)
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -31,6 +29,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
@@ -82,8 +83,6 @@ $graph:
         outputBinding:
             glob: $(inputs.output_bam_prefix + '.quality_distribution_metrics')
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -107,6 +106,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
@@ -153,8 +155,6 @@ $graph:
         outputBinding:
             glob: $(inputs.output_bam_prefix + '.gc_bias.summary_metrics')
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -180,6 +180,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
@@ -265,8 +268,6 @@ $graph:
         outputBinding:
             glob: $(inputs.output_bam_prefix + '.error_summary_metrics')
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -297,6 +298,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
@@ -334,8 +338,6 @@ $graph:
         outputBinding:
             glob: $(inputs.base_name + '.oxog_metrics')
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -351,6 +353,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -407,8 +412,6 @@ $graph:
         outputBinding:
             glob: $(inputs.metrics_filename)
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -427,6 +430,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: $((Math.ceil(inputs.total_input_size)  + 20) * 1024)
@@ -502,8 +508,6 @@ $graph:
             glob: lod
             outputEval: $(parseFloat(self[0].contents))
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.26.4
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -531,6 +535,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.26.4
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -589,8 +596,6 @@ $graph:
             outputEval: $("duplication_value.txt" > inputs.max_duplication_in_reasonable_sample
                 || "chimerism_value.txt" > inputs.max_chimerism_in_reasonable_sample)
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-dsp-gcr-public/base/python:3.9-debian
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -624,6 +629,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-dsp-gcr-public/base/python:3.9-debian
       - class: ResourceRequirement
         ramMin: 2048.0
         outdirMin: 1024
@@ -675,8 +683,6 @@ $graph:
         outputBinding:
             glob: $(inputs.report_filename)
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -695,6 +701,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -747,8 +756,6 @@ $graph:
         outputBinding:
             glob: $(inputs.metrics_filename)
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -767,6 +774,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
@@ -808,8 +818,6 @@ $graph:
         outputBinding:
             glob: $(inputs.metrics_filename)
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -828,6 +836,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -885,8 +896,6 @@ $graph:
         outputBinding:
             glob: $(inputs.metrics_filename)
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -906,6 +915,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -949,8 +961,6 @@ $graph:
         outputBinding:
             glob: $(inputs.read_group_md5_filename)
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -963,6 +973,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 4000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
@@ -1013,8 +1026,6 @@ $graph:
         type: string
     outputs: []
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gatk/gatk:4.1.8.0
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -1033,6 +1044,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gatk/gatk:4.1.8.0
       - class: ResourceRequirement
         ramMin: 7000.0
         outdirMin: '$((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
@@ -1078,8 +1092,6 @@ $graph:
         outputBinding:
             glob: $(inputs.metrics_basename + '.variant_calling_detail_metrics')
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -1096,6 +1108,9 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
