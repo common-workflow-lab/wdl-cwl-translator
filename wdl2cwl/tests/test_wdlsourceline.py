@@ -6,13 +6,13 @@ import pytest
 import WDL
 
 from ..errors import WDLSourceLine
-from ..main import ConversionException, Converter
-from .test_cwl import get_file
+from ..main import ConversionException
+from .util import get_data
 
 
 def test_wdlsourceline() -> None:
     """Basic test of WDLSourceLine."""
-    doc_tree = WDL.load(get_file("wdl_files/minCores.wdl"))
+    doc_tree = WDL.load(get_data("wdl_files/minCores.wdl"))
     with pytest.raises(
         ConversionException,
         match=re.escape("minCores.wdl:1:1: SourceLineTest"),
@@ -38,7 +38,7 @@ def test_wdlsourceline_non_wdl_context_manager() -> None:
 
 def test_nested_wdlsourceline() -> None:
     """Nested test of WDLSourceLine."""
-    doc_tree = WDL.load(get_file("wdl_files/minCores.wdl"))
+    doc_tree = WDL.load(get_data("wdl_files/minCores.wdl"))
     with pytest.raises(
         ConversionException,
         match=re.escape("minCores.wdl:3:1: SourceLineTest"),

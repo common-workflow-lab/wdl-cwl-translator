@@ -72,7 +72,7 @@ docs: FORCE
 clean: FORCE
 	rm -f ${MODILE}/*.pyc tests/*.pyc
 	python setup.py clean --all || true
-	rm -Rf .coverage
+	rm -Rf .coverage coverage.xml
 	rm -f diff-cover.html
 
 # Linting and code style related targets
@@ -142,6 +142,9 @@ vpath %.wdl wdl2cwl/tests/wdl_files
 
 wdl2cwl/tests/cwl_files/%.cwl: %.wdl wdl2cwl/main.py
 	wdl2cwl $< --output $@
+
+validate-cwl:
+	$(foreach file,$(wildcard wdl2cwl/tests/cwl_files/*.cwl),cwltool --validate $(file) &&) true
 
 # See https://github.com/common-workflow-lab/wdl2cwl_test_cache
 cwltest:

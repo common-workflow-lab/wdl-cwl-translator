@@ -1,0 +1,13 @@
+vcf:
+  class: File
+  path: ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.vcf.gz
+  size: 3668947
+  checksum: sha1$e1c2767c9c11825750a8e50118fba3c7cd6e3748
+  # https://github.com/elixir-cloud-aai/demo-workflows/blob/43eb87f9499399977b889935ae721563598d7d8e/gwas_workflow/cwl/example_job/data/ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.vcf.gz
+metadata_csv:
+  class: File
+  path: thousand_genomes_meta.csv
+  size: 780047
+  checksum: sha1$4d53c8693c089ce0b5f5b6ebb88ea7040068b5f3
+  # https://github.com/elixir-cloud-aai/demo-workflows/blob/43eb87f9499399977b889935ae721563598d7d8e/gwas_workflow/cwl/example_job/data/thousand_genomes_meta.csv
+

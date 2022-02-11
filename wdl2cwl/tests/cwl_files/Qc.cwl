@@ -342,7 +342,7 @@ $graph:
             entry: |4
 
                 input_base=\$(dirname $(inputs.pre_adapter_detail_metrics.path))/$(inputs.base_name)
-                java -Xms$(Math.ceil(4000*inputs.memory_multiplier) -1000)m -Xmx$(Math.ceil(4000*inputs.memory_multiplier) -500)m \
+                java -Xms$(Math.ceil(4000 * inputs.memory_multiplier)  - 1000)m -Xmx$(Math.ceil(4000 * inputs.memory_multiplier)  - 500)m \
                   -jar /usr/picard/picard.jar \
                   ConvertSequencingArtifactToOxoG \
                   --INPUT_BASE $input_base \
@@ -355,7 +355,7 @@ $graph:
         ramMin: |-
             ${
             var unit = "MiB";
-            var value = parseInt(`${Math.ceil(4000*inputs.memory_multiplier) }`.match(/[0-9]+/g));
+            var value = parseInt(`${Math.ceil(4000 * inputs.memory_multiplier) }`.match(/[0-9]+/g));
             var memory = "";
             if(unit==="KiB") memory = value/1024;
             else if(unit==="MiB") memory = value;
@@ -510,7 +510,7 @@ $graph:
             entry: |4
 
                 set -e
-                java -Xms$(inputs.memory_size-1000)m -Xmx$(inputs.memory_size-500)m -Dpicard.useLegacyParser=false -jar /usr/picard/picard.jar \
+                java -Xms$(inputs.memory_size - 1000)m -Xmx$(inputs.memory_size - 500)m -Dpicard.useLegacyParser=false -jar /usr/picard/picard.jar \
                 CheckFingerprint \
                   --INPUT $([inputs.input_vcf === null ? "" : inputs.input_vcf.path, inputs.input_bam === null ? "" : inputs.input_bam.path].find(element => element !== null) ) \
                   $(inputs.input_vcf ? inputs.input_sample_alias === null ? "" : "--OBSERVED_SAMPLE_ALIAS "" + inputs.input_sample_alias + """ : "") \
@@ -586,7 +586,7 @@ $graph:
       - id: is_outlier_data
         type: boolean
         outputBinding:
-            glob: $("duplication_value.txt" > inputs.max_duplication_in_reasonable_sample
+            outputEval: $("duplication_value.txt" > inputs.max_duplication_in_reasonable_sample
                 || "chimerism_value.txt" > inputs.max_chimerism_in_reasonable_sample)
     requirements:
       - class: DockerRequirement
@@ -682,7 +682,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms$(inputs.memory_size-1000)m -Xmx$(inputs.memory_size-500)m -jar /usr/picard/picard.jar \
+                java -Xms$(inputs.memory_size - 1000)m -Xmx$(inputs.memory_size - 500)m -jar /usr/picard/picard.jar \
                   ValidateSamFile \
                   INPUT=$(inputs.input_bam.path) \
                   OUTPUT=$(inputs.report_filename) \
@@ -815,7 +815,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms$(inputs.memory_size-1*1000)m -jar /usr/picard/picard.jar \
+                java -Xms$(inputs.memory_size - 1 * 1000)m -jar /usr/picard/picard.jar \
                   CollectRawWgsMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   VALIDATION_STRINGENCY=SILENT \
@@ -892,7 +892,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                java -Xms$(inputs.memory_size-1000)m -Xmx$(inputs.memory_size-500)m -jar /usr/picard/picard.jar \
+                java -Xms$(inputs.memory_size - 1000)m -Xmx$(inputs.memory_size - 500)m -jar /usr/picard/picard.jar \
                   CollectHsMetrics \
                   INPUT=$(inputs.input_bam.path) \
                   REFERENCE_SEQUENCE=$(inputs.ref_fasta.path) \

@@ -5,6 +5,7 @@ from types import TracebackType
 from typing import Any, Callable, Optional, Type, cast
 
 import WDL
+from WDL import SourcePosition
 
 # Inspired by https://github.com/common-workflow-language/schema_salad/blob/661fb0fa8c745ed70253dda93bd12002007f6b33/schema_salad/sourceline.py#L232
 
@@ -45,7 +46,7 @@ class WDLSourceLine:
 
     def makeLead(self) -> str:
         """Caculate the error message prefix."""
-        pos: WDL.SourcePosition = cast(WDL.SourcePosition, self.item.pos)
+        pos: SourcePosition = cast(SourcePosition, self.item.pos)
         return f"{pos.uri}:{pos.line}:{pos.column}:"
 
     def makeError(self, msg: str) -> Any:
