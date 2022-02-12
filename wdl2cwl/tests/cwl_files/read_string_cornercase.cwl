@@ -1,15 +1,6 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: ReadStringCornercase
-inputs:
-  - id: bam
-    type: File
-  - id: expected_checksum
-    type: string
-outputs:
-  - id: result
-    type: File
-    outputBinding:
-        glob: read_string.txt
+class: CommandLineTool
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -42,7 +33,16 @@ hints:
     coresMin: 1
     ramMin: 3576.2786865234375
     outdirMin: 1024
-cwlVersion: v1.2
+inputs:
+  - id: bam
+    type: File
+  - id: expected_checksum
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: result
+    type: File
+    outputBinding:
+        glob: read_string.txt

@@ -1,19 +1,6 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: ValidateLoom
-inputs:
-  - id: loom_file
-    type:
-      - File
-      - 'null'
-  - id: expected_loom_file_checksum
-    type: string
-outputs:
-  - id: result
-    type: string
-    outputBinding:
-        loadContents: true
-        glob: result.txt
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+class: CommandLineTool
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -46,7 +33,20 @@ hints:
     outdirMin: '$((Math.ceil((function(size_of=0){inputs.loom_file === null ? "" :
         inputs.loom_file.path.forEach(function(element){ if (element) {size_of +=
         element.size}})}) / 1000^3 * 1.1) ) * 1024)'
-cwlVersion: v1.2
+inputs:
+  - id: loom_file
+    type:
+      - File
+      - 'null'
+  - id: expected_loom_file_checksum
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: result
+    type: string
+    outputBinding:
+        loadContents: true
+        glob: result.txt
+        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))

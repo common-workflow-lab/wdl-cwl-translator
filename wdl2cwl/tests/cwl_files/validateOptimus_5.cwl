@@ -1,13 +1,6 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: GenerateReport
-inputs:
-  - id: metric_and_index_validation_result
-    type: string
-  - id: matrix_validation_result
-    type: string
-  - id: loom_validation_result
-    type: string
-outputs: []
+class: CommandLineTool
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -53,7 +46,14 @@ hints:
     coresMin: 1
     ramMin: 953.67431640625
     outdirMin: 1024
-cwlVersion: v1.2
+inputs:
+  - id: metric_and_index_validation_result
+    type: string
+  - id: matrix_validation_result
+    type: string
+  - id: loom_validation_result
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs: []

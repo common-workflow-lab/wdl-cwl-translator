@@ -25,6 +25,7 @@ import WDL._parser  # delete when reloading bug is fixed upstream
 import WDL.CLI
 from ruamel.yaml import scalarstring
 from ruamel.yaml.main import YAML
+from ruamel.yaml.comments import CommentedMap
 
 from wdl2cwl import _logger
 from wdl2cwl.errors import WDLSourceLine
@@ -65,14 +66,48 @@ def convert(doc: str) -> Dict[str, Any]:
 
     parser = Converter()
     if doc_tree.workflow:
-        return parser.load_wdl_workflow(doc_tree.workflow).save()
+        return sort_cwl(parser.load_wdl_workflow(doc_tree.workflow).save())
     if len(doc_tree.tasks) == 1:
-        return parser.load_wdl_objects(doc_tree.tasks[0]).save()
+        return sort_cwl(parser.load_wdl_objects(doc_tree.tasks[0]).save())
     else:
         return {
             "cwlVersion": "v1.2",
-            "$graph": [parser.load_wdl_objects(task).save() for task in doc_tree.tasks],
+            "$graph": [
+                sort_cwl(parser.load_wdl_objects(task).save())
+                for task in doc_tree.tasks
+            ],
         }
+
+
+def sort_cwl(document: Dict[str, Any]) -> CommentedMap:
+    """Sort the sections of the CWL document in a more meaningful order."""
+    keyorder = [
+        "cwlVersion",
+        "id",
+        "class",
+        "label",
+        "doc",
+        "requirements",
+        "hints",
+        "inputs",
+        "stdin",
+        "baseCommand",
+        "steps",
+        "expression",
+        "arguments",
+        "stderr",
+        "stdout",
+        "outputs",
+        "successCodes",
+        "temporaryFailCodes",
+        "permanentFailCodes",
+    ]
+    return CommentedMap(
+        sorted(
+            document.items(),
+            key=lambda i: keyorder.index(i[0]) if i[0] in keyorder else 100,
+        )
+    )
 
 
 def get_cwl_type(input_type: WDL.Type.Base) -> str:

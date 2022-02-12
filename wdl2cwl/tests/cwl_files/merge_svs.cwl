@@ -1,5 +1,6 @@
-class: Workflow
+cwlVersion: v1.2
 id: mergeSvs
+class: Workflow
 inputs:
   - id: estimate_sv_distance
     type: boolean
@@ -48,23 +49,6 @@ inputs:
   - id: bcftoolsAnnotsvFilter.output_tsv_name
     default: filtered-bcftools-merged-AnnotSV.tsv
     type: string
-outputs:
-  - id: mergeSvs.bcftools_merged_sv_vcf
-    outputSource: filterBlocklistBcftools/filtered_sv_vcf
-    type: File
-  - id: mergeSvs.bcftools_merged_annotated_tsv
-    outputSource: bcftoolsAnnotateVariants/sv_variants_tsv
-    type: File
-  - id: mergeSvs.bcftools_merged_filtered_annotated_tsv
-    outputSource: bcftoolsAnnotsvFilter/filtered_tsv
-    type: File
-  - id: mergeSvs.survivor_merged_sv_vcf
-    outputSource: filterBlocklistSurvivor/filtered_sv_vcf
-    type: File
-  - id: mergeSvs.survivor_merged_annotated_tsv
-    outputSource: survivorAnnotateVariants/sv_variants_tsv
-    type: File
-cwlVersion: v1.2
 steps:
   - id: survivorMergeSvVcfs
     in:
@@ -585,3 +569,19 @@ steps:
         baseCommand:
           - bash
           - script.bash
+outputs:
+  - id: mergeSvs.bcftools_merged_sv_vcf
+    outputSource: filterBlocklistBcftools/filtered_sv_vcf
+    type: File
+  - id: mergeSvs.bcftools_merged_annotated_tsv
+    outputSource: bcftoolsAnnotateVariants/sv_variants_tsv
+    type: File
+  - id: mergeSvs.bcftools_merged_filtered_annotated_tsv
+    outputSource: bcftoolsAnnotsvFilter/filtered_tsv
+    type: File
+  - id: mergeSvs.survivor_merged_sv_vcf
+    outputSource: filterBlocklistSurvivor/filtered_sv_vcf
+    type: File
+  - id: mergeSvs.survivor_merged_annotated_tsv
+    outputSource: survivorAnnotateVariants/sv_variants_tsv
+    type: File

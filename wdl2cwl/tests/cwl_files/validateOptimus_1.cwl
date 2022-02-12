@@ -1,17 +1,6 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: ValidateBam
-inputs:
-  - id: bam
-    type: File
-  - id: expected_checksum
-    type: string
-outputs:
-  - id: result
-    type: string
-    outputBinding:
-        loadContents: true
-        glob: result.txt
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+class: CommandLineTool
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -45,7 +34,18 @@ hints:
     ramMin: 3576.2786865234375
     outdirMin: $((Math.ceil((function(size_of=0){inputs.bam.path.forEach(function(element){
         if (element) {size_of += element.size}})}) / 1000^3 * 1.1) ) * 1024)
-cwlVersion: v1.2
+inputs:
+  - id: bam
+    type: File
+  - id: expected_checksum
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: result
+    type: string
+    outputBinding:
+        loadContents: true
+        glob: result.txt
+        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))

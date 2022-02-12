@@ -1,56 +1,7 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: TrimAdapters
+class: CommandLineTool
 doc: Trims adapters from FASTQ files.
-inputs:
-  - id: fastq1_input_files
-    type:
-        items: File
-        type: array
-  - id: fastq2_input_files
-    type:
-        items: File
-        type: array
-  - id: adapter_list
-    type: File
-  - id: input_ids
-    type:
-        items: string
-        type: array
-  - id: docker
-    doc: (optional) the docker image containing the runtime environment for this task
-    default: quay.io/humancellatlas/snss2-trim-adapters:0.1.0
-    type: string
-  - id: machine_mem_mb
-    doc: (optional) the amount of memory (MiB) to provision for this task
-    default: 8250
-    type: int
-  - id: cpu
-    doc: (optional) the number of cpus to provision for this task
-    default: 1
-    type: int
-  - id: disk
-    doc: (optional) the amount of disk space (GiB) to provision for this task
-    type:
-      - int
-      - 'null'
-  - id: preemptible
-    doc: (optional) if non-zero, request a pre-emptible instance and allow for this
-        number of preemptions before running the task on a non preemptible machine
-    default: 3
-    type: int
-outputs:
-  - id: trimmed_fastq1_files
-    type:
-        items: File
-        type: array
-    outputBinding:
-        glob: $("*trimmed_R1.fastq.gz")
-  - id: trimmed_fastq2_files
-    type:
-        items: File
-        type: array
-    outputBinding:
-        glob: $("*trimmed_R2.fastq.gz")
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -101,7 +52,56 @@ hints:
     outdirMin: $((Math.ceil(2 * (function(size_of=0){inputs.fastq1_input_files.forEach(function(element){
         if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq2_input_files.forEach(function(element){
         if (element) {size_of += element.size}})}) / 1024^3)  + 10) * 1024)
-cwlVersion: v1.2
+inputs:
+  - id: fastq1_input_files
+    type:
+        items: File
+        type: array
+  - id: fastq2_input_files
+    type:
+        items: File
+        type: array
+  - id: adapter_list
+    type: File
+  - id: input_ids
+    type:
+        items: string
+        type: array
+  - id: docker
+    doc: (optional) the docker image containing the runtime environment for this task
+    default: quay.io/humancellatlas/snss2-trim-adapters:0.1.0
+    type: string
+  - id: machine_mem_mb
+    doc: (optional) the amount of memory (MiB) to provision for this task
+    default: 8250
+    type: int
+  - id: cpu
+    doc: (optional) the number of cpus to provision for this task
+    default: 1
+    type: int
+  - id: disk
+    doc: (optional) the amount of disk space (GiB) to provision for this task
+    type:
+      - int
+      - 'null'
+  - id: preemptible
+    doc: (optional) if non-zero, request a pre-emptible instance and allow for this
+        number of preemptions before running the task on a non preemptible machine
+    default: 3
+    type: int
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: trimmed_fastq1_files
+    type:
+        items: File
+        type: array
+    outputBinding:
+        glob: $("*trimmed_R1.fastq.gz")
+  - id: trimmed_fastq2_files
+    type:
+        items: File
+        type: array
+    outputBinding:
+        glob: $("*trimmed_R2.fastq.gz")

@@ -1,32 +1,6 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: Sample
-inputs:
-  - id: sequenceFile
-    type: File
-  - id: outFilePath
-    default: subsampledReads.fq.gz
-    type: string
-  - id: twoPassMode
-    default: false
-    type: boolean
-  - id: fractionOrNumber
-    type: float
-  - id: zip
-    default: true
-    type: boolean
-  - id: preCommand
-    type:
-      - string
-      - 'null'
-  - id: seed
-    type:
-      - int
-      - 'null'
-outputs:
-  - id: subsampledReads
-    type: File
-    outputBinding:
-        glob: $(inputs.outFilePath)
+class: CommandLineTool
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -49,7 +23,33 @@ requirements:
 hints:
   - class: ResourceRequirement
     outdirMin: 1024
-cwlVersion: v1.2
+inputs:
+  - id: sequenceFile
+    type: File
+  - id: outFilePath
+    default: subsampledReads.fq.gz
+    type: string
+  - id: twoPassMode
+    default: false
+    type: boolean
+  - id: fractionOrNumber
+    type: float
+  - id: zip
+    default: true
+    type: boolean
+  - id: preCommand
+    type:
+      - string
+      - 'null'
+  - id: seed
+    type:
+      - int
+      - 'null'
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: subsampledReads
+    type: File
+    outputBinding:
+        glob: $(inputs.outFilePath)
