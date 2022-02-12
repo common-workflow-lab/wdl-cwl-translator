@@ -2,12 +2,15 @@ class: CommandLineTool
 id: Mem
 inputs:
   - id: read1
+    doc: The first-end fastq file.
     type: File
   - id: read2
+    doc: The second-end fastq file.
     type:
       - File
       - 'null'
   - id: bwaIndex
+    doc: The BWA index, including (optionally) a .alt file.
     type:
         name: BwaIndex
         fields:
@@ -19,50 +22,64 @@ inputs:
                 type: array
         type: record
   - id: outputPrefix
+    doc: The prefix of the output files, including any parent directories.
     type: string
   - id: sixtyFour
+    doc: Whether or not the index uses the '.64' suffixes.
     default: false
     type: boolean
   - id: usePostalt
+    doc: Whether to use the postalt script from bwa kit.
     default: false
     type: boolean
   - id: useSoftclippingForSupplementary
     default: false
     type: boolean
   - id: sortMemoryPerThreadGb
+    doc: The amount of memory for each sorting thread in gigabytes.
     default: 2
     type: int
   - id: compressionLevel
+    doc: The compression level of the output BAM.
     default: 1
     type: int
   - id: readgroup
+    doc: A readgroup identifier.
     type:
       - string
       - 'null'
   - id: sortThreads
+    doc: The number of threads to use for sorting.
     type:
       - int
       - 'null'
   - id: threads
+    doc: The number of threads to use for alignment.
     default: 4
     type: int
   - id: memoryGb
+    doc: The amount of memory this job will use in gigabytes.
     type:
       - int
       - 'null'
   - id: timeMinutes
+    doc: The maximum amount of time the job will run in minutes.
     type:
       - int
       - 'null'
   - id: dockerImage
+    doc: The docker image used for this task. Changing this may result in errors which
+        the developers may choose not to address.
     default: quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
     type: string
 outputs:
   - id: outputBam
+    doc: The produced BAM file.
     type: File
     outputBinding:
         glob: $(inputs.outputPrefix + ".aln.bam")
   - id: outputHla
+    doc: The produced HLA file.
     type:
       - File
       - 'null'

@@ -1,11 +1,14 @@
 class: CommandLineTool
 id: CorrectUMItools
+doc: Marks duplicates using umitools group specifically for single-cell experiments
 inputs:
   - id: bam_input
+    doc: Aligned and sorted bam
     type: File
   - id: bam_index
     type: File
   - id: docker
+    doc: (optional) the docker image containing the runtime environment for this task
     default: quay.io/humancellatlas/secondary-analysis-umitools:0.0.1
     type: string
   - id: output_bam_filename
@@ -15,16 +18,21 @@ inputs:
     default: groupout.tsv
     type: string
   - id: machine_mem_mb
+    doc: (optional) the amount of memory (MiB) to provision for this task
     default: 16000
     type: int
   - id: cpu
+    doc: (optional) the number of cpus to provision for this task
     default: 1
     type: int
   - id: disk
+    doc: (optional) the amount of disk space (GiB) to provision for this task
     type:
       - int
       - 'null'
   - id: preemptible
+    doc: (optional) if non-zero, request a pre-emptible instance and allow for this
+        number of preemptions before running the task on a non preemptible machine
     default: 3
     type: int
 outputs:

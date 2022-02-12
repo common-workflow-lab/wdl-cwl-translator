@@ -4,108 +4,143 @@ $graph:
     id: Annotate
     inputs:
       - id: columns
+        doc: Comma-separated list of columns or tags to carry over from the annotation
+            file (see man page for details).
         default: []
         type:
             items: string
             type: array
       - id: force
+        doc: Continue even when parsing errors, such as undefined tags, are encountered.
         default: false
         type: boolean
       - id: keepSites
+        doc: Keep sites which do not pass -i and -e expressions instead of discarding
+            them.
         default: false
         type: boolean
       - id: noVersion
+        doc: Do not append version and command line information to the output VCF
+            header.
         default: false
         type: boolean
       - id: samples
+        doc: List of samples for sample stats, "-" to include all samples.
         default: []
         type:
             items: string
             type: array
       - id: singleOverlaps
+        doc: keep memory requirements low with very large annotation files.
         default: false
         type: boolean
       - id: removeAnns
+        doc: List of annotations to remove (see man page for details).
         default: []
         type:
             items: string
             type: array
       - id: inputFile
+        doc: A vcf or bcf file.
         type: File
       - id: inputFileIndex
+        doc: The index for the input vcf or bcf.
         type:
           - File
           - 'null'
       - id: outputPath
+        doc: The location the output VCF file should be written.
         default: output.vcf.gz
         type: string
       - id: annsFile
+        doc: Bgzip-compressed and tabix-indexed file with annotations (see man page
+            for details).
         type:
           - File
           - 'null'
       - id: annsFileIndex
+        doc: The index for annsFile.
         type:
           - File
           - 'null'
       - id: collapse
+        doc: Treat as identical records with <snps|indels|both|all|some|none>, see
+            man page for details.
         type:
           - string
           - 'null'
       - id: exclude
+        doc: Exclude sites for which the expression is true (see man page for details).
         type:
           - string
           - 'null'
       - id: headerLines
+        doc: Lines to append to the VCF header (see man page for details).
         type:
           - File
           - 'null'
       - id: newId
+        doc: Assign ID on the fly (e.g. --set-id +'%CHROM\_%POS').
         type:
           - string
           - 'null'
       - id: include
+        doc: Select sites for which the expression is true (see man page for details).
         type:
           - string
           - 'null'
       - id: markSites
+        doc: Annotate sites which are present ('+') or absent ('-') in the -a file
+            with a new INFO/TAG flag.
         type:
           - string
           - 'null'
       - id: regions
+        doc: Restrict to comma-separated list of regions.
         type:
           - string
           - 'null'
       - id: regionsFile
+        doc: Restrict to regions listed in a file.
         type:
           - File
           - 'null'
       - id: renameChrs
+        doc: rename chromosomes according to the map in file (see man page for details).
         type:
           - File
           - 'null'
       - id: samplesFile
+        doc: File of samples to include.
         type:
           - File
           - 'null'
       - id: threads
+        doc: Number of extra decompression threads [0].
         default: 0
         type: int
       - id: memory
+        doc: The amount of memory this job will use.
         default: 4G
         type: string
       - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
         type:
           - int
           - 'null'
       - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     outputs:
       - id: outputVcf
+        doc: Annotated VCF file.
         type: File
         outputBinding:
             glob: $(inputs.outputPath)
       - id: outputVcfIndex
+        doc: Index of the annotated VCF file.
         type:
           - File
           - 'null'
@@ -178,10 +213,13 @@ $graph:
     id: Filter
     inputs:
       - id: vcf
+        doc: The VCF file to operate on.
         type: File
       - id: vcfIndex
+        doc: The index for the VCF file.
         type: File
       - id: include
+        doc: Equivalent to the `-i` option.
         type:
           - string
           - 'null'
@@ -194,16 +232,21 @@ $graph:
           - string
           - 'null'
       - id: outputPath
+        doc: The location the output VCF file should be written.
         default: ./filtered.vcf.gz
         type: string
       - id: memory
+        doc: The amount of memory this job will use.
         default: 256M
         type: string
       - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
         type:
           - int
           - 'null'
       - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     outputs:
@@ -267,29 +310,38 @@ $graph:
     id: Sort
     inputs:
       - id: inputFile
+        doc: A vcf or bcf file.
         type: File
       - id: outputPath
+        doc: The location the output VCF file should be written.
         default: output.vcf.gz
         type: string
       - id: tmpDir
+        doc: The location of the temporary files during the bcftools sorting.
         default: ./sorting-tmp
         type: string
       - id: memory
+        doc: The amount of memory this job will use.
         default: 256M
         type: string
       - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
         type:
           - int
           - 'null'
       - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     outputs:
       - id: outputVcf
+        doc: Sorted VCF file.
         type: File
         outputBinding:
             glob: $(inputs.outputPath)
       - id: outputVcfIndex
+        doc: Index of sorted VCF file.
         type:
           - File
           - 'null'
@@ -345,114 +397,154 @@ $graph:
     id: Stats
     inputs:
       - id: inputVcf
+        doc: The VCF to be analysed.
         type: File
       - id: inputVcfIndex
+        doc: The index for the input VCF.
         type: File
       - id: outputPath
+        doc: The location the output VCF file should be written.
         type:
           - string
           - 'null'
       - id: firstAlleleOnly
+        doc: Include only 1st allele at multiallelic sites.
         default: false
         type: boolean
       - id: splitByID
+        doc: Collect stats for sites with ID separately (known vs novel).
         default: false
         type: boolean
       - id: samples
+        doc: List of samples for sample stats, "-" to include all samples.
         default: []
         type:
             items: string
             type: array
       - id: verbose
+        doc: Produce verbose per-site and per-sample output.
         default: false
         type: boolean
       - id: compareVcf
+        doc: When inputVcf and compareVCF are given, the program generates separate
+            stats for intersection and the complements. By default only sites are
+            compared, samples must be given to include also sample columns.
         type:
           - File
           - 'null'
       - id: compareVcfIndex
+        doc: Index for the compareVcf.
         type:
           - File
           - 'null'
       - id: afBins
+        doc: |-
+            Allele frequency bins, a list (0.1,0.5,1) or a file (0.1
+            0.5
+            1).
         type:
           - string
           - 'null'
       - id: afTag
+        doc: Allele frequency tag to use, by default estimated from AN,AC or GT.
         type:
           - string
           - 'null'
       - id: collapse
+        doc: Treat as identical records with <snps|indels|both|all|some|none>, see
+            man page for details.
         type:
           - string
           - 'null'
       - id: depth
+        doc: 'Depth distribution: min,max,bin size [0,500,1].'
         type:
           - string
           - 'null'
       - id: exclude
+        doc: Exclude sites for which the expression is true (see man page for details).
         type:
           - string
           - 'null'
       - id: exons
+        doc: Tab-delimited file with exons for indel frameshifts (chr,from,to; 1-based,
+            inclusive, bgzip compressed).
         type:
           - File
           - 'null'
       - id: applyFilters
+        doc: Require at least one of the listed FILTER strings (e.g. "PASS,.").
         type:
           - string
           - 'null'
       - id: fastaRef
+        doc: Faidx indexed reference sequence file to determine INDEL context.
         type:
           - File
           - 'null'
       - id: fastaRefIndex
+        doc: Index file (.fai) for fastaRef. Must be supplied if fastaRef is supplied.
         type:
           - File
           - 'null'
       - id: include
+        doc: Select sites for which the expression is true (see man page for details).
         type:
           - string
           - 'null'
       - id: regions
+        doc: Restrict to comma-separated list of regions.
         type:
           - string
           - 'null'
       - id: regionsFile
+        doc: Restrict to regions listed in a file.
         type:
           - File
           - 'null'
       - id: samplesFile
+        doc: File of samples to include.
         type:
           - File
           - 'null'
       - id: targets
+        doc: Similar to regions but streams rather than index-jumps.
         type:
           - string
           - 'null'
       - id: targetsFile
+        doc: Similar to regionsFile but streams rather than index-jumps.
         type:
           - File
           - 'null'
       - id: userTsTv
+        doc: <TAG[:min:max:n]>. Collect Ts/Tv stats for any tag using the given binning
+            [0:1:100].
         type:
           - string
           - 'null'
       - id: threads
+        doc: Number of extra decompression threads [0].
         default: 0
         type: int
       - id: memory
+        doc: The amount of memory this job will use.
         default: 256M
         type: string
       - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
         type:
           - int
           - 'null'
       - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     outputs:
       - id: stats
+        doc: Text file stats which is suitable for machine processing and can be plotted
+            using plot-vcfstats.
         type: File
         outputBinding:
             glob: '$(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats"
@@ -530,37 +622,48 @@ $graph:
     id: View
     inputs:
       - id: inputFile
+        doc: A vcf or bcf file.
         type: File
       - id: outputPath
+        doc: The location the output VCF file should be written.
         default: output.vcf
         type: string
       - id: excludeUncalled
+        doc: Exclude sites without a called genotype (see man page for details).
         default: false
         type: boolean
       - id: exclude
+        doc: Exclude sites for which the expression is true (see man page for details).
         type:
           - string
           - 'null'
       - id: include
+        doc: Select sites for which the expression is true (see man page for details).
         type:
           - string
           - 'null'
       - id: memory
+        doc: The amount of memory this job will use.
         default: 256M
         type: string
       - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
         type:
           - int
           - 'null'
       - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     outputs:
       - id: outputVcf
+        doc: VCF file.
         type: File
         outputBinding:
             glob: $("output.vcf")
       - id: outputVcfIndex
+        doc: Index of VCF file.
         type:
           - File
           - 'null'

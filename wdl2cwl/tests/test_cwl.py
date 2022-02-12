@@ -11,7 +11,7 @@ from .util import get_data
 
 def test_meta(caplog: pytest.LogCaptureFixture) -> None:
     """Test meta warning."""
-    main([get_data("wdl_files/TrimAdapters.wdl")])
+    main([get_data("wdl_files/InternalTasks.wdl")])
     assert "Skipping meta" in caplog.text
 
 
@@ -73,7 +73,6 @@ def test_wdl_stdout(
         captured = capsys.readouterr()
         log = caplog.text
         assert captured.out == file.read()
-        assert "Skipping parameter_meta" in log
 
 
 def test_wdl_url(
@@ -89,7 +88,6 @@ def test_wdl_url(
         captured = capsys.readouterr()
         log = caplog.text
         assert captured.out == file.read()
-        assert "Skipping parameter_meta" in log
 
 
 class TestObject(NamedTuple):

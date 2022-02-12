@@ -2,30 +2,42 @@ class: CommandLineTool
 id: Normalize
 inputs:
   - id: inputVCF
+    doc: The VCF file to process.
     type: File
   - id: inputVCFIndex
+    doc: The index of the VCF file to be processed.
     type: File
   - id: referenceFasta
+    doc: The reference fasta file which was also used for mapping.
     type: File
   - id: referenceFastaFai
+    doc: The index for the reference fasta file.
     type: File
   - id: ignoreMaskedRef
+    doc: Warns but does not exit when REF is inconsistent with masked reference sequence
+        for non SNPs.
     default: false
     type: boolean
   - id: outputPath
+    doc: The location the output VCF file should be written.
     default: ./vt/normalized_decomposed.vcf
     type: string
   - id: memory
+    doc: The memory required to run the programs.
     default: 4G
     type: string
   - id: timeMinutes
+    doc: The maximum amount of time the job will run in minutes.
     default: 30
     type: int
   - id: dockerImage
+    doc: The docker image used for this task. Changing this may result in errors which
+        the developers may choose not to address.
     default: quay.io/biocontainers/vt:0.57721--hdf88d34_2
     type: string
 outputs:
   - id: outputVcf
+    doc: Normalized & decomposed VCF file.
     type: File
     outputBinding:
         glob: $(inputs.outputPath)

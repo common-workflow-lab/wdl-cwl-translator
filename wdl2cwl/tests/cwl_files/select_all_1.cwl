@@ -9,6 +9,7 @@ inputs:
       - 'null'
 outputs:
   - id: first1
+    doc: amalgamation
     type:
         items: int
         type: array
