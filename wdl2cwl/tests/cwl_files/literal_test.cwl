@@ -1,5 +1,19 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: literal
+class: CommandLineTool
+requirements:
+  - class: InitialWorkDirRequirement
+    listing:
+      - entryname: script.bash
+        entry: |4
+
+            echo $(inputs.tenth.map(function(el) {return el.path}).join(" "))
+  - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
+hints:
+  - class: ResourceRequirement
+    outdirMin: 1024
 inputs:
   - id: first
     default: true
@@ -56,6 +70,9 @@ inputs:
     type:
         items: File
         type: array
+baseCommand:
+  - bash
+  - script.bash
 outputs:
   - id: result
     type: string
@@ -64,20 +81,3 @@ outputs:
             ' + inputs.fourth + ' ' + inputs.fifth.basename + ' ' + inputs.sixth.join(",")
             + ' ' + inputs.seventh.join(",") + ' ' + inputs.eighth.join(",") + ' '
             + inputs.nineth.join(",") + ' ' + inputs.tenth[0].basename + ',' + inputs.tenth[1].basename)
-requirements:
-  - class: InitialWorkDirRequirement
-    listing:
-      - entryname: script.bash
-        entry: |4
-
-            echo $(inputs.tenth.map(function(el) {return el.path}).join(" "))
-  - class: InlineJavascriptRequirement
-  - class: NetworkAccess
-    networkAccess: true
-hints:
-  - class: ResourceRequirement
-    outdirMin: 1024
-cwlVersion: v1.2
-baseCommand:
-  - bash
-  - script.bash

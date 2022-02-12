@@ -1,5 +1,57 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: RunDeepVariant
+class: CommandLineTool
+requirements:
+  - class: InitialWorkDirRequirement
+    listing:
+      - entryname: script.bash
+        entry: |4
+
+            set -e
+            mkdir reference_dir
+            ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
+            ln -s $(inputs.referenceFastaIndex.path) reference_dir/$(inputs.referenceFastaIndex.basename)
+            mkdir bam_dir
+            ln -s $(inputs.inputBam.path) bam_dir/$(inputs.inputBam.basename)
+            ln -s $(inputs.inputBamIndex.path) bam_dir/$(inputs.inputBamIndex.basename)
+            /opt/deepvariant/bin/run_deepvariant \
+            --ref reference_dir/$(inputs.referenceFasta.basename) \
+            --reads bam_dir/$(inputs.inputBam.basename) \
+            --model_type $(inputs.modelType) \
+            --output_vcf $(inputs.outputVcf) \
+            $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf) \
+            $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path) \
+            $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards) \
+            --regions  $(inputs.regions) \
+            $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName) \
+            $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs) \
+            $(inputs.VCFStatsReport === null ? "--novcf_stats_report" : "--vcf_stats_report")
+  - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: google/deepvariant:1.0.0
+  - class: ResourceRequirement
+    ramMin: |-
+        ${
+        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+        var memory = "";
+        if(unit==="KiB") memory = value/1024;
+        else if(unit==="MiB") memory = value;
+        else if(unit==="GiB") memory = value*1024;
+        else if(unit==="TiB") memory = value*1024*1024;
+        else if(unit==="B") memory = value/(1024*1024);
+        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+        else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+        else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+        else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+        return parseInt(memory);
+        }
+    outdirMin: 1024
+  - class: ToolTimeLimit
+    timelimit: $(inputs.timeMinutes * 60)
 inputs:
   - id: referenceFasta
     doc: Genome reference to use.
@@ -77,6 +129,9 @@ inputs:
         the developers may choose not to address.
     default: google/deepvariant:1.0.0
     type: string
+baseCommand:
+  - bash
+  - script.bash
 outputs:
   - id: outputVCF
     doc: Output VCF file.
@@ -109,58 +164,3 @@ outputs:
       - 'null'
     outputBinding:
         glob: $(inputs.outputGVcfIndex)
-requirements:
-  - class: InitialWorkDirRequirement
-    listing:
-      - entryname: script.bash
-        entry: |4
-
-            set -e
-            mkdir reference_dir
-            ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
-            ln -s $(inputs.referenceFastaIndex.path) reference_dir/$(inputs.referenceFastaIndex.basename)
-            mkdir bam_dir
-            ln -s $(inputs.inputBam.path) bam_dir/$(inputs.inputBam.basename)
-            ln -s $(inputs.inputBamIndex.path) bam_dir/$(inputs.inputBamIndex.basename)
-            /opt/deepvariant/bin/run_deepvariant \
-            --ref reference_dir/$(inputs.referenceFasta.basename) \
-            --reads bam_dir/$(inputs.inputBam.basename) \
-            --model_type $(inputs.modelType) \
-            --output_vcf $(inputs.outputVcf) \
-            $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf) \
-            $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path) \
-            $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards) \
-            --regions  $(inputs.regions) \
-            $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName) \
-            $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs) \
-            $(inputs.VCFStatsReport === null ? "--novcf_stats_report" : "--vcf_stats_report")
-  - class: InlineJavascriptRequirement
-  - class: NetworkAccess
-    networkAccess: true
-hints:
-  - class: DockerRequirement
-    dockerPull: google/deepvariant:1.0.0
-  - class: ResourceRequirement
-    ramMin: |-
-        ${
-        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-        var memory = "";
-        if(unit==="KiB") memory = value/1024;
-        else if(unit==="MiB") memory = value;
-        else if(unit==="GiB") memory = value*1024;
-        else if(unit==="TiB") memory = value*1024*1024;
-        else if(unit==="B") memory = value/(1024*1024);
-        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-        else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-        else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-        else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-        return parseInt(memory);
-        }
-    outdirMin: 1024
-  - class: ToolTimeLimit
-    timelimit: $(inputs.timeMinutes * 60)
-cwlVersion: v1.2
-baseCommand:
-  - bash
-  - script.bash

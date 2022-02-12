@@ -1,44 +1,6 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: Call
-inputs:
-  - id: bamFile
-    doc: The bam file to process.
-    type: File
-  - id: bamIndex
-    doc: The index of the bam file.
-    type: File
-  - id: referenceFasta
-    doc: The reference fasta file also used for mapping.
-    type: File
-  - id: referenceFastaFai
-    doc: Fasta index (.fai) file of the reference.
-    type: File
-  - id: sample
-    doc: The name of the sample.
-    type: string
-  - id: outputDir
-    doc: The location the output VCF file should be written.
-    default: ./smoove
-    type: string
-  - id: memory
-    doc: The memory required to run the programs.
-    default: 15G
-    type: string
-  - id: timeMinutes
-    doc: The maximum duration (in minutes) the tool is allowed to run.
-    default: 1440
-    type: int
-  - id: dockerImage
-    doc: The docker image used for this task. Changing this may result in errors which
-        the developers may choose not to address.
-    default: quay.io/biocontainers/smoove:0.2.5--0
-    type: string
-outputs:
-  - id: smooveVcf
-    doc: Calls of structural variants in VCF file.
-    type: File
-    outputBinding:
-        glob: $(inputs.outputDir + "/" + inputs.sample + "-smoove.genotyped.vcf.gz")
+class: CommandLineTool
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -80,7 +42,45 @@ hints:
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)
-cwlVersion: v1.2
+inputs:
+  - id: bamFile
+    doc: The bam file to process.
+    type: File
+  - id: bamIndex
+    doc: The index of the bam file.
+    type: File
+  - id: referenceFasta
+    doc: The reference fasta file also used for mapping.
+    type: File
+  - id: referenceFastaFai
+    doc: Fasta index (.fai) file of the reference.
+    type: File
+  - id: sample
+    doc: The name of the sample.
+    type: string
+  - id: outputDir
+    doc: The location the output VCF file should be written.
+    default: ./smoove
+    type: string
+  - id: memory
+    doc: The memory required to run the programs.
+    default: 15G
+    type: string
+  - id: timeMinutes
+    doc: The maximum duration (in minutes) the tool is allowed to run.
+    default: 1440
+    type: int
+  - id: dockerImage
+    doc: The docker image used for this task. Changing this may result in errors which
+        the developers may choose not to address.
+    default: quay.io/biocontainers/smoove:0.2.5--0
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: smooveVcf
+    doc: Calls of structural variants in VCF file.
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir + "/" + inputs.sample + "-smoove.genotyped.vcf.gz")

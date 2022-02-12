@@ -1,18 +1,11 @@
-class: Workflow
+cwlVersion: v1.2
 id: gwas
+class: Workflow
 inputs:
   - id: vcf
     type: File
   - id: metadata_csv
     type: File
-outputs:
-  - id: gwas.logistic
-    outputSource: run_gwas/logistic
-    type: File
-  - id: gwas.manhattan_plot
-    outputSource: create_plot/manhattan_plot
-    type: File
-cwlVersion: v1.2
 steps:
   - id: parse_metadata
     in:
@@ -191,3 +184,10 @@ steps:
         baseCommand:
           - bash
           - script.bash
+outputs:
+  - id: gwas.logistic
+    outputSource: run_gwas/logistic
+    type: File
+  - id: gwas.manhattan_plot
+    outputSource: create_plot/manhattan_plot
+    type: File

@@ -1,7 +1,67 @@
 cwlVersion: v1.2
 $graph:
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: Annotate
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p "\$(dirname $(inputs.outputPath))"
+                bcftools annotate \
+                -o $(inputs.outputPath) \
+                -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
+                $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path) \
+                $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
+                $(inputs.columns.length > 0 ? "--columns" : "") $(inputs.columns.join(",")) \
+                $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
+                $(inputs.force ? "--force" : "") \
+                $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines.path) \
+                $(inputs.newId === null ? "" : "--set-id " + inputs.newId) \
+                $(inputs.include === null ? "" : "--include " + inputs.include) \
+                $(inputs.keepSites ? "--keep-sites" : "") \
+                $(inputs.markSites === null ? "" : "--mark-sites " + inputs.markSites) \
+                $(inputs.noVersion ? "--no-version" : "") \
+                $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
+                $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
+                $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs.path) \
+                $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
+                $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
+                $(inputs.singleOverlaps ? "--single-overlaps" : "") \
+                $(inputs.removeAnns.length > 0 ? "--remove" : "") $(inputs.removeAnns.join(",")) \
+                $(inputs.inputFile.path)
+
+                $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath : "")
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(60 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: columns
         doc: Comma-separated list of columns or tags to carry over from the annotation
@@ -133,6 +193,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: outputVcf
         doc: Annotated VCF file.
@@ -146,118 +209,9 @@ $graph:
           - 'null'
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPath))"
-                bcftools annotate \
-                -o $(inputs.outputPath) \
-                -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
-                $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path) \
-                $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
-                $(inputs.columns.length > 0 ? "--columns" : "") $(inputs.columns.join(",")) \
-                $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
-                $(inputs.force ? "--force" : "") \
-                $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines.path) \
-                $(inputs.newId === null ? "" : "--set-id " + inputs.newId) \
-                $(inputs.include === null ? "" : "--include " + inputs.include) \
-                $(inputs.keepSites ? "--keep-sites" : "") \
-                $(inputs.markSites === null ? "" : "--mark-sites " + inputs.markSites) \
-                $(inputs.noVersion ? "--no-version" : "") \
-                $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
-                $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
-                $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs.path) \
-                $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
-                $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
-                $(inputs.singleOverlaps ? "--single-overlaps" : "") \
-                $(inputs.removeAnns.length > 0 ? "--remove" : "") $(inputs.removeAnns.join(",")) \
-                $(inputs.inputFile.path)
-
-                $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath : "")
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
-      - class: ResourceRequirement
-        ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(60 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: Filter
-    inputs:
-      - id: vcf
-        doc: The VCF file to operate on.
-        type: File
-      - id: vcfIndex
-        doc: The index for the VCF file.
-        type: File
-      - id: include
-        doc: Equivalent to the `-i` option.
-        type:
-          - string
-          - 'null'
-      - id: exclude
-        type:
-          - string
-          - 'null'
-      - id: softFilter
-        type:
-          - string
-          - 'null'
-      - id: outputPath
-        doc: The location the output VCF file should be written.
-        default: ./filtered.vcf.gz
-        type: string
-      - id: memory
-        doc: The amount of memory this job will use.
-        default: 256M
-        type: string
-      - id: timeMinutes
-        doc: The maximum amount of time the job will run in minutes.
-        type:
-          - int
-          - 'null'
-      - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
-        type: string
-    outputs:
-      - id: outputVcf
-        type: File
-        outputBinding:
-            glob: $(inputs.outputPath)
-      - id: outputVcfIndex
-        type: File
-        outputBinding:
-            glob: $(inputs.outputPath + ".tbi")
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -302,23 +256,29 @@ $graph:
       - class: ToolTimeLimit
         timelimit: $(1 + Math.ceil((function(size_of=0){inputs.vcf.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3)  * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: Sort
     inputs:
-      - id: inputFile
-        doc: A vcf or bcf file.
+      - id: vcf
+        doc: The VCF file to operate on.
         type: File
+      - id: vcfIndex
+        doc: The index for the VCF file.
+        type: File
+      - id: include
+        doc: Equivalent to the `-i` option.
+        type:
+          - string
+          - 'null'
+      - id: exclude
+        type:
+          - string
+          - 'null'
+      - id: softFilter
+        type:
+          - string
+          - 'null'
       - id: outputPath
         doc: The location the output VCF file should be written.
-        default: output.vcf.gz
-        type: string
-      - id: tmpDir
-        doc: The location of the temporary files during the bcftools sorting.
-        default: ./sorting-tmp
+        default: ./filtered.vcf.gz
         type: string
       - id: memory
         doc: The amount of memory this job will use.
@@ -334,19 +294,21 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: outputVcf
-        doc: Sorted VCF file.
         type: File
         outputBinding:
             glob: $(inputs.outputPath)
       - id: outputVcfIndex
-        doc: Index of sorted VCF file.
-        type:
-          - File
-          - 'null'
+        type: File
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
+  - cwlVersion: v1.2
+    id: Sort
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -389,12 +351,116 @@ $graph:
       - class: ToolTimeLimit
         timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3)  * 60)
-    cwlVersion: v1.2
+    inputs:
+      - id: inputFile
+        doc: A vcf or bcf file.
+        type: File
+      - id: outputPath
+        doc: The location the output VCF file should be written.
+        default: output.vcf.gz
+        type: string
+      - id: tmpDir
+        doc: The location of the temporary files during the bcftools sorting.
+        default: ./sorting-tmp
+        type: string
+      - id: memory
+        doc: The amount of memory this job will use.
+        default: 256M
+        type: string
+      - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
+        type:
+          - int
+          - 'null'
+      - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
+        default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: outputVcf
+        doc: Sorted VCF file.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputPath)
+      - id: outputVcfIndex
+        doc: Index of sorted VCF file.
+        type:
+          - File
+          - 'null'
+        outputBinding:
+            glob: $(inputs.outputPath + ".tbi")
+  - cwlVersion: v1.2
     id: Stats
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p \$(dirname $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath))
+                mkdir fastaRef_dir  # to ensure correct localization
+                ln -s $(inputs.fastaRef === null ? "" : inputs.fastaRef.path) fastaRef_dir/\$(basename $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))
+                ln -s $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path) fastaRef_dir/\$(basename $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path))
+                bcftools stats \
+                $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
+                $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
+                $(inputs.firstAlleleOnly ? "--1st-allele-only" : "") \
+                $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
+                $(inputs.depth === null ? "" : "--depth " + inputs.depth) \
+                $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
+                $(inputs.exons === null ? "" : "--exons " + inputs.exons.path) \
+                $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
+                $(inputs.fastaRef === null ? "" : "--fasta-ref fastaRef_dir/$(basename " + inputs.fastaRef.path + ")") \
+                $(inputs.include === null ? "" : "--include " + inputs.include) \
+                $(inputs.splitByID ? "--split-by-ID" : "") \
+                $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
+                $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
+                $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
+                $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
+                $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
+                $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path) \
+                $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
+                --threads $(inputs.threads) \
+                $(inputs.verbose ? "--verbose" : "") \
+                $(inputs.inputVcf.path) $(inputs.compareVcf === null ? "" : inputs.compareVcf.path) > $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)
+                sed -i "s=\$(dirname $(inputs.inputVcf.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
+                sed -i "s=\$(dirname $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
+      - class: ResourceRequirement
+        coresMin: $(inputs.threads + 1)
+        ramMin: |-
+            ${
+            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: '$(1 + 2 * Math.ceil((function(size_of=0){[inputs.inputVcf.path,
+            inputs.compareVcf === null ? "" : inputs.compareVcf.path].filter(function(element)
+            { return element !== null }) .forEach(function(element){ if (element)
+            {size_of += element.size}})}) / 1000^3)  * 60)'
     inputs:
       - id: inputVcf
         doc: The VCF to be analysed.
@@ -541,6 +607,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: stats
         doc: Text file stats which is suitable for machine processing and can be plotted
@@ -549,126 +618,9 @@ $graph:
         outputBinding:
             glob: '$(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats"
                 : inputs.outputPath)'
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p \$(dirname $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath))
-                mkdir fastaRef_dir  # to ensure correct localization
-                ln -s $(inputs.fastaRef === null ? "" : inputs.fastaRef.path) fastaRef_dir/\$(basename $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))
-                ln -s $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path) fastaRef_dir/\$(basename $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path))
-                bcftools stats \
-                $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
-                $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
-                $(inputs.firstAlleleOnly ? "--1st-allele-only" : "") \
-                $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
-                $(inputs.depth === null ? "" : "--depth " + inputs.depth) \
-                $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
-                $(inputs.exons === null ? "" : "--exons " + inputs.exons.path) \
-                $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
-                $(inputs.fastaRef === null ? "" : "--fasta-ref fastaRef_dir/$(basename " + inputs.fastaRef.path + ")") \
-                $(inputs.include === null ? "" : "--include " + inputs.include) \
-                $(inputs.splitByID ? "--split-by-ID" : "") \
-                $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
-                $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
-                $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
-                $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
-                $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
-                $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path) \
-                $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
-                --threads $(inputs.threads) \
-                $(inputs.verbose ? "--verbose" : "") \
-                $(inputs.inputVcf.path) $(inputs.compareVcf === null ? "" : inputs.compareVcf.path) > $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)
-                sed -i "s=\$(dirname $(inputs.inputVcf.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
-                sed -i "s=\$(dirname $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
-      - class: ResourceRequirement
-        coresMin: $(inputs.threads + 1)
-        ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: '$(1 + 2 * Math.ceil((function(size_of=0){[inputs.inputVcf.path,
-            inputs.compareVcf === null ? "" : inputs.compareVcf.path].filter(function(element)
-            { return element !== null }) .forEach(function(element){ if (element)
-            {size_of += element.size}})}) / 1000^3)  * 60)'
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: View
-    inputs:
-      - id: inputFile
-        doc: A vcf or bcf file.
-        type: File
-      - id: outputPath
-        doc: The location the output VCF file should be written.
-        default: output.vcf
-        type: string
-      - id: excludeUncalled
-        doc: Exclude sites without a called genotype (see man page for details).
-        default: false
-        type: boolean
-      - id: exclude
-        doc: Exclude sites for which the expression is true (see man page for details).
-        type:
-          - string
-          - 'null'
-      - id: include
-        doc: Select sites for which the expression is true (see man page for details).
-        type:
-          - string
-          - 'null'
-      - id: memory
-        doc: The amount of memory this job will use.
-        default: 256M
-        type: string
-      - id: timeMinutes
-        doc: The maximum amount of time the job will run in minutes.
-        type:
-          - int
-          - 'null'
-      - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
-        type: string
-    outputs:
-      - id: outputVcf
-        doc: VCF file.
-        type: File
-        outputBinding:
-            glob: $("output.vcf")
-      - id: outputVcfIndex
-        doc: Index of VCF file.
-        type:
-          - File
-          - 'null'
-        outputBinding:
-            glob: $("output.vcf" + ".tbi")
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -713,7 +665,55 @@ $graph:
       - class: ToolTimeLimit
         timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3)  * 60)
-    cwlVersion: v1.2
+    inputs:
+      - id: inputFile
+        doc: A vcf or bcf file.
+        type: File
+      - id: outputPath
+        doc: The location the output VCF file should be written.
+        default: output.vcf
+        type: string
+      - id: excludeUncalled
+        doc: Exclude sites without a called genotype (see man page for details).
+        default: false
+        type: boolean
+      - id: exclude
+        doc: Exclude sites for which the expression is true (see man page for details).
+        type:
+          - string
+          - 'null'
+      - id: include
+        doc: Select sites for which the expression is true (see man page for details).
+        type:
+          - string
+          - 'null'
+      - id: memory
+        doc: The amount of memory this job will use.
+        default: 256M
+        type: string
+      - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
+        type:
+          - int
+          - 'null'
+      - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
+        default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
+        type: string
     baseCommand:
       - bash
       - script.bash
+    outputs:
+      - id: outputVcf
+        doc: VCF file.
+        type: File
+        outputBinding:
+            glob: $("output.vcf")
+      - id: outputVcfIndex
+        doc: Index of VCF file.
+        type:
+          - File
+          - 'null'
+        outputBinding:
+            glob: $("output.vcf" + ".tbi")

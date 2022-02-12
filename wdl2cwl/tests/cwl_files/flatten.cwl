@@ -1,5 +1,13 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: echo
+class: CommandLineTool
+requirements:
+  - class: InlineJavascriptRequirement
+  - class: NetworkAccess
+    networkAccess: true
+hints:
+  - class: ResourceRequirement
+    outdirMin: 1024
 inputs:
   - id: a_s
     type:
@@ -9,6 +17,8 @@ inputs:
     type:
         items: string
         type: array
+baseCommand:
+  - 'true'
 outputs:
   - id: out_s
     type:
@@ -24,13 +34,3 @@ outputs:
         type: array
     outputBinding:
         outputEval: $(inputs.a_s)
-requirements:
-  - class: InlineJavascriptRequirement
-  - class: NetworkAccess
-    networkAccess: true
-hints:
-  - class: ResourceRequirement
-    outdirMin: 1024
-cwlVersion: v1.2
-baseCommand:
-  - 'true'

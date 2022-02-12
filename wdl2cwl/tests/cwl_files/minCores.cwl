@@ -1,9 +1,6 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: Echo
-inputs: []
-outputs:
-  - id: out
-    type: stdout
+class: CommandLineTool
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -20,7 +17,10 @@ hints:
   - class: ResourceRequirement
     coresMin: 8
     outdirMin: 1024
-cwlVersion: v1.2
+inputs: []
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: out
+    type: stdout

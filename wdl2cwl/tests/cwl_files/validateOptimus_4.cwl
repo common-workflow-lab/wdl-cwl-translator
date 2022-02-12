@@ -1,21 +1,6 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: ValidateMetrics
-inputs:
-  - id: cell_metrics
-    type: File
-  - id: gene_metrics
-    type: File
-  - id: expected_cell_metric_hash
-    type: string
-  - id: expected_gene_metric_hash
-    type: string
-outputs:
-  - id: result
-    type: string
-    outputBinding:
-        loadContents: true
-        glob: result.txt
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+class: CommandLineTool
 requirements:
   - class: InitialWorkDirRequirement
     listing:
@@ -63,7 +48,22 @@ hints:
     outdirMin: $((Math.ceil((function(size_of=0){inputs.cell_metrics.path.forEach(function(element){
         if (element) {size_of += element.size}})}) / 1000^3 + (function(size_of=0){inputs.gene_metrics.path.forEach(function(element){
         if (element) {size_of += element.size}})}) / 1000^3 * 1.1) ) * 1024)
-cwlVersion: v1.2
+inputs:
+  - id: cell_metrics
+    type: File
+  - id: gene_metrics
+    type: File
+  - id: expected_cell_metric_hash
+    type: string
+  - id: expected_gene_metric_hash
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: result
+    type: string
+    outputBinding:
+        loadContents: true
+        glob: result.txt
+        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))

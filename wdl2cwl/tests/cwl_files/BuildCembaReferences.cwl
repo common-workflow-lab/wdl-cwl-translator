@@ -1,5 +1,6 @@
-class: Workflow
+cwlVersion: v1.2
 id: BuildCembaReferences
+class: Workflow
 inputs:
   - id: reference_fasta
     type: File
@@ -7,30 +8,6 @@ inputs:
     type:
       - File
       - 'null'
-outputs:
-  - id: BuildCembaReferences.reference_fasta_dict
-    outputSource: CreateReferenceDictionary/ref_dict_output
-    type: File
-  - id: BuildCembaReferences.reference_fasta_index
-    outputSource: CreateReferenceFastaIndex/ref_index_output
-    type: File
-  - id: BuildCembaReferences.fwd_converted_reference_fasta
-    outputSource: Convert/fwd_converted_reference_fasta_output
-    type: File
-  - id: BuildCembaReferences.rev_converted_reference_fasta
-    outputSource: Convert/rev_converted_reference_fasta_output
-    type: File
-  - id: BuildCembaReferences.fwd_bowtie2_index_files
-    outputSource: IndexForward/bowtie2_index_files
-    type:
-        items: File
-        type: array
-  - id: BuildCembaReferences.rev_bowtie2_index_files
-    outputSource: IndexReverse/bowtie2_index_files
-    type:
-        items: File
-        type: array
-cwlVersion: v1.2
 steps:
   - id: Convert
     in:
@@ -366,3 +343,26 @@ steps:
         baseCommand:
           - bash
           - script.bash
+outputs:
+  - id: BuildCembaReferences.reference_fasta_dict
+    outputSource: CreateReferenceDictionary/ref_dict_output
+    type: File
+  - id: BuildCembaReferences.reference_fasta_index
+    outputSource: CreateReferenceFastaIndex/ref_index_output
+    type: File
+  - id: BuildCembaReferences.fwd_converted_reference_fasta
+    outputSource: Convert/fwd_converted_reference_fasta_output
+    type: File
+  - id: BuildCembaReferences.rev_converted_reference_fasta
+    outputSource: Convert/rev_converted_reference_fasta_output
+    type: File
+  - id: BuildCembaReferences.fwd_bowtie2_index_files
+    outputSource: IndexForward/bowtie2_index_files
+    type:
+        items: File
+        type: array
+  - id: BuildCembaReferences.rev_bowtie2_index_files
+    outputSource: IndexReverse/bowtie2_index_files
+    type:
+        items: File
+        type: array

@@ -1,7 +1,55 @@
 cwlVersion: v1.2
 $graph:
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: AnnotateIntervals
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p "\$(dirname $(inputs.annotatedIntervalsPath))"
+                mkdir reference_dir
+                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
+                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
+                ln -s $(inputs.referenceFastaFai.path) reference_dir/$(inputs.referenceFastaFai.basename)
+                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
+                AnnotateIntervals \
+                -R reference_dir/$(inputs.referenceFasta.basename) \
+                -L $(inputs.intervals.path) \
+                $(inputs.mappabilityTrack === null ? "" : "--mappability-track  " + inputs.mappabilityTrack.path) \
+                $(inputs.segmentalDuplicationTrack === null ? "" : "--segmental-duplication-track " + inputs.segmentalDuplicationTrack.path) \
+                --feature-query-lookahead $(inputs.featureQueryLookahead) \
+                --interval-merging-rule $(inputs.intervalMergingRule) \
+                -O $(inputs.annotatedIntervalsPath)
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(inputs.timeMinutes * 60)
     inputs:
       - id: referenceFasta
         doc: The reference fasta file.
@@ -56,6 +104,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: annotatedIntervals
         doc: This is a tab-separated values (TSV) file with a SAM-style header containing
@@ -64,122 +115,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.annotatedIntervalsPath)
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p "\$(dirname $(inputs.annotatedIntervalsPath))"
-                mkdir reference_dir
-                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
-                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
-                ln -s $(inputs.referenceFastaFai.path) reference_dir/$(inputs.referenceFastaFai.basename)
-                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                AnnotateIntervals \
-                -R reference_dir/$(inputs.referenceFasta.basename) \
-                -L $(inputs.intervals.path) \
-                $(inputs.mappabilityTrack === null ? "" : "--mappability-track  " + inputs.mappabilityTrack.path) \
-                $(inputs.segmentalDuplicationTrack === null ? "" : "--segmental-duplication-track " + inputs.segmentalDuplicationTrack.path) \
-                --feature-query-lookahead $(inputs.featureQueryLookahead) \
-                --interval-merging-rule $(inputs.intervalMergingRule) \
-                -O $(inputs.annotatedIntervalsPath)
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-      - class: ResourceRequirement
-        ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(inputs.timeMinutes * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: ApplyBQSR
-    inputs:
-      - id: inputBam
-        doc: The BAM file which should be recalibrated.
-        type: File
-      - id: inputBamIndex
-        doc: The input BAM file's index.
-        type: File
-      - id: outputBamPath
-        doc: The location the resulting BAM file should be written.
-        type: string
-      - id: recalibrationReport
-        doc: The BQSR report the be used for recalibration.
-        type: File
-      - id: sequenceGroupInterval
-        doc: Bed files describing the regions to operate on.
-        default: []
-        type:
-            items: File
-            type: array
-      - id: referenceFasta
-        doc: The reference fasta file which was also used for mapping.
-        type: File
-      - id: referenceFastaDict
-        doc: The sequence dictionary associated with the reference fasta file.
-        type: File
-      - id: referenceFastaFai
-        doc: The index for the reference fasta file.
-        type: File
-      - id: javaXmxMb
-        doc: The maximum memory available to the program in megabytes. Should be lower
-            than `memoryMb` to accommodate JVM overhead.
-        default: 2048
-        type: int
-      - id: memoryMb
-        doc: The amount of memory this job will use in megabytes.
-        type:
-          - int
-          - 'null'
-      - id: timeMinutes
-        doc: The maximum amount of time the job will run in minutes.
-        default: 120
-        type: int
-      - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-        type: string
-    outputs:
-      - id: recalibratedBam
-        doc: A BAM file containing the recalibrated read data.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputBamPath)
-      - id: recalibratedBamIndex
-        doc: Index of recalibrated BAM file.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputBamPath.replace("\.bam$", ".bai") )
-      - id: recalibratedBamMd5
-        doc: MD5 of recalibrated BAM file.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputBamPath + ".md5")
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -234,12 +172,125 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
-    cwlVersion: v1.2
+    inputs:
+      - id: inputBam
+        doc: The BAM file which should be recalibrated.
+        type: File
+      - id: inputBamIndex
+        doc: The input BAM file's index.
+        type: File
+      - id: outputBamPath
+        doc: The location the resulting BAM file should be written.
+        type: string
+      - id: recalibrationReport
+        doc: The BQSR report the be used for recalibration.
+        type: File
+      - id: sequenceGroupInterval
+        doc: Bed files describing the regions to operate on.
+        default: []
+        type:
+            items: File
+            type: array
+      - id: referenceFasta
+        doc: The reference fasta file which was also used for mapping.
+        type: File
+      - id: referenceFastaDict
+        doc: The sequence dictionary associated with the reference fasta file.
+        type: File
+      - id: referenceFastaFai
+        doc: The index for the reference fasta file.
+        type: File
+      - id: javaXmxMb
+        doc: The maximum memory available to the program in megabytes. Should be lower
+            than `memoryMb` to accommodate JVM overhead.
+        default: 2048
+        type: int
+      - id: memoryMb
+        doc: The amount of memory this job will use in megabytes.
+        type:
+          - int
+          - 'null'
+      - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
+        default: 120
+        type: int
+      - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
+        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: recalibratedBam
+        doc: A BAM file containing the recalibrated read data.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputBamPath)
+      - id: recalibratedBamIndex
+        doc: Index of recalibrated BAM file.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputBamPath.replace("\.bam$", ".bai") )
+      - id: recalibratedBamMd5
+        doc: MD5 of recalibrated BAM file.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputBamPath + ".md5")
+  - cwlVersion: v1.2
     id: BaseRecalibrator
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p "\$(dirname $(inputs.recalibrationReportPath))"
+                mkdir bam_dir
+                ln -s $(inputs.inputBam.path) bam_dir/$(inputs.inputBam.basename)
+                ln -s $(inputs.inputBamIndex.path) bam_dir/$(inputs.inputBamIndex.basename)
+                mkdir reference_dir
+                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
+                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
+                ln -s $(inputs.referenceFastaFai.path) reference_dir/$(inputs.referenceFastaFai.basename)
+                gatk --java-options '-Xmx$(inputs.javaXmxMb)M -XX:ParallelGCThreads=1' \
+                BaseRecalibrator \
+                -R reference_dir/$(inputs.referenceFasta.basename) \
+                -I bam_dir/$(inputs.inputBam.basename) \
+                --use-original-qualities \
+                -O $(inputs.recalibrationReportPath) \
+                $(inputs.knownIndelsSitesVCFs.length > 0 ? "--known-sites" : "") $(inputs.knownIndelsSitesVCFs.map(function(el) {return el.path}).join(" --known-sites ")) \
+                $(inputs.dbsnpVCF === null ? "" : "--known-sites " + inputs.dbsnpVCF.path) \
+                $(inputs.sequenceGroupInterval.length > 0 ? "-L" : "") $(inputs.sequenceGroupInterval.map(function(el) {return el.path}).join(" -L "))
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = "M";
+            var value = parseInt(`${inputs.javaXmxMb + 512}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(inputs.timeMinutes * 60)
     inputs:
       - id: inputBam
         doc: The BAM file to generate a BQSR report for.
@@ -306,106 +357,18 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: recalibrationReport
         doc: A GATK Report file with many tables.
         type: File
         outputBinding:
             glob: $(inputs.recalibrationReportPath)
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p "\$(dirname $(inputs.recalibrationReportPath))"
-                mkdir bam_dir
-                ln -s $(inputs.inputBam.path) bam_dir/$(inputs.inputBam.basename)
-                ln -s $(inputs.inputBamIndex.path) bam_dir/$(inputs.inputBamIndex.basename)
-                mkdir reference_dir
-                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
-                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
-                ln -s $(inputs.referenceFastaFai.path) reference_dir/$(inputs.referenceFastaFai.basename)
-                gatk --java-options '-Xmx$(inputs.javaXmxMb)M -XX:ParallelGCThreads=1' \
-                BaseRecalibrator \
-                -R reference_dir/$(inputs.referenceFasta.basename) \
-                -I bam_dir/$(inputs.inputBam.basename) \
-                --use-original-qualities \
-                -O $(inputs.recalibrationReportPath) \
-                $(inputs.knownIndelsSitesVCFs.length > 0 ? "--known-sites" : "") $(inputs.knownIndelsSitesVCFs.map(function(el) {return el.path}).join(" --known-sites ")) \
-                $(inputs.dbsnpVCF === null ? "" : "--known-sites " + inputs.dbsnpVCF.path) \
-                $(inputs.sequenceGroupInterval.length > 0 ? "-L" : "") $(inputs.sequenceGroupInterval.map(function(el) {return el.path}).join(" -L "))
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-      - class: ResourceRequirement
-        ramMin: |-
-            ${
-            var unit = "M";
-            var value = parseInt(`${inputs.javaXmxMb + 512}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(inputs.timeMinutes * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: CalculateContamination
-    inputs:
-      - id: tumorPileups
-        doc: The pileup summary of a tumor/case sample.
-        type: File
-      - id: normalPileups
-        doc: The pileup summary of the normal/control sample.
-        type:
-          - File
-          - 'null'
-      - id: javaXmx
-        doc: The maximum memory available to the program. Should be lower than `memory`
-            to accommodate JVM overhead.
-        default: 12G
-        type: string
-      - id: memory
-        doc: The amount of memory this job will use.
-        default: 13G
-        type: string
-      - id: timeMinutes
-        doc: The maximum amount of time the job will run in minutes.
-        default: 180
-        type: int
-      - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-        type: string
-    outputs:
-      - id: contaminationTable
-        doc: Table with fractions of reads from cross-sample contamination.
-        type: File
-        outputBinding:
-            glob: contamination.table
-      - id: mafTumorSegments
-        doc: Tumor segments table.
-        type: File
-        outputBinding:
-            glob: segments.table
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -445,52 +408,50 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CallCopyRatioSegments
     inputs:
-      - id: outputPrefix
-        doc: The prefix for the output files.
-        type: string
-      - id: copyRatioSegments
-        doc: The copy ratios file generated by gatk ModelSegments.
+      - id: tumorPileups
+        doc: The pileup summary of a tumor/case sample.
         type: File
+      - id: normalPileups
+        doc: The pileup summary of the normal/control sample.
+        type:
+          - File
+          - 'null'
       - id: javaXmx
         doc: The maximum memory available to the program. Should be lower than `memory`
             to accommodate JVM overhead.
-        default: 2G
+        default: 12G
         type: string
       - id: memory
         doc: The amount of memory this job will use.
-        default: 3G
+        default: 13G
         type: string
       - id: timeMinutes
         doc: The maximum amount of time the job will run in minutes.
-        default: 2
+        default: 180
         type: int
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: calledSegments
-        doc: This is a tab-separated values (TSV) file with a SAM-style header containing
-            a read group sample name, a sequence dictionary, a row specifying the
-            column headers contained in CalledCopyRatioSegmentCollection.CalledCopyRatioSegmentTableColumn,
-            and the corresponding entry rows.
+      - id: contaminationTable
+        doc: Table with fractions of reads from cross-sample contamination.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + ".called.seg")
-      - id: calledSegmentsIgv
-        doc: This is a tab-separated values (TSV) file with CBS-format column headers
-            and the corresponding entry rows that can be plotted using IGV.
+            glob: contamination.table
+      - id: mafTumorSegments
+        doc: Tumor segments table.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + ".called.igv.seg")
+            glob: segments.table
+  - cwlVersion: v1.2
+    id: CallCopyRatioSegments
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -529,68 +490,52 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CollectAllelicCounts
     inputs:
-      - id: allelicCountsPath
-        doc: The path the output should be written to.
-        default: allelic_counts.tsv
+      - id: outputPrefix
+        doc: The prefix for the output files.
         type: string
-      - id: commonVariantSites
-        doc: Interval list or vcf of common variant sites (to retrieve the allelic
-            counts for).
+      - id: copyRatioSegments
+        doc: The copy ratios file generated by gatk ModelSegments.
         type: File
-      - id: inputBam
-        doc: The BAM file to generate counts for.
-        type: File
-      - id: inputBamIndex
-        doc: The index of the input BAM file.
-        type: File
-      - id: referenceFasta
-        doc: The reference fasta file.
-        type: File
-      - id: referenceFastaDict
-        doc: The sequence dictionary associated with the reference fasta file.
-        type: File
-      - id: referenceFastaFai
-        doc: The index for the reference fasta file.
-        type: File
-      - id: commonVariantSitesIndex
-        doc: The index for commonVariantSites.
-        type:
-          - File
-          - 'null'
       - id: javaXmx
         doc: The maximum memory available to the program. Should be lower than `memory`
             to accommodate JVM overhead.
-        default: 10G
+        default: 2G
         type: string
       - id: memory
         doc: The amount of memory this job will use.
-        default: 11G
+        default: 3G
         type: string
       - id: timeMinutes
         doc: The maximum amount of time the job will run in minutes.
-        default: 120
+        default: 2
         type: int
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: allelicCounts
+      - id: calledSegments
         doc: This is a tab-separated values (TSV) file with a SAM-style header containing
             a read group sample name, a sequence dictionary, a row specifying the
-            column headers contained in AllelicCountCollection.AllelicCountTableColumn,
+            column headers contained in CalledCopyRatioSegmentCollection.CalledCopyRatioSegmentTableColumn,
             and the corresponding entry rows.
         type: File
         outputBinding:
-            glob: $(inputs.allelicCountsPath)
+            glob: $(inputs.outputPrefix + ".called.seg")
+      - id: calledSegmentsIgv
+        doc: This is a tab-separated values (TSV) file with CBS-format column headers
+            and the corresponding entry rows that can be plotted using IGV.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputPrefix + ".called.igv.seg")
+  - cwlVersion: v1.2
+    id: CollectAllelicCounts
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -638,25 +583,20 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CollectReadCounts
     inputs:
-      - id: countsPath
-        doc: The location the output should be written to.
-        default: readcounts.hdf5
+      - id: allelicCountsPath
+        doc: The path the output should be written to.
+        default: allelic_counts.tsv
         type: string
-      - id: intervals
-        doc: The intervals to collect counts for.
+      - id: commonVariantSites
+        doc: Interval list or vcf of common variant sites (to retrieve the allelic
+            counts for).
         type: File
       - id: inputBam
-        doc: The BAM file to determine the coverage for.
+        doc: The BAM file to generate counts for.
         type: File
       - id: inputBamIndex
-        doc: The input BAM file's index.
+        doc: The index of the input BAM file.
         type: File
       - id: referenceFasta
         doc: The reference fasta file.
@@ -667,35 +607,44 @@ $graph:
       - id: referenceFastaFai
         doc: The index for the reference fasta file.
         type: File
-      - id: intervalMergingRule
-        doc: Equivalent to gatk CollectReadCounts' `--interval-merging-rule` option.
-        default: OVERLAPPING_ONLY
-        type: string
+      - id: commonVariantSitesIndex
+        doc: The index for commonVariantSites.
+        type:
+          - File
+          - 'null'
       - id: javaXmx
         doc: The maximum memory available to the program. Should be lower than `memory`
             to accommodate JVM overhead.
-        default: 7G
+        default: 10G
         type: string
       - id: memory
         doc: The amount of memory this job will use.
-        default: 8G
+        default: 11G
         type: string
       - id: timeMinutes
         doc: The maximum amount of time the job will run in minutes.
-        type:
-          - int
-          - 'null'
+        default: 120
+        type: int
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: counts
-        doc: Read counts at specified intervals.
+      - id: allelicCounts
+        doc: This is a tab-separated values (TSV) file with a SAM-style header containing
+            a read group sample name, a sequence dictionary, a row specifying the
+            column headers contained in AllelicCountCollection.AllelicCountTableColumn,
+            and the corresponding entry rows.
         type: File
         outputBinding:
-            glob: $(inputs.countsPath)
+            glob: $(inputs.allelicCountsPath)
+  - cwlVersion: v1.2
+    id: CollectReadCounts
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -746,34 +695,22 @@ $graph:
       - class: ToolTimeLimit
         timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputBam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3 * 5)  * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CombineGVCFs
     inputs:
-      - id: gvcfFiles
-        doc: The GVCF files to be combined.
-        type:
-            items: File
-            type: array
-      - id: gvcfFilesIndex
-        doc: The indexes for the GVCF files.
-        type:
-            items: File
-            type: array
-      - id: intervals
-        doc: Bed files or interval lists describing the regions to operate on.
-        default: []
-        type:
-            items: File
-            type: array
-      - id: outputPath
-        doc: The location the combined GVCF should be written to.
+      - id: countsPath
+        doc: The location the output should be written to.
+        default: readcounts.hdf5
         type: string
+      - id: intervals
+        doc: The intervals to collect counts for.
+        type: File
+      - id: inputBam
+        doc: The BAM file to determine the coverage for.
+        type: File
+      - id: inputBamIndex
+        doc: The input BAM file's index.
+        type: File
       - id: referenceFasta
-        doc: The reference fasta file which was also used for mapping.
+        doc: The reference fasta file.
         type: File
       - id: referenceFastaDict
         doc: The sequence dictionary associated with the reference fasta file.
@@ -781,14 +718,18 @@ $graph:
       - id: referenceFastaFai
         doc: The index for the reference fasta file.
         type: File
+      - id: intervalMergingRule
+        doc: Equivalent to gatk CollectReadCounts' `--interval-merging-rule` option.
+        default: OVERLAPPING_ONLY
+        type: string
       - id: javaXmx
         doc: The maximum memory available to the program. Should be lower than `memory`
             to accommodate JVM overhead.
-        default: 4G
+        default: 7G
         type: string
       - id: memory
         doc: The amount of memory this job will use.
-        default: 5G
+        default: 8G
         type: string
       - id: timeMinutes
         doc: The maximum amount of time the job will run in minutes.
@@ -800,17 +741,18 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: outputVcf
-        doc: A combined multi-sample gVCF.
+      - id: counts
+        doc: Read counts at specified intervals.
         type: File
         outputBinding:
-            glob: $(inputs.outputPath)
-      - id: outputVcfIndex
-        doc: Index of the output file.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputPath + ".tbi")
+            glob: $(inputs.countsPath)
+  - cwlVersion: v1.2
+    id: CombineGVCFs
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -859,77 +801,71 @@ $graph:
       - class: ToolTimeLimit
         timelimit: $(1 + Math.ceil((function(size_of=0){inputs.gvcfFiles.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3 * 8)  * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CombineVariants
     inputs:
-      - id: referenceFasta
-        doc: The reference fasta file which was also used for mapping.
-        type: File
-      - id: referenceFastaFai
-        doc: The index for the reference fasta file.
-        type: File
-      - id: referenceFastaDict
-        doc: The sequence dictionary associated with the reference fasta file.
-        type: File
-      - id: genotypeMergeOption
-        doc: Equivalent to CombineVariants' `--genotypemergeoption` option.
-        default: UNIQUIFY
-        type: string
-      - id: filteredRecordsMergeType
-        doc: Equivalent to CombineVariants' `--filteredrecordsmergetype` option.
-        default: KEEP_IF_ANY_UNFILTERED
-        type: string
-      - id: identifiers
-        doc: The sample identifiers in the same order as variantVcfs.
-        type:
-            items: string
-            type: array
-      - id: variantVcfs
-        doc: The input VCF files in the same order as identifiers.
+      - id: gvcfFiles
+        doc: The GVCF files to be combined.
         type:
             items: File
             type: array
-      - id: variantIndexes
-        doc: The indexes of the input VCF files.
+      - id: gvcfFilesIndex
+        doc: The indexes for the GVCF files.
+        type:
+            items: File
+            type: array
+      - id: intervals
+        doc: Bed files or interval lists describing the regions to operate on.
+        default: []
         type:
             items: File
             type: array
       - id: outputPath
-        doc: The location the output should be written to.
+        doc: The location the combined GVCF should be written to.
         type: string
+      - id: referenceFasta
+        doc: The reference fasta file which was also used for mapping.
+        type: File
+      - id: referenceFastaDict
+        doc: The sequence dictionary associated with the reference fasta file.
+        type: File
+      - id: referenceFastaFai
+        doc: The index for the reference fasta file.
+        type: File
       - id: javaXmx
         doc: The maximum memory available to the program. Should be lower than `memory`
             to accommodate JVM overhead.
-        default: 12G
+        default: 4G
         type: string
       - id: memory
         doc: The amount of memory this job will use.
-        default: 13G
+        default: 5G
         type: string
       - id: timeMinutes
         doc: The maximum amount of time the job will run in minutes.
-        default: 180
-        type: int
+        type:
+          - int
+          - 'null'
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
-        default: broadinstitute/gatk3:3.8-1
+        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: combinedVcf
-        doc: Combined VCF file.
+      - id: outputVcf
+        doc: A combined multi-sample gVCF.
         type: File
         outputBinding:
             glob: $(inputs.outputPath)
-      - id: combinedVcfIndex
-        doc: Index of combined VCF file.
+      - id: outputVcfIndex
+        doc: Index of the output file.
         type: File
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
+  - cwlVersion: v1.2
+    id: CombineVariants
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -990,52 +926,77 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(180 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CreateReadCountPanelOfNormals
     inputs:
-      - id: PONpath
-        doc: The location the PON should be written to.
-        default: PON.hdf5
+      - id: referenceFasta
+        doc: The reference fasta file which was also used for mapping.
+        type: File
+      - id: referenceFastaFai
+        doc: The index for the reference fasta file.
+        type: File
+      - id: referenceFastaDict
+        doc: The sequence dictionary associated with the reference fasta file.
+        type: File
+      - id: genotypeMergeOption
+        doc: Equivalent to CombineVariants' `--genotypemergeoption` option.
+        default: UNIQUIFY
         type: string
-      - id: readCountsFiles
-        doc: The read counts files as generated by CollectReadCounts.
+      - id: filteredRecordsMergeType
+        doc: Equivalent to CombineVariants' `--filteredrecordsmergetype` option.
+        default: KEEP_IF_ANY_UNFILTERED
+        type: string
+      - id: identifiers
+        doc: The sample identifiers in the same order as variantVcfs.
+        type:
+            items: string
+            type: array
+      - id: variantVcfs
+        doc: The input VCF files in the same order as identifiers.
         type:
             items: File
             type: array
-      - id: annotatedIntervals
-        doc: An annotation set of intervals as generated by AnnotateIntervals. If
-            provided, explicit GC correction will be performed.
+      - id: variantIndexes
+        doc: The indexes of the input VCF files.
         type:
-          - File
-          - 'null'
+            items: File
+            type: array
+      - id: outputPath
+        doc: The location the output should be written to.
+        type: string
       - id: javaXmx
         doc: The maximum memory available to the program. Should be lower than `memory`
             to accommodate JVM overhead.
-        default: 7G
+        default: 12G
         type: string
       - id: memory
         doc: The amount of memory this job will use.
-        default: 8G
+        default: 13G
         type: string
       - id: timeMinutes
         doc: The maximum amount of time the job will run in minutes.
-        default: 5
+        default: 180
         type: int
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
-        default: broadinstitute/gatk:4.1.8.0
+        default: broadinstitute/gatk3:3.8-1
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: PON
-        doc: Panel-of-normals file.
+      - id: combinedVcf
+        doc: Combined VCF file.
         type: File
         outputBinding:
-            glob: $(inputs.PONpath)
+            glob: $(inputs.outputPath)
+      - id: combinedVcfIndex
+        doc: Index of combined VCF file.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputPath + ".tbi")
+  - cwlVersion: v1.2
+    id: CreateReadCountPanelOfNormals
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -1075,38 +1036,30 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(5 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: DenoiseReadCounts
     inputs:
-      - id: readCounts
-        doc: The read counts file as generated by CollectReadCounts.
-        type: File
-      - id: outputPrefix
-        doc: The prefix for the output files.
+      - id: PONpath
+        doc: The location the PON should be written to.
+        default: PON.hdf5
         type: string
-      - id: PON
-        doc: A panel of normals as generated by CreateReadCountPanelOfNormals.
+      - id: readCountsFiles
+        doc: The read counts files as generated by CollectReadCounts.
         type:
-          - File
-          - 'null'
+            items: File
+            type: array
       - id: annotatedIntervals
-        doc: An annotated set of intervals as generated by AnnotateIntervals. Will
-            be ignored if PON is provided.
+        doc: An annotation set of intervals as generated by AnnotateIntervals. If
+            provided, explicit GC correction will be performed.
         type:
           - File
           - 'null'
       - id: javaXmx
         doc: The maximum memory available to the program. Should be lower than `memory`
             to accommodate JVM overhead.
-        default: 4G
+        default: 7G
         type: string
       - id: memory
         doc: The amount of memory this job will use.
-        default: 5G
+        default: 8G
         type: string
       - id: timeMinutes
         doc: The maximum amount of time the job will run in minutes.
@@ -1115,25 +1068,20 @@ $graph:
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
-        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+        default: broadinstitute/gatk:4.1.8.0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: standardizedCopyRatios
-        doc: This is a tab-separated values (TSV) file with a SAM-style header containing
-            a read group sample name, a sequence dictionary, a row specifying the
-            column headers contained in CopyRatioCollection.CopyRatioTableColumn,
-            and the corresponding entry rows.
+      - id: PON
+        doc: Panel-of-normals file.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + ".standardizedCR.tsv")
-      - id: denoisedCopyRatios
-        doc: This is a tab-separated values (TSV) file with a SAM-style header containing
-            a read group sample name, a sequence dictionary, a row specifying the
-            column headers contained in CopyRatioCollection.CopyRatioTableColumn,
-            and the corresponding entry rows.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputPrefix + ".denoisedCR.tsv")
+            glob: $(inputs.PONpath)
+  - cwlVersion: v1.2
+    id: DenoiseReadCounts
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -1175,12 +1123,118 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(5 * 60)
-    cwlVersion: v1.2
+    inputs:
+      - id: readCounts
+        doc: The read counts file as generated by CollectReadCounts.
+        type: File
+      - id: outputPrefix
+        doc: The prefix for the output files.
+        type: string
+      - id: PON
+        doc: A panel of normals as generated by CreateReadCountPanelOfNormals.
+        type:
+          - File
+          - 'null'
+      - id: annotatedIntervals
+        doc: An annotated set of intervals as generated by AnnotateIntervals. Will
+            be ignored if PON is provided.
+        type:
+          - File
+          - 'null'
+      - id: javaXmx
+        doc: The maximum memory available to the program. Should be lower than `memory`
+            to accommodate JVM overhead.
+        default: 4G
+        type: string
+      - id: memory
+        doc: The amount of memory this job will use.
+        default: 5G
+        type: string
+      - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
+        default: 5
+        type: int
+      - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
+        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: standardizedCopyRatios
+        doc: This is a tab-separated values (TSV) file with a SAM-style header containing
+            a read group sample name, a sequence dictionary, a row specifying the
+            column headers contained in CopyRatioCollection.CopyRatioTableColumn,
+            and the corresponding entry rows.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputPrefix + ".standardizedCR.tsv")
+      - id: denoisedCopyRatios
+        doc: This is a tab-separated values (TSV) file with a SAM-style header containing
+            a read group sample name, a sequence dictionary, a row specifying the
+            column headers contained in CopyRatioCollection.CopyRatioTableColumn,
+            and the corresponding entry rows.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputPrefix + ".denoisedCR.tsv")
+  - cwlVersion: v1.2
     id: FilterMutectCalls
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p "\$(dirname $(inputs.outputVcf))"
+                mkdird unfiltered_vcf_dir
+                ln -s $(inputs.unfilteredVcf.path) unfiltered_vcf_dir/$(inputs.unfilteredVcf.basename)
+                ln -s $(inputs.unfilteredVcfIndex.path) unfiltered_vcf_dir/$(inputs.unfilteredVcfIndex.basename)
+                mkdir reference_dir
+                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
+                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
+                ln -s $(inputs.referenceFastaFai.path) reference_dir/$(inputs.referenceFastaFai.basename)
+                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
+                FilterMutectCalls \
+                -R reference_dir/$(inputs.referenceFasta.basename) \
+                -V unfiltered_vcf_dir/$(inputs.unfilteredVcf.basename) \
+                -O $(inputs.outputVcf) \
+                $(inputs.contaminationTable === null ? "" : "--contamination-table " + inputs.contaminationTable.path) \
+                $(inputs.mafTumorSegments === null ? "" : "--tumor-segmentation " + inputs.mafTumorSegments.path) \
+                $(inputs.artifactPriors === null ? "" : "--ob-priors " + inputs.artifactPriors.path) \
+                --unique-alt-read-count  $(inputs.uniqueAltReadCount) \
+                -stats  $(inputs.mutect2Stats.path) \
+                --filtering-stats "filtering.stats" \
+                --showHidden
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(60 * 60)
     inputs:
       - id: referenceFasta
         doc: The reference fasta file which was also used for mapping.
@@ -1240,6 +1294,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: filteredVcf
         doc: VCF file with filtered variants from a Mutect2 VCF callset.
@@ -1256,99 +1313,9 @@ $graph:
         type: File
         outputBinding:
             glob: filtering.stats
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputVcf))"
-                mkdird unfiltered_vcf_dir
-                ln -s $(inputs.unfilteredVcf.path) unfiltered_vcf_dir/$(inputs.unfilteredVcf.basename)
-                ln -s $(inputs.unfilteredVcfIndex.path) unfiltered_vcf_dir/$(inputs.unfilteredVcfIndex.basename)
-                mkdir reference_dir
-                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
-                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
-                ln -s $(inputs.referenceFastaFai.path) reference_dir/$(inputs.referenceFastaFai.basename)
-                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                FilterMutectCalls \
-                -R reference_dir/$(inputs.referenceFasta.basename) \
-                -V unfiltered_vcf_dir/$(inputs.unfilteredVcf.basename) \
-                -O $(inputs.outputVcf) \
-                $(inputs.contaminationTable === null ? "" : "--contamination-table " + inputs.contaminationTable.path) \
-                $(inputs.mafTumorSegments === null ? "" : "--tumor-segmentation " + inputs.mafTumorSegments.path) \
-                $(inputs.artifactPriors === null ? "" : "--ob-priors " + inputs.artifactPriors.path) \
-                --unique-alt-read-count  $(inputs.uniqueAltReadCount) \
-                -stats  $(inputs.mutect2Stats.path) \
-                --filtering-stats "filtering.stats" \
-                --showHidden
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-      - class: ResourceRequirement
-        ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(60 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: GatherBqsrReports
-    inputs:
-      - id: inputBQSRreports
-        doc: The BQSR reports to be merged.
-        type:
-            items: File
-            type: array
-      - id: outputReportPath
-        doc: The location of the combined BQSR report.
-        type: string
-      - id: javaXmxMb
-        doc: The maximum memory available to the program in megabytes. Should be lower
-            than `memory` to accommodate JVM overhead.
-        default: 256
-        type: int
-      - id: memoryMb
-        doc: The amount of memory this job will use in megabytes.
-        type:
-          - int
-          - 'null'
-      - id: timeMinutes
-        doc: The maximum amount of time the job will run in minutes.
-        default: 1
-        type: int
-      - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-        type: string
-    outputs:
-      - id: outputBQSRreport
-        doc: Single file with scattered BQSR recalibration reports gathered into one.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputReportPath)
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -1387,12 +1354,87 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(1 * 60)
-    cwlVersion: v1.2
+    inputs:
+      - id: inputBQSRreports
+        doc: The BQSR reports to be merged.
+        type:
+            items: File
+            type: array
+      - id: outputReportPath
+        doc: The location of the combined BQSR report.
+        type: string
+      - id: javaXmxMb
+        doc: The maximum memory available to the program in megabytes. Should be lower
+            than `memory` to accommodate JVM overhead.
+        default: 256
+        type: int
+      - id: memoryMb
+        doc: The amount of memory this job will use in megabytes.
+        type:
+          - int
+          - 'null'
+      - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
+        default: 1
+        type: int
+      - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
+        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: outputBQSRreport
+        doc: Single file with scattered BQSR recalibration reports gathered into one.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputReportPath)
+  - cwlVersion: v1.2
     id: GenomicsDBImport
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p "\$(dirname $(inputs.genomicsDBWorkspacePath))"
+                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
+                GenomicsDBImport \
+                -V $(inputs.gvcfFiles.map(function(el) {return el.path}).join(" -V ")) \
+                --genomicsdb-workspace-path $(inputs.genomicsDBWorkspacePath) \
+                $(inputs.tmpDir === null ? "" : "--tmp-dir " + inputs.tmpDir) \
+                -L $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
+                bash -c 'tar -cvzf $(inputs.genomicsDBTarFile) $(inputs.genomicsDBWorkspacePath)/*'
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(180 * 60)
     inputs:
       - id: gvcfFiles
         doc: The gvcfFiles to be merged.
@@ -1441,12 +1483,18 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: genomicsDbTarArchive
         doc: Imported VCFs to GenomicsDB file.
         type: File
         outputBinding:
             glob: $(inputs.genomicsDBTarFile)
+  - cwlVersion: v1.2
+    id: GenotypeGVCFs
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -1454,14 +1502,24 @@ $graph:
             entry: |4
 
                 set -e
-                mkdir -p "\$(dirname $(inputs.genomicsDBWorkspacePath))"
+                mkdir -p "\$(dirname $(inputs.outputPath))"
+                mkdir wd
+                ln -s $(inputs.gvcfFile.path) wd/$(inputs.gvcfFile.basename)
+                ln -s $(inputs.gvcfFileIndex.path) wd/$(inputs.gvcfFileIndex.basename)
+                mkdir reference_dir
+                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
+                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
+                ln -s $(inputs.referenceFastaFai.path) reference_dir/$(inputs.referenceFastaFai.basename)
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                GenomicsDBImport \
-                -V $(inputs.gvcfFiles.map(function(el) {return el.path}).join(" -V ")) \
-                --genomicsdb-workspace-path $(inputs.genomicsDBWorkspacePath) \
-                $(inputs.tmpDir === null ? "" : "--tmp-dir " + inputs.tmpDir) \
-                -L $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
-                bash -c 'tar -cvzf $(inputs.genomicsDBTarFile) $(inputs.genomicsDBWorkspacePath)/*'
+                GenotypeGVCFs \
+                -R reference_dir/$(inputs.referenceFasta.basename) \
+                -O $(inputs.outputPath) \
+                $(inputs.dbsnpVCF === null ? "" : "-D " + inputs.dbsnpVCF.path) \
+                $(inputs.pedigree === null ? "" : "--pedigree " + inputs.pedigree.path) \
+                $(inputs.annotationGroups.length > 0 ? "-G" : "") $(inputs.annotationGroups.join(" -G ")) \
+                -V wd/$(inputs.gvcfFile.basename) \
+                $(inputs.intervals === null ? "" : "--only-output-calls-starting-in-intervals") \
+                $(inputs.intervals === null ? "" : "-L") $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -1487,13 +1545,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(180 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: GenotypeGVCFs
+        timelimit: $(120 * 60)
     inputs:
       - id: gvcfFile
         doc: The GVCF file to be genotyped.
@@ -1559,6 +1611,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: outputVCF
         doc: 'A final VCF in which all samples have been jointly genotyped. '
@@ -1570,109 +1625,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPath))"
-                mkdir wd
-                ln -s $(inputs.gvcfFile.path) wd/$(inputs.gvcfFile.basename)
-                ln -s $(inputs.gvcfFileIndex.path) wd/$(inputs.gvcfFileIndex.basename)
-                mkdir reference_dir
-                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
-                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
-                ln -s $(inputs.referenceFastaFai.path) reference_dir/$(inputs.referenceFastaFai.basename)
-                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                GenotypeGVCFs \
-                -R reference_dir/$(inputs.referenceFasta.basename) \
-                -O $(inputs.outputPath) \
-                $(inputs.dbsnpVCF === null ? "" : "-D " + inputs.dbsnpVCF.path) \
-                $(inputs.pedigree === null ? "" : "--pedigree " + inputs.pedigree.path) \
-                $(inputs.annotationGroups.length > 0 ? "-G" : "") $(inputs.annotationGroups.join(" -G ")) \
-                -V wd/$(inputs.gvcfFile.basename) \
-                $(inputs.intervals === null ? "" : "--only-output-calls-starting-in-intervals") \
-                $(inputs.intervals === null ? "" : "-L") $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-      - class: ResourceRequirement
-        ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(120 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: GetPileupSummaries
-    inputs:
-      - id: sampleBam
-        doc: A BAM file for which a pileup should be created.
-        type: File
-      - id: sampleBamIndex
-        doc: The index of the input BAM file.
-        type: File
-      - id: variantsForContamination
-        doc: A VCF file with common variants.
-        type: File
-      - id: variantsForContaminationIndex
-        doc: The index for the common variants VCF file.
-        type: File
-      - id: sitesForContamination
-        doc: A bed file describing regions to operate on.
-        type: File
-      - id: sitesForContaminationIndex
-        doc: The index for the bed file.
-        type: File
-      - id: outputPrefix
-        doc: The prefix for the ouput.
-        type: string
-      - id: javaXmx
-        doc: The maximum memory available to the program. Should be lower than `memory`
-            to accommodate JVM overhead.
-        default: 12G
-        type: string
-      - id: memory
-        doc: The amount of memory this job will use.
-        default: 13G
-        type: string
-      - id: timeMinutes
-        doc: The maximum amount of time the job will run in minutes.
-        default: 120
-        type: int
-      - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-        type: string
-    outputs:
-      - id: pileups
-        doc: Pileup metrics for inferring contamination.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputPrefix + "-pileups.table")
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -1721,12 +1676,114 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(120 * 60)
-    cwlVersion: v1.2
+    inputs:
+      - id: sampleBam
+        doc: A BAM file for which a pileup should be created.
+        type: File
+      - id: sampleBamIndex
+        doc: The index of the input BAM file.
+        type: File
+      - id: variantsForContamination
+        doc: A VCF file with common variants.
+        type: File
+      - id: variantsForContaminationIndex
+        doc: The index for the common variants VCF file.
+        type: File
+      - id: sitesForContamination
+        doc: A bed file describing regions to operate on.
+        type: File
+      - id: sitesForContaminationIndex
+        doc: The index for the bed file.
+        type: File
+      - id: outputPrefix
+        doc: The prefix for the ouput.
+        type: string
+      - id: javaXmx
+        doc: The maximum memory available to the program. Should be lower than `memory`
+            to accommodate JVM overhead.
+        default: 12G
+        type: string
+      - id: memory
+        doc: The amount of memory this job will use.
+        default: 13G
+        type: string
+      - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
+        default: 120
+        type: int
+      - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
+        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: pileups
+        doc: Pileup metrics for inferring contamination.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputPrefix + "-pileups.table")
+  - cwlVersion: v1.2
     id: HaplotypeCaller
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p "\$(dirname $(inputs.outputPath))"
+                mkdir wd
+                for FILE in $(inputs.inputBams.map(function(el) {return el.path}).join(" ")); do ln -s $FILE wd/\$(inputBams $FILE) ; done
+                for FILE in $(inputs.inputBamsIndex.map(function(el) {return el.path}).join(" ")); do ln -s $FILE wd/\$(inputBamsIndex $FILE) ; done
+                mkdir reference_dir
+                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
+                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
+                ln -s $(inputs.referenceFastaIndex.path) reference_dir/$(inputs.referenceFastaIndex.basename)
+                gatk --java-options '-Xmx$(inputs.javaXmxMb)M -XX:ParallelGCThreads=1' \
+                HaplotypeCaller \
+                -R reference_dir/$(inputs.referenceFasta.basename) \
+                -O $(inputs.outputPath) \
+                (for FILE in $(inputs.inputBams.map(function(el) {return el.path}).join(" ")); do echo -- "-I wd/"\$(basename $FILE); done) \
+                $(inputs.ploidy === null ? "" : "--sample-ploidy " + inputs.ploidy) \
+                $(inputs.intervalList === null ? "" : "-L") $(inputs.intervalList.map(function(el) {return el.path}).join(" -L ")) \
+                $(inputs.excludeIntervalList === null ? "" : "-XL") $(inputs.excludeIntervalList.map(function(el) {return el.path}).join(" -XL ")) \
+                $(inputs.dbsnpVCF === null ? "" : "-D " + inputs.dbsnpVCF.path) \
+                $(inputs.pedigree === null ? "" : "--pedigree " + inputs.pedigree.path) \
+                $(inputs.contamination === null ? "" : "--contamination-fraction-per-sample-file " + inputs.contamination) \
+                $(inputs.outputMode === null ? "" : "--output-mode " + inputs.outputMode) \
+                --emit-ref-confidence $(inputs.emitRefConfidence) \
+                $(inputs.dontUseSoftClippedBases ? "--dont-use-soft-clipped-bases" : "") \
+                $(inputs.standardMinConfidenceThresholdForCalling === null ? "" : "--standard-min-confidence-threshold-for-calling " + inputs.standardMinConfidenceThresholdForCalling)
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = "M";
+            var value = parseInt(`${inputs.javaXmxMb + 512}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(400 * 60)
     inputs:
       - id: inputBams
         doc: The BAM files on which to perform variant calling.
@@ -1829,6 +1886,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: outputVCF
         doc: Raw, unfiltered SNP and indel calls.
@@ -1840,99 +1900,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPath))"
-                mkdir wd
-                for FILE in $(inputs.inputBams.map(function(el) {return el.path}).join(" ")); do ln -s $FILE wd/\$(inputBams $FILE) ; done
-                for FILE in $(inputs.inputBamsIndex.map(function(el) {return el.path}).join(" ")); do ln -s $FILE wd/\$(inputBamsIndex $FILE) ; done
-                mkdir reference_dir
-                ln -s $(inputs.referenceFasta.path) reference_dir/$(inputs.referenceFasta.basename)
-                ln -s $(inputs.referenceFastaDict.path) reference_dir/$(inputs.referenceFastaDict.basename)
-                ln -s $(inputs.referenceFastaIndex.path) reference_dir/$(inputs.referenceFastaIndex.basename)
-                gatk --java-options '-Xmx$(inputs.javaXmxMb)M -XX:ParallelGCThreads=1' \
-                HaplotypeCaller \
-                -R reference_dir/$(inputs.referenceFasta.basename) \
-                -O $(inputs.outputPath) \
-                (for FILE in $(inputs.inputBams.map(function(el) {return el.path}).join(" ")); do echo -- "-I wd/"\$(basename $FILE); done) \
-                $(inputs.ploidy === null ? "" : "--sample-ploidy " + inputs.ploidy) \
-                $(inputs.intervalList === null ? "" : "-L") $(inputs.intervalList.map(function(el) {return el.path}).join(" -L ")) \
-                $(inputs.excludeIntervalList === null ? "" : "-XL") $(inputs.excludeIntervalList.map(function(el) {return el.path}).join(" -XL ")) \
-                $(inputs.dbsnpVCF === null ? "" : "-D " + inputs.dbsnpVCF.path) \
-                $(inputs.pedigree === null ? "" : "--pedigree " + inputs.pedigree.path) \
-                $(inputs.contamination === null ? "" : "--contamination-fraction-per-sample-file " + inputs.contamination) \
-                $(inputs.outputMode === null ? "" : "--output-mode " + inputs.outputMode) \
-                --emit-ref-confidence $(inputs.emitRefConfidence) \
-                $(inputs.dontUseSoftClippedBases ? "--dont-use-soft-clipped-bases" : "") \
-                $(inputs.standardMinConfidenceThresholdForCalling === null ? "" : "--standard-min-confidence-threshold-for-calling " + inputs.standardMinConfidenceThresholdForCalling)
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-      - class: ResourceRequirement
-        ramMin: |-
-            ${
-            var unit = "M";
-            var value = parseInt(`${inputs.javaXmxMb + 512}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(400 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: LearnReadOrientationModel
-    inputs:
-      - id: f1r2TarGz
-        doc: A f1r2TarGz file outputed by mutect2.
-        type:
-            items: File
-            type: array
-      - id: javaXmx
-        doc: The maximum memory available to the program. Should be lower than `memory`
-            to accommodate JVM overhead.
-        default: 12G
-        type: string
-      - id: memory
-        doc: The amount of memory this job will use.
-        default: 13G
-        type: string
-      - id: timeMinutes
-        doc: The maximum amount of time the job will run in minutes.
-        default: 120
-        type: int
-      - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-        type: string
-    outputs:
-      - id: artifactPriorsTable
-        doc: Maximum likelihood estimates of artifact prior probabilities in the orientation
-            bias mixture model filter.
-        type: File
-        outputBinding:
-            glob: artifact-priors.tar.gz
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -1970,42 +1940,43 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(120 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: MergeStats
     inputs:
-      - id: stats
-        doc: Statistics files to be merged.
+      - id: f1r2TarGz
+        doc: A f1r2TarGz file outputed by mutect2.
         type:
             items: File
             type: array
       - id: javaXmx
         doc: The maximum memory available to the program. Should be lower than `memory`
             to accommodate JVM overhead.
-        default: 14G
+        default: 12G
         type: string
       - id: memory
         doc: The amount of memory this job will use.
-        default: 15G
+        default: 13G
         type: string
       - id: timeMinutes
         doc: The maximum amount of time the job will run in minutes.
-        default: 30
+        default: 120
         type: int
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: mergedStats
-        doc: Merged stats from scattered Mutect2 runs.
+      - id: artifactPriorsTable
+        doc: Maximum likelihood estimates of artifact prior probabilities in the orientation
+            bias mixture model filter.
         type: File
         outputBinding:
-            glob: merged.stats
+            glob: artifact-priors.tar.gz
+  - cwlVersion: v1.2
+    id: MergeStats
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -2043,12 +2014,83 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(30 * 60)
-    cwlVersion: v1.2
+    inputs:
+      - id: stats
+        doc: Statistics files to be merged.
+        type:
+            items: File
+            type: array
+      - id: javaXmx
+        doc: The maximum memory available to the program. Should be lower than `memory`
+            to accommodate JVM overhead.
+        default: 14G
+        type: string
+      - id: memory
+        doc: The amount of memory this job will use.
+        default: 15G
+        type: string
+      - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
+        default: 30
+        type: int
+      - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
+        default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: mergedStats
+        doc: Merged stats from scattered Mutect2 runs.
+        type: File
+        outputBinding:
+            glob: merged.stats
+  - cwlVersion: v1.2
     id: ModelSegments
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p $(inputs.outputDir)
+                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
+                ModelSegments \
+                --denoised-copy-ratios $(inputs.denoisedCopyRatios.path) \
+                --allelic-counts $(inputs.allelicCounts.path) \
+                $(inputs.normalAllelicCounts === null ? "" : "--normal-allelic-counts " + inputs.normalAllelicCounts.path) \
+                --minimum-total-allele-count-case $(inputs.minimumTotalAlleleCountCase) \
+                --maximum-number-of-smoothing-iterations $(inputs.maximumNumberOfSmoothingIterations) \
+                --output $(inputs.outputDir) \
+                --output-prefix $(inputs.outputPrefix)
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
     inputs:
       - id: outputDir
         doc: The directory to write the ouput to.
@@ -2095,6 +2137,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: hetrozygousAllelicCounts
         doc: Allelic-counts file containing the counts at sites genotyped as heterozygous
@@ -2160,6 +2205,9 @@ $graph:
           - 'null'
         outputBinding:
             glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".hets.normal.tsv")
+  - cwlVersion: v1.2
+    id: MuTect2
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -2167,16 +2215,18 @@ $graph:
             entry: |4
 
                 set -e
-                mkdir -p $(inputs.outputDir)
+                mkdir -p "\$(dirname $(inputs.outputVcf))"
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                ModelSegments \
-                --denoised-copy-ratios $(inputs.denoisedCopyRatios.path) \
-                --allelic-counts $(inputs.allelicCounts.path) \
-                $(inputs.normalAllelicCounts === null ? "" : "--normal-allelic-counts " + inputs.normalAllelicCounts.path) \
-                --minimum-total-allele-count-case $(inputs.minimumTotalAlleleCountCase) \
-                --maximum-number-of-smoothing-iterations $(inputs.maximumNumberOfSmoothingIterations) \
-                --output $(inputs.outputDir) \
-                --output-prefix $(inputs.outputPrefix)
+                Mutect2 \
+                -R $(inputs.referenceFasta.path) \
+                -I $(inputs.inputBams.map(function(el) {return el.path}).join(" -I ")) \
+                -tumor $(inputs.tumorSample) \
+                $(inputs.normalSample === null ? "" : "-normal " + inputs.normalSample) \
+                $(inputs.germlineResource === null ? "" : "--germline-resource " + inputs.germlineResource.path) \
+                $(inputs.panelOfNormals === null ? "" : "--panel-of-normals " + inputs.panelOfNormals.path) \
+                --f1r2-tar-gz  $(inputs.f1r2TarGz) \
+                -O $(inputs.outputVcf) \
+                -L $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -2201,12 +2251,8 @@ $graph:
             return parseInt(memory);
             }
         outdirMin: 1024
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: MuTect2
+      - class: ToolTimeLimit
+        timelimit: $(240 * 60)
     inputs:
       - id: inputBams
         doc: The BAM files on which to perform variant calling.
@@ -2290,6 +2336,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: vcfFile
         doc: Somatic SNVs and indels called via local assembly of haplotypes.
@@ -2313,133 +2362,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.outputVcf + ".stats")
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputVcf))"
-                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                Mutect2 \
-                -R $(inputs.referenceFasta.path) \
-                -I $(inputs.inputBams.map(function(el) {return el.path}).join(" -I ")) \
-                -tumor $(inputs.tumorSample) \
-                $(inputs.normalSample === null ? "" : "-normal " + inputs.normalSample) \
-                $(inputs.germlineResource === null ? "" : "--germline-resource " + inputs.germlineResource.path) \
-                $(inputs.panelOfNormals === null ? "" : "--panel-of-normals " + inputs.panelOfNormals.path) \
-                --f1r2-tar-gz  $(inputs.f1r2TarGz) \
-                -O $(inputs.outputVcf) \
-                -L $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-      - class: ResourceRequirement
-        ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(240 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: PlotDenoisedCopyRatios
-    inputs:
-      - id: referenceFastaDict
-        doc: The sequence dictionary associated with the reference fasta file used
-            for the analyses.
-        type: File
-      - id: outputDir
-        doc: The directory to write the ouput to.
-        default: .
-        type: string
-      - id: outputPrefix
-        doc: The prefix of the output files. Should not include directories.
-        type: string
-      - id: standardizedCopyRatios
-        doc: The standardized copy ratios as generated by DenoiseReadCounts.
-        type: File
-      - id: denoisedCopyRatios
-        doc: The denoised copy ratios as generated by DenoiseReadCounts.
-        type: File
-      - id: minimumContigLength
-        doc: The minimum length for a contig to be included in the plots.
-        type:
-          - int
-          - 'null'
-      - id: javaXmx
-        doc: The maximum memory available to the program. Should be lower than `memory`
-            to accommodate JVM overhead.
-        default: 3G
-        type: string
-      - id: memory
-        doc: The amount of memory this job will use.
-        default: 4G
-        type: string
-      - id: timeMinutes
-        doc: The maximum amount of time the job will run in minutes.
-        default: 2
-        type: int
-      - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: broadinstitute/gatk:4.1.8.0
-        type: string
-    outputs:
-      - id: denoisedCopyRatiosPlot
-        doc: Plot showing the entire range of standardized and denoised copy ratios.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".denoised.png")
-      - id: standardizedMedianAbsoluteDeviation
-        doc: Standardized median absolute deviation copy ratios.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".standardizedMAD.txt")
-      - id: denoisedMedianAbsoluteDeviation
-        doc: Denoised median absolute deviation copy ratios.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".denoisedMAD.txt")
-      - id: deltaMedianAbsoluteDeviation
-        doc: The change between `standardizedMedianAbsoluteDeviation` & `denoisedMedianAbsoluteDeviation`.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".deltaMAD.txt")
-      - id: deltaScaledMedianAbsoluteDeviation
-        doc: The change between `standardizedMedianAbsoluteDeviation` & `denoisedMedianAbsoluteDeviation`
-            scaled by standardized MAD.
-        type: File
-        outputBinding:
-            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".scaledDeltaMAD.txt")
-      - id: denoisedCopyRatiosLimitedPlot
-        doc: Plot showing the standardized and denoised copy ratios limited to ratios
-            within [0, 4].
-        type:
-          - File
-          - 'null'
-        outputBinding:
-            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".denoisedLimit4.png")
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -2482,12 +2407,131 @@ $graph:
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(2 * 60)
-    cwlVersion: v1.2
+    inputs:
+      - id: referenceFastaDict
+        doc: The sequence dictionary associated with the reference fasta file used
+            for the analyses.
+        type: File
+      - id: outputDir
+        doc: The directory to write the ouput to.
+        default: .
+        type: string
+      - id: outputPrefix
+        doc: The prefix of the output files. Should not include directories.
+        type: string
+      - id: standardizedCopyRatios
+        doc: The standardized copy ratios as generated by DenoiseReadCounts.
+        type: File
+      - id: denoisedCopyRatios
+        doc: The denoised copy ratios as generated by DenoiseReadCounts.
+        type: File
+      - id: minimumContigLength
+        doc: The minimum length for a contig to be included in the plots.
+        type:
+          - int
+          - 'null'
+      - id: javaXmx
+        doc: The maximum memory available to the program. Should be lower than `memory`
+            to accommodate JVM overhead.
+        default: 3G
+        type: string
+      - id: memory
+        doc: The amount of memory this job will use.
+        default: 4G
+        type: string
+      - id: timeMinutes
+        doc: The maximum amount of time the job will run in minutes.
+        default: 2
+        type: int
+      - id: dockerImage
+        doc: The docker image used for this task. Changing this may result in errors
+            which the developers may choose not to address.
+        default: broadinstitute/gatk:4.1.8.0
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: denoisedCopyRatiosPlot
+        doc: Plot showing the entire range of standardized and denoised copy ratios.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".denoised.png")
+      - id: standardizedMedianAbsoluteDeviation
+        doc: Standardized median absolute deviation copy ratios.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".standardizedMAD.txt")
+      - id: denoisedMedianAbsoluteDeviation
+        doc: Denoised median absolute deviation copy ratios.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".denoisedMAD.txt")
+      - id: deltaMedianAbsoluteDeviation
+        doc: The change between `standardizedMedianAbsoluteDeviation` & `denoisedMedianAbsoluteDeviation`.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".deltaMAD.txt")
+      - id: deltaScaledMedianAbsoluteDeviation
+        doc: The change between `standardizedMedianAbsoluteDeviation` & `denoisedMedianAbsoluteDeviation`
+            scaled by standardized MAD.
+        type: File
+        outputBinding:
+            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".scaledDeltaMAD.txt")
+      - id: denoisedCopyRatiosLimitedPlot
+        doc: Plot showing the standardized and denoised copy ratios limited to ratios
+            within [0, 4].
+        type:
+          - File
+          - 'null'
+        outputBinding:
+            glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".denoisedLimit4.png")
+  - cwlVersion: v1.2
     id: PlotModeledSegments
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                set -e
+                mkdir -p $(inputs.outputDir)
+                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
+                PlotModeledSegments \
+                --denoised-copy-ratios $(inputs.denoisedCopyRatios.path) \
+                --allelic-counts $(inputs.allelicCounts.path) \
+                --segments $(inputs.segments.path) \
+                --sequence-dictionary $(inputs.referenceFastaDict.path) \
+                $(inputs.minimumContigLength === null ? "" : "--minimum-contig-length " + inputs.minimumContigLength) \
+                --output $(inputs.outputDir) \
+                --output-prefix $(inputs.outputPrefix)
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: broadinstitute/gatk:4.1.8.0
+      - class: ResourceRequirement
+        ramMin: |-
+            ${
+            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            return parseInt(memory);
+            }
+        outdirMin: 1024
+      - class: ToolTimeLimit
+        timelimit: $(2 * 60)
     inputs:
       - id: referenceFastaDict
         doc: The sequence dictionary associated with the reference fasta file used
@@ -2532,6 +2576,9 @@ $graph:
             which the developers may choose not to address.
         default: broadinstitute/gatk:4.1.8.0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: modeledSegmentsPlot
         doc: This plot shows the input denoised copy ratios and/or alternate-allele
@@ -2540,6 +2587,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.outputDir + "/" + inputs.outputPrefix + ".modeled.png")
+  - cwlVersion: v1.2
+    id: PreprocessIntervals
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -2547,22 +2597,22 @@ $graph:
             entry: |4
 
                 set -e
-                mkdir -p $(inputs.outputDir)
+                mkdir -p "\$(dirname $(inputs.outputIntervalList))"
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                PlotModeledSegments \
-                --denoised-copy-ratios $(inputs.denoisedCopyRatios.path) \
-                --allelic-counts $(inputs.allelicCounts.path) \
-                --segments $(inputs.segments.path) \
+                PreprocessIntervals \
+                -R $(inputs.referenceFasta.path) \
                 --sequence-dictionary $(inputs.referenceFastaDict.path) \
-                $(inputs.minimumContigLength === null ? "" : "--minimum-contig-length " + inputs.minimumContigLength) \
-                --output $(inputs.outputDir) \
-                --output-prefix $(inputs.outputPrefix)
+                --bin-length $(inputs.binLength) \
+                --padding $(inputs.padding) \
+                $(inputs.intervals === null ? "" : "-L " + inputs.intervals.path) \
+                --interval-merging-rule $(inputs.intervalMergingRule) \
+                -O $(inputs.outputIntervalList)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: broadinstitute/gatk:4.1.8.0
+        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -2582,13 +2632,8 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(2 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: PreprocessIntervals
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.referenceFasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3 * 6)  * 60)
     inputs:
       - id: referenceFasta
         doc: The reference fasta file.
@@ -2638,12 +2683,18 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: intervalList
         doc: Preprocessed Picard interval-list file.
         type: File
         outputBinding:
             glob: $(inputs.outputIntervalList)
+  - cwlVersion: v1.2
+    id: SelectVariants
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -2651,16 +2702,14 @@ $graph:
             entry: |4
 
                 set -e
-                mkdir -p "\$(dirname $(inputs.outputIntervalList))"
+                mkdir -p "\$(dirname $(inputs.outputPath))"
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                PreprocessIntervals \
+                SelectVariants \
                 -R $(inputs.referenceFasta.path) \
-                --sequence-dictionary $(inputs.referenceFastaDict.path) \
-                --bin-length $(inputs.binLength) \
-                --padding $(inputs.padding) \
-                $(inputs.intervals === null ? "" : "-L " + inputs.intervals.path) \
-                --interval-merging-rule $(inputs.intervalMergingRule) \
-                -O $(inputs.outputIntervalList)
+                -V $(inputs.inputVcf.path) \
+                $(inputs.selectTypeToInclude === null ? "" : "--select-type-to-include " + inputs.selectTypeToInclude) \
+                $(inputs.intervals.length > 0 ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L ")) \
+                -O $(inputs.outputPath)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -2685,15 +2734,6 @@ $graph:
             return parseInt(memory);
             }
         outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.referenceFasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1000^3 * 6)  * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: SelectVariants
     inputs:
       - id: inputVcf
         doc: The VCF input file.
@@ -2743,6 +2783,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: outputVcf
         doc: A new VCF file containing the selected subset of variants.
@@ -2754,6 +2797,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
+  - cwlVersion: v1.2
+    id: SplitNCigarReads
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -2761,14 +2807,13 @@ $graph:
             entry: |4
 
                 set -e
-                mkdir -p "\$(dirname $(inputs.outputPath))"
+                mkdir -p "\$(dirname $(inputs.outputBam))"
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                SelectVariants \
+                SplitNCigarReads \
+                -I $(inputs.inputBam.path) \
                 -R $(inputs.referenceFasta.path) \
-                -V $(inputs.inputVcf.path) \
-                $(inputs.selectTypeToInclude === null ? "" : "--select-type-to-include " + inputs.selectTypeToInclude) \
-                $(inputs.intervals.length > 0 ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L ")) \
-                -O $(inputs.outputPath)
+                -O $(inputs.outputBam) \
+                $(inputs.intervals.length > 0 ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -2793,12 +2838,8 @@ $graph:
             return parseInt(memory);
             }
         outdirMin: 1024
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: SplitNCigarReads
+      - class: ToolTimeLimit
+        timelimit: $(120 * 60)
     inputs:
       - id: inputBam
         doc: The BAM file for which spliced reads should be split.
@@ -2842,6 +2883,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: bam
         doc: BAM file with reads split at N CIGAR elements and CIGAR strings updated.
@@ -2853,6 +2897,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.outputBam.replace("\.bam$", ".bai") )
+  - cwlVersion: v1.2
+    id: VariantEval
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -2860,13 +2907,21 @@ $graph:
             entry: |4
 
                 set -e
-                mkdir -p "\$(dirname $(inputs.outputBam))"
+                mkdir -p "\$(dirname $(inputs.outputPath))"
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                SplitNCigarReads \
-                -I $(inputs.inputBam.path) \
-                -R $(inputs.referenceFasta.path) \
-                -O $(inputs.outputBam) \
-                $(inputs.intervals.length > 0 ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
+                VariantEval \
+                --output $(inputs.outputPath) \
+                $(inputs.evalVcfs.length > 0 ? "--eval" : "") $(inputs.evalVcfs.map(function(el) {return el.path}).join(" --eval ")) \
+                $(inputs.comparisonVcfs.length > 0 ? "--comparison" : "") $(inputs.comparisonVcfs.map(function(el) {return el.path}).join(" --comparison ")) \
+                $(inputs.referenceFasta === null ? "" : "-R " + inputs.referenceFasta.path) \
+                $(inputs.dbsnpVCF === null ? "" : "--dbsnp " + inputs.dbsnpVCF.path) \
+                $(inputs.intervals.length > 0 ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L ")) \
+                $(inputs.samples.length > 0 ? "--sample" : "") $(inputs.samples.join(" --sample ")) \
+                $(inputs.doNotUseAllStandardModules ? "--do-not-use-all-standard-modules" : "") \
+                $(inputs.doNotUseAllStandardStratifications ? "--do-not-use-all-standard-stratifications" : "") \
+                $(inputs.evalModules.length > 0 ? "-EV" : "") $(inputs.evalModules.join(" -EV ")) \
+                $(inputs.stratificationModules.length > 0 ? "-ST" : "") $(inputs.stratificationModules.join(" -ST ")) \
+                $(inputs.mergeEvals ? "--merge-evals" : "")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -2874,6 +2929,7 @@ $graph:
       - class: DockerRequirement
         dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
       - class: ResourceRequirement
+        coresMin: 1
         ramMin: |-
             ${
             var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
@@ -2892,13 +2948,13 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(120 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: VariantEval
+        timelimit: '$(Math.ceil((function(size_of=0){(function () {var new_array =
+            []; [ inputs.evalVcfs, inputs.comparisonVcfs, [inputs.referenceFasta ===
+            null ? "" : inputs.referenceFasta.path, inputs.dbsnpVCF === null ? ""
+            : inputs.dbsnpVCF.path].filter(function(element) { return element !==
+            null })  ].forEach(function(value, index, obj) {value.forEach(function(sub_value,
+            sub_index, sub_obj) {new_array.push(sub_value);});}); return new_array;})().forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3 * 20)  * 60)'
     inputs:
       - id: evalVcfs
         doc: Variant sets to evaluate.
@@ -3011,6 +3067,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: table
         doc: Evaluation tables detailing the results of the eval modules which were
@@ -3018,6 +3077,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.outputPath)
+  - cwlVersion: v1.2
+    id: VariantFiltration
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -3027,19 +3089,12 @@ $graph:
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))"
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                VariantEval \
-                --output $(inputs.outputPath) \
-                $(inputs.evalVcfs.length > 0 ? "--eval" : "") $(inputs.evalVcfs.map(function(el) {return el.path}).join(" --eval ")) \
-                $(inputs.comparisonVcfs.length > 0 ? "--comparison" : "") $(inputs.comparisonVcfs.map(function(el) {return el.path}).join(" --comparison ")) \
-                $(inputs.referenceFasta === null ? "" : "-R " + inputs.referenceFasta.path) \
-                $(inputs.dbsnpVCF === null ? "" : "--dbsnp " + inputs.dbsnpVCF.path) \
-                $(inputs.intervals.length > 0 ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L ")) \
-                $(inputs.samples.length > 0 ? "--sample" : "") $(inputs.samples.join(" --sample ")) \
-                $(inputs.doNotUseAllStandardModules ? "--do-not-use-all-standard-modules" : "") \
-                $(inputs.doNotUseAllStandardStratifications ? "--do-not-use-all-standard-stratifications" : "") \
-                $(inputs.evalModules.length > 0 ? "-EV" : "") $(inputs.evalModules.join(" -EV ")) \
-                $(inputs.stratificationModules.length > 0 ? "-ST" : "") $(inputs.stratificationModules.join(" -ST ")) \
-                $(inputs.mergeEvals ? "--merge-evals" : "")
+                VariantFiltration \
+                -I $(inputs.inputVcf.path) \
+                -R $(inputs.referenceFasta.path) \
+                -O $(inputs.outputPath) \
+                $(inputs.filterArguments.join(" ")) \
+                $(inputs.intervals.length > 0 ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -3047,7 +3102,6 @@ $graph:
       - class: DockerRequirement
         dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
       - class: ResourceRequirement
-        coresMin: 1
         ramMin: |-
             ${
             var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
@@ -3066,19 +3120,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: '$(Math.ceil((function(size_of=0){(function () {var new_array =
-            []; [ inputs.evalVcfs, inputs.comparisonVcfs, [inputs.referenceFasta ===
-            null ? "" : inputs.referenceFasta.path, inputs.dbsnpVCF === null ? ""
-            : inputs.dbsnpVCF.path].filter(function(element) { return element !==
-            null })  ].forEach(function(value, index, obj) {value.forEach(function(sub_value,
-            sub_index, sub_obj) {new_array.push(sub_value);});}); return new_array;})().forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1000^3 * 20)  * 60)'
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: VariantFiltration
+        timelimit: $(120 * 60)
     inputs:
       - id: inputVcf
         doc: The VCF to be filtered.
@@ -3129,6 +3171,9 @@ $graph:
             which the developers may choose not to address.
         default: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
         type: string
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: filteredVcf
         doc: A filtered VCF in which passing variants are annotated as PASS and failing
@@ -3141,48 +3186,3 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.outputPath + ".tbi")
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPath))"
-                gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
-                VariantFiltration \
-                -I $(inputs.inputVcf.path) \
-                -R $(inputs.referenceFasta.path) \
-                -O $(inputs.outputPath) \
-                $(inputs.filterArguments.join(" ")) \
-                $(inputs.intervals.length > 0 ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/gatk4:4.1.8.0--py38h37ae868_0
-      - class: ResourceRequirement
-        ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            return parseInt(memory);
-            }
-        outdirMin: 1024
-      - class: ToolTimeLimit
-        timelimit: $(120 * 60)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash

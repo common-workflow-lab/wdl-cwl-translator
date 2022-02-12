@@ -1,19 +1,8 @@
 cwlVersion: v1.2
 $graph:
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: CollectQualityYieldMetrics
-    inputs:
-      - id: input_bam
-        type: File
-      - id: metrics_filename
-        type: string
-      - id: preemptible_tries
-        type: int
-    outputs:
-      - id: quality_yield_metrics
-        type: File
-        outputBinding:
-            glob: $(inputs.metrics_filename)
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -36,12 +25,55 @@ $graph:
         ramMin: 3500.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
-    cwlVersion: v1.2
+    inputs:
+      - id: input_bam
+        type: File
+      - id: metrics_filename
+        type: string
+      - id: preemptible_tries
+        type: int
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: quality_yield_metrics
+        type: File
+        outputBinding:
+            glob: $(inputs.metrics_filename)
+  - cwlVersion: v1.2
     id: CollectUnsortedReadgroupBamQualityMetrics
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                java -Xms5000m -Xmx6500m -jar /usr/picard/picard.jar \
+                  CollectMultipleMetrics \
+                  INPUT=$(inputs.input_bam.path) \
+                  OUTPUT=$(inputs.output_bam_prefix) \
+                  ASSUME_SORTED=true \
+                  PROGRAM=null \
+                  PROGRAM=CollectBaseDistributionByCycle \
+                  PROGRAM=CollectInsertSizeMetrics \
+                  PROGRAM=MeanQualityByCycle \
+                  PROGRAM=QualityScoreDistribution \
+                  METRIC_ACCUMULATION_LEVEL=null \
+                  METRIC_ACCUMULATION_LEVEL=ALL_READS
+
+                touch $(inputs.output_bam_prefix).insert_size_metrics
+                touch $(inputs.output_bam_prefix).insert_size_histogram.pdf
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
+      - class: ResourceRequirement
+        ramMin: 7000.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
         type: File
@@ -49,6 +81,9 @@ $graph:
         type: string
       - id: preemptible_tries
         type: int
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: base_distribution_by_cycle_pdf
         type: File
@@ -82,78 +117,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.output_bam_prefix + '.quality_distribution_metrics')
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                java -Xms5000m -Xmx6500m -jar /usr/picard/picard.jar \
-                  CollectMultipleMetrics \
-                  INPUT=$(inputs.input_bam.path) \
-                  OUTPUT=$(inputs.output_bam_prefix) \
-                  ASSUME_SORTED=true \
-                  PROGRAM=null \
-                  PROGRAM=CollectBaseDistributionByCycle \
-                  PROGRAM=CollectInsertSizeMetrics \
-                  PROGRAM=MeanQualityByCycle \
-                  PROGRAM=QualityScoreDistribution \
-                  METRIC_ACCUMULATION_LEVEL=null \
-                  METRIC_ACCUMULATION_LEVEL=ALL_READS
-
-                touch $(inputs.output_bam_prefix).insert_size_metrics
-                touch $(inputs.output_bam_prefix).insert_size_histogram.pdf
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
-      - class: ResourceRequirement
-        ramMin: 7000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: CollectReadgroupBamQualityMetrics
-    inputs:
-      - id: input_bam
-        type: File
-      - id: input_bam_index
-        type: File
-      - id: output_bam_prefix
-        type: string
-      - id: ref_dict
-        type: File
-      - id: ref_fasta
-        type: File
-      - id: ref_fasta_index
-        type: File
-      - id: collect_gc_bias_metrics
-        default: true
-        type: boolean
-      - id: preemptible_tries
-        type: int
-    outputs:
-      - id: alignment_summary_metrics
-        type: File
-        outputBinding:
-            glob: $(inputs.output_bam_prefix + '.alignment_summary_metrics')
-      - id: gc_bias_detail_metrics
-        type: File
-        outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.detail_metrics')
-      - id: gc_bias_pdf
-        type: File
-        outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.pdf')
-      - id: gc_bias_summary_metrics
-        type: File
-        outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.summary_metrics')
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -190,12 +156,6 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CollectAggregationMetrics
     inputs:
       - id: input_bam
         type: File
@@ -214,6 +174,91 @@ $graph:
         type: boolean
       - id: preemptible_tries
         type: int
+    baseCommand:
+      - bash
+      - script.bash
+    outputs:
+      - id: alignment_summary_metrics
+        type: File
+        outputBinding:
+            glob: $(inputs.output_bam_prefix + '.alignment_summary_metrics')
+      - id: gc_bias_detail_metrics
+        type: File
+        outputBinding:
+            glob: $(inputs.output_bam_prefix + '.gc_bias.detail_metrics')
+      - id: gc_bias_pdf
+        type: File
+        outputBinding:
+            glob: $(inputs.output_bam_prefix + '.gc_bias.pdf')
+      - id: gc_bias_summary_metrics
+        type: File
+        outputBinding:
+            glob: $(inputs.output_bam_prefix + '.gc_bias.summary_metrics')
+  - cwlVersion: v1.2
+    id: CollectAggregationMetrics
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                # These are optionally generated, but need to exist for Cromwell's sake
+                touch $(inputs.output_bam_prefix).gc_bias.detail_metrics \
+                  $(inputs.output_bam_prefix).gc_bias.pdf \
+                  $(inputs.output_bam_prefix).gc_bias.summary_metrics \
+                  $(inputs.output_bam_prefix).insert_size_metrics \
+                  $(inputs.output_bam_prefix).insert_size_histogram.pdf
+
+                java -Xms5000m -Xmx6500m -jar /usr/picard/picard.jar \
+                  CollectMultipleMetrics \
+                  INPUT=$(inputs.input_bam.path) \
+                  REFERENCE_SEQUENCE=$(inputs.ref_fasta.path) \
+                  OUTPUT=$(inputs.output_bam_prefix) \
+                  ASSUME_SORTED=true \
+                  PROGRAM=null \
+                  PROGRAM=CollectAlignmentSummaryMetrics \
+                  PROGRAM=CollectInsertSizeMetrics \
+                  PROGRAM=CollectSequencingArtifactMetrics \
+                  PROGRAM=QualityScoreDistribution \
+                  $(inputs.collect_gc_bias_metrics ? 'PROGRAM="CollectGcBiasMetrics"' : "") \
+                  METRIC_ACCUMULATION_LEVEL=null \
+                  METRIC_ACCUMULATION_LEVEL=SAMPLE \
+                  METRIC_ACCUMULATION_LEVEL=LIBRARY
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
+      - class: ResourceRequirement
+        ramMin: 7000.0
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
+    inputs:
+      - id: input_bam
+        type: File
+      - id: input_bam_index
+        type: File
+      - id: output_bam_prefix
+        type: string
+      - id: ref_dict
+        type: File
+      - id: ref_fasta
+        type: File
+      - id: ref_fasta_index
+        type: File
+      - id: collect_gc_bias_metrics
+        default: true
+        type: boolean
+      - id: preemptible_tries
+        type: int
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: alignment_summary_metrics
         type: File
@@ -267,76 +312,9 @@ $graph:
         type: File
         outputBinding:
             glob: $(inputs.output_bam_prefix + '.error_summary_metrics')
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                # These are optionally generated, but need to exist for Cromwell's sake
-                touch $(inputs.output_bam_prefix).gc_bias.detail_metrics \
-                  $(inputs.output_bam_prefix).gc_bias.pdf \
-                  $(inputs.output_bam_prefix).gc_bias.summary_metrics \
-                  $(inputs.output_bam_prefix).insert_size_metrics \
-                  $(inputs.output_bam_prefix).insert_size_histogram.pdf
-
-                java -Xms5000m -Xmx6500m -jar /usr/picard/picard.jar \
-                  CollectMultipleMetrics \
-                  INPUT=$(inputs.input_bam.path) \
-                  REFERENCE_SEQUENCE=$(inputs.ref_fasta.path) \
-                  OUTPUT=$(inputs.output_bam_prefix) \
-                  ASSUME_SORTED=true \
-                  PROGRAM=null \
-                  PROGRAM=CollectAlignmentSummaryMetrics \
-                  PROGRAM=CollectInsertSizeMetrics \
-                  PROGRAM=CollectSequencingArtifactMetrics \
-                  PROGRAM=QualityScoreDistribution \
-                  $(inputs.collect_gc_bias_metrics ? 'PROGRAM="CollectGcBiasMetrics"' : "") \
-                  METRIC_ACCUMULATION_LEVEL=null \
-                  METRIC_ACCUMULATION_LEVEL=SAMPLE \
-                  METRIC_ACCUMULATION_LEVEL=LIBRARY
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
-      - class: ResourceRequirement
-        ramMin: 7000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: ConvertSequencingArtifactToOxoG
-    inputs:
-      - id: pre_adapter_detail_metrics
-        type: File
-      - id: bait_bias_detail_metrics
-        type: File
-      - id: base_name
-        type: string
-      - id: ref_dict
-        type: File
-      - id: ref_fasta
-        type: File
-      - id: ref_fasta_index
-        type: File
-      - id: preemptible_tries
-        type: int
-      - id: memory_multiplier
-        default: 1
-        type: int
-    outputs:
-      - id: oxog_metrics
-        type: File
-        outputBinding:
-            glob: $(inputs.base_name + '.oxog_metrics')
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -379,38 +357,35 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
-    cwlVersion: v1.2
+    inputs:
+      - id: pre_adapter_detail_metrics
+        type: File
+      - id: bait_bias_detail_metrics
+        type: File
+      - id: base_name
+        type: string
+      - id: ref_dict
+        type: File
+      - id: ref_fasta
+        type: File
+      - id: ref_fasta_index
+        type: File
+      - id: preemptible_tries
+        type: int
+      - id: memory_multiplier
+        default: 1
+        type: int
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
-    id: CrossCheckFingerprints
-    inputs:
-      - id: input_bams
-        type:
-            items: File
-            type: array
-      - id: input_bam_indexes
-        type:
-            items: File
-            type: array
-      - id: haplotype_database_file
-        type: File
-      - id: metrics_filename
-        type: string
-      - id: total_input_size
-        type: float
-      - id: preemptible_tries
-        type: int
-      - id: lod_threshold
-        type: float
-      - id: cross_check_by
-        type: string
     outputs:
-      - id: cross_check_fingerprints_metrics
+      - id: oxog_metrics
         type: File
         outputBinding:
-            glob: $(inputs.metrics_filename)
+            glob: $(inputs.base_name + '.oxog_metrics')
+  - cwlVersion: v1.2
+    id: CrossCheckFingerprints
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -436,77 +411,38 @@ $graph:
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: $((Math.ceil(inputs.total_input_size)  + 20) * 1024)
-    cwlVersion: v1.2
+    inputs:
+      - id: input_bams
+        type:
+            items: File
+            type: array
+      - id: input_bam_indexes
+        type:
+            items: File
+            type: array
+      - id: haplotype_database_file
+        type: File
+      - id: metrics_filename
+        type: string
+      - id: total_input_size
+        type: float
+      - id: preemptible_tries
+        type: int
+      - id: lod_threshold
+        type: float
+      - id: cross_check_by
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
-    id: CheckFingerprint
-    inputs:
-      - id: input_bam
-        type:
-          - File
-          - 'null'
-      - id: input_bam_index
-        type:
-          - File
-          - 'null'
-      - id: input_vcf
-        type:
-          - File
-          - 'null'
-      - id: input_vcf_index
-        type:
-          - File
-          - 'null'
-      - id: input_sample_alias
-        type:
-          - string
-          - 'null'
-      - id: genotypes
-        type: File
-      - id: genotypes_index
-        type:
-          - File
-          - 'null'
-      - id: expected_sample_alias
-        type: string
-      - id: output_basename
-        type: string
-      - id: genotype_lod_threshold
-        default: 5.0
-        type: float
-      - id: haplotype_database_file
-        type: File
-      - id: ref_fasta
-        type:
-          - File
-          - 'null'
-      - id: ref_fasta_index
-        type:
-          - File
-          - 'null'
-      - id: memory_size
-        default: 2500
-        type: int
-      - id: preemptible_tries
-        default: 3
-        type: int
     outputs:
-      - id: summary_metrics
+      - id: cross_check_fingerprints_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_basename + '.fingerprinting_summary_metrics')
-      - id: detail_metrics
-        type: File
-        outputBinding:
-            glob: $(inputs.output_basename + '.fingerprinting_detail_metrics')
-      - id: lod
-        type: float
-        outputBinding:
-            loadContents: true
-            glob: lod
-            outputEval: $(parseFloat(self[0].contents))
+            glob: $(inputs.metrics_filename)
+  - cwlVersion: v1.2
+    id: CheckFingerprint
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -560,41 +496,77 @@ $graph:
             += element.size}})}) / 1024^3 + (function(size_of=0){inputs.input_vcf
             === null ? "" : inputs.input_vcf.path.forEach(function(element){ if (element)
             {size_of += element.size}})}) / 1024^3)  + 20) * 1024)'
-    cwlVersion: v1.2
+    inputs:
+      - id: input_bam
+        type:
+          - File
+          - 'null'
+      - id: input_bam_index
+        type:
+          - File
+          - 'null'
+      - id: input_vcf
+        type:
+          - File
+          - 'null'
+      - id: input_vcf_index
+        type:
+          - File
+          - 'null'
+      - id: input_sample_alias
+        type:
+          - string
+          - 'null'
+      - id: genotypes
+        type: File
+      - id: genotypes_index
+        type:
+          - File
+          - 'null'
+      - id: expected_sample_alias
+        type: string
+      - id: output_basename
+        type: string
+      - id: genotype_lod_threshold
+        default: 5.0
+        type: float
+      - id: haplotype_database_file
+        type: File
+      - id: ref_fasta
+        type:
+          - File
+          - 'null'
+      - id: ref_fasta_index
+        type:
+          - File
+          - 'null'
+      - id: memory_size
+        default: 2500
+        type: int
+      - id: preemptible_tries
+        default: 3
+        type: int
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
-    id: CheckPreValidation
-    inputs:
-      - id: duplication_metrics
-        type: File
-      - id: chimerism_metrics
-        type: File
-      - id: max_duplication_in_reasonable_sample
-        type: float
-      - id: max_chimerism_in_reasonable_sample
-        type: float
-      - id: preemptible_tries
-        type: int
     outputs:
-      - id: duplication_rate
+      - id: summary_metrics
+        type: File
+        outputBinding:
+            glob: $(inputs.output_basename + '.fingerprinting_summary_metrics')
+      - id: detail_metrics
+        type: File
+        outputBinding:
+            glob: $(inputs.output_basename + '.fingerprinting_detail_metrics')
+      - id: lod
         type: float
         outputBinding:
             loadContents: true
-            glob: duplication_value.txt
+            glob: lod
             outputEval: $(parseFloat(self[0].contents))
-      - id: chimerism_rate
-        type: float
-        outputBinding:
-            loadContents: true
-            glob: chimerism_value.txt
-            outputEval: $(parseFloat(self[0].contents))
-      - id: is_outlier_data
-        type: boolean
-        outputBinding:
-            outputEval: $("duplication_value.txt" > inputs.max_duplication_in_reasonable_sample
-                || "chimerism_value.txt" > inputs.max_chimerism_in_reasonable_sample)
+  - cwlVersion: v1.2
+    id: CheckPreValidation
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -635,53 +607,41 @@ $graph:
       - class: ResourceRequirement
         ramMin: 2048.0
         outdirMin: 1024
-    cwlVersion: v1.2
+    inputs:
+      - id: duplication_metrics
+        type: File
+      - id: chimerism_metrics
+        type: File
+      - id: max_duplication_in_reasonable_sample
+        type: float
+      - id: max_chimerism_in_reasonable_sample
+        type: float
+      - id: preemptible_tries
+        type: int
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
-    id: ValidateSamFile
-    inputs:
-      - id: input_bam
-        type: File
-      - id: input_bam_index
-        type:
-          - File
-          - 'null'
-      - id: report_filename
-        type: string
-      - id: ref_dict
-        type: File
-      - id: ref_fasta
-        type: File
-      - id: ref_fasta_index
-        type: File
-      - id: max_output
-        type:
-          - int
-          - 'null'
-      - id: ignore
-        type:
-          - items: string
-            type: array
-          - 'null'
-      - id: is_outlier_data
-        type:
-          - boolean
-          - 'null'
-      - id: preemptible_tries
-        type: int
-      - id: memory_multiplier
-        default: 1
-        type: int
-      - id: additional_disk
-        default: 20
-        type: int
     outputs:
-      - id: report
-        type: File
+      - id: duplication_rate
+        type: float
         outputBinding:
-            glob: $(inputs.report_filename)
+            loadContents: true
+            glob: duplication_value.txt
+            outputEval: $(parseFloat(self[0].contents))
+      - id: chimerism_rate
+        type: float
+        outputBinding:
+            loadContents: true
+            glob: chimerism_value.txt
+            outputEval: $(parseFloat(self[0].contents))
+      - id: is_outlier_data
+        type: boolean
+        outputBinding:
+            outputEval: $("duplication_value.txt" > inputs.max_duplication_in_reasonable_sample
+                || "chimerism_value.txt" > inputs.max_chimerism_in_reasonable_sample)
+  - cwlVersion: v1.2
+    id: ValidateSamFile
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -727,34 +687,53 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
             * 1024)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CollectWgsMetrics
     inputs:
       - id: input_bam
         type: File
       - id: input_bam_index
-        type: File
-      - id: metrics_filename
+        type:
+          - File
+          - 'null'
+      - id: report_filename
         type: string
-      - id: wgs_coverage_interval_list
+      - id: ref_dict
         type: File
       - id: ref_fasta
         type: File
       - id: ref_fasta_index
         type: File
-      - id: read_length
-        type: int
+      - id: max_output
+        type:
+          - int
+          - 'null'
+      - id: ignore
+        type:
+          - items: string
+            type: array
+          - 'null'
+      - id: is_outlier_data
+        type:
+          - boolean
+          - 'null'
       - id: preemptible_tries
         type: int
+      - id: memory_multiplier
+        default: 1
+        type: int
+      - id: additional_disk
+        default: 20
+        type: int
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: metrics
+      - id: report
         type: File
         outputBinding:
-            glob: $(inputs.metrics_filename)
+            glob: $(inputs.report_filename)
+  - cwlVersion: v1.2
+    id: CollectWgsMetrics
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -783,12 +762,6 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CollectRawWgsMetrics
     inputs:
       - id: input_bam
         type: File
@@ -806,17 +779,17 @@ $graph:
         type: int
       - id: preemptible_tries
         type: int
-      - id: memory_multiplier
-        default: 1
-        type: int
-      - id: additional_disk
-        default: 20
-        type: int
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: metrics
         type: File
         outputBinding:
             glob: $(inputs.metrics_filename)
+  - cwlVersion: v1.2
+    id: CollectRawWgsMetrics
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -861,27 +834,21 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
             * 1024)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CollectHsMetrics
     inputs:
       - id: input_bam
         type: File
       - id: input_bam_index
         type: File
+      - id: metrics_filename
+        type: string
+      - id: wgs_coverage_interval_list
+        type: File
       - id: ref_fasta
         type: File
       - id: ref_fasta_index
         type: File
-      - id: metrics_filename
-        type: string
-      - id: target_interval_list
-        type: File
-      - id: bait_interval_list
-        type: File
+      - id: read_length
+        type: int
       - id: preemptible_tries
         type: int
       - id: memory_multiplier
@@ -890,11 +857,17 @@ $graph:
       - id: additional_disk
         default: 20
         type: int
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
       - id: metrics
         type: File
         outputBinding:
             glob: $(inputs.metrics_filename)
+  - cwlVersion: v1.2
+    id: CollectHsMetrics
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -940,26 +913,40 @@ $graph:
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
             * 1024)
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: CalculateReadGroupChecksum
     inputs:
       - id: input_bam
         type: File
       - id: input_bam_index
         type: File
-      - id: read_group_md5_filename
+      - id: ref_fasta
+        type: File
+      - id: ref_fasta_index
+        type: File
+      - id: metrics_filename
         type: string
+      - id: target_interval_list
+        type: File
+      - id: bait_interval_list
+        type: File
       - id: preemptible_tries
         type: int
+      - id: memory_multiplier
+        default: 1
+        type: int
+      - id: additional_disk
+        default: 20
+        type: int
+    baseCommand:
+      - bash
+      - script.bash
     outputs:
-      - id: md5_file
+      - id: metrics
         type: File
         outputBinding:
-            glob: $(inputs.read_group_md5_filename)
+            glob: $(inputs.metrics_filename)
+  - cwlVersion: v1.2
+    id: CalculateReadGroupChecksum
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -980,12 +967,57 @@ $graph:
         ramMin: 4000.0
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 40) * 1024)
-    cwlVersion: v1.2
+    inputs:
+      - id: input_bam
+        type: File
+      - id: input_bam_index
+        type: File
+      - id: read_group_md5_filename
+        type: string
+      - id: preemptible_tries
+        type: int
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs:
+      - id: md5_file
+        type: File
+        outputBinding:
+            glob: $(inputs.read_group_md5_filename)
+  - cwlVersion: v1.2
     id: ValidateVCF
+    class: CommandLineTool
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: script.bash
+            entry: |4
+
+                # Note that WGS needs a lot of memory to do the -L *.vcf if an interval file is not supplied
+                gatk --java-options "-Xms6000m -Xmx6500m" \
+                  ValidateVariants \
+                  -V $(inputs.input_vcf.path) \
+                  -R $(inputs.ref_fasta.path) \
+                  -L $(inputs.calling_interval_list.path) \
+                  $(inputs.is_gvcf ? "-gvcf" : "") \
+                  --validation-type-to-exclude ALLELES \
+                  $(inputs.dbsnp_vcf === null ? "" : "--dbsnp " + inputs.dbsnp_vcf.path) \
+                  $(inputs.extra_args)
+      - class: InlineJavascriptRequirement
+      - class: NetworkAccess
+        networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-gatk/gatk:4.1.8.0
+      - class: ResourceRequirement
+        ramMin: 7000.0
+        outdirMin: '$((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf
+            === null ? "" : inputs.dbsnp_vcf.path.forEach(function(element){ if (element)
+            {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)'
     inputs:
       - id: input_vcf
         type: File
@@ -1024,73 +1056,13 @@ $graph:
       - id: gatk_docker
         default: us.gcr.io/broad-gatk/gatk:4.1.8.0
         type: string
-    outputs: []
-    requirements:
-      - class: InitialWorkDirRequirement
-        listing:
-          - entryname: script.bash
-            entry: |4
-
-                # Note that WGS needs a lot of memory to do the -L *.vcf if an interval file is not supplied
-                gatk --java-options "-Xms6000m -Xmx6500m" \
-                  ValidateVariants \
-                  -V $(inputs.input_vcf.path) \
-                  -R $(inputs.ref_fasta.path) \
-                  -L $(inputs.calling_interval_list.path) \
-                  $(inputs.is_gvcf ? "-gvcf" : "") \
-                  --validation-type-to-exclude ALLELES \
-                  $(inputs.dbsnp_vcf === null ? "" : "--dbsnp " + inputs.dbsnp_vcf.path) \
-                  $(inputs.extra_args)
-      - class: InlineJavascriptRequirement
-      - class: NetworkAccess
-        networkAccess: true
-    hints:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-gatk/gatk:4.1.8.0
-      - class: ResourceRequirement
-        ramMin: 7000.0
-        outdirMin: '$((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf
-            === null ? "" : inputs.dbsnp_vcf.path.forEach(function(element){ if (element)
-            {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)'
-    cwlVersion: v1.2
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
+    outputs: []
+  - cwlVersion: v1.2
     id: CollectVariantCallingMetrics
-    inputs:
-      - id: input_vcf
-        type: File
-      - id: input_vcf_index
-        type: File
-      - id: metrics_basename
-        type: string
-      - id: dbsnp_vcf
-        type: File
-      - id: dbsnp_vcf_index
-        type: File
-      - id: ref_dict
-        type: File
-      - id: evaluation_interval_list
-        type: File
-      - id: is_gvcf
-        default: true
-        type: boolean
-      - id: preemptible_tries
-        type: int
-    outputs:
-      - id: summary_metrics
-        type: File
-        outputBinding:
-            glob: $(inputs.metrics_basename + '.variant_calling_summary_metrics')
-      - id: detail_metrics
-        type: File
-        outputBinding:
-            glob: $(inputs.metrics_basename + '.variant_calling_detail_metrics')
+    class: CommandLineTool
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -1116,7 +1088,35 @@ $graph:
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
-    cwlVersion: v1.2
+    inputs:
+      - id: input_vcf
+        type: File
+      - id: input_vcf_index
+        type: File
+      - id: metrics_basename
+        type: string
+      - id: dbsnp_vcf
+        type: File
+      - id: dbsnp_vcf_index
+        type: File
+      - id: ref_dict
+        type: File
+      - id: evaluation_interval_list
+        type: File
+      - id: is_gvcf
+        default: true
+        type: boolean
+      - id: preemptible_tries
+        type: int
     baseCommand:
       - bash
       - script.bash
+    outputs:
+      - id: summary_metrics
+        type: File
+        outputBinding:
+            glob: $(inputs.metrics_basename + '.variant_calling_summary_metrics')
+      - id: detail_metrics
+        type: File
+        outputBinding:
+            glob: $(inputs.metrics_basename + '.variant_calling_detail_metrics')

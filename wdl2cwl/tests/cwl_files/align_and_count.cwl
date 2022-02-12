@@ -1,5 +1,6 @@
-class: Workflow
+cwlVersion: v1.2
 id: align_and_count_report
+class: Workflow
 doc: Align reads to reference with minimap2 and count the number of hits. Results
     are returned in the format of 'samtools idxstats'.
 inputs:
@@ -17,17 +18,6 @@ inputs:
   - id: align_and_count.docker
     default: quay.io/broadinstitute/viral-core:2.1.33
     type: string
-outputs:
-  - id: align_and_count_report.report
-    outputSource: align_and_count/report
-    type: File
-  - id: align_and_count_report.report_top_hits
-    outputSource: align_and_count/report_top_hits
-    type: File
-  - id: align_and_count_report.viral_core_version
-    outputSource: align_and_count/viralngs_version
-    type: string
-cwlVersion: v1.2
 steps:
   - id: align_and_count
     in:
@@ -138,3 +128,13 @@ steps:
         baseCommand:
           - bash
           - script.bash
+outputs:
+  - id: align_and_count_report.report
+    outputSource: align_and_count/report
+    type: File
+  - id: align_and_count_report.report_top_hits
+    outputSource: align_and_count/report_top_hits
+    type: File
+  - id: align_and_count_report.viral_core_version
+    outputSource: align_and_count/viralngs_version
+    type: string
