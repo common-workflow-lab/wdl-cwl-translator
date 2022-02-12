@@ -45,10 +45,16 @@ $graph:
         default: true
         type: boolean
       - id: ignoreSpecificGenotypesLsid
+        doc: Optional, MUST be specified with ignoreSpecificGenotypesPlatform. If
+            both are defined will not download fingerprints for an LSID run on a specific
+            genotyping platform. The intent is to ignore its own fingerprint
         type:
           - string
           - 'null'
       - id: ignoreSpecificGenotypesPlatform
+        doc: Optional, MUST be specified with ignoreSpecificGenotypesLsid. If both
+            are defined will not download fingerprints for an LSID run on a specific
+            genotyping platform. The intent is to ignore its own fingerprint
         type:
           - string
           - 'null'

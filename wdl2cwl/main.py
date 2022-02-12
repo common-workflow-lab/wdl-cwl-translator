@@ -10,6 +10,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Mapping,
     Sequence,
     Set,
     Tuple,
@@ -252,23 +253,27 @@ class Converter:
         inputs = [
             cwl.WorkflowInputParameter(
                 id=inp.id,
+                doc=inp.doc,
                 type=inp.type,
                 default=inp.default,
             )
-            for inp in self.get_cwl_task_inputs(obj.available_inputs)  # type: ignore[arg-type]
+            for inp in self.get_cwl_task_inputs(obj.available_inputs, obj.parameter_meta)  # type: ignore[arg-type]
         ]
         outputs = [
             cwl.WorkflowOutputParameter(
                 id=f"{wf_name}.{output_id}",
                 type=output_type,
                 outputSource=output_source,
+                doc=obj.meta.get(output_id, None),
             )
             for output_id, output_type, output_source in get_workflow_outputs(
                 obj.effective_outputs
             )
         ]
         wf_steps: List[cwl.WorkflowStep] = []
-        wf_description = obj.meta["description"] if "description" in obj.meta else None
+        wf_description = (
+            obj.meta.pop("description") if "description" in obj.meta else None
+        )
         for call in obj.body:
             if not isinstance(call, WDL.Tree.Call):
                 _logger.warning(
@@ -364,11 +369,10 @@ class Converter:
 
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
-        cwl_inputs = self.get_cwl_task_inputs(obj.inputs)
-        cwl_outputs = [output for output in self.get_cwl_task_outputs(obj.outputs)]
+        cwl_inputs = self.get_cwl_task_inputs(obj.inputs, obj.parameter_meta)
+        cwl_outputs = self.get_cwl_task_outputs(obj.outputs, obj.parameter_meta)
         hints, requirements = self.get_cwl_hints_and_requirements(obj)
-        if obj.parameter_meta:
-            _logger.warning("Skipping parameter_meta: %s", obj.parameter_meta)
+        description = obj.meta.pop("description", None)
         if obj.meta:
             _logger.warning("Skipping meta: %s", obj.meta)
         run_script = False
@@ -377,6 +381,7 @@ class Converter:
                 run_script = True
         return cwl.CommandLineTool(
             id=obj.name,
+            doc=description,
             inputs=cwl_inputs,
             hints=hints,
             requirements=requirements,
@@ -963,7 +968,9 @@ class Converter:
         return pl_holder_str
 
     def get_cwl_task_inputs(
-        self, wdl_inputs: Optional[List[WDL.Tree.Decl]]
+        self,
+        wdl_inputs: Optional[List[WDL.Tree.Decl]],
+        meta: Optional[Dict[str, Any]] = None,
     ) -> List[cwl.CommandInputParameter]:
         """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
         inputs: List[cwl.CommandInputParameter] = []
@@ -1019,9 +1026,16 @@ class Converter:
                         if input_value and final_type_of == "float":
                             input_value = float(input_value)
 
+            doc: Optional[str] = None
+            if meta and input_name in meta:
+                if isinstance(meta[input_name], str):
+                    doc = meta[input_name]
+                elif isinstance(meta[input_name], Mapping):
+                    if "description" in meta[input_name]:
+                        doc = meta[input_name]["description"]
             inputs.append(
                 cwl.CommandInputParameter(
-                    id=input_name, type=final_type_of, default=input_value
+                    id=input_name, type=final_type_of, default=input_value, doc=doc
                 )
             )
 
@@ -1047,7 +1061,8 @@ class Converter:
 
     def get_cwl_task_outputs(
         self,
-        wdl_outputs: Union[List[WDL.Tree.Decl], List[WDL.Env.Binding[WDL.Tree.Decl]]],
+        wdl_outputs: List[WDL.Tree.Decl],
+        meta: Optional[Dict[str, Any]] = None,
     ) -> List[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
         outputs: List[cwl.CommandOutputParameter] = []
@@ -1055,12 +1070,15 @@ class Converter:
         if not wdl_outputs:
             return outputs
 
-        for item in wdl_outputs:
-            output_name = item.name
-            if isinstance(item, WDL.Env.Binding):
-                wdl_output = item.info
-            else:
-                wdl_output = item
+        for wdl_output in wdl_outputs:
+            output_name = wdl_output.name
+            doc: Optional[str] = None
+            if meta and output_name in meta:
+                if isinstance(meta[output_name], str):
+                    doc = meta[output_name]
+                elif isinstance(meta[output_name], Mapping):
+                    if "description" in meta[output_name]:
+                        doc = meta[output_name]["description"]
             glob = False
             if isinstance(wdl_output.type, WDL.Type.Array):
                 input_type = get_cwl_type(wdl_output.type.item_type)
@@ -1095,6 +1113,7 @@ class Converter:
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
+                        doc=doc,
                         type=type_of,
                         outputBinding=cwl.CommandOutputBinding(
                             glob=glob_str,
@@ -1119,6 +1138,7 @@ class Converter:
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
+                        doc=doc,
                         type=type_of,
                         outputBinding=cwl.CommandOutputBinding(
                             glob=glob_str,
@@ -1143,6 +1163,7 @@ class Converter:
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
+                        doc=doc,
                         type=type_of,
                         outputBinding=cwl.CommandOutputBinding(
                             glob=glob_str,
@@ -1163,6 +1184,7 @@ throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 outputs.append(
                     cwl.CommandOutputParameter(
                         id=output_name,
+                        doc=doc,
                         type="stdout",
                     ),
                 )
@@ -1178,11 +1200,12 @@ throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                     final_type_of = type_of
                 if glob:
                     globs: List[str] = []
-                    targets: Union[List[WDL.Expr.Base], List[WDL.Tree.Decl]] = (
-                        wdl_output.expr.items
-                        if isinstance(wdl_output.expr, WDL.Expr.Array)
-                        else [wdl_output]
-                    )
+                    if isinstance(wdl_output.expr, WDL.Expr.Array):
+                        targets: Sequence[
+                            Union[WDL.Expr.Base, WDL.Tree.Decl]
+                        ] = wdl_output.expr.items
+                    else:
+                        targets = [wdl_output]
                     for entry in targets:
                         glob_str = f"$({self.get_expr(entry)})"
                         if (
@@ -1195,6 +1218,7 @@ throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                     outputs.append(
                         cwl.CommandOutputParameter(
                             id=output_name,
+                            doc=doc,
                             type=final_type_of,
                             outputBinding=cwl.CommandOutputBinding(glob=final_glob),
                         )
@@ -1204,6 +1228,7 @@ throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                     outputs.append(
                         cwl.CommandOutputParameter(
                             id=output_name,
+                            doc=doc,
                             type=final_type_of,
                             outputBinding=cwl.CommandOutputBinding(
                                 outputEval=outputEval

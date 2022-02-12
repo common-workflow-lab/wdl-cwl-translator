@@ -1,5 +1,6 @@
 class: CommandLineTool
 id: TrimAdapters
+doc: Trims adapters from FASTQ files.
 inputs:
   - id: fastq1_input_files
     type:
@@ -16,19 +17,25 @@ inputs:
         items: string
         type: array
   - id: docker
+    doc: (optional) the docker image containing the runtime environment for this task
     default: quay.io/humancellatlas/snss2-trim-adapters:0.1.0
     type: string
   - id: machine_mem_mb
+    doc: (optional) the amount of memory (MiB) to provision for this task
     default: 8250
     type: int
   - id: cpu
+    doc: (optional) the number of cpus to provision for this task
     default: 1
     type: int
   - id: disk
+    doc: (optional) the amount of disk space (GiB) to provision for this task
     type:
       - int
       - 'null'
   - id: preemptible
+    doc: (optional) if non-zero, request a pre-emptible instance and allow for this
+        number of preemptions before running the task on a non preemptible machine
     default: 3
     type: int
 outputs:

@@ -11,4 +11,8 @@ task test_select_all {
   output {
     Array[Int] first1 = select_all([one, two, 1, select_first([two, one])])
   }
+
+  parameter_meta {
+    first1: "amalgamation"
+  }
 }
