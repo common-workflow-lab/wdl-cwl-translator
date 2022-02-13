@@ -273,14 +273,16 @@ class Converter:
 
     def get_step_input_expr(self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]) -> str:
         """Get name of expression referenced in workflow call inputs."""
-        if isinstance(wf_expr, WDL.Expr.String):
-            return self.get_expr_string(wf_expr)[1:-1]
-        wdl_expr = wf_expr.expr
-        if not isinstance(wdl_expr, WDL.Expr.Ident):
-            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
-                f"Unhandled type: {type(wdl_expr)}: {wdl_expr}. Was expecting a WDL.Expr.Ident."
-            )
-        return str(wdl_expr.name)
+        with WDLSourceLine(wf_expr, ConversionException):
+            if isinstance(wf_expr, WDL.Expr.String):
+                return self.get_expr_string(wf_expr)[1:-1]
+            elif isinstance(wf_expr, WDL.Expr.Get):
+                ident = cast(WDL.Expr.Ident, wf_expr.expr)
+                id_name = ident.name
+                referee = ident.referee
+                if referee and isinstance(referee, WDL.Tree.Scatter):
+                    return self.get_step_input_expr(referee.expr)  # type: ignore [arg-type]
+                return id_name
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
@@ -309,6 +311,7 @@ class Converter:
         wf_description = (
             obj.meta.pop("description") if "description" in obj.meta else None
         )
+        is_scatter_present = False
         for body_part in obj.body:
             if not isinstance(body_part, (WDL.Tree.Call, WDL.Tree.Scatter)):
                 _logger.warning(
@@ -323,16 +326,20 @@ class Converter:
                 if isinstance(body_part, WDL.Tree.Call):
                     wf_steps.append(self.get_workflow_call(body_part))
                 elif isinstance(body_part, WDL.Tree.Scatter):
+                    is_scatter_present = True
                     wf_steps.extend(self.get_workflow_scatter(body_part))
+        requirements = [cwl.ScatterFeatureRequirement()] if is_scatter_present else None
 
         return cwl.Workflow(
             id=wf_name,
             cwlVersion="v1.2",
             doc=wf_description,
+            requirements=requirements,
             inputs=inputs,
             steps=wf_steps,
             outputs=outputs,
         )
+
     def get_workflow_scatter(self, scatter: WDL.Tree.Scatter) -> List[cwl.WorkflowStep]:
         """Get the CWL Workflow Step equivalent of a list of WDL Scatter Object."""
         scatter_steps: List[cwl.WorkflowStep] = []
@@ -346,6 +353,8 @@ class Converter:
     def get_workflow_call(self, call: WDL.Tree.Call) -> cwl.WorkflowStep:
         """Get the CWL Workflow Step equivalent of a WDL Call Object."""
         callee = call.callee
+        if callee is None:
+            raise ConversionException("callee is None. This should not be possible.")
         cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)
         call_inputs = call.inputs
         inputs_from_call: Dict[str, Tuple[str, Dict[str, Any]]] = {}
@@ -389,21 +398,14 @@ class Converter:
 
             if inp.id not in input_defaults:
                 wf_step_inputs.append(
-                    cwl.WorkflowStepInput(
-                        id=inp.id, source=source_str, **extras
-                    )
+                    cwl.WorkflowStepInput(id=inp.id, source=source_str, **extras)
                 )
             else:
                 wf_step_inputs.append(
-                    cwl.WorkflowStepInput(
-                        id=inp.id, default=source_str, **extras
-                    )
+                    cwl.WorkflowStepInput(id=inp.id, default=source_str, **extras)
                 )
         wf_step_outputs = (
-            [
-                cwl.WorkflowStepOutput(id=output.name)
-                for output in callee.outputs
-            ]
+            [cwl.WorkflowStepOutput(id=output.name) for output in callee.outputs]
             if callee.outputs
             else []
         )
@@ -415,7 +417,6 @@ class Converter:
             out=wf_step_outputs,
         )
         return wf_step
-                
 
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
@@ -899,7 +900,6 @@ class Converter:
     def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
         """Translate WDL Ident Expressions."""
         id_name = wdl_ident_expr.name
-        ident_name = get_input(id_name)
         referee = wdl_ident_expr.referee
         optional = wdl_ident_expr.type.optional
         if referee:
@@ -911,6 +911,7 @@ class Converter:
                     or wdl_ident_expr.name not in self.non_static_values
                 ):
                     return self.get_expr(referee.expr)
+        ident_name = get_input(id_name)
         if optional and isinstance(wdl_ident_expr.type, WDL.Type.File):
             # To prevent null showing on the terminal for inputs of type File
             name_with_file_check = get_expr_name_with_is_file_check(wdl_ident_expr)
