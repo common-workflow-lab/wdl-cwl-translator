@@ -72,7 +72,7 @@ docs: FORCE
 clean: FORCE
 	rm -f ${MODILE}/*.pyc tests/*.pyc
 	python setup.py clean --all || true
-	rm -Rf .coverage
+	rm -Rf .coverage coverage.xml
 	rm -f diff-cover.html
 
 # Linting and code style related targets

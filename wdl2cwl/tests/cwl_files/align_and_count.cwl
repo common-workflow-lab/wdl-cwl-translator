@@ -1,5 +1,6 @@
-class: Workflow
+cwlVersion: v1.2
 id: align_and_count_report
+class: Workflow
 doc: Align reads to reference with minimap2 and count the number of hits. Results
     are returned in the format of 'samtools idxstats'.
 inputs:
@@ -17,19 +18,8 @@ inputs:
   - id: align_and_count.docker
     default: quay.io/broadinstitute/viral-core:2.1.33
     type: string
-outputs:
-  - id: align_and_count_report.report
-    outputSource: reports.align_and_count/report
-    type: File
-  - id: align_and_count_report.report_top_hits
-    outputSource: reports.align_and_count/report_top_hits
-    type: File
-  - id: align_and_count_report.viral_core_version
-    outputSource: reports.align_and_count/viralngs_version
-    type: string
-cwlVersion: v1.2
 steps:
-  - id: reports.align_and_count
+  - id: align_and_count
     in:
       - id: reads_bam
         source: align_and_count.reads_bam
@@ -90,8 +80,6 @@ steps:
                 glob: VERSION
                 outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/viral-core:2.1.33
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -114,12 +102,15 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/viral-core:2.1.33
           - class: ResourceRequirement
             coresMin: 4
             ramMin: |-
                 ${
                 var unit = "GB";
-                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(element => element !== null) }`.match(/[0-9]+/g));
+                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(function(element) { return element !== null }) }`.match(/[0-9]+/g));
                 var memory = "";
                 if(unit==="KiB") memory = value/1024;
                 else if(unit==="MiB") memory = value;
@@ -137,3 +128,13 @@ steps:
         baseCommand:
           - bash
           - script.bash
+outputs:
+  - id: align_and_count_report.report
+    outputSource: align_and_count/report
+    type: File
+  - id: align_and_count_report.report_top_hits
+    outputSource: align_and_count/report_top_hits
+    type: File
+  - id: align_and_count_report.viral_core_version
+    outputSource: align_and_count/viralngs_version
+    type: string

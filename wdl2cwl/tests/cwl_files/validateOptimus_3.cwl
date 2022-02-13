@@ -1,40 +1,7 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: ValidateMatrix
-inputs:
-  - id: matrix
-    type: File
-  - id: matrix_row_index
-    type: File
-  - id: matrix_col_index
-    type: File
-  - id: reference_matrix
-    type: File
-outputs:
-  - id: result
-    type: string
-    outputBinding:
-        loadContents: true
-        glob: result.txt
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
-  - id: new_reference_matrix
-    type: File
-    outputBinding:
-        glob: newReferenceMatrix.rds
-  - id: reads_per_cell_histogram
-    type: File
-    outputBinding:
-        glob: reads_per_cell_histogram.png
-  - id: reads_per_gene_histogram
-    type: File
-    outputBinding:
-        glob: reads_per_gene_histogram.png
-  - id: number_of_genes_per_cell
-    type: File
-    outputBinding:
-        glob: number_of_genes_per_cell.png
+class: CommandLineTool
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/humancellatlas/optimus-matrix-test:0.0.7
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -61,12 +28,46 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/humancellatlas/optimus-matrix-test:0.0.7
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 15258.7890625
     outdirMin: $((Math.ceil((function(size_of=0){inputs.matrix.path.forEach(function(element){
-        if (element) {size_of += element.size}})}) / 1000^3*1.1) ) * 1024)
-cwlVersion: v1.2
+        if (element) {size_of += element.size}})}) / 1000^3 * 1.1) ) * 1024)
+inputs:
+  - id: matrix
+    type: File
+  - id: matrix_row_index
+    type: File
+  - id: matrix_col_index
+    type: File
+  - id: reference_matrix
+    type: File
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: result
+    type: string
+    outputBinding:
+        loadContents: true
+        glob: result.txt
+        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+  - id: new_reference_matrix
+    type: File
+    outputBinding:
+        glob: newReferenceMatrix.rds
+  - id: reads_per_cell_histogram
+    type: File
+    outputBinding:
+        glob: reads_per_cell_histogram.png
+  - id: reads_per_gene_histogram
+    type: File
+    outputBinding:
+        glob: reads_per_gene_histogram.png
+  - id: number_of_genes_per_cell
+    type: File
+    outputBinding:
+        glob: number_of_genes_per_cell.png

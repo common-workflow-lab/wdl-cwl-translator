@@ -1,20 +1,9 @@
 cwlVersion: v1.2
 $graph:
-  - class: CommandLineTool
+  - cwlVersion: v1.2
     id: MakeSafeFilename
-    inputs:
-      - id: name
-        type: string
-    outputs:
-      - id: output_safe_name
-        type: string
-        outputBinding:
-            loadContents: true
-            glob: safe_name.txt
-            outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+    class: CommandLineTool
     requirements:
-      - class: DockerRequirement
-        dockerPull: gcr.io/gcp-runtimes/ubuntu_16_0_4:latest
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -24,78 +13,29 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: gcr.io/gcp-runtimes/ubuntu_16_0_4:latest
       - class: ResourceRequirement
         ramMin: 1024.0
         outdirMin: 10240
-    cwlVersion: v1.2
+    inputs:
+      - id: name
+        type: string
     baseCommand:
       - bash
       - script.bash
-  - class: CommandLineTool
-    id: DownloadGenotypes
-    inputs:
-      - id: sample_alias
-        type: string
-      - id: sample_lsid
-        type: string
-      - id: output_vcf_base_name
-        type: string
-      - id: compress
-        default: true
-        type: boolean
-      - id: ignoreSpecificGenotypesLsid
-        type:
-          - string
-          - 'null'
-      - id: ignoreSpecificGenotypesPlatform
-        type:
-          - string
-          - 'null'
-      - id: haplotype_database_file
-        type: File
-      - id: ref_fasta
-        type: File
-      - id: ref_fasta_index
-        type: File
-      - id: ref_dict
-        type: File
-      - id: environment
-        type: string
-      - id: vault_token_path
-        type: File
-      - id: max_retries
-        type:
-          - int
-          - 'null'
-      - id: preemptible_tries
-        type:
-          - int
-          - 'null'
     outputs:
-      - id: fingerprint_retrieved
-        type: boolean
+      - id: output_safe_name
+        type: string
         outputBinding:
             loadContents: true
-            glob: $("fp_retrieved.txt")
-            outputEval: |-
-                ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
-      - id: reference_fingerprint_vcf
-        type: File
-        outputBinding:
-            glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf")'
-      - id: reference_fingerprint_vcf_index
-        type: File
-        outputBinding:
-            glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf"
-                + inputs.compress ? ".tbi" : ".idx")'
+            glob: safe_name.txt
+            outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+  - cwlVersion: v1.2
+    id: DownloadGenotypes
+    class: CommandLineTool
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -153,19 +93,43 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: 1024
-    cwlVersion: v1.2
-    baseCommand:
-      - bash
-      - script.bash
-  - class: CommandLineTool
-    id: UploadFingerprintToMercury
     inputs:
-      - id: fingerprint_json_file
+      - id: sample_alias
+        type: string
+      - id: sample_lsid
+        type: string
+      - id: output_vcf_base_name
+        type: string
+      - id: compress
+        default: true
+        type: boolean
+      - id: ignoreSpecificGenotypesLsid
+        doc: Optional, MUST be specified with ignoreSpecificGenotypesPlatform. If
+            both are defined will not download fingerprints for an LSID run on a specific
+            genotyping platform. The intent is to ignore its own fingerprint
+        type:
+          - string
+          - 'null'
+      - id: ignoreSpecificGenotypesPlatform
+        doc: Optional, MUST be specified with ignoreSpecificGenotypesLsid. If both
+            are defined will not download fingerprints for an LSID run on a specific
+            genotyping platform. The intent is to ignore its own fingerprint
+        type:
+          - string
+          - 'null'
+      - id: haplotype_database_file
         type: File
-      - id: gtc_file
+      - id: ref_fasta
+        type: File
+      - id: ref_fasta_index
+        type: File
+      - id: ref_dict
         type: File
       - id: environment
         type: string
@@ -179,10 +143,35 @@ $graph:
         type:
           - int
           - 'null'
-    outputs: []
+    baseCommand:
+      - bash
+      - script.bash
+    outputs:
+      - id: fingerprint_retrieved
+        type: boolean
+        outputBinding:
+            loadContents: true
+            glob: $("fp_retrieved.txt")
+            outputEval: |-
+                ${
+                var contents = self[0].contents.trim().toLowerCase()
+                if (contents == 'true') { return true;}
+                if (contents == 'false') { return false;}
+                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                }
+      - id: reference_fingerprint_vcf
+        type: File
+        outputBinding:
+            glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf")'
+      - id: reference_fingerprint_vcf_index
+        type: File
+        outputBinding:
+            glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf"
+                + inputs.compress ? ".tbi" : ".idx")'
+  - cwlVersion: v1.2
+    id: UploadFingerprintToMercury
+    class: CommandLineTool
     requirements:
-      - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
@@ -213,10 +202,30 @@ $graph:
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
+    hints:
+      - class: DockerRequirement
+        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: 1024
-    cwlVersion: v1.2
+    inputs:
+      - id: fingerprint_json_file
+        type: File
+      - id: gtc_file
+        type: File
+      - id: environment
+        type: string
+      - id: vault_token_path
+        type: File
+      - id: max_retries
+        type:
+          - int
+          - 'null'
+      - id: preemptible_tries
+        type:
+          - int
+          - 'null'
     baseCommand:
       - bash
       - script.bash
+    outputs: []

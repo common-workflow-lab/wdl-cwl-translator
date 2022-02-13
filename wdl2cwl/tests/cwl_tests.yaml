@@ -133,3 +133,36 @@
   tool: cwl_files/read_boolean.cwl#read_dynamic_boolean
   output:
     dynamic_true: true
+
+- doc: GA4GH 2020 plenary demonstration workflow
+  tool: cwl_files/gwas.cwl
+  job: inputs/gwas.yaml
+  output:
+    gwas.logistic:
+      class: File
+      basename: ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.assoc.logistic
+      checksum: sha1$afd49c06594c285bca785e6f20d9695a34fb8a05
+      size: 38122
+    gwas.manhattan_plot:
+      class: File
+      basename: ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.png
+      checksum: sha1$a26b178dfa0be82f991dc2b28b9f2e6403cbfc51
+      size: 51977
+
+- doc: simple flatten() support
+  tool: cwl_files/flatten.cwl
+  job: inputs/flatten.yaml
+  output:
+    out_s: [ Hello, World, How, are, you? ]
+    out_a_s: [ Hello, World ]
+
+- doc: simple select_all() support
+  tool: cwl_files/select_all_1.cwl
+  job: inputs/select_all_1.yaml
+  output:
+    first1: [1, 2, 1, 2 ]
+
+- doc: literals in inputs of different types
+  tool: cwl_files/literal_test.cwl
+  output:
+    result: "true 42 6.022 hoopla README.md true,false 42,23 6.022,10,23 Hello,World README.md,LICENSE"

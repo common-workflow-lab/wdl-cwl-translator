@@ -1,37 +1,7 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: Normalize
-inputs:
-  - id: inputVCF
-    type: File
-  - id: inputVCFIndex
-    type: File
-  - id: referenceFasta
-    type: File
-  - id: referenceFastaFai
-    type: File
-  - id: ignoreMaskedRef
-    default: false
-    type: boolean
-  - id: outputPath
-    default: ./vt/normalized_decomposed.vcf
-    type: string
-  - id: memory
-    default: 4G
-    type: string
-  - id: timeMinutes
-    default: 30
-    type: int
-  - id: dockerImage
-    default: quay.io/biocontainers/vt:0.57721--hdf88d34_2
-    type: string
-outputs:
-  - id: outputVcf
-    type: File
-    outputBinding:
-        glob: $(inputs.outputPath)
+class: CommandLineTool
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/vt:0.57721--hdf88d34_2
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -46,6 +16,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/vt:0.57721--hdf88d34_2
   - class: ResourceRequirement
     ramMin: |-
         ${
@@ -66,7 +39,47 @@ requirements:
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)
-cwlVersion: v1.2
+inputs:
+  - id: inputVCF
+    doc: The VCF file to process.
+    type: File
+  - id: inputVCFIndex
+    doc: The index of the VCF file to be processed.
+    type: File
+  - id: referenceFasta
+    doc: The reference fasta file which was also used for mapping.
+    type: File
+  - id: referenceFastaFai
+    doc: The index for the reference fasta file.
+    type: File
+  - id: ignoreMaskedRef
+    doc: Warns but does not exit when REF is inconsistent with masked reference sequence
+        for non SNPs.
+    default: false
+    type: boolean
+  - id: outputPath
+    doc: The location the output VCF file should be written.
+    default: ./vt/normalized_decomposed.vcf
+    type: string
+  - id: memory
+    doc: The memory required to run the programs.
+    default: 4G
+    type: string
+  - id: timeMinutes
+    doc: The maximum amount of time the job will run in minutes.
+    default: 30
+    type: int
+  - id: dockerImage
+    doc: The docker image used for this task. Changing this may result in errors which
+        the developers may choose not to address.
+    default: quay.io/biocontainers/vt:0.57721--hdf88d34_2
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: outputVcf
+    doc: Normalized & decomposed VCF file.
+    type: File
+    outputBinding:
+        glob: $(inputs.outputPath)

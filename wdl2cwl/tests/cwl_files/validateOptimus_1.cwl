@@ -1,20 +1,7 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: ValidateBam
-inputs:
-  - id: bam
-    type: File
-  - id: expected_checksum
-    type: string
-outputs:
-  - id: result
-    type: string
-    outputBinding:
-        loadContents: true
-        glob: result.txt
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+class: CommandLineTool
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -39,11 +26,26 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/humancellatlas/secondary-analysis-samtools:v0.2.2-1.6
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 3576.2786865234375
-    outdirMin: 1024
-cwlVersion: v1.2
+    outdirMin: $((Math.ceil((function(size_of=0){inputs.bam.path.forEach(function(element){
+        if (element) {size_of += element.size}})}) / 1000^3 * 1.1) ) * 1024)
+inputs:
+  - id: bam
+    type: File
+  - id: expected_checksum
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: result
+    type: string
+    outputBinding:
+        loadContents: true
+        glob: result.txt
+        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))

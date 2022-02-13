@@ -1,65 +1,7 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: Refine
-inputs:
-  - id: minPolyALength
-    default: 20
-    type: int
-  - id: requirePolyA
-    default: false
-    type: boolean
-  - id: logLevel
-    default: WARN
-    type: string
-  - id: inputBamFile
-    type: File
-  - id: inputBamIndex
-    type: File
-  - id: primerFile
-    type: File
-  - id: outputDir
-    type: string
-  - id: outputNamePrefix
-    type: string
-  - id: threads
-    default: 2
-    type: int
-  - id: memory
-    default: 2G
-    type: string
-  - id: timeMinutes
-    default: 30
-    type: int
-  - id: dockerImage
-    default: quay.io/biocontainers/isoseq3:3.4.0--0
-    type: string
-outputs:
-  - id: refineBam
-    type: File
-    outputBinding:
-        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".bam")
-  - id: refineBamIndex
-    type: File
-    outputBinding:
-        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".bam.pbi")
-  - id: refineConsensusReadset
-    type: File
-    outputBinding:
-        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".consensusreadset.xml")
-  - id: refineFilterSummary
-    type: File
-    outputBinding:
-        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".filter_summary.json")
-  - id: refineReport
-    type: File
-    outputBinding:
-        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".report.csv")
-  - id: refineStderr
-    type: File
-    outputBinding:
-        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".stderr.log")
+class: CommandLineTool
 requirements:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/isoseq3:3.4.0--0
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -79,6 +21,9 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: quay.io/biocontainers/isoseq3:3.4.0--0
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
     ramMin: |-
@@ -100,7 +45,82 @@ requirements:
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)
-cwlVersion: v1.2
+inputs:
+  - id: minPolyALength
+    doc: Minimum poly(A) tail length.
+    default: 20
+    type: int
+  - id: requirePolyA
+    doc: Require fl reads to have a poly(A) tail and remove it.
+    default: false
+    type: boolean
+  - id: logLevel
+    doc: 'Set log level. Valid choices: (TRACE, DEBUG, INFO, WARN, FATAL).'
+    default: WARN
+    type: string
+  - id: inputBamFile
+    doc: Bam input file.
+    type: File
+  - id: inputBamIndex
+    doc: Index for the Bam input file.
+    type: File
+  - id: primerFile
+    doc: Barcode/primer fasta file.
+    type: File
+  - id: outputDir
+    doc: Output directory path.
+    type: string
+  - id: outputNamePrefix
+    doc: Basename of the output files.
+    type: string
+  - id: threads
+    doc: The number of threads to be used.
+    default: 2
+    type: int
+  - id: memory
+    doc: The amount of memory available to the job.
+    default: 2G
+    type: string
+  - id: timeMinutes
+    doc: The maximum amount of time the job will run in minutes.
+    default: 30
+    type: int
+  - id: dockerImage
+    doc: The docker image used for this task. Changing this may result in errors which
+        the developers may choose not to address.
+    default: quay.io/biocontainers/isoseq3:3.4.0--0
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: refineBam
+    doc: Filtered reads output file.
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".bam")
+  - id: refineBamIndex
+    doc: Index of filtered reads output file.
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".bam.pbi")
+  - id: refineConsensusReadset
+    doc: Refine consensus readset xml file.
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".consensusreadset.xml")
+  - id: refineFilterSummary
+    doc: Refine summary file.
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".filter_summary.json")
+  - id: refineReport
+    doc: Refine report file.
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".report.csv")
+  - id: refineStderr
+    doc: Refine stderr log file.
+    type: File
+    outputBinding:
+        glob: $(inputs.outputDir + "/" + inputs.outputNamePrefix + ".stderr.log")

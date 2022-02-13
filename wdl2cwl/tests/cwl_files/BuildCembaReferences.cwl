@@ -1,5 +1,6 @@
-class: Workflow
+cwlVersion: v1.2
 id: BuildCembaReferences
+class: Workflow
 inputs:
   - id: reference_fasta
     type: File
@@ -7,30 +8,6 @@ inputs:
     type:
       - File
       - 'null'
-outputs:
-  - id: BuildCembaReferences.reference_fasta_dict
-    outputSource: CreateReferenceDictionary/ref_dict_output
-    type: File
-  - id: BuildCembaReferences.reference_fasta_index
-    outputSource: CreateReferenceFastaIndex/ref_index_output
-    type: File
-  - id: BuildCembaReferences.fwd_converted_reference_fasta
-    outputSource: Convert/fwd_converted_reference_fasta_output
-    type: File
-  - id: BuildCembaReferences.rev_converted_reference_fasta
-    outputSource: Convert/rev_converted_reference_fasta_output
-    type: File
-  - id: BuildCembaReferences.fwd_bowtie2_index_files
-    outputSource: IndexForward/bowtie2_index_files
-    type:
-        items: File
-        type: array
-  - id: BuildCembaReferences.rev_bowtie2_index_files
-    outputSource: IndexReverse/bowtie2_index_files
-    type:
-        items: File
-        type: array
-cwlVersion: v1.2
 steps:
   - id: Convert
     in:
@@ -66,8 +43,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bisulfite-references:1.0
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -88,10 +63,13 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/bisulfite-references:1.0
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3337.860107421875
-            outdirMin: '$((Math.ceil(3.5*(function(size_of=0){inputs.fasta_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(3.5 * (function(size_of=0){inputs.fasta_input.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
         cwlVersion: v1.2
@@ -133,8 +111,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -153,10 +129,13 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 6675.72021484375
-            outdirMin: '$((Math.ceil(3*(function(size_of=0){inputs.fasta_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(3 * (function(size_of=0){inputs.fasta_input.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
         cwlVersion: v1.2
@@ -198,8 +177,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -218,10 +195,13 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 6675.72021484375
-            outdirMin: '$((Math.ceil(3*(function(size_of=0){inputs.fasta_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(3 * (function(size_of=0){inputs.fasta_input.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
         cwlVersion: v1.2
@@ -258,8 +238,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/picard:2.18.23
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -284,10 +262,13 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/picard:2.18.23
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 4000.0
-            outdirMin: '$((Math.ceil(2*(function(size_of=0){inputs.reference_fasta.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.reference_fasta.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.reference_fasta.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
         cwlVersion: v1.2
@@ -323,8 +304,6 @@ steps:
             outputBinding:
                 glob: monitoring.log
         requirements:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/samtools:1.9
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
@@ -351,13 +330,39 @@ steps:
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
+        hints:
+          - class: DockerRequirement
+            dockerPull: quay.io/broadinstitute/samtools:1.9
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3337.860107421875
-            outdirMin: '$((Math.ceil(2.25*(function(size_of=0){inputs.reference_fasta.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2.25 * (function(size_of=0){inputs.reference_fasta.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.reference_fasta.path.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
           - bash
           - script.bash
+outputs:
+  - id: BuildCembaReferences.reference_fasta_dict
+    outputSource: CreateReferenceDictionary/ref_dict_output
+    type: File
+  - id: BuildCembaReferences.reference_fasta_index
+    outputSource: CreateReferenceFastaIndex/ref_index_output
+    type: File
+  - id: BuildCembaReferences.fwd_converted_reference_fasta
+    outputSource: Convert/fwd_converted_reference_fasta_output
+    type: File
+  - id: BuildCembaReferences.rev_converted_reference_fasta
+    outputSource: Convert/rev_converted_reference_fasta_output
+    type: File
+  - id: BuildCembaReferences.fwd_bowtie2_index_files
+    outputSource: IndexForward/bowtie2_index_files
+    type:
+        items: File
+        type: array
+  - id: BuildCembaReferences.rev_bowtie2_index_files
+    outputSource: IndexReverse/bowtie2_index_files
+    type:
+        items: File
+        type: array

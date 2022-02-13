@@ -1,22 +1,7 @@
-class: CommandLineTool
+cwlVersion: v1.2
 id: ValidateLoom
-inputs:
-  - id: loom_file
-    type:
-      - File
-      - 'null'
-  - id: expected_loom_file_checksum
-    type: string
-outputs:
-  - id: result
-    type: string
-    outputBinding:
-        loadContents: true
-        glob: result.txt
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+class: CommandLineTool
 requirements:
-  - class: DockerRequirement
-    dockerPull: ubuntu:16.04
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
@@ -39,13 +24,29 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
+hints:
+  - class: DockerRequirement
+    dockerPull: ubuntu:16.04
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 3576.2786865234375
     outdirMin: '$((Math.ceil((function(size_of=0){inputs.loom_file === null ? "" :
         inputs.loom_file.path.forEach(function(element){ if (element) {size_of +=
-        element.size}})}) / 1000^3*1.1) ) * 1024)'
-cwlVersion: v1.2
+        element.size}})}) / 1000^3 * 1.1) ) * 1024)'
+inputs:
+  - id: loom_file
+    type:
+      - File
+      - 'null'
+  - id: expected_loom_file_checksum
+    type: string
 baseCommand:
   - bash
   - script.bash
+outputs:
+  - id: result
+    type: string
+    outputBinding:
+        loadContents: true
+        glob: result.txt
+        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
