@@ -143,7 +143,7 @@ steps:
         baseCommand:
           - bash
           - script.bash
-    scatter: raw_reads
+    scatter: reads_bam
   - id: align_and_count_summary
     in:
       - id: counts_txt

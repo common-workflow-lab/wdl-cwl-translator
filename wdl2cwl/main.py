@@ -346,7 +346,7 @@ class Converter:
         for body_obj in scatter.body:
             if isinstance(body_obj, WDL.Tree.Call):
                 wp_step = self.get_workflow_call(body_obj)
-            wp_step.scatter = scatter.variable
+            wp_step.scatter = wp_step.in_[0].id
             scatter_steps.append(wp_step)
         return scatter_steps
 
