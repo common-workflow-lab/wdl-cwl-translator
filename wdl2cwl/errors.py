@@ -45,7 +45,7 @@ class WDLSourceLine:
         raise self.makeError(str(exc_value)) from exc_value
 
     def makeLead(self) -> str:
-        """Caculate the error message prefix."""
+        """Calculate the error message prefix."""
         pos: SourcePosition = cast(SourcePosition, self.item.pos)
         return f"{pos.uri}:{pos.line}:{pos.column}:"
 

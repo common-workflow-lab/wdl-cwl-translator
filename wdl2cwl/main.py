@@ -627,7 +627,7 @@ class Converter:
                 item_expr = item.info.expr
                 output_source = item_expr.expr.name[::-1].replace(".", "/", 1)[::-1]
                 # replace just the last occurrence of a period with a slash
-                # by first reversing the string and the replace the first occurence
+                # by first reversing the string and the replace the first occurrence
                 # then reversing the result
                 wdl_output = item.info
                 type_of = self.get_cwl_type(
@@ -886,7 +886,7 @@ class Converter:
                 item_type = array.type.item_type
             else:
                 raise WDLSourceLine(array, ConversionException).makeError(
-                    f"Unhandeled sep array type: {type(array)}: {array}."
+                    f"Unhandled sep array type: {type(array)}: {array}."
                 )
             sep_str = get_literal_value(sep) or ""
             if isinstance(item_type, WDL.Type.File):
@@ -1007,16 +1007,16 @@ class Converter:
                         f"{placeholder_expr} === null ? {false_str} : {true_str}"
                     )
             elif "sep" in options:
-                seperator = options["sep"]
+                separator = options["sep"]
                 if isinstance(expr.type, WDL.Type.Array):
                     item_type = expr.type.item_type
                     if isinstance(item_type, WDL.Type.String):
-                        pl_holder_str = f'{placeholder_expr}.join("{seperator}")'
+                        pl_holder_str = f'{placeholder_expr}.join("{separator}")'
                     elif isinstance(item_type, WDL.Type.File):
                         pl_holder_str = (
                             f"{placeholder_expr}.map("
                             + 'function(el) {return el.path}).join("'
-                            + seperator
+                            + separator
                             + '")'
                         )
                 else:
@@ -1037,7 +1037,7 @@ class Converter:
         wdl_inputs: Optional[List[WDL.Tree.Decl]],
         meta: Optional[Dict[str, Any]] = None,
     ) -> List[cwl.CommandInputParameter]:
-        """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
+        """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Parameters."""
         inputs: List[cwl.CommandInputParameter] = []
 
         if not wdl_inputs:

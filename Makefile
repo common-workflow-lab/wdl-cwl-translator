@@ -179,7 +179,7 @@ pyupgrade: $(filter-out wdl2cwl/WdlV1_1%,$(PYSOURCES))
 	pyupgrade --exit-zero-even-if-changed --py37-plus $^
 
 release-test: FORCE
-	git diff-index --quiet HEAD -- || ( echo You have uncommited changes, please commit them and try again; false )
+	git diff-index --quiet HEAD -- || ( echo You have uncommitted changes, please commit them and try again; false )
 	./release-test.sh
 
 release: release-test
