@@ -349,6 +349,7 @@ $graph:
             else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
             else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
         outdirMin: $((Math.ceil((function(size_of=0){inputs.pre_adapter_detail_metrics.path.forEach(function(element){
@@ -489,6 +490,7 @@ $graph:
             else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
             else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
         outdirMin: '$((Math.ceil((function(size_of=0){inputs.input_bam === null ?
@@ -679,6 +681,7 @@ $graph:
             else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
             else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
@@ -827,6 +830,7 @@ $graph:
             else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
             else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
@@ -906,6 +910,7 @@ $graph:
             else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
             else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
             else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
         outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){

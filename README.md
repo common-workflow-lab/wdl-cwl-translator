@@ -1,4 +1,4 @@
-# A WIP translator from [OpenWDL v1.1](https://github.com/openwdl/wdl/tree/main/versions/1.1) to [CWL v1.2](https://w3id.org/cwl/v1.2/)
+# A translator from [WDL](https://openwdl.org/) to [CWL v1.2](https://w3id.org/cwl/v1.2/)
 
 [![codecov](https://codecov.io/gh/common-workflow-lab/wdl-cwl-translator/branch/main/graph/badge.svg?token=lvcnJHP1hj)](https://codecov.io/gh/common-workflow-lab/wdl-cwl-translator)
 
@@ -11,7 +11,7 @@ series of steps that are connected by input/output dependencies.
 
 CWL is the product of community-based open source standards process,
 and workflows written in CWL are portable across a number of different
-software platforms (e.g. Arvados, Toil, CWL-Airflow).  WDL is also
+software platforms (e.g. Arvados, Toil, CWL-Airflow, Seven Bridges).  WDL is also
 open source, but based largely around a single implementation
 (Cromwell), however some workflows that are important to the
 bioinformatics community are only maintained in WDL.
@@ -30,7 +30,11 @@ More background reading on CWL:
 - A recent paper: https://arxiv.org/abs/2105.07028 ([Full PDF](https://arxiv.org/pdf/2105.07028.pdf))
 - https://www.commonwl.org/user_guide/
 
-This project uses the parser and object from [`cwl_utils.parser.cwl_v1_2`](https://cwl-utils.readthedocs.io/en/latest/autoapi/cwl_utils/parser/cwl_v1_2/index.html)
+This project uses the CWL parser and objects from [`cwl_utils.parser.cwl_v1_2`](https://cwl-utils.readthedocs.io/en/latest/autoapi/cwl_utils/parser/cwl_v1_2/index.html)
+
+[miniwdl](https://github.com/chanzuckerberg/miniwdl) is used for WDL parsing,
+and while we target OpenWDL 1.1, earlier versions of (Open)WDL seem to work
+thanks to the flexibility of the `miniwdl` parser.
 
 For some discussion comparing the two languages (mainly from the perspective of translating in the other direction, CWL to WDL), see this document:
 
@@ -75,10 +79,11 @@ WDL features not yet supported
 
 ## Incompatibilities possibly requiring manual intervention
 
-1. Dynamic specification of Docker containers. As of CWL v1.2, CWL's DockerRequirement
-has no support for dynamic specifications, only fixed values. If a WDL task has a
-`runtime.docker` that references an input with a default value, then `wdl2cwl` does
-try to copy that to the CWL `DockerRequirement.dockerPull`.
+1. Dynamic specification of Docker containers.
+   As of CWL v1.2, CWL's `DockerRequirement` has no support for dynamic
+specifications, only fixed values. If a WDL task has a `runtime.docker` that
+references an input with a default value, then `wdl2cwl` does try to copy that
+default value to the CWL `DockerRequirement.dockerPull`.
 
 If changing the software container is needed, there are several workarounds:
 1. Use workflow runner/engine provided overrides: many CWL runners
@@ -100,6 +105,86 @@ explicit staging).
 See [this example](https://github.com/mr-c/biowdl_tasks_cwlcompat/commit/0dd4704ec8969e491e6358fe2e8283272cafde21#diff-c76c01f3ca967cdb9c157a75e7fb1a08d0037543b455c2107398601a2f526ebfR45)
 for one method using explicit staging of input files in the `command` block to
 achieve the localization required by the tool(s) being called.
+
+## Tips for manually improving the CWL outputs
+
+If you are converting a WDL workflow to the CWL format and the original WDL
+document is the "source of truth", then one should avoid making manual changes
+to the CWL as you will need to maintain those changes as the source WDL
+document(s) changes.
+
+Otherwise, for those users looking to convert from WDL to CWL and then continue
+to modify the CWL directly, then we have the following advice:
+
+Consider swapping the `wdl2cwl` translation of the WDL tasks for
+[community maintained CWL descriptions for popular tools](https://github.com/common-workflow-library/bio-cwl-tools)
+when possible. Follow the [instructions on usage](https://github.com/common-workflow-library/bio-cwl-tools#how-to-use-these-descriptions-in-your-own-repository)
+and update the `run` line to refer to a local path or a "raw" GitHub URL of the
+community-maintained tool description. You may need to adjust a few input names to
+match. Of course, we are happy to [receive your enhancements and additional CWL
+bio\* tool descriptions](https://github.com/common-workflow-library/bio-cwl-tools#how-to-donate-your-tool-descriptions)!
+
+For the resulting CWL `Workflow` and any CWL `CommandLineTool`s not swapped for
+idiomatic CWL descriptions, consider using the following CWL features absent in WDL
+
+### CWL `Workflow` Tips
+1. Consider collapsing nested WDL scatters in a single [multi-dimensional CWL scatter](https://www.commonwl.org/v1.2/Workflow.html#Scatter/gather)
+
+### CWL `CommandLineTool` Tips
+
+1. Use `secondaryFiles` instead of implicit file co-localizaton for when you
+   have a file and its index(es).
+2. Adding [`format`](https://www.commonwl.org/user_guide/16-file-formats/index.html)
+   specifiers to input and output `File`s and arrays of `File`s both at the
+   `Workflow` and `CommandLineTool` levels. This helps improve the type checking
+   of the workflow and anyone wanting to re-use or adapt the individual `CommandLineTool`s.
+3. In addition to the `minCores` in ResourceRequirement, consider setting the `maxCores`
+   if the tool is known to not benefit from additional cores after a certain amount.
+4. Retrieving the actual number of cores allocated via `$(runtime.cores)` to pass
+   to your tools.
+5. Need the absolute path of the working directory? You can use `$(runtime.outdir)`.
+6. Only running a single command and are redirecting a file into in (`my_tool < input_file`)?
+   You can change the input to be [`type: stdin`](https://www.commonwl.org/v1.2/CommandLineTool.html#stdin)
+   instead of `type: File` and drop the `< input_file` as a shortcut.
+7. Specify the underlying tool(s) required beyond a `DockerRequirement` via
+   [`SoftwareRequirement`](https://www.commonwl.org/v1.2/CommandLineTool.html#SoftwareRequirement).
+   This makes for good documentation, helps give credit to the authors of the tool(s),
+   and makes it easier for those who want to run with local software, conda packages,
+   and other non-containerized environments.
+8. Moving any environment variable settings (`export FOO=bar`) present in the `script.bash` to an
+   [`EnvVarRequirement`](https://www.commonwl.org/user_guide/12-env/index.html)
+   Be careful, if the `script.bash` runs many commands and the environment variables
+   are not set at the beginning, that may be due to them not being appropriate for
+   all the commands; so test to confirm that they are safe to move to an `EnvVarRequirement`
+   and if you aren't sure, leave them there.
+   Per-tool invocations with environment variables like `FOO=bar name_of_tool.pl --option`
+   are also a candidate if (1) there are no other tools invoked or (2) they all
+   have the same environment variables set or (3) they other tools ignore the
+   environment variables.
+9. Many WDL `command` sections create output directories and perform other
+   "housekeeping" that is not necessary in CWL, like symlinking files to change
+   names or otherwise arrange the input files. Output directories that themselves
+   don't become a `Directory` type are likely removable. If a
+   [specific arrangement of inputs files is needed](https://www.commonwl.org/user_guide/15-staging/index.html),
+   or [additional files need to created dynamically](https://www.commonwl.org/user_guide/14-runtime/index.html),
+   then consider using `InitialWorkDirRequirement`.
+10. Some WDL `command` sections include copying input files to obtain writable versions.
+    This can be quite slow on many systems, and from a CWL perspective it is better
+    to use [`InitialWorkDirRequirement`](https://www.commonwl.org/user_guide/15-staging/index.html)
+    to achieve the same results by marking those inputs as being `writable: true`.
+11. Most CWL runners provide methods to monitor task execution in real time,
+    so monitoring scripts and other similar techniques can be removed.
+12. If the `script.bash` (which comes from the WDL `command` section) meets the
+    following criteria, then consider removing it (and the `InitialWorkDirRequirement`
+    if otherwise unused) in favor of directly calling your tool using `baseCommand`
+    with the name of the executable and any static command line arguments
+    and [`arguments`](https://www.commonwl.org/user_guide/08-arguments/index.html)
+    with the remaining mix of dynamic and static command line arguments.
+    - No `bash` features like `for` loops and `if` statements
+    - A single tool is invoked just once; check for un-escaped semicolons `;` which
+      means there are multiple commands on a single line.
+    - no input/output redirection, use `stdin`, `stdout`, and `stderr` as need be.
+    - no pipelining `|`.
 
 ## Development
 

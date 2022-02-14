@@ -128,30 +128,31 @@ CWLRecordTypes = TypeVar(
 )
 
 
-def get_mem_in_bytes(unit: str) -> str:
-    """Determine the value of a memory unit in bytes."""
-    with WDLSourceLine(unit, ConversionException):
-        if unit == "KiB" or unit == "Ki":
-            mem_in_bytes = "1024^1"
-        elif unit == "MiB" or unit == "Mi":
-            mem_in_bytes = "1024^2"
-        elif unit == "GiB" or unit == "Gi":
-            mem_in_bytes = "1024^3"
-        elif unit == "TiB" or unit == "Ti":
-            mem_in_bytes = "1024^4"
-        elif unit == "B":
-            mem_in_bytes = "1024^0"
-        elif unit == "KB" or unit == "K":
-            mem_in_bytes = "1000^1"
-        elif unit == "MB" or unit == "M":
-            mem_in_bytes = "1000^2"
-        elif unit == "GB" or unit == "G":
-            mem_in_bytes = "1000^3"
-        elif unit == "TB" or unit == "T":
-            mem_in_bytes = "1000^4"
-        else:
-            raise ConversionException(f"Invalid memory unit: ${unit}")
-    return mem_in_bytes
+def get_mem_in_bytes(unit: str) -> Tuple[int, int]:
+    """
+    Determine the value of a memory unit in bytes.
+
+    Returns the base and exponent, ready for stringifying or evaluation
+    """
+    if unit == "KiB" or unit == "Ki":
+        return 1024, 1
+    elif unit == "MiB" or unit == "Mi":
+        return 1024, 2
+    elif unit == "GiB" or unit == "Gi":
+        return 1024, 3
+    elif unit == "TiB" or unit == "Ti":
+        return 1024, 4
+    elif unit == "B":
+        return 1024, 0
+    elif unit == "KB" or unit == "K":
+        return 1000, 1
+    elif unit == "MB" or unit == "M":
+        return 1000, 2
+    elif unit == "GB" or unit == "G":
+        return 1000, 3
+    elif unit == "TB" or unit == "T":
+        return 1000, 4
+    raise ConversionException(f"Invalid memory unit: ${unit}")
 
 
 def get_input(input_name: str) -> str:
@@ -479,13 +480,19 @@ class Converter:
     def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> Union[float, str]:
         """Get the literal value for memory requirement with type WDL.Expr.String."""
         if memory_runtime.literal is None:
-            _, placeholder, unit, _ = memory_runtime.parts
-            with WDLSourceLine(placeholder, ConversionException):
-                if isinstance(placeholder.expr, WDL.Expr.Get):  # type: ignore[union-attr]
-                    value_name = self.get_expr_get(placeholder.expr)  # type: ignore[union-attr]
-                else:
-                    value_name = self.get_expr_apply(placeholder.expr)  # type: ignore[union-attr,arg-type]
-                return self.get_ram_min_js(value_name, unit.strip())  # type: ignore[union-attr]
+            if len(memory_runtime.parts) == 4:
+                _, amount, unit, _ = memory_runtime.parts
+            else:
+                _, amount, _, unit, _ = memory_runtime.parts
+            if isinstance(amount, WDL.Expr.Placeholder):
+                amount_str = self.get_expr(amount)
+            else:
+                amount_str = amount
+            if isinstance(unit, WDL.Expr.Placeholder):
+                unit_str = self.get_expr(unit)
+            else:
+                unit_str = unit.strip()
+            return self.get_ram_min_js(amount_str, unit_str)
 
         ram_min = self.get_expr_string(memory_runtime)[1:-1]
         unit_result = re.search(r"[a-zA-Z]+", ram_min)
@@ -493,10 +500,8 @@ class Converter:
             raise ConversionException("Missing Memory units, yet still a string?")
         unit = unit_result.group()
         value = float(ram_min.split(unit)[0])
-        byte, power = get_mem_in_bytes(unit).split("^")
-        memory: float = value * float(byte) ** float(power) / (1024 * 1024)
-
-        return memory
+        unit_base, unit_exponent = get_mem_in_bytes(unit)
+        return float((value * (unit_base**unit_exponent)) / (2**20))
 
     def get_outdir_requirement(
         self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply, WDL.Expr.Placeholder]
@@ -549,7 +554,10 @@ class Converter:
         """Get memory requirement for user input."""
         append_str: str = ""
         if unit:
-            append_str = '${\nvar unit = "' + unit + '";'
+            if "inputs." in unit:
+                append_str = "${\nvar unit = " + unit + ";"
+            else:
+                append_str = '${\nvar unit = "' + unit + '";'
         else:
             append_str = (
                 "${\nvar unit = " + ram_min_ref_name + '.match(/[a-zA-Z]+/g).join("");'
@@ -569,6 +577,7 @@ class Converter:
             + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
             + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
             + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
+            + 'else throw "Unknown units: " + unit;\n'
             + "return parseInt(memory);\n}"
         )
 
@@ -838,7 +847,10 @@ class Converter:
                 unit_value = "1"
             else:
                 left_operand, right_operand = arguments
-                unit_value = get_mem_in_bytes(self.get_expr(right_operand)[1:-1])
+                unit_base, unit_exponent = get_mem_in_bytes(
+                    self.get_expr(right_operand)[1:-1]
+                )
+                unit_value = f"{unit_base}^{unit_exponent}"
             if isinstance(left_operand, WDL.Expr.Array):
                 array_items = [self.get_expr(item) for item in left_operand.items]
                 left = ", ".join(array_items)
