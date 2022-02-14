@@ -331,7 +331,7 @@ class Converter:
         inputs_from_call: Dict[str, Tuple[str, Dict[str, Any]]] = {}
         input_defaults = set()
         if call_inputs:
-            if_scatter_handled = False
+            scatter_handled = False
             for key, value in call_inputs.items():
                 with WDLSourceLine(value, ConversionException):
                     if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
@@ -361,9 +361,9 @@ class Converter:
                             input_expr.replace(".", "/"),
                             {},
                         )
-                    if self.scatter_names and not if_scatter_handled:
-                        self.scatter_names[0] = key
-                        if_scatter_handled = True
+                    if self.scatter_names and not scatter_handled:
+                        self.scatter_names[-1] = key
+                        scatter_handled = True
         wf_step_inputs: List[cwl.WorkflowStepInput] = []
         for inp in cwl_callee_inputs:
             call_inp_id = f"{call.name}.{inp.id}"
