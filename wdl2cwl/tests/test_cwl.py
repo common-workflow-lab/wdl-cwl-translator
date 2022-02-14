@@ -52,6 +52,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("merge_svs.wdl"),
         ("literal_test.wdl"),
         ("identifier_test.wdl"),
+        ("dynamic_memory_units.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
