@@ -315,10 +315,11 @@ class Converter:
         """Get the CWL Workflow Step equivalent of a list of WDL Scatter Object."""
         scatter_steps: List[cwl.WorkflowStep] = []
         for body_obj in scatter.body:
-            if isinstance(body_obj, WDL.Tree.Call):
-                wp_step = self.get_workflow_call(body_obj)
-            wp_step.scatter = self.scatter_names.pop()
-            scatter_steps.append(wp_step)
+            with WDLSourceLine(body_obj, ConversionException):
+                if isinstance(body_obj, WDL.Tree.Call):
+                    wf_step = self.get_workflow_call(body_obj)
+                wf_step.scatter = self.scatter_names.pop()
+                scatter_steps.append(wf_step)
         return scatter_steps
 
     def get_workflow_call(self, call: WDL.Tree.Call) -> cwl.WorkflowStep:
