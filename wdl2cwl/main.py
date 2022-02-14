@@ -393,7 +393,7 @@ class Converter:
                             input_expr.replace(".", "/"),
                             {},
                         )
-                    if self.scatter_names and not if_scatter_handled: 
+                    if self.scatter_names and not if_scatter_handled:
                         self.scatter_names[0] = key
                         if_scatter_handled = True
         wf_step_inputs: List[cwl.WorkflowStepInput] = []
