@@ -164,7 +164,7 @@ def get_input(input_name: str) -> str:
 
 def get_cwl_docker_requirements(
     wdl_docker: Union[WDL.Expr.Get, WDL.Expr.String]
-) -> cwl.ProcessRequirement:
+) -> Optional[cwl.ProcessRequirement]:
     """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
     if isinstance(wdl_docker, WDL.Expr.String) and wdl_docker.literal:
         dockerpull = get_literal_value(wdl_docker)
@@ -188,7 +188,11 @@ def get_cwl_docker_requirements(
             raise WDLSourceLine(wdl_docker, ConversionException).makeError(
                 f"Unsupported type: {type(dockerpull_referee)}"
             )
-        dockerpull = get_literal_value(dockerpull_referee.expr)
+        if dockerpull_referee.expr:
+            dockerpull = get_literal_value(dockerpull_referee.expr)
+        else:
+            _logger.warning(f"Unable to extract docker reference from {wdl_docker}")
+            return None
     return cwl.DockerRequirement(dockerPull=dockerpull)
 
 
@@ -221,6 +225,29 @@ def get_literal_value(expr: WDL.Expr.Base) -> Optional[Any]:
             return result
         return value
     return None
+
+
+read_funcs = {
+    "read_string": r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
+    "read_int": "$(parseInt(self[0].contents))",
+    "read_float": "$(parseFloat(self[0].contents))",
+    "read_boolean": """${
+  var contents = self[0].contents.trim().toLowerCase()
+  if (contents == 'true') { return true;}
+  if (contents == 'false') { return false;}
+  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+}""",
+    "read_tsv": r"""${
+  var result;
+  self.contents.split(/\n|(\n\r)/).forEach(function(line) {
+    var line_array;
+    line.split('\t').forEach(function(field) {
+      line_array.push(field)
+    })
+    result.push(line_array);
+  })
+}""",
+}
 
 
 class Converter:
@@ -373,26 +400,27 @@ class Converter:
 
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
-        cwl_inputs = self.get_cwl_task_inputs(obj.inputs, obj.parameter_meta)
-        cwl_outputs = self.get_cwl_task_outputs(obj.outputs, obj.parameter_meta)
-        hints, requirements = self.get_cwl_hints_and_requirements(obj)
         description = obj.meta.pop("description", None)
-        if obj.meta:
-            _logger.warning("Skipping meta: %s", obj.meta)
+        cwl_inputs = self.get_cwl_task_inputs(obj.inputs, obj.parameter_meta)
         run_script = False
+        hints, requirements = self.get_cwl_hints_and_requirements(obj)
         for req in requirements:
             if isinstance(req, cwl.InitialWorkDirRequirement):
                 run_script = True
-        return cwl.CommandLineTool(
+        tool = cwl.CommandLineTool(
             id=obj.name,
             doc=description,
             inputs=cwl_inputs,
+            outputs=None,
             hints=hints,
             requirements=requirements,
-            outputs=cwl_outputs,
             cwlVersion="v1.2",
             baseCommand=["bash", "script.bash"] if run_script else ["true"],
         )
+        tool.outputs = self.set_cwl_task_outputs(obj.outputs, obj.parameter_meta, tool)
+        if obj.meta:
+            _logger.warning("Skipping meta: %s", obj.meta)
+        return tool
 
     def get_cwl_hints_and_requirements(
         self, obj: WDL.Tree.Task
@@ -404,11 +432,11 @@ class Converter:
         hints: List[cwl.ProcessRequirement] = []
         if "docker" in runtime:
             with WDLSourceLine(runtime["docker"], ConversionException):
-                hints.append(
-                    get_cwl_docker_requirements(
-                        runtime["docker"]  # type: ignore[arg-type]
-                    )
+                docker = get_cwl_docker_requirements(
+                    runtime["docker"]  # type: ignore[arg-type]
                 )
+                if docker:
+                    hints.append(docker)
         command_req = self.get_cwl_command_requirements(command.parts)
         if command_req:
             requirements.append(command_req)
@@ -721,6 +749,7 @@ class Converter:
             "glob",
             "read_int",
             "read_boolean",
+            "read_tsv",
         }
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
@@ -1115,10 +1144,11 @@ class Converter:
             inputs.append(cwl.CommandInputRecordField(name=input_name, type=type_of))
         return inputs
 
-    def get_cwl_task_outputs(
+    def set_cwl_task_outputs(
         self,
         wdl_outputs: List[WDL.Tree.Decl],
-        meta: Optional[Dict[str, Any]] = None,
+        meta: Optional[Dict[str, Any]],
+        tool: cwl.CommandLineTool,
     ) -> List[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
         outputs: List[cwl.CommandOutputParameter] = []
@@ -1152,16 +1182,22 @@ class Converter:
 
             if (
                 isinstance(wdl_output.expr, WDL.Expr.Apply)
-                and wdl_output.expr.function_name == "read_string"
+                and wdl_output.expr.function_name in read_funcs
             ):
-                glob_expr = self.get_expr(wdl_output.expr)
-                is_literal = wdl_output.expr.arguments[0].literal
-                if is_literal:
-                    glob_str = glob_expr[
-                        1:-1
-                    ]  # remove quotes from the string returned by get_expr_string
+                if (
+                    isinstance(wdl_output.expr.arguments[0], WDL.Expr.Apply)
+                    and wdl_output.expr.arguments[0].function_name == "stdout"
+                ):
+                    glob_str = tool.stdout = "_stdout"
                 else:
-                    glob_str = f"$({glob_expr})"
+                    glob_expr = self.get_expr(wdl_output.expr)
+                    is_literal = wdl_output.expr.arguments[0].literal
+                    if is_literal:
+                        glob_str = glob_expr[
+                            1:-1
+                        ]  # remove quotes from the string returned by get_expr_string
+                    else:
+                        glob_str = f"$({glob_expr})"
 
                 outputs.append(
                     cwl.CommandOutputParameter(
@@ -1171,62 +1207,7 @@ class Converter:
                         outputBinding=cwl.CommandOutputBinding(
                             glob=glob_str,
                             loadContents=True,
-                            outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
-                        ),
-                    )
-                )
-            elif (
-                isinstance(wdl_output.expr, WDL.Expr.Apply)
-                and wdl_output.expr.function_name == "read_float"
-            ):
-                glob_expr = self.get_expr(wdl_output.expr)
-                is_literal = wdl_output.expr.arguments[0].literal
-                if is_literal:
-                    glob_str = glob_expr[
-                        1:-1
-                    ]  # remove quotes from the string returned by get_expr_string
-                else:
-                    glob_str = f"$({glob_expr})"
-
-                outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        doc=doc,
-                        type=type_of,
-                        outputBinding=cwl.CommandOutputBinding(
-                            glob=glob_str,
-                            loadContents=True,
-                            outputEval=r"$(parseFloat(self[0].contents))",
-                        ),
-                    )
-                )
-            elif (
-                isinstance(wdl_output.expr, WDL.Expr.Apply)
-                and wdl_output.expr.function_name == "read_boolean"
-            ):
-                glob_expr = self.get_expr(wdl_output.expr)
-                is_literal = wdl_output.expr.arguments[0].literal
-                if is_literal:
-                    glob_str = glob_expr[
-                        1:-1
-                    ]  # remove quotes from the string returned by get_expr_string
-                else:
-                    glob_str = f"$({glob_expr})"
-
-                outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        doc=doc,
-                        type=type_of,
-                        outputBinding=cwl.CommandOutputBinding(
-                            glob=glob_str,
-                            loadContents=True,
-                            outputEval=r"""${
-var contents = self[0].contents.trim().toLowerCase()
-if (contents == 'true') { return true;}
-if (contents == 'false') { return false;}
-throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-}""",
+                            outputEval=read_funcs[wdl_output.expr.function_name],
                         ),
                     )
                 )
