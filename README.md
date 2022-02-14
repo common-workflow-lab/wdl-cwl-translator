@@ -42,7 +42,7 @@ https://github.com/dnanexus/dxCompiler/blob/main/doc/CWL_v1.2.0_to_WDL_v1.md
 
 ## Installation
 
-### Prequisites
+### Prerequisites
 
 Python 3.7+
 
