@@ -53,7 +53,6 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("literal_test.wdl"),
         ("align_and_count_multiple_report.wdl"),
         ("identifier_test.wdl"),
-
     ],
 )
 def test_wdls(description_name: str) -> None:
