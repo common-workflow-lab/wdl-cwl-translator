@@ -261,6 +261,7 @@ class Converter:
         """Initialize the sets used by the object and prevent inconsistent behaviours."""
         self.non_static_values: Set[str] = set()
         self.optional_cwl_null: Set[str] = set()
+        self.scatter_names: List[str] = []
 
     def load_wdl_objects(
         self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]
@@ -281,7 +282,9 @@ class Converter:
                 id_name = ident.name
                 referee = ident.referee
                 if referee and isinstance(referee, WDL.Tree.Scatter):
-                    return self.get_step_input_expr(referee.expr)  # type: ignore [arg-type]
+                    scatter_name = self.get_step_input_expr(referee.expr)  # type: ignore [arg-type]
+                    self.scatter_names.append(scatter_name)
+                    return scatter_name
                 return id_name
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
@@ -346,7 +349,7 @@ class Converter:
         for body_obj in scatter.body:
             if isinstance(body_obj, WDL.Tree.Call):
                 wp_step = self.get_workflow_call(body_obj)
-            wp_step.scatter = wp_step.in_[0].id
+            wp_step.scatter = self.scatter_names.pop()
             scatter_steps.append(wp_step)
         return scatter_steps
 
@@ -360,6 +363,7 @@ class Converter:
         inputs_from_call: Dict[str, Tuple[str, Dict[str, Any]]] = {}
         input_defaults = set()
         if call_inputs:
+            if_scatter_handled = False
             for key, value in call_inputs.items():
                 with WDLSourceLine(value, ConversionException):
                     if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
@@ -389,6 +393,9 @@ class Converter:
                             input_expr.replace(".", "/"),
                             {},
                         )
+                    if self.scatter_names and not if_scatter_handled: 
+                        self.scatter_names[0] = key
+                        if_scatter_handled = True
         wf_step_inputs: List[cwl.WorkflowStepInput] = []
         for inp in cwl_callee_inputs:
             call_inp_id = f"{call.name}.{inp.id}"
