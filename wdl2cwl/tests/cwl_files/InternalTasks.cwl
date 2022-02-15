@@ -154,10 +154,10 @@ $graph:
             glob: $("fp_retrieved.txt")
             outputEval: |-
                 ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                  var contents = self[0].contents.trim().toLowerCase()
+                  if (contents == 'true') { return true;}
+                  if (contents == 'false') { return false;}
+                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 }
       - id: reference_fingerprint_vcf
         type: File

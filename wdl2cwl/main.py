@@ -128,30 +128,31 @@ CWLRecordTypes = TypeVar(
 )
 
 
-def get_mem_in_bytes(unit: str) -> str:
-    """Determine the value of a memory unit in bytes."""
-    with WDLSourceLine(unit, ConversionException):
-        if unit == "KiB" or unit == "Ki":
-            mem_in_bytes = "1024^1"
-        elif unit == "MiB" or unit == "Mi":
-            mem_in_bytes = "1024^2"
-        elif unit == "GiB" or unit == "Gi":
-            mem_in_bytes = "1024^3"
-        elif unit == "TiB" or unit == "Ti":
-            mem_in_bytes = "1024^4"
-        elif unit == "B":
-            mem_in_bytes = "1024^0"
-        elif unit == "KB" or unit == "K":
-            mem_in_bytes = "1000^1"
-        elif unit == "MB" or unit == "M":
-            mem_in_bytes = "1000^2"
-        elif unit == "GB" or unit == "G":
-            mem_in_bytes = "1000^3"
-        elif unit == "TB" or unit == "T":
-            mem_in_bytes = "1000^4"
-        else:
-            raise ConversionException(f"Invalid memory unit: ${unit}")
-    return mem_in_bytes
+def get_mem_in_bytes(unit: str) -> Tuple[int, int]:
+    """
+    Determine the value of a memory unit in bytes.
+
+    Returns the base and exponent, ready for stringifying or evaluation
+    """
+    if unit == "KiB" or unit == "Ki":
+        return 1024, 1
+    elif unit == "MiB" or unit == "Mi":
+        return 1024, 2
+    elif unit == "GiB" or unit == "Gi":
+        return 1024, 3
+    elif unit == "TiB" or unit == "Ti":
+        return 1024, 4
+    elif unit == "B":
+        return 1024, 0
+    elif unit == "KB" or unit == "K":
+        return 1000, 1
+    elif unit == "MB" or unit == "M":
+        return 1000, 2
+    elif unit == "GB" or unit == "G":
+        return 1000, 3
+    elif unit == "TB" or unit == "T":
+        return 1000, 4
+    raise ConversionException(f"Invalid memory unit: ${unit}")
 
 
 def get_input(input_name: str) -> str:
@@ -163,7 +164,7 @@ def get_input(input_name: str) -> str:
 
 def get_cwl_docker_requirements(
     wdl_docker: Union[WDL.Expr.Get, WDL.Expr.String]
-) -> cwl.ProcessRequirement:
+) -> Optional[cwl.ProcessRequirement]:
     """Translate WDL Runtime Docker requirements to CWL Docker Requirement."""
     if isinstance(wdl_docker, WDL.Expr.String) and wdl_docker.literal:
         dockerpull = get_literal_value(wdl_docker)
@@ -187,7 +188,11 @@ def get_cwl_docker_requirements(
             raise WDLSourceLine(wdl_docker, ConversionException).makeError(
                 f"Unsupported type: {type(dockerpull_referee)}"
             )
-        dockerpull = get_literal_value(dockerpull_referee.expr)
+        if dockerpull_referee.expr:
+            dockerpull = get_literal_value(dockerpull_referee.expr)
+        else:
+            _logger.warning(f"Unable to extract docker reference from {wdl_docker}")
+            return None
     return cwl.DockerRequirement(dockerPull=dockerpull)
 
 
@@ -220,6 +225,29 @@ def get_literal_value(expr: WDL.Expr.Base) -> Optional[Any]:
             return result
         return value
     return None
+
+
+read_funcs = {
+    "read_string": r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
+    "read_int": "$(parseInt(self[0].contents))",
+    "read_float": "$(parseFloat(self[0].contents))",
+    "read_boolean": """${
+  var contents = self[0].contents.trim().toLowerCase()
+  if (contents == 'true') { return true;}
+  if (contents == 'false') { return false;}
+  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+}""",
+    "read_tsv": r"""${
+  var result;
+  self.contents.split(/\n|(\n\r)/).forEach(function(line) {
+    var line_array;
+    line.split('\t').forEach(function(field) {
+      line_array.push(field)
+    })
+    result.push(line_array);
+  })
+}""",
+}
 
 
 class Converter:
@@ -396,26 +424,27 @@ class Converter:
 
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
-        cwl_inputs = self.get_cwl_task_inputs(obj.inputs, obj.parameter_meta)
-        cwl_outputs = self.get_cwl_task_outputs(obj.outputs, obj.parameter_meta)
-        hints, requirements = self.get_cwl_hints_and_requirements(obj)
         description = obj.meta.pop("description", None)
-        if obj.meta:
-            _logger.warning("Skipping meta: %s", obj.meta)
+        cwl_inputs = self.get_cwl_task_inputs(obj.inputs, obj.parameter_meta)
         run_script = False
+        hints, requirements = self.get_cwl_hints_and_requirements(obj)
         for req in requirements:
             if isinstance(req, cwl.InitialWorkDirRequirement):
                 run_script = True
-        return cwl.CommandLineTool(
+        tool = cwl.CommandLineTool(
             id=obj.name,
             doc=description,
             inputs=cwl_inputs,
+            outputs=None,
             hints=hints,
             requirements=requirements,
-            outputs=cwl_outputs,
             cwlVersion="v1.2",
             baseCommand=["bash", "script.bash"] if run_script else ["true"],
         )
+        tool.outputs = self.set_cwl_task_outputs(obj.outputs, obj.parameter_meta, tool)
+        if obj.meta:
+            _logger.warning("Skipping meta: %s", obj.meta)
+        return tool
 
     def get_cwl_hints_and_requirements(
         self, obj: WDL.Tree.Task
@@ -427,11 +456,11 @@ class Converter:
         hints: List[cwl.ProcessRequirement] = []
         if "docker" in runtime:
             with WDLSourceLine(runtime["docker"], ConversionException):
-                hints.append(
-                    get_cwl_docker_requirements(
-                        runtime["docker"]  # type: ignore[arg-type]
-                    )
+                docker = get_cwl_docker_requirements(
+                    runtime["docker"]  # type: ignore[arg-type]
                 )
+                if docker:
+                    hints.append(docker)
         command_req = self.get_cwl_command_requirements(command.parts)
         if command_req:
             requirements.append(command_req)
@@ -503,13 +532,19 @@ class Converter:
     def get_memory_literal(self, memory_runtime: WDL.Expr.String) -> Union[float, str]:
         """Get the literal value for memory requirement with type WDL.Expr.String."""
         if memory_runtime.literal is None:
-            _, placeholder, unit, _ = memory_runtime.parts
-            with WDLSourceLine(placeholder, ConversionException):
-                if isinstance(placeholder.expr, WDL.Expr.Get):  # type: ignore[union-attr]
-                    value_name = self.get_expr_get(placeholder.expr)  # type: ignore[union-attr]
-                else:
-                    value_name = self.get_expr_apply(placeholder.expr)  # type: ignore[union-attr,arg-type]
-                return self.get_ram_min_js(value_name, unit.strip())  # type: ignore[union-attr]
+            if len(memory_runtime.parts) == 4:
+                _, amount, unit, _ = memory_runtime.parts
+            else:
+                _, amount, _, unit, _ = memory_runtime.parts
+            if isinstance(amount, WDL.Expr.Placeholder):
+                amount_str = self.get_expr(amount)
+            else:
+                amount_str = amount
+            if isinstance(unit, WDL.Expr.Placeholder):
+                unit_str = self.get_expr(unit)
+            else:
+                unit_str = unit.strip()
+            return self.get_ram_min_js(amount_str, unit_str)
 
         ram_min = self.get_expr_string(memory_runtime)[1:-1]
         unit_result = re.search(r"[a-zA-Z]+", ram_min)
@@ -517,10 +552,8 @@ class Converter:
             raise ConversionException("Missing Memory units, yet still a string?")
         unit = unit_result.group()
         value = float(ram_min.split(unit)[0])
-        byte, power = get_mem_in_bytes(unit).split("^")
-        memory: float = value * float(byte) ** float(power) / (1024 * 1024)
-
-        return memory
+        unit_base, unit_exponent = get_mem_in_bytes(unit)
+        return float((value * (unit_base**unit_exponent)) / (2**20))
 
     def get_outdir_requirement(
         self, outdir: Union[WDL.Expr.Get, WDL.Expr.Apply, WDL.Expr.Placeholder]
@@ -573,7 +606,10 @@ class Converter:
         """Get memory requirement for user input."""
         append_str: str = ""
         if unit:
-            append_str = '${\nvar unit = "' + unit + '";'
+            if "inputs." in unit:
+                append_str = "${\nvar unit = " + unit + ";"
+            else:
+                append_str = '${\nvar unit = "' + unit + '";'
         else:
             append_str = (
                 "${\nvar unit = " + ram_min_ref_name + '.match(/[a-zA-Z]+/g).join("");'
@@ -593,6 +629,7 @@ class Converter:
             + 'else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);\n'
             + 'else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);\n'
             + 'else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);\n'
+            + 'else throw "Unknown units: " + unit;\n'
             + "return parseInt(memory);\n}"
         )
 
@@ -642,7 +679,7 @@ class Converter:
                 item_expr = item.info.expr
                 output_source = item_expr.expr.name[::-1].replace(".", "/", 1)[::-1]
                 # replace just the last occurrence of a period with a slash
-                # by first reversing the string and the replace the first occurence
+                # by first reversing the string and the replace the first occurrence
                 # then reversing the result
                 wdl_output = item.info
                 type_of = self.get_cwl_type(
@@ -736,6 +773,7 @@ class Converter:
             "glob",
             "read_int",
             "read_boolean",
+            "read_tsv",
         }
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
@@ -862,7 +900,10 @@ class Converter:
                 unit_value = "1"
             else:
                 left_operand, right_operand = arguments
-                unit_value = get_mem_in_bytes(self.get_expr(right_operand)[1:-1])
+                unit_base, unit_exponent = get_mem_in_bytes(
+                    self.get_expr(right_operand)[1:-1]
+                )
+                unit_value = f"{unit_base}^{unit_exponent}"
             if isinstance(left_operand, WDL.Expr.Array):
                 array_items = [self.get_expr(item) for item in left_operand.items]
                 left = ", ".join(array_items)
@@ -898,7 +939,7 @@ class Converter:
                 item_type = array.type.item_type
             else:
                 raise WDLSourceLine(array, ConversionException).makeError(
-                    f"Unhandeled sep array type: {type(array)}: {array}."
+                    f"Unhandled sep array type: {type(array)}: {array}."
                 )
             sep_str = get_literal_value(sep) or ""
             if isinstance(item_type, WDL.Type.File):
@@ -1019,16 +1060,16 @@ class Converter:
                         f"{placeholder_expr} === null ? {false_str} : {true_str}"
                     )
             elif "sep" in options:
-                seperator = options["sep"]
+                separator = options["sep"]
                 if isinstance(expr.type, WDL.Type.Array):
                     item_type = expr.type.item_type
                     if isinstance(item_type, WDL.Type.String):
-                        pl_holder_str = f'{placeholder_expr}.join("{seperator}")'
+                        pl_holder_str = f'{placeholder_expr}.join("{separator}")'
                     elif isinstance(item_type, WDL.Type.File):
                         pl_holder_str = (
                             f"{placeholder_expr}.map("
                             + 'function(el) {return el.path}).join("'
-                            + seperator
+                            + separator
                             + '")'
                         )
                 else:
@@ -1049,7 +1090,7 @@ class Converter:
         wdl_inputs: Optional[List[WDL.Tree.Decl]],
         meta: Optional[Dict[str, Any]] = None,
     ) -> List[cwl.CommandInputParameter]:
-        """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Paramenters."""
+        """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Parameters."""
         inputs: List[cwl.CommandInputParameter] = []
 
         if not wdl_inputs:
@@ -1127,10 +1168,11 @@ class Converter:
             inputs.append(cwl.CommandInputRecordField(name=input_name, type=type_of))
         return inputs
 
-    def get_cwl_task_outputs(
+    def set_cwl_task_outputs(
         self,
         wdl_outputs: List[WDL.Tree.Decl],
-        meta: Optional[Dict[str, Any]] = None,
+        meta: Optional[Dict[str, Any]],
+        tool: cwl.CommandLineTool,
     ) -> List[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
         outputs: List[cwl.CommandOutputParameter] = []
@@ -1164,16 +1206,22 @@ class Converter:
 
             if (
                 isinstance(wdl_output.expr, WDL.Expr.Apply)
-                and wdl_output.expr.function_name == "read_string"
+                and wdl_output.expr.function_name in read_funcs
             ):
-                glob_expr = self.get_expr(wdl_output.expr)
-                is_literal = wdl_output.expr.arguments[0].literal
-                if is_literal:
-                    glob_str = glob_expr[
-                        1:-1
-                    ]  # remove quotes from the string returned by get_expr_string
+                if (
+                    isinstance(wdl_output.expr.arguments[0], WDL.Expr.Apply)
+                    and wdl_output.expr.arguments[0].function_name == "stdout"
+                ):
+                    glob_str = tool.stdout = "_stdout"
                 else:
-                    glob_str = f"$({glob_expr})"
+                    glob_expr = self.get_expr(wdl_output.expr)
+                    is_literal = wdl_output.expr.arguments[0].literal
+                    if is_literal:
+                        glob_str = glob_expr[
+                            1:-1
+                        ]  # remove quotes from the string returned by get_expr_string
+                    else:
+                        glob_str = f"$({glob_expr})"
 
                 outputs.append(
                     cwl.CommandOutputParameter(
@@ -1183,62 +1231,7 @@ class Converter:
                         outputBinding=cwl.CommandOutputBinding(
                             glob=glob_str,
                             loadContents=True,
-                            outputEval=r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
-                        ),
-                    )
-                )
-            elif (
-                isinstance(wdl_output.expr, WDL.Expr.Apply)
-                and wdl_output.expr.function_name == "read_float"
-            ):
-                glob_expr = self.get_expr(wdl_output.expr)
-                is_literal = wdl_output.expr.arguments[0].literal
-                if is_literal:
-                    glob_str = glob_expr[
-                        1:-1
-                    ]  # remove quotes from the string returned by get_expr_string
-                else:
-                    glob_str = f"$({glob_expr})"
-
-                outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        doc=doc,
-                        type=type_of,
-                        outputBinding=cwl.CommandOutputBinding(
-                            glob=glob_str,
-                            loadContents=True,
-                            outputEval=r"$(parseFloat(self[0].contents))",
-                        ),
-                    )
-                )
-            elif (
-                isinstance(wdl_output.expr, WDL.Expr.Apply)
-                and wdl_output.expr.function_name == "read_boolean"
-            ):
-                glob_expr = self.get_expr(wdl_output.expr)
-                is_literal = wdl_output.expr.arguments[0].literal
-                if is_literal:
-                    glob_str = glob_expr[
-                        1:-1
-                    ]  # remove quotes from the string returned by get_expr_string
-                else:
-                    glob_str = f"$({glob_expr})"
-
-                outputs.append(
-                    cwl.CommandOutputParameter(
-                        id=output_name,
-                        doc=doc,
-                        type=type_of,
-                        outputBinding=cwl.CommandOutputBinding(
-                            glob=glob_str,
-                            loadContents=True,
-                            outputEval=r"""${
-var contents = self[0].contents.trim().toLowerCase()
-if (contents == 'true') { return true;}
-if (contents == 'false') { return false;}
-throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-}""",
+                            outputEval=read_funcs[wdl_output.expr.function_name],
                         ),
                     )
                 )

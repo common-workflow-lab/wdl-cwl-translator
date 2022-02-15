@@ -31,10 +31,10 @@ $graph:
             glob: true.txt
             outputEval: |-
                 ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                  var contents = self[0].contents.trim().toLowerCase()
+                  if (contents == 'true') { return true;}
+                  if (contents == 'false') { return false;}
+                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 }
       - id: good_false
         type: boolean
@@ -43,10 +43,10 @@ $graph:
             glob: false.txt
             outputEval: |-
                 ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                  var contents = self[0].contents.trim().toLowerCase()
+                  if (contents == 'true') { return true;}
+                  if (contents == 'false') { return false;}
+                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 }
       - id: mixed_case_true
         type: boolean
@@ -55,10 +55,10 @@ $graph:
             glob: True.txt
             outputEval: |-
                 ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                  var contents = self[0].contents.trim().toLowerCase()
+                  if (contents == 'true') { return true;}
+                  if (contents == 'false') { return false;}
+                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 }
       - id: mixed_case_false
         type: boolean
@@ -67,10 +67,10 @@ $graph:
             glob: False.txt
             outputEval: |-
                 ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                  var contents = self[0].contents.trim().toLowerCase()
+                  if (contents == 'true') { return true;}
+                  if (contents == 'false') { return false;}
+                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 }
   - cwlVersion: v1.2
     id: read_bad_boolean
@@ -101,10 +101,10 @@ $graph:
             glob: bad-true.txt
             outputEval: |-
                 ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                  var contents = self[0].contents.trim().toLowerCase()
+                  if (contents == 'true') { return true;}
+                  if (contents == 'false') { return false;}
+                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 }
       - id: bad_false
         type: boolean
@@ -113,10 +113,10 @@ $graph:
             glob: bad-false.txt
             outputEval: |-
                 ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                  var contents = self[0].contents.trim().toLowerCase()
+                  if (contents == 'true') { return true;}
+                  if (contents == 'false') { return false;}
+                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 }
   - cwlVersion: v1.2
     id: read_dynamic_boolean
@@ -149,8 +149,8 @@ $graph:
             glob: $(inputs.filename)
             outputEval: |-
                 ${
-                var contents = self[0].contents.trim().toLowerCase()
-                if (contents == 'true') { return true;}
-                if (contents == 'false') { return false;}
-                throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+                  var contents = self[0].contents.trim().toLowerCase()
+                  if (contents == 'true') { return true;}
+                  if (contents == 'false') { return false;}
+                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
                 }
