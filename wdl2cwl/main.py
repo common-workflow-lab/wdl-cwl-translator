@@ -286,6 +286,7 @@ class Converter:
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
         wf_name = obj.name
+        requirements: List[cwl.ProcessRequirement] = []
         inputs = [
             cwl.WorkflowInputParameter(
                 id=inp.id,
@@ -327,13 +328,14 @@ class Converter:
                 elif isinstance(body_part, WDL.Tree.Scatter):
                     is_scatter_present = True
                     wf_steps.extend(self.get_workflow_scatter(body_part))
-        requirements = [cwl.ScatterFeatureRequirement()] if is_scatter_present else None
+        if is_scatter_present:
+            requirements.append(cwl.ScatterFeatureRequirement())
 
         return cwl.Workflow(
             id=wf_name,
             cwlVersion="v1.2",
             doc=wf_description,
-            requirements=requirements,
+            requirements=requirements if requirements else None,
             inputs=inputs,
             steps=wf_steps,
             outputs=outputs,
