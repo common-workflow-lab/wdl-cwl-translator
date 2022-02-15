@@ -73,7 +73,7 @@ wdl2cwl path_to_workflow.wdl --output path_to_new_workflow.cwl
 ## Temporary Limitations
 
 WDL features not yet supported
-- [Scatter](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/146)
+- Advanced [Scatter](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/183)
 
 WDL types not yet supported
 - [Map](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/77) types
