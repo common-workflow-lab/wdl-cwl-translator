@@ -99,7 +99,7 @@ $graph:
       - class: ResourceRequirement
         coresMin: 16
         ramMin: 13351.4404296875
-        outdirMin: $((inputs.disk_size.replace("\\..*", "") ) * 1024)
+        outdirMin: $(parseFloat(inputs.disk_size.replace("\\..*", "") ) * 1024)
     inputs: []
     baseCommand:
       - bash
@@ -138,7 +138,7 @@ $graph:
       - class: ResourceRequirement
         coresMin: 1
         ramMin: 4768.37158203125
-        outdirMin: $((inputs.disk_size.replace("\\..*", "") ) * 1024)
+        outdirMin: $(parseFloat(inputs.disk_size.replace("\\..*", "") ) * 1024)
     inputs: []
     baseCommand:
       - bash
@@ -182,7 +182,7 @@ $graph:
     hints:
       - class: ResourceRequirement
         ramMin: 6675.72021484375
-        outdirMin: $((inputs.disk_size.replace("\\..*", "") ) * 1024)
+        outdirMin: $(parseFloat(inputs.disk_size.replace("\\..*", "") ) * 1024)
     inputs: []
     baseCommand:
       - bash
@@ -319,7 +319,7 @@ $graph:
     hints:
       - class: ResourceRequirement
         ramMin: 5722.0458984375
-        outdirMin: $((inputs.disk_size.replace("\\..*", "") ) * 1024)
+        outdirMin: $(parseFloat(inputs.disk_size.replace("\\..*", "") ) * 1024)
     inputs: []
     baseCommand:
       - bash
@@ -357,7 +357,7 @@ $graph:
     hints:
       - class: ResourceRequirement
         ramMin: 3337.860107421875
-        outdirMin: $((inputs.disk_size.replace("\\..*", "") ) * 1024)
+        outdirMin: $(parseFloat(inputs.disk_size.replace("\\..*", "") ) * 1024)
     inputs: []
     baseCommand:
       - bash
@@ -421,7 +421,7 @@ $graph:
     hints:
       - class: ResourceRequirement
         ramMin: 2861.02294921875
-        outdirMin: $((inputs.disk_size.replace("\\..*", "") ) * 1024)
+        outdirMin: $(parseFloat(inputs.disk_size.replace("\\..*", "") ) * 1024)
     inputs: []
     baseCommand:
       - bash
@@ -524,7 +524,7 @@ $graph:
       - class: ResourceRequirement
         coresMin: 1
         ramMin: 2861.02294921875
-        outdirMin: $((inputs.disk_size.replace("\\..*", "") ) * 1024)
+        outdirMin: $(parseFloat(inputs.disk_size.replace("\\..*", "") ) * 1024)
     inputs: []
     baseCommand:
       - bash
