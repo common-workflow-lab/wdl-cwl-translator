@@ -73,20 +73,20 @@ steps:
           - id: report
             type: File
             outputBinding:
-                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
-                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.txt')
+                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
+                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".txt")
           - id: report_top_hits
             type: File
             outputBinding:
-                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
-                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.top_' +
-                    inputs.topNHits + '_hits.txt')
+                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
+                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".top_" +
+                    inputs.topNHits + "_hits.txt")
           - id: top_hit_id
             type: string
             outputBinding:
                 loadContents: true
-                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + '.count.'
-                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + '.top.txt')
+                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
+                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".top.txt")
                 outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
           - id: viralngs_version
             type: string
@@ -174,7 +174,7 @@ steps:
           - id: count_summary
             type: File
             outputBinding:
-                glob: $(inputs.output_prefix + '.tsv')
+                glob: $(inputs.output_prefix + ".tsv")
           - id: viralngs_version
             type: string
             outputBinding:
@@ -234,7 +234,7 @@ steps:
           - id: count_summary
             type: File
             outputBinding:
-                glob: $(inputs.output_prefix + '.tsv')
+                glob: $(inputs.output_prefix + ".tsv")
           - id: viralngs_version
             type: string
             outputBinding:
