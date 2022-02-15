@@ -88,35 +88,35 @@ $graph:
       - id: base_distribution_by_cycle_pdf
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.base_distribution_by_cycle.pdf')
+            glob: $(inputs.output_bam_prefix + ".base_distribution_by_cycle.pdf")
       - id: base_distribution_by_cycle_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.base_distribution_by_cycle_metrics')
+            glob: $(inputs.output_bam_prefix + ".base_distribution_by_cycle_metrics")
       - id: insert_size_histogram_pdf
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.insert_size_histogram.pdf')
+            glob: $(inputs.output_bam_prefix + ".insert_size_histogram.pdf")
       - id: insert_size_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.insert_size_metrics')
+            glob: $(inputs.output_bam_prefix + ".insert_size_metrics")
       - id: quality_by_cycle_pdf
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.quality_by_cycle.pdf')
+            glob: $(inputs.output_bam_prefix + ".quality_by_cycle.pdf")
       - id: quality_by_cycle_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.quality_by_cycle_metrics')
+            glob: $(inputs.output_bam_prefix + ".quality_by_cycle_metrics")
       - id: quality_distribution_pdf
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.quality_distribution.pdf')
+            glob: $(inputs.output_bam_prefix + ".quality_distribution.pdf")
       - id: quality_distribution_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.quality_distribution_metrics')
+            glob: $(inputs.output_bam_prefix + ".quality_distribution_metrics")
   - cwlVersion: v1.2
     id: CollectReadgroupBamQualityMetrics
     class: CommandLineTool
@@ -181,19 +181,19 @@ $graph:
       - id: alignment_summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.alignment_summary_metrics')
+            glob: $(inputs.output_bam_prefix + ".alignment_summary_metrics")
       - id: gc_bias_detail_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.detail_metrics')
+            glob: $(inputs.output_bam_prefix + ".gc_bias.detail_metrics")
       - id: gc_bias_pdf
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.pdf')
+            glob: $(inputs.output_bam_prefix + ".gc_bias.pdf")
       - id: gc_bias_summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.summary_metrics')
+            glob: $(inputs.output_bam_prefix + ".gc_bias.summary_metrics")
   - cwlVersion: v1.2
     id: CollectAggregationMetrics
     class: CommandLineTool
@@ -263,55 +263,55 @@ $graph:
       - id: alignment_summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.alignment_summary_metrics')
+            glob: $(inputs.output_bam_prefix + ".alignment_summary_metrics")
       - id: bait_bias_detail_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.bait_bias_detail_metrics')
+            glob: $(inputs.output_bam_prefix + ".bait_bias_detail_metrics")
       - id: bait_bias_summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.bait_bias_summary_metrics')
+            glob: $(inputs.output_bam_prefix + ".bait_bias_summary_metrics")
       - id: gc_bias_detail_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.detail_metrics')
+            glob: $(inputs.output_bam_prefix + ".gc_bias.detail_metrics")
       - id: gc_bias_pdf
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.pdf')
+            glob: $(inputs.output_bam_prefix + ".gc_bias.pdf")
       - id: gc_bias_summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.gc_bias.summary_metrics')
+            glob: $(inputs.output_bam_prefix + ".gc_bias.summary_metrics")
       - id: insert_size_histogram_pdf
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.insert_size_histogram.pdf')
+            glob: $(inputs.output_bam_prefix + ".insert_size_histogram.pdf")
       - id: insert_size_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.insert_size_metrics')
+            glob: $(inputs.output_bam_prefix + ".insert_size_metrics")
       - id: pre_adapter_detail_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.pre_adapter_detail_metrics')
+            glob: $(inputs.output_bam_prefix + ".pre_adapter_detail_metrics")
       - id: pre_adapter_summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.pre_adapter_summary_metrics')
+            glob: $(inputs.output_bam_prefix + ".pre_adapter_summary_metrics")
       - id: quality_distribution_pdf
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.quality_distribution.pdf')
+            glob: $(inputs.output_bam_prefix + ".quality_distribution.pdf")
       - id: quality_distribution_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.quality_distribution_metrics')
+            glob: $(inputs.output_bam_prefix + ".quality_distribution_metrics")
       - id: error_summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_prefix + '.error_summary_metrics')
+            glob: $(inputs.output_bam_prefix + ".error_summary_metrics")
   - cwlVersion: v1.2
     id: ConvertSequencingArtifactToOxoG
     class: CommandLineTool
@@ -383,7 +383,7 @@ $graph:
       - id: oxog_metrics
         type: File
         outputBinding:
-            glob: $(inputs.base_name + '.oxog_metrics')
+            glob: $(inputs.base_name + ".oxog_metrics")
   - cwlVersion: v1.2
     id: CrossCheckFingerprints
     class: CommandLineTool
@@ -460,15 +460,15 @@ $graph:
                   $(inputs.input_bam ? "--IGNORE_READ_GROUPS true" : "") \
                   --HAPLOTYPE_MAP $(inputs.haplotype_database_file.path) \
                   --GENOTYPE_LOD_THRESHOLD $(inputs.genotype_lod_threshold) \
-                  --SUMMARY_OUTPUT $(inputs.output_basename + '.fingerprinting_summary_metrics') \
-                  --DETAIL_OUTPUT $(inputs.output_basename + '.fingerprinting_detail_metrics') \
+                  --SUMMARY_OUTPUT $(inputs.output_basename + ".fingerprinting_summary_metrics") \
+                  --DETAIL_OUTPUT $(inputs.output_basename + ".fingerprinting_detail_metrics") \
                   $(inputs.ref_fasta === null ? "" : "--REFERENCE_SEQUENCE " + inputs.ref_fasta.path)
 
-                CONTENT_LINE=\$(cat $(inputs.output_basename + '.fingerprinting_summary_metrics') |
+                CONTENT_LINE=\$(cat $(inputs.output_basename + ".fingerprinting_summary_metrics") |
                 grep -n "## METRICS CLASS\tpicard.analysis.FingerprintingSummaryMetrics" |
                 cut -f1 -d:)
                 CONTENT_LINE=\$(($CONTENT_LINE+2))
-                sed '8q;d' $(inputs.output_basename + '.fingerprinting_summary_metrics') | cut -f5 > lod
+                sed '8q;d' $(inputs.output_basename + ".fingerprinting_summary_metrics") | cut -f5 > lod
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -555,11 +555,11 @@ $graph:
       - id: summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_basename + '.fingerprinting_summary_metrics')
+            glob: $(inputs.output_basename + ".fingerprinting_summary_metrics")
       - id: detail_metrics
         type: File
         outputBinding:
-            glob: $(inputs.output_basename + '.fingerprinting_detail_metrics')
+            glob: $(inputs.output_basename + ".fingerprinting_detail_metrics")
       - id: lod
         type: float
         outputBinding:
@@ -1120,8 +1120,8 @@ $graph:
       - id: summary_metrics
         type: File
         outputBinding:
-            glob: $(inputs.metrics_basename + '.variant_calling_summary_metrics')
+            glob: $(inputs.metrics_basename + ".variant_calling_summary_metrics")
       - id: detail_metrics
         type: File
         outputBinding:
-            glob: $(inputs.metrics_basename + '.variant_calling_detail_metrics')
+            glob: $(inputs.metrics_basename + ".variant_calling_detail_metrics")

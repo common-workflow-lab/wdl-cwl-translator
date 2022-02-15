@@ -77,7 +77,7 @@ outputs:
   - id: result
     type: string
     outputBinding:
-        outputEval: $(inputs.first + ' ' + inputs.second + ' ' + inputs.third + '
-            ' + inputs.fourth + ' ' + inputs.fifth.basename + ' ' + inputs.sixth.join(",")
-            + ' ' + inputs.seventh.join(",") + ' ' + inputs.eighth.join(",") + ' '
-            + inputs.nineth.join(",") + ' ' + inputs.tenth[0].basename + ',' + inputs.tenth[1].basename)
+        outputEval: $(inputs.first + " " + inputs.second + " " + inputs.third + "
+            " + inputs.fourth + " " + inputs.fifth.basename + " " + inputs.sixth.join(",")
+            + " " + inputs.seventh.join(",") + " " + inputs.eighth.join(",") + " "
+            + inputs.nineth.join(",") + " " + inputs.tenth[0].basename + "," + inputs.tenth[1].basename)

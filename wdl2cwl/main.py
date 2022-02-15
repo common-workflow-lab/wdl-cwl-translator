@@ -723,28 +723,18 @@ class Converter:
         """Translate WDL String Expressions."""
         if wdl_expr_string.literal is not None:
             return str(wdl_expr_string.literal)
-        string = ""
         parts = wdl_expr_string.parts
-        for index, part in enumerate(parts[1:-1], start=1):
-            if isinstance(
-                part,
-                WDL.Expr.Placeholder,
-            ):
-                placeholder = self.get_expr(part)
-                part = (
-                    "" if parts[index - 1] == '"' or parts[index - 1] == "'" else "' + "  # type: ignore
-                )
-                part += placeholder
-                part += (
-                    "" if parts[index + 1] == '"' or parts[index + 1] == "'" else " + '"  # type: ignore
-                )
-            string += part
-        # condition to determine if the opening and closing quotes should be added to string
-        # for cases where a placeholder begins or ends a WDL.Expr.String
-        if type(parts[1]) == str:
-            string = "'" + string
-        if type(parts[-2]) == str:
-            string = string + "'"
+        q = cast(str, parts[0])[0]
+        string = (
+            f"{q}{parts[1]}{q}"
+            if isinstance(parts[1], str)
+            else self.get_expr(parts[1])
+        )
+        if parts[2:-1]:
+            string += " + " + " + ".join(
+                f"{q}{part}{q}" if isinstance(part, str) else self.get_expr(part)
+                for part in parts[2:-1]
+            )
         return string
 
     def get_expr_ifthenelse(self, wdl_ifthenelse: WDL.Expr.IfThenElse) -> str:

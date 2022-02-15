@@ -94,7 +94,7 @@ steps:
             type: File
             outputBinding:
                 glob: $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/,
-                    '') + '.assoc.logistic')
+                    '') + ".assoc.logistic")
         requirements:
           - class: InitialWorkDirRequirement
             listing:
@@ -160,7 +160,7 @@ steps:
             type: File
             outputBinding:
                 glob: $(inputs.assoc_file.basename.replace(/\.assoc\.logistic$/, '')  +
-                    '.png')
+                    ".png")
         requirements:
           - class: InitialWorkDirRequirement
             listing:

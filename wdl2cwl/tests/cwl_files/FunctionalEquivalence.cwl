@@ -108,11 +108,11 @@ $graph:
       - id: output_bam
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bam')
+            glob: $(inputs.output_bam_basename + ".bam")
       - id: bwa_stderr_log
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bwa.stderr.log')
+            glob: $(inputs.output_bam_basename + ".bwa.stderr.log")
   - cwlVersion: v1.2
     id: SortSam
     class: CommandLineTool
@@ -147,15 +147,15 @@ $graph:
       - id: output_bam
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bam')
+            glob: $(inputs.output_bam_basename + ".bam")
       - id: output_bam_index
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bai')
+            glob: $(inputs.output_bam_basename + ".bai")
       - id: output_bam_md5
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bam.md5')
+            glob: $(inputs.output_bam_basename + ".bam.md5")
   - cwlVersion: v1.2
     id: MarkDuplicates
     class: CommandLineTool
@@ -191,7 +191,7 @@ $graph:
       - id: output_bam
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bam')
+            glob: $(inputs.output_bam_basename + ".bam")
       - id: duplicate_metrics
         type: File
         outputBinding:
@@ -366,11 +366,11 @@ $graph:
       - id: recalibrated_bam
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bam')
+            glob: $(inputs.output_bam_basename + ".bam")
       - id: recalibrated_bam_checksum
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bam.md5')
+            glob: $(inputs.output_bam_basename + ".bam.md5")
   - cwlVersion: v1.2
     id: GatherBqsrReports
     class: CommandLineTool
@@ -430,15 +430,15 @@ $graph:
       - id: output_bam
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bam')
+            glob: $(inputs.output_bam_basename + ".bam")
       - id: output_bam_index
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bai')
+            glob: $(inputs.output_bam_basename + ".bai")
       - id: output_bam_md5
         type: File
         outputBinding:
-            glob: $(inputs.output_bam_basename + '.bam.md5')
+            glob: $(inputs.output_bam_basename + ".bam.md5")
   - cwlVersion: v1.2
     id: ScatterIntervalList
     class: CommandLineTool
@@ -533,15 +533,15 @@ $graph:
       - id: output_cram
         type: File
         outputBinding:
-            glob: $(inputs.output_basename + '.cram')
+            glob: $(inputs.output_basename + ".cram")
       - id: output_cram_index
         type: File
         outputBinding:
-            glob: $(inputs.output_basename + '.cram.crai')
+            glob: $(inputs.output_basename + ".cram.crai")
       - id: output_cram_md5
         type: File
         outputBinding:
-            glob: $(inputs.output_basename + '.cram.md5')
+            glob: $(inputs.output_basename + ".cram.md5")
   - cwlVersion: v1.2
     id: SumFloats
     class: CommandLineTool
