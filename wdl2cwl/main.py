@@ -257,6 +257,7 @@ class Converter:
         """Initialize the sets used by the object and prevent inconsistent behaviours."""
         self.non_static_values: Set[str] = set()
         self.optional_cwl_null: Set[str] = set()
+        self.scatter_names: List[str] = []
 
     def load_wdl_objects(
         self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]
@@ -269,18 +270,23 @@ class Converter:
 
     def get_step_input_expr(self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]) -> str:
         """Get name of expression referenced in workflow call inputs."""
-        if isinstance(wf_expr, WDL.Expr.String):
-            return self.get_expr_string(wf_expr)[1:-1]
-        wdl_expr = wf_expr.expr
-        if not isinstance(wdl_expr, WDL.Expr.Ident):
-            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
-                f"Unhandled type: {type(wdl_expr)}: {wdl_expr}. Was expecting a WDL.Expr.Ident."
-            )
-        return str(wdl_expr.name)
+        with WDLSourceLine(wf_expr, ConversionException):
+            if isinstance(wf_expr, WDL.Expr.String):
+                return self.get_expr_string(wf_expr)[1:-1]
+            elif isinstance(wf_expr, WDL.Expr.Get):
+                ident = cast(WDL.Expr.Ident, wf_expr.expr)
+                id_name = ident.name
+                referee = ident.referee
+                if referee and isinstance(referee, WDL.Tree.Scatter):
+                    scatter_name = self.get_step_input_expr(referee.expr)  # type: ignore [arg-type]
+                    self.scatter_names.append(scatter_name)
+                    return scatter_name
+                return id_name
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
         wf_name = obj.name
+        requirements: List[cwl.ProcessRequirement] = []
         inputs = [
             cwl.WorkflowInputParameter(
                 id=inp.id,
@@ -305,98 +311,118 @@ class Converter:
         wf_description = (
             obj.meta.pop("description") if "description" in obj.meta else None
         )
-        for call in obj.body:
-            if not isinstance(call, WDL.Tree.Call):
+        is_scatter_present = False
+        for body_part in obj.body:
+            if not isinstance(body_part, (WDL.Tree.Call, WDL.Tree.Scatter)):
                 _logger.warning(
-                    WDLSourceLine(call).makeError(
+                    WDLSourceLine(body_part).makeError(
                         "Warning: unhandled Workflow node type:"
                     )
                     + " %s",
-                    type(call),
+                    type(body_part),
                 )
                 continue
-            with WDLSourceLine(call, ConversionException):
-                callee = call.callee
-                if not callee:
-                    continue  # shouldn't be possible?
-                cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)
-                call_inputs = call.inputs
-                inputs_from_call: Dict[str, Tuple[str, Dict[str, Any]]] = {}
-                input_defaults = set()
-                if call_inputs:
-                    for key, value in call_inputs.items():
-                        with WDLSourceLine(value, ConversionException):
-                            if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
-                                input_defaults.add(key)
-                            if (
-                                isinstance(value, WDL.Expr.Apply)
-                                and value.function_name == "select_all"
-                                and isinstance(value.arguments[0], WDL.Expr.Array)
-                                and isinstance(
-                                    value.arguments[0].items[0],
-                                    (WDL.Expr.Get, WDL.Expr.String),
-                                )
-                            ):
-                                input_expr = self.get_step_input_expr(
-                                    value.arguments[0].items[0]
-                                )
-                                inputs_from_call[key] = (
-                                    input_expr.replace(".", "/"),
-                                    {
-                                        "pickValue": "all_non_null",
-                                        "valueFrom": "$([self])",
-                                    },
-                                )
-                            else:
-                                input_expr = self.get_step_input_expr(value)  # type: ignore[arg-type]
-                                inputs_from_call[key] = (
-                                    input_expr.replace(".", "/"),
-                                    {},
-                                )
-                wf_step_inputs: List[cwl.WorkflowStepInput] = []
-                for inp in cwl_callee_inputs:
-                    call_inp_id = f"{call.name}.{inp.id}"
-                    source_str, extras = inputs_from_call.get(
-                        cast(str, inp.id), (call_inp_id, {})
-                    )
-
-                    if inp.id not in input_defaults:
-                        wf_step_inputs.append(
-                            cwl.WorkflowStepInput(
-                                id=inp.id, source=source_str, **extras
-                            )
-                        )
-                    else:
-                        wf_step_inputs.append(
-                            cwl.WorkflowStepInput(
-                                id=inp.id, default=source_str, **extras
-                            )
-                        )
-                wf_step_outputs = (
-                    [
-                        cwl.WorkflowStepOutput(id=output.name)
-                        for output in callee.outputs
-                    ]
-                    if callee.outputs
-                    else []
-                )
-                wf_step_run = self.load_wdl_objects(callee)
-                wf_step = cwl.WorkflowStep(
-                    wf_step_inputs,
-                    id=call.name,
-                    run=wf_step_run,
-                    out=wf_step_outputs,
-                )
-                wf_steps.append(wf_step)
+            with WDLSourceLine(body_part, ConversionException):
+                if isinstance(body_part, WDL.Tree.Call):
+                    wf_steps.append(self.get_workflow_call(body_part))
+                elif isinstance(body_part, WDL.Tree.Scatter):
+                    is_scatter_present = True
+                    wf_steps.extend(self.get_workflow_scatter(body_part))
+        if is_scatter_present:
+            requirements.append(cwl.ScatterFeatureRequirement())
 
         return cwl.Workflow(
             id=wf_name,
             cwlVersion="v1.2",
             doc=wf_description,
+            requirements=requirements if requirements else None,
             inputs=inputs,
             steps=wf_steps,
             outputs=outputs,
         )
+
+    def get_workflow_scatter(self, scatter: WDL.Tree.Scatter) -> List[cwl.WorkflowStep]:
+        """Get the CWL Workflow Step equivalent of a list of WDL Scatter Object."""
+        scatter_steps: List[cwl.WorkflowStep] = []
+        for body_obj in scatter.body:
+            with WDLSourceLine(body_obj, ConversionException):
+                if isinstance(body_obj, WDL.Tree.Call):
+                    wf_step = self.get_workflow_call(body_obj)
+                wf_step.scatter = self.scatter_names.pop()
+                scatter_steps.append(wf_step)
+        return scatter_steps
+
+    def get_workflow_call(self, call: WDL.Tree.Call) -> cwl.WorkflowStep:
+        """Get the CWL Workflow Step equivalent of a WDL Call Object."""
+        callee = call.callee
+        if callee is None:
+            raise ConversionException("callee is None. This should not be possible.")
+        cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)
+        call_inputs = call.inputs
+        inputs_from_call: Dict[str, Tuple[str, Dict[str, Any]]] = {}
+        input_defaults = set()
+        if call_inputs:
+            scatter_handled = False
+            for key, value in call_inputs.items():
+                with WDLSourceLine(value, ConversionException):
+                    if not isinstance(value, (WDL.Expr.Get, WDL.Expr.Apply)):
+                        input_defaults.add(key)
+                    if (
+                        isinstance(value, WDL.Expr.Apply)
+                        and value.function_name == "select_all"
+                        and isinstance(value.arguments[0], WDL.Expr.Array)
+                        and isinstance(
+                            value.arguments[0].items[0],
+                            (WDL.Expr.Get, WDL.Expr.String),
+                        )
+                    ):
+                        input_expr = self.get_step_input_expr(
+                            value.arguments[0].items[0]
+                        )
+                        inputs_from_call[key] = (
+                            input_expr.replace(".", "/"),
+                            {
+                                "pickValue": "all_non_null",
+                                "valueFrom": "$([self])",
+                            },
+                        )
+                    else:
+                        input_expr = self.get_step_input_expr(value)  # type: ignore[arg-type]
+                        inputs_from_call[key] = (
+                            input_expr.replace(".", "/"),
+                            {},
+                        )
+                    if self.scatter_names and not scatter_handled:
+                        self.scatter_names[-1] = key
+                        scatter_handled = True
+        wf_step_inputs: List[cwl.WorkflowStepInput] = []
+        for inp in cwl_callee_inputs:
+            call_inp_id = f"{call.name}.{inp.id}"
+            source_str, extras = inputs_from_call.get(
+                cast(str, inp.id), (call_inp_id, {})
+            )
+
+            if inp.id not in input_defaults:
+                wf_step_inputs.append(
+                    cwl.WorkflowStepInput(id=inp.id, source=source_str, **extras)
+                )
+            else:
+                wf_step_inputs.append(
+                    cwl.WorkflowStepInput(id=inp.id, default=source_str, **extras)
+                )
+        wf_step_outputs = (
+            [cwl.WorkflowStepOutput(id=output.name) for output in callee.outputs]
+            if callee.outputs
+            else []
+        )
+        wf_step_run = self.load_wdl_objects(callee)
+        wf_step = cwl.WorkflowStep(
+            wf_step_inputs,
+            id=call.name,
+            run=wf_step_run,
+            out=wf_step_outputs,
+        )
+        return wf_step
 
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
@@ -948,7 +974,6 @@ class Converter:
     def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
         """Translate WDL Ident Expressions."""
         id_name = wdl_ident_expr.name
-        ident_name = get_input(id_name)
         referee = wdl_ident_expr.referee
         optional = wdl_ident_expr.type.optional
         if referee:
@@ -960,6 +985,7 @@ class Converter:
                     or wdl_ident_expr.name not in self.non_static_values
                 ):
                     return self.get_expr(referee.expr)
+        ident_name = get_input(id_name)
         if optional and isinstance(wdl_ident_expr.type, WDL.Type.File):
             # To prevent null showing on the terminal for inputs of type File
             name_with_file_check = get_expr_name_with_is_file_check(wdl_ident_expr)

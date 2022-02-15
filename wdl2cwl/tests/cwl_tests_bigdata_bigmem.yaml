@@ -18,3 +18,20 @@
       checksum: sha1$5b2aa070a547dc18b72412f066f7729929499153
       size: 69
     align_and_count_report.viral_core_version: v2.1.33
+  
+  - doc: scatter example
+  tool: cwl_files/align_and_count_multiple_report.cwl
+  # https://github.com/broadinstitute/viral-pipelines/blob/e7bbbb65c1a6bc6ae6dbfc89ff33b128cbad556d/pipes/WDL/workflows/align_and_count_multiple_report.wdl
+  job: inputs/align_and_count_multiple_report.yaml
+  output:
+    align_and_count_multiple_report.report:
+        class: File
+        basename: count_summary.tsv
+        checksum: sha1$5a01b55993cadfa14c1cfc4b62028cef64e5e4b4
+        size: 86212
+    align_and_count_multiple_report.report_top_hits:
+        class: File
+        basename: count_summary_top_hits.tsv
+        checksum: sha1$dcd0a877f8ecf340021047209873c0ab1105382c
+        size: 100
+    align_and_count_multiple_report.viral_core_version: v2.1.33
