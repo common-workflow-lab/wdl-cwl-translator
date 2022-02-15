@@ -573,13 +573,10 @@ class Converter:
                     # If it contains an apply expr we don't want to process the _add function
                     # that concatenates it to the chars in the string
                     expr_str = self.get_expr(outdir)
-                    # if the expr_str returns an integer that is declared as a static variable
-                    # multiply with 1024 to obtain the value in mebibytes
-                    return (
-                        f"$(({expr_str}) * 1024)"
-                        if not expr_str.isdigit()
-                        else int(expr_str) * 1024
-                    )
+                    if isinstance(outdir.type, WDL.Type.String):
+                        return f"$(parseFloat({expr_str}) * 1024)"
+                    else:
+                        return f"$(({expr_str}) * 1024)"
                 # apply exprs contain arguments and strings contain parts both are lists
                 # they could contain expressions that represent the runtime disk
                 list_object = (
@@ -901,8 +898,7 @@ class Converter:
                 unit_value = "1"
             else:
                 left_operand, right_operand = arguments
-                if right_operand.literal:
-                    right_value = str(get_literal_value(right_operand))
+                right_value = str(get_literal_value(right_operand))
                 unit_base, unit_exponent = get_mem_in_bytes(right_value)
                 unit_value = f"{unit_base}^{unit_exponent}"
             if isinstance(left_operand, WDL.Expr.Array):
