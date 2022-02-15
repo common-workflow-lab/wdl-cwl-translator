@@ -1,0 +1,6 @@
+ref_dict:
+  class: File
+  path: bcftools/reference.dict
+  checksum: sha1$5d0c05894040d82477cb2611781e97ce901896d4
+  size: 252
+preemptible_tries: 1

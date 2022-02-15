@@ -166,3 +166,16 @@
   tool: cwl_files/literal_test.cwl
   output:
     result: "true 42 6.022 hoopla README.md true,false 42,23 6.022,10,23 Hello,World README.md,LICENSE"
+
+- doc: read_lines(stdout)
+  tool: cwl_files/pacbio.cwl#ccsChunks
+  job: inputs/pacbio_ccsChunks.yaml
+  output:
+    chunks: ["1/10", "2/10", "3/10", "4/10", "5/10", "6/10", "7/10", "8/10", "9/10", "10/10"]
+
+- doc: read_tsv() test
+  tool: cwl_files/Utilities.cwl#CreateSequenceGroupingTSV
+  job: inputs/Utilities_CreateSequenceGroupingTSV.yaml
+  output:
+    sequence_grouping: [ [ "22:1+" ], [ "X:1+" ], [ "Y:1+" ] ]
+    sequence_grouping_with_unmapped: [ [ "22:1+" ], [ "X:1+" ], [ "Y:1+" ], [ "unmapped" ] ]
