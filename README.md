@@ -74,8 +74,45 @@ wdl2cwl path_to_workflow.wdl --output path_to_new_workflow.cwl
 
 WDL features not yet supported
 - [Scatter](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/146)
+
+WDL types not yet supported
 - [Map](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/77) types
 - [Nested structs](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/158)
+- [Pair](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#pairx-y)
+
+OpenWDL 1.1 standard library functions to be implemented
+- [floor](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#int-floorfloat-int-ceilfloat-and-int-roundfloat)
+- [min](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-int-minint-int-float-minfloat-float-float-minint-float-float-minfloat-int)
+- [max](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-int-maxint-int-float-maxfloat-float-float-maxint-float-float-maxfloat-int)
+- [stderr](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#file-stderr)
+- [read_map](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#mapstring-string-read_mapstringfile)
+- [read_object](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-object-read_objectstringfile)
+- [read_objects](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arrayobject-read_objectsstringfile)
+- [read_json](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#r-read_jsonstringfile)
+- [write_lines](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#file-write_linesarraystring)
+- [write_tsv](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#file-write_tsvarrayarraystring)
+- [write_map](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#file-write_mapmapstring-string)
+- [write_object](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-file-write_objectobject)
+- [write_objects](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-file-write_objectsarrayobject)
+- [write_json](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#file-write_jsonx)
+- [range](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/176)
+- [transpose](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#arrayarrayx-transposearrayarrayx)
+- [zip](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#arraypairxy-ziparrayx-arrayy)
+- [unzip](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-pairarrayx-arrayy-unziparraypairx-y)
+- [cross](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#arraypairxy-crossarrayx-arrayy)
+- [prefix](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#arraystring-prefixstring-arrayp)
+- [suffix](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arraystring-suffixstring-arrayp)
+- [quote](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arraystring-quotearrayp)
+- [squote](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arraystring-squotearrayp)
+- [as_pairs](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arraypairp-y-as_pairsmapp-y)
+- [as_map](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-mapp-y-as_maparraypairp-y)
+- [keys](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arrayp-keysmapp-y)
+- [collect_by_keys](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-mapp-arrayy-collect_by_keyarraypairp-y)
+
+Many of the above are straightforward to implement, but we haven't needed them yet.
+So if you are unable to translate a particular WDL document due to lackof a standard library
+function, please [open and issue](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/new/choose)
+and share your example!
 
 ## Incompatibilities possibly requiring manual intervention
 
