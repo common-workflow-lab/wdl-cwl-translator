@@ -548,7 +548,7 @@ class Converter:
                 unit_str = unit.strip()
             return self.get_ram_min_js(amount_str, unit_str)
 
-        ram_min = self.get_expr_string(memory_runtime)[1:-1]
+        ram_min = str(get_literal_value(memory_runtime))
         unit_result = re.search(r"[a-zA-Z]+", ram_min)
         if not unit_result:
             raise ConversionException("Missing Memory units, yet still a string?")
@@ -725,7 +725,7 @@ class Converter:
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
         if wdl_expr_string.literal is not None:
-            return f'"{wdl_expr_string.literal.value}"'
+            return str(wdl_expr_string.literal)
         string = ""
         parts = wdl_expr_string.parts
         for index, part in enumerate(parts[1:-1], start=1):
@@ -831,9 +831,9 @@ class Converter:
         elif function_name == "_interpolation_add":
             arg_value, arg_name = arguments
             if isinstance(arg_name, WDL.Expr.String) and isinstance(
-                arg_value, WDL.Expr.Apply
+                arg_value, (WDL.Expr.Apply, WDL.Expr.String)
             ):
-                return f"{self.get_expr_apply(arg_value)} + {self.get_expr(arg_name)}"
+                return f"{self.get_expr(arg_value)} + {self.get_expr(arg_name)}"
             if isinstance(arg_name, (WDL.Expr.Placeholder, WDL.Expr.Get)):
                 just_arg_name = get_expr_name(arg_name.expr)  # type: ignore[arg-type]
                 arg_name_with_file_check = get_expr_name_with_is_file_check(
@@ -846,12 +846,11 @@ class Converter:
                 )
                 arg_value = arg_name
             with WDLSourceLine(arg_value, ConversionException):
-                if arg_value.literal:
-                    arg_value = arg_value.literal.value
+                arg_value_str = self.get_expr(arg_value)
                 return (
-                    f'{just_arg_name} === null ? "" : "{arg_value}" + {arg_name_with_file_check}'
+                    f'{just_arg_name} === null ? "" : {arg_value_str} + {arg_name_with_file_check}'
                     if treat_as_optional
-                    else f"{arg_value} $({arg_name_with_file_check})"
+                    else f"{arg_value_str} + {arg_name_with_file_check}"
                 )
         elif function_name == "sub":
             wdl_apply, arg_string, arg_sub = arguments
@@ -902,9 +901,9 @@ class Converter:
                 unit_value = "1"
             else:
                 left_operand, right_operand = arguments
-                unit_base, unit_exponent = get_mem_in_bytes(
-                    self.get_expr(right_operand)[1:-1]
-                )
+                if right_operand.literal:
+                    right_value = str(get_literal_value(right_operand))
+                unit_base, unit_exponent = get_mem_in_bytes(right_value)
                 unit_value = f"{unit_base}^{unit_exponent}"
             if isinstance(left_operand, WDL.Expr.Array):
                 array_items = [self.get_expr(item) for item in left_operand.items]
@@ -1013,14 +1012,8 @@ class Converter:
         for wdl_command in wdl_commands:
             if isinstance(wdl_command, str):
                 command_str += wdl_command.replace("$(", "\\$(")
-            elif isinstance(wdl_command, WDL.Expr.Placeholder):
-                pl_holder_str = self.translate_wdl_placeholder(wdl_command)
-                command_str += (
-                    f"$({pl_holder_str})"
-                    if " $(" not in pl_holder_str
-                    else pl_holder_str
-                )
-
+            else:
+                command_str += f"$({self.translate_wdl_placeholder(wdl_command)})"
         command_str = textwrap.dedent(command_str)
         return (
             cwl.InitialWorkDirRequirement(
@@ -1031,13 +1024,9 @@ class Converter:
         )
 
     def translate_wdl_placeholder(self, wdl_placeholder: WDL.Expr.Placeholder) -> str:
-        """Translate WDL Expr Placeholder to a valid CWL command string."""
+        """Translate WDL Expr Placeholder to a valid CWL expression."""
         pl_holder_str = ""
         expr = wdl_placeholder.expr
-        if expr is None:
-            raise WDLSourceLine(wdl_placeholder, ConversionException).makeError(
-                f"Placeholder '{wdl_placeholder}' has no expr."
-            )
         placeholder_expr = self.get_expr(expr)
         options = wdl_placeholder.options
         if options:
@@ -1219,9 +1208,7 @@ class Converter:
                     glob_expr = self.get_expr(wdl_output.expr)
                     is_literal = wdl_output.expr.arguments[0].literal
                     if is_literal:
-                        glob_str = glob_expr[
-                            1:-1
-                        ]  # remove quotes from the string returned by get_expr_string
+                        glob_str = str(get_literal_value(wdl_output.expr.arguments[0]))
                     else:
                         glob_str = f"$({glob_expr})"
 

@@ -107,7 +107,7 @@ $graph:
                 $(inputs.refOverlap ? "--ref-overlap" : "") \
                 $(inputs.sample === null ? "" : "--sample " + inputs.sample) \
                 $(inputs.squashPloidy ? "--squash-ploidy" : "") \
-                --output-mode  $(inputs.outputMode) \
+                $("--output-mode " + inputs.outputMode) \
                 --threads $(inputs.threads)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess

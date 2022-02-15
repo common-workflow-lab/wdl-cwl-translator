@@ -454,7 +454,7 @@ $graph:
                 java -Xms$(inputs.memory_size - 1000)m -Xmx$(inputs.memory_size - 500)m -Dpicard.useLegacyParser=false -jar /usr/picard/picard.jar \
                 CheckFingerprint \
                   --INPUT $([inputs.input_vcf === null ? "" : inputs.input_vcf.path, inputs.input_bam === null ? "" : inputs.input_bam.path].find(function(element) { return element !== null }) ) \
-                  $(inputs.input_vcf ? inputs.input_sample_alias === null ? "" : "--OBSERVED_SAMPLE_ALIAS "" + inputs.input_sample_alias + """ : "") \
+                  $(inputs.input_vcf ? inputs.input_sample_alias === null ? "" : "--OBSERVED_SAMPLE_ALIAS \"" + inputs.input_sample_alias + "\"" : "") \
                   --GENOTYPES $(inputs.genotypes.path) \
                   --EXPECTED_SAMPLE_ALIAS "$(inputs.expected_sample_alias)" \
                   $(inputs.input_bam ? "--IGNORE_READ_GROUPS true" : "") \

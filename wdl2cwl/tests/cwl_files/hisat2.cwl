@@ -11,7 +11,7 @@ requirements:
             mkdir -p "\$(dirname $(inputs.outputBam))"
             hisat2 \
             -p $(inputs.threads) \
-            -x $(inputs.indexFiles[0].replace("\.[0-9]\.ht2", "") ) \
+            -x $(inputs.indexFiles[0].replace("\\.[0-9]\\.ht2", "") ) \
             $(inputs.inputR2 === null ? "-U" : "-1") $(inputs.inputR1.path) \
             $(inputs.inputR2 === null ? "" : "-2" + inputs.inputR2.path) \
             --rg-id $(inputs.readgroup) \
@@ -22,7 +22,7 @@ requirements:
             --new-summary \
             --summary-file $(inputs.summaryFilePath === null ? inputs.outputBam.split('/').reverse()[0].replace(/\.bam$/, '') + ".summary.txt" : inputs.summaryFilePath) \
             | samtools sort \
-            -@  $(inputs.totalSortThreads) \
+            $("-@ " + inputs.totalSortThreads) \
             -m $(inputs.sortMemoryPerThreadGb)G \
             -l $(inputs.compressionLevel) \
             - \

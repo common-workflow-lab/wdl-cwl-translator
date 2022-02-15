@@ -19,7 +19,7 @@ requirements:
               2> $(inputs.outputPrefix).log.bwamem | \
               $(inputs.usePostalt ? "" : "#") bwa-postalt.js -p $(inputs.outputPrefix).hla $(inputs.bwaIndex.fastaFile.path)$(inputs.sixtyFour ? ".64.alt" : ".alt") | \
               samtools sort \
-              -@  $(inputs.totalSortThreads) \
+              $("-@ " + inputs.totalSortThreads) \
               -m $(inputs.sortMemoryPerThreadGb)G \
               -l $(inputs.compressionLevel) \
               - \

@@ -10,7 +10,7 @@ requirements:
             set -e -o pipefail
             export JAVA_OPTS="-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1"
             vardict-java \
-            -th  $(inputs.threads) \
+            $("-th " + inputs.threads) \
             -G $(inputs.referenceFasta.path) \
             -N $(inputs.tumorSampleName) \
             -b "$(inputs.tumorBam.path)$(inputs.normalBam === null ? "" : "|" + inputs.normalBam.path)" \
