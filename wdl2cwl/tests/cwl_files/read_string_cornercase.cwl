@@ -32,7 +32,8 @@ hints:
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 3576.2786865234375
-    outdirMin: 1024
+    outdirMin: $((Math.ceil((function(size_of=0){inputs.bam.path.forEach(function(element){
+        if (element) {size_of += element.size}})}) / 1000^3 * 1.1) ) * 1024)
 inputs:
   - id: bam
     type: File

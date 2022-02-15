@@ -234,7 +234,7 @@ $graph:
         doc: Index of recalibrated BAM file.
         type: File
         outputBinding:
-            glob: $(inputs.outputBamPath.replace("\.bam$", ".bai") )
+            glob: $(inputs.outputBamPath.replace("\\.bam$", ".bai") )
       - id: recalibratedBamMd5
         doc: MD5 of recalibrated BAM file.
         type: File
@@ -1216,8 +1216,8 @@ $graph:
                 $(inputs.contaminationTable === null ? "" : "--contamination-table " + inputs.contaminationTable.path) \
                 $(inputs.mafTumorSegments === null ? "" : "--tumor-segmentation " + inputs.mafTumorSegments.path) \
                 $(inputs.artifactPriors === null ? "" : "--ob-priors " + inputs.artifactPriors.path) \
-                --unique-alt-read-count  $(inputs.uniqueAltReadCount) \
-                -stats  $(inputs.mutect2Stats.path) \
+                $("--unique-alt-read-count " + inputs.uniqueAltReadCount) \
+                $("-stats " + inputs.mutect2Stats.path) \
                 --filtering-stats "filtering.stats" \
                 --showHidden
       - class: InlineJavascriptRequirement
@@ -1664,7 +1664,7 @@ $graph:
                 -I bam_dir/$(inputs.sampleBam.basename) \
                 -V variants_dir/$(inputs.variantsForContamination.basename) \
                 -L sites_dir/$(inputs.sitesForContamination.basename) \
-                -O -pileups.table $(inputs.outputPrefix)
+                -O $("-pileups.table" + inputs.outputPrefix)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -2244,7 +2244,7 @@ $graph:
                 $(inputs.normalSample === null ? "" : "-normal " + inputs.normalSample) \
                 $(inputs.germlineResource === null ? "" : "--germline-resource " + inputs.germlineResource.path) \
                 $(inputs.panelOfNormals === null ? "" : "--panel-of-normals " + inputs.panelOfNormals.path) \
-                --f1r2-tar-gz  $(inputs.f1r2TarGz) \
+                $("--f1r2-tar-gz " + inputs.f1r2TarGz) \
                 -O $(inputs.outputVcf) \
                 -L $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
       - class: InlineJavascriptRequirement
@@ -2922,7 +2922,7 @@ $graph:
         doc: Index of output BAM file.
         type: File
         outputBinding:
-            glob: $(inputs.outputBam.replace("\.bam$", ".bai") )
+            glob: $(inputs.outputBam.replace("\\.bam$", ".bai") )
   - cwlVersion: v1.2
     id: VariantEval
     class: CommandLineTool

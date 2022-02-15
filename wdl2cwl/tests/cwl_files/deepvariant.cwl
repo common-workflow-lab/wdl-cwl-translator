@@ -22,7 +22,7 @@ requirements:
             $(inputs.outputGVcf === null ? "" : "--output_gvcf " + inputs.outputGVcf) \
             $(inputs.customizedModel === null ? "" : "--customized_model " + inputs.customizedModel.path) \
             $(inputs.numShards === null ? "" : "--num_shards " + inputs.numShards) \
-            --regions  $(inputs.regions) \
+            $("--regions " + inputs.regions) \
             $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName) \
             $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs) \
             $(inputs.VCFStatsReport === null ? "--novcf_stats_report" : "--vcf_stats_report")

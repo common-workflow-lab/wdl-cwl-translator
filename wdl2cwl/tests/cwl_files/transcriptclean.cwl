@@ -15,7 +15,7 @@ $graph:
                 --f=$(inputs.gtfFile.path) \
                 --g=$(inputs.genomeFile.path) \
                 --minIntronSize=$(inputs.minIntronSize) \
-                --o= $(inputs.outputPrefix) + ".tsv"
+                $("--o=" + inputs.outputPrefix + ".tsv")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true

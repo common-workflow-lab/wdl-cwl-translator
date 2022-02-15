@@ -55,6 +55,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("identifier_test.wdl"),
         ("dynamic_memory_units.wdl"),
         ("FunctionalEquivalence.wdl"),
+        ("whatshap.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:
@@ -99,6 +100,7 @@ class TestObject(NamedTuple):
 
     value: Union[Any, None]
     literal: Union[Any, None]
+    parent: Any = None
 
 
 testdata = [

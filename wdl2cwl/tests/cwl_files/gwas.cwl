@@ -93,7 +93,7 @@ steps:
           - id: logistic
             type: File
             outputBinding:
-                glob: $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/,
+                glob: $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/,
                     '') + '.assoc.logistic')
         requirements:
           - class: InitialWorkDirRequirement
@@ -106,29 +106,29 @@ steps:
                     	--maf 0.10 \
                     	--update-ids $(inputs.ids.path) \
                     	--make-bed \
-                    	--out $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, ''))
+                    	--out $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, ''))
 
                     plink \
-                    	--bfile $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, '')) \
+                    	--bfile $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, '')) \
                     	--update-sex $(inputs.sex.path) \
                     	--pheno $(inputs.phenotypes.path) \
                     	--make-bed \
-                    	--out $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, ''))
+                    	--out $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, ''))
 
                     # Recode covariates to binary
                     plink \
-                    	--bfile $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, '')) \
+                    	--bfile $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, '')) \
                     	--covar $(inputs.covariates.path) \
                     	--dummy-coding \
                     	--write-covar
 
                     plink \
-                    	--bfile $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, '')) \
+                    	--bfile $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, '')) \
                     	--logistic \
                     	--covar plink.cov \
-                    	--out $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, ''))
+                    	--out $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, ''))
 
-                    sed -i -e 's/\s\+/,/g' -e 's/^,//g' -e 's/,$//g' $(inputs.vcf.path.replace("\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, '')).assoc.logistic
+                    sed -i -e 's/\s\+/,/g' -e 's/^,//g' -e 's/,$//g' $(inputs.vcf.path.replace("\\?.*", "") .split('/').reverse()[0].replace(/\.vcf\.gz$/, '')).assoc.logistic
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true

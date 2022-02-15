@@ -67,8 +67,8 @@ $graph:
                   --HAPLOTYPE_MAP $(inputs.haplotype_database_file.path) \
                   --EXPECTED_GENOTYPING_PLATFORMS FLUIDIGM \
                   --EXPECTED_GENOTYPING_PLATFORMS GENERAL_ARRAY \
-                  $(inputs.ignoreSpecificGenotypesLsid ? inputs.ignoreSpecificGenotypesLsid === null ? "" : "--IGNORE_SPECIFIC_GENOTYPES_LSID "" + inputs.ignoreSpecificGenotypesLsid + """ : "") \
-                  $(inputs.ignoreSpecificGenotypesPlatform ? inputs.ignoreSpecificGenotypesPlatform === null ? "" : "--IGNORE_SPECIFIC_GENOTYPES_PLATFORM "" + inputs.ignoreSpecificGenotypesPlatform + """ : "") \
+                  $(inputs.ignoreSpecificGenotypesLsid ? inputs.ignoreSpecificGenotypesLsid === null ? "" : "--IGNORE_SPECIFIC_GENOTYPES_LSID \"" + inputs.ignoreSpecificGenotypesLsid + "\"" : "") \
+                  $(inputs.ignoreSpecificGenotypesPlatform ? inputs.ignoreSpecificGenotypesPlatform === null ? "" : "--IGNORE_SPECIFIC_GENOTYPES_PLATFORM \"" + inputs.ignoreSpecificGenotypesPlatform + "\"" : "") \
                   --MERCURY_FP_STORE_URI $MERCURY_FP_STORE_URI \
                   --CREDENTIALS_VAULT_PATH $MERCURY_AUTH_KEY \
                   --ERR_NO_GENOTYPES_AVAILABLE 7
