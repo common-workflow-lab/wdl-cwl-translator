@@ -264,14 +264,13 @@ $graph:
             glob: sequence_grouping.txt
             outputEval: |-
                 ${
-                  var result;
-                  self.contents.split(/\n|(\n\r)/).forEach(function(line) {
-                    var line_array;
-                    line.split('\t').forEach(function(field) {
-                      line_array.push(field)
-                    })
-                    result.push(line_array);
-                  })
+                  var result = Array();
+                  var contents = self[0].contents.replace(/\r\n$/, "").replace(/\n$/, "").replace(/\r$/, "");
+                  // ^ remove any trailing newline to prevent a null being returned
+                  contents.split(/\r\n|\r|\n/).forEach(function(line) {
+                    result.push(line.split('\t'));
+                  });
+                  return result;
                 }
       - id: sequence_grouping_with_unmapped
         type:
@@ -284,14 +283,13 @@ $graph:
             glob: sequence_grouping_with_unmapped.txt
             outputEval: |-
                 ${
-                  var result;
-                  self.contents.split(/\n|(\n\r)/).forEach(function(line) {
-                    var line_array;
-                    line.split('\t').forEach(function(field) {
-                      line_array.push(field)
-                    })
-                    result.push(line_array);
-                  })
+                  var result = Array();
+                  var contents = self[0].contents.replace(/\r\n$/, "").replace(/\n$/, "").replace(/\r$/, "");
+                  // ^ remove any trailing newline to prevent a null being returned
+                  contents.split(/\r\n|\r|\n/).forEach(function(line) {
+                    result.push(line.split('\t'));
+                  });
+                  return result;
                 }
   - cwlVersion: v1.2
     id: BaseRecalibrator

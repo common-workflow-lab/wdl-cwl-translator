@@ -237,15 +237,19 @@ read_funcs = {
   if (contents == 'false') { return false;}
   throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
 }""",
+    "read_lines": r"""${
+  var contents = self[0].contents.replace(/\r\n$/, "").replace(/\n$/, "").replace(/\r$/, "");
+  // ^ remove any trailing newline to prevent a null being returned
+  return contents.split(/\r\n|\r|\n/);
+}""",
     "read_tsv": r"""${
-  var result;
-  self.contents.split(/\n|(\n\r)/).forEach(function(line) {
-    var line_array;
-    line.split('\t').forEach(function(field) {
-      line_array.push(field)
-    })
-    result.push(line_array);
-  })
+  var result = Array();
+  var contents = self[0].contents.replace(/\r\n$/, "").replace(/\n$/, "").replace(/\r$/, "");
+  // ^ remove any trailing newline to prevent a null being returned
+  contents.split(/\r\n|\r|\n/).forEach(function(line) {
+    result.push(line.split('\t'));
+  });
+  return result;
 }""",
 }
 
@@ -763,6 +767,7 @@ class Converter:
             "read_int",
             "read_boolean",
             "read_tsv",
+            "read_lines",
         }
         function_name = wdl_apply_expr.function_name
         arguments = wdl_apply_expr.arguments
