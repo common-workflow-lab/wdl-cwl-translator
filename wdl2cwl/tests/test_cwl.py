@@ -58,6 +58,8 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("whatshap.wdl"),
         ("pacbio.wdl"),
         ("Utilities.wdl"),
+        ("array_nonempty.wdl"),
+        ("workflow_inputs.wdl"),
     ],
 )
 def test_wdls(description_name: str) -> None:

@@ -291,15 +291,7 @@ class Converter:
         """Load WDL workflow and convert to CWL."""
         wf_name = obj.name
         requirements: List[cwl.ProcessRequirement] = []
-        inputs = [
-            cwl.WorkflowInputParameter(
-                id=inp.id,
-                doc=inp.doc,
-                type=inp.type,
-                default=inp.default,
-            )
-            for inp in self.get_cwl_task_inputs(obj.available_inputs, obj.parameter_meta)  # type: ignore[arg-type]
-        ]
+        inputs = self.get_cwl_workflow_inputs(obj.available_inputs, obj.parameter_meta)
         outputs = [
             cwl.WorkflowOutputParameter(
                 id=f"{wf_name}.{output_id}",
@@ -361,7 +353,7 @@ class Converter:
         callee = call.callee
         if callee is None:
             raise ConversionException("callee is None. This should not be possible.")
-        cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)
+        cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)[0]
         call_inputs = call.inputs
         inputs_from_call: Dict[str, Tuple[str, Dict[str, Any]]] = {}
         input_defaults = set()
@@ -431,12 +423,15 @@ class Converter:
     def load_wdl_task(self, obj: WDL.Tree.Task) -> cwl.CommandLineTool:
         """Load task and convert to CWL."""
         description = obj.meta.pop("description", None)
-        cwl_inputs = self.get_cwl_task_inputs(obj.inputs, obj.parameter_meta)
+        cwl_inputs, restrictions = self.get_cwl_task_inputs(
+            obj.inputs, obj.parameter_meta
+        )
         run_script = False
         hints, requirements = self.get_cwl_hints_and_requirements(obj)
         for req in requirements:
             if isinstance(req, cwl.InitialWorkDirRequirement):
                 run_script = True
+        arguments = [{"valueFrom": "${" + item + "}"} for item in restrictions]
         tool = cwl.CommandLineTool(
             id=obj.name,
             doc=description,
@@ -446,6 +441,7 @@ class Converter:
             requirements=requirements,
             cwlVersion="v1.2",
             baseCommand=["bash", "script.bash"] if run_script else ["true"],
+            arguments=arguments if arguments else None,
         )
         tool.outputs = self.set_cwl_task_outputs(obj.outputs, obj.parameter_meta, tool)
         if obj.meta:
@@ -1067,33 +1063,98 @@ class Converter:
 
         return pl_holder_str
 
+    def get_cwl_workflow_inputs(
+        self,
+        wdl_inputs: WDL.Env.Bindings[WDL.Tree.Decl],
+        meta: Optional[Dict[str, Any]] = None,
+    ) -> List[cwl.WorkflowInputParameter]:
+        """Convert WDL inputs into CWL inputs and return a list of CWL Workflow Input Parameters."""
+        inputs: List[cwl.WorkflowInputParameter] = []
+
+        for input_decl in wdl_inputs:
+            input_name = input_decl.name
+            self.non_static_values.add(input_name)
+            input_value = None
+            wdl_input = input_decl.value
+            type_of = self.get_cwl_type(
+                wdl_input.type,
+                cwl.InputArraySchema,
+                cwl.InputRecordSchema,
+            )
+
+            if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
+                final_type_of: Union[
+                    List[
+                        Union[
+                            str,
+                            cwl.InputArraySchema,
+                            cwl.InputRecordSchema,
+                        ]
+                    ],
+                    str,
+                    cwl.InputArraySchema,
+                    cwl.InputRecordSchema,
+                ] = [type_of, "null"]
+            else:
+                final_type_of = type_of
+
+            if wdl_input.expr is not None:
+                with WDLSourceLine(wdl_input.expr, ConversionException):
+                    input_value = get_literal_value(wdl_input.expr)
+                    if input_value and final_type_of == "float":
+                        input_value = float(input_value)
+
+            doc: Optional[str] = None
+            if meta and input_name in meta:
+                if isinstance(meta[input_name], str):
+                    doc = meta[input_name]
+                elif "description" in meta[input_name]:
+                    doc = meta[input_name]["description"]
+            inputs.append(
+                cwl.WorkflowInputParameter(
+                    id=input_name,
+                    type=final_type_of,
+                    default=input_value,
+                    doc=doc,
+                )
+            )
+
+        return inputs
+
     def get_cwl_task_inputs(
         self,
         wdl_inputs: Optional[List[WDL.Tree.Decl]],
         meta: Optional[Dict[str, Any]] = None,
-    ) -> List[cwl.CommandInputParameter]:
-        """Convert WDL inputs into CWL inputs and return a list of CWL Command Input Parameters."""
+    ) -> Tuple[List[cwl.CommandInputParameter], List[str]]:
+        """
+        Convert WDL inputs into CWL inputs.
+
+        Return a tuple: list of CWL Command Input Parameters and list of restriction checks.
+        """
         inputs: List[cwl.CommandInputParameter] = []
+        restriction_checks: List[str] = []
 
         if not wdl_inputs:
-            return inputs
+            return inputs, restriction_checks
 
         for wdl_input in wdl_inputs:
             input_name = wdl_input.name
             self.non_static_values.add(input_name)
             input_value = None
-            type_of: Union[
-                str, cwl.CommandInputArraySchema, cwl.CommandInputRecordSchema
-            ]
-
-            if hasattr(wdl_input, "value"):
-                wdl_input = wdl_input.value  # type: ignore
 
             type_of = self.get_cwl_type(
                 wdl_input.type,
                 cwl.CommandInputArraySchema,
                 cwl.CommandInputRecordSchema,
             )
+
+            if isinstance(wdl_input.type, WDL.Type.Array) and wdl_input.type.nonempty:
+                restriction_checks.append(
+                    f"if ({get_input(input_name)}.length == 0) "
+                    "{throw "
+                    f'"{input_name} must contain at least one item.";'
+                    '} else { return "";}'
+                )
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
@@ -1124,16 +1185,15 @@ class Converter:
             if meta and input_name in meta:
                 if isinstance(meta[input_name], str):
                     doc = meta[input_name]
-                elif isinstance(meta[input_name], Mapping):
-                    if "description" in meta[input_name]:
-                        doc = meta[input_name]["description"]
+                elif "description" in meta[input_name]:
+                    doc = meta[input_name]["description"]
             inputs.append(
                 cwl.CommandInputParameter(
                     id=input_name, type=final_type_of, default=input_value, doc=doc
                 )
             )
 
-        return inputs
+        return inputs, restriction_checks
 
     def get_struct_inputs(
         self, members: Optional[Dict[str, WDL.Type.Base]]

@@ -139,6 +139,11 @@ inputs:
 baseCommand:
   - bash
   - script.bash
+arguments:
+  - valueFrom: ${if (inputs.readsUpstream.length == 0) {throw "readsUpstream must
+        contain at least one item.";} else { return "";}}
+  - valueFrom: ${if (inputs.indexFiles.length == 0) {throw "indexFiles must contain
+        at least one item.";} else { return "";}}
 outputs:
   - id: outputBam
     doc: Output alignment file.

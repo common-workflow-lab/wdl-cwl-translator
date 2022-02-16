@@ -179,3 +179,13 @@
   output:
     sequence_grouping: [ [ "22:1+" ], [ "X:1+" ], [ "Y:1+" ] ]
     sequence_grouping_with_unmapped: [ [ "22:1+" ], [ "X:1+" ], [ "Y:1+" ], [ "unmapped" ] ]
+
+- doc: positive test for non empty arrays
+  tool: cwl_files/array_nonempty.cwl
+  output:
+    result: "1,2,3"
+
+- doc: negative test for non empty arrays
+  tool: cwl_files/array_nonempty.cwl
+  job: inputs/array_nonempty.yaml
+  should_fail: true

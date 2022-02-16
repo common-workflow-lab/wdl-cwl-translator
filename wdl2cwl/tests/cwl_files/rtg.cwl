@@ -78,6 +78,9 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.inputFiles.length == 0) {throw "inputFiles must contain
+            at least one item.";} else { return "";}}
     outputs:
       - id: sdf
         doc: RTGSequence Data File (SDF) format version of the input file(s).

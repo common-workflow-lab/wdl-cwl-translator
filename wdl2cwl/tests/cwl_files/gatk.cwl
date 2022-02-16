@@ -860,6 +860,11 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.gvcfFiles.length == 0) {throw "gvcfFiles must contain
+            at least one item.";} else { return "";}}
+      - valueFrom: ${if (inputs.gvcfFilesIndex.length == 0) {throw "gvcfFilesIndex
+            must contain at least one item.";} else { return "";}}
     outputs:
       - id: outputVcf
         doc: A combined multi-sample gVCF.
@@ -992,6 +997,13 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.identifiers.length == 0) {throw "identifiers must
+            contain at least one item.";} else { return "";}}
+      - valueFrom: ${if (inputs.variantVcfs.length == 0) {throw "variantVcfs must
+            contain at least one item.";} else { return "";}}
+      - valueFrom: ${if (inputs.variantIndexes.length == 0) {throw "variantIndexes
+            must contain at least one item.";} else { return "";}}
     outputs:
       - id: combinedVcf
         doc: Combined VCF file.
@@ -1083,6 +1095,9 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.readCountsFiles.length == 0) {throw "readCountsFiles
+            must contain at least one item.";} else { return "";}}
     outputs:
       - id: PON
         doc: Panel-of-normals file.
@@ -1500,6 +1515,9 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.intervals.length == 0) {throw "intervals must contain
+            at least one item.";} else { return "";}}
     outputs:
       - id: genomicsDbTarArchive
         doc: Imported VCFs to GenomicsDB file.
@@ -1906,6 +1924,15 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.inputBams.length == 0) {throw "inputBams must contain
+            at least one item.";} else { return "";}}
+      - valueFrom: ${if (inputs.inputBamsIndex.length == 0) {throw "inputBamsIndex
+            must contain at least one item.";} else { return "";}}
+      - valueFrom: ${if (inputs.intervalList.length == 0) {throw "intervalList must
+            contain at least one item.";} else { return "";}}
+      - valueFrom: ${if (inputs.excludeIntervalList.length == 0) {throw "excludeIntervalList
+            must contain at least one item.";} else { return "";}}
     outputs:
       - id: outputVCF
         doc: Raw, unfiltered SNP and indel calls.
@@ -1985,6 +2012,9 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.f1r2TarGz.length == 0) {throw "f1r2TarGz must contain
+            at least one item.";} else { return "";}}
     outputs:
       - id: artifactPriorsTable
         doc: Maximum likelihood estimates of artifact prior probabilities in the orientation
@@ -2060,6 +2090,9 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.stats.length == 0) {throw "stats must contain at least
+            one item.";} else { return "";}}
     outputs:
       - id: mergedStats
         doc: Merged stats from scattered Mutect2 runs.
@@ -2360,6 +2393,13 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.inputBams.length == 0) {throw "inputBams must contain
+            at least one item.";} else { return "";}}
+      - valueFrom: ${if (inputs.inputBamsIndex.length == 0) {throw "inputBamsIndex
+            must contain at least one item.";} else { return "";}}
+      - valueFrom: ${if (inputs.intervals.length == 0) {throw "intervals must contain
+            at least one item.";} else { return "";}}
     outputs:
       - id: vcfFile
         doc: Somatic SNVs and indels called via local assembly of haplotypes.
@@ -3202,6 +3242,9 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.filterArguments.length == 0) {throw "filterArguments
+            must contain at least one item.";} else { return "";}}
     outputs:
       - id: filteredVcf
         doc: A filtered VCF in which passing variants are annotated as PASS and failing

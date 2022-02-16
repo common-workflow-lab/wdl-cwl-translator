@@ -131,6 +131,9 @@ inputs:
 baseCommand:
   - bash
   - script.bash
+arguments:
+  - valueFrom: ${if (inputs.indexFiles.length == 0) {throw "indexFiles must contain
+        at least one item.";} else { return "";}}
 outputs:
   - id: bamFile
     doc: Output BAM file.
