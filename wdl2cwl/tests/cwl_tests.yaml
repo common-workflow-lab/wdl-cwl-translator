@@ -189,3 +189,9 @@
   tool: cwl_files/array_nonempty.cwl
   job: inputs/array_nonempty.yaml
   should_fail: true
+
+- doc: placeholder true/false quote test
+  tool: cwl_files/placeholder_options_test.cwl
+  output:
+    result: "true single quote: foo\ntrue double quote: foo\ntrue mixed quotes: foo bar\ntrue mixed quotes: foo bar\ndefault single quote\ndefault double quote\ndefault mixed quotes\ndefault mixed quotes\n1,2,3\nsuccess"
+    present: false

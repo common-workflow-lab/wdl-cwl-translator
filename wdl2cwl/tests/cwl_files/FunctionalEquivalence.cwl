@@ -549,7 +549,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                python -c "print $()"
+                python -c "print $(inputs.sizes.join("+"))"
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true

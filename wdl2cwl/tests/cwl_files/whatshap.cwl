@@ -13,15 +13,15 @@ $graph:
                 whatshap phase \
                 $(inputs.vcf.path) \
                 $(inputs.phaseInput.path) \
-                $(inputs.outputVCF ? "--output " + "\"" + inputs.outputVCF + "\"" : "") \
-                $(inputs.reference ? inputs.reference === null ? "" : "--reference " + "\"" + inputs.reference.path + "\"" : "") \
-                $(inputs.tag ? inputs.tag === null ? "" : "--tag " + "\"" + inputs.tag + "\"" : "") \
-                $(inputs.algorithm ? inputs.algorithm === null ? "" : "--algorithm " + "\"" + inputs.algorithm + "\"" : "") \
-                $(inputs.indels === null ? "" : "--indels") \
-                $(inputs.sample ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "") \
-                $(inputs.chromosome ? inputs.chromosome === null ? "" : "--chromosome " + "\"" + inputs.chromosome + "\"" : "") \
-                $(inputs.threshold ? inputs.threshold === null ? "" : "--threshold " + "\"" + inputs.threshold + "\"" : "") \
-                $(inputs.ped ? inputs.ped === null ? "" : "--ped " + "\"" + inputs.ped + "\"" : "")
+                $(inputs.outputVCF !== null ? "--output " + "\"" + inputs.outputVCF + "\"" : "") \
+                $(inputs.reference !== null ? inputs.reference === null ? "" : "--reference " + "\"" + inputs.reference.path + "\"" : "") \
+                $(inputs.tag !== null ? inputs.tag === null ? "" : "--tag " + "\"" + inputs.tag + "\"" : "") \
+                $(inputs.algorithm !== null ? inputs.algorithm === null ? "" : "--algorithm " + "\"" + inputs.algorithm + "\"" : "") \
+                $(inputs.indels === null ? "" : inputs.indels ? "--indels" : "") \
+                $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "") \
+                $(inputs.chromosome !== null ? inputs.chromosome === null ? "" : "--chromosome " + "\"" + inputs.chromosome + "\"" : "") \
+                $(inputs.threshold !== null ? inputs.threshold === null ? "" : "--threshold " + "\"" + inputs.threshold + "\"" : "") \
+                $(inputs.ped !== null ? inputs.ped === null ? "" : "--ped " + "\"" + inputs.ped + "\"" : "")
 
                 tabix -p vcf $(inputs.outputVCF)
       - class: InlineJavascriptRequirement
@@ -160,11 +160,11 @@ $graph:
 
                 whatshap stats \
                 $(inputs.vcf.path) \
-                $(inputs.gtf ? inputs.gtf === null ? "" : "--gtf " + "\"" + inputs.gtf + "\"" : "") \
-                $(inputs.sample ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "") \
-                $(inputs.tsv ? inputs.tsv === null ? "" : "--tsv " + "\"" + inputs.tsv + "\"" : "") \
-                $(inputs.blockList ? inputs.blockList === null ? "" : "--block-list " + "\"" + inputs.blockList + "\"" : "") \
-                $(inputs.chromosome ? inputs.chromosome === null ? "" : "--chromosome " + "\"" + inputs.chromosome + "\"" : "")
+                $(inputs.gtf !== null ? inputs.gtf === null ? "" : "--gtf " + "\"" + inputs.gtf + "\"" : "") \
+                $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "") \
+                $(inputs.tsv !== null ? inputs.tsv === null ? "" : "--tsv " + "\"" + inputs.tsv + "\"" : "") \
+                $(inputs.blockList !== null ? inputs.blockList === null ? "" : "--block-list " + "\"" + inputs.blockList + "\"" : "") \
+                $(inputs.chromosome !== null ? inputs.chromosome === null ? "" : "--chromosome " + "\"" + inputs.chromosome + "\"" : "")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -274,10 +274,10 @@ $graph:
                 whatshap haplotag \
                 $(inputs.vcf.path) \
                 $(inputs.alignments.path) \
-                $(inputs.outputFile ? "--output " + "\"" + inputs.outputFile + "\"" : "") \
-                $(inputs.reference ? inputs.reference === null ? "" : "--reference " + "\"" + inputs.reference.path + "\"" : "") \
-                $(inputs.regions ? inputs.regions === null ? "" : "--regions " + "\"" + inputs.regions + "\"" : "") \
-                $(inputs.sample ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "")
+                $(inputs.outputFile !== null ? "--output " + "\"" + inputs.outputFile + "\"" : "") \
+                $(inputs.reference !== null ? inputs.reference === null ? "" : "--reference " + "\"" + inputs.reference.path + "\"" : "") \
+                $(inputs.regions !== null ? inputs.regions === null ? "" : "--regions " + "\"" + inputs.regions + "\"" : "") \
+                $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "")
 
                 python3 -c "import pysam; pysam.index('$(inputs.outputFile)')"
       - class: InlineJavascriptRequirement

@@ -12,7 +12,7 @@ requirements:
             bwa mem \
               -t $(inputs.threads) \
               $(inputs.useSoftclippingForSupplementary ? "-Y" : "") \
-              $(inputs.readgroup === null ? "" : "-R '" + inputs.readgroup)$(inputs.readgroup === null ? "" : "'") \
+              $(inputs.readgroup === null ? "" : "-R '" + inputs.readgroup)$(inputs.readgroup !== null ? "'" : "") \
               $(inputs.bwaIndex.fastaFile.path) \
               $(inputs.read1.path) \
               $(inputs.read2 === null ? "" : inputs.read2.path) \

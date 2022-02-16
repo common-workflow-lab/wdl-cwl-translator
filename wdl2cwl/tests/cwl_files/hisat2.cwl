@@ -12,7 +12,7 @@ requirements:
             hisat2 \
             -p $(inputs.threads) \
             -x $(inputs.indexFiles[0].replace("\\.[0-9]\\.ht2", "") ) \
-            $(inputs.inputR2 === null ? "-U" : "-1") $(inputs.inputR1.path) \
+            $(inputs.inputR2 !== null ? "-1" : "-U") $(inputs.inputR1.path) \
             $(inputs.inputR2 === null ? "" : "-2" + inputs.inputR2.path) \
             --rg-id $(inputs.readgroup) \
             --rg 'SM:$(inputs.sample)' \

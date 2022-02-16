@@ -79,6 +79,7 @@ WDL types not yet supported
 - [Map](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/77) types
 - [Nested structs](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/158)
 - [Pair](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#pairx-y)
+- [Object](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-object)
 
 OpenWDL 1.1 standard library functions to be implemented
 - [floor](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#int-floorfloat-int-ceilfloat-and-int-roundfloat)

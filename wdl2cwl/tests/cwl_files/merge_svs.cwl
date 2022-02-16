@@ -174,7 +174,7 @@ steps:
                     INPUT_VCF="$(inputs.input_vcf.path)"
                     SLOPE="$(inputs.slope)"
                     OUT_BASE="$(inputs.output_vcf_basename)"
-                    if [[ $(inputs.blocklist_bedpe) = true ]];then # blocklist_bedpe is passed.
+                    if [[ $(inputs.blocklist_bedpe !== null) = true ]];then # blocklist_bedpe is passed.
                         BL_BEDPE="$(inputs.blocklist_bedpe === null ? "" : inputs.blocklist_bedpe.path)"
 
                         #CNVkit outputs invalid format like CIPOS=.,894;CIEND=.,894, which can cause svtools vcftobedpe fail
@@ -389,7 +389,7 @@ steps:
                     INPUT_VCF="$(inputs.input_vcf.path)"
                     SLOPE="$(inputs.slope)"
                     OUT_BASE="$(inputs.output_vcf_basename)"
-                    if [[ $(inputs.blocklist_bedpe) = true ]];then # blocklist_bedpe is passed.
+                    if [[ $(inputs.blocklist_bedpe !== null) = true ]];then # blocklist_bedpe is passed.
                         BL_BEDPE="$(inputs.blocklist_bedpe === null ? "" : inputs.blocklist_bedpe.path)"
 
                         #CNVkit outputs invalid format like CIPOS=.,894;CIEND=.,894, which can cause svtools vcftobedpe fail
