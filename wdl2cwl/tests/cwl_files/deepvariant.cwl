@@ -25,7 +25,7 @@ requirements:
             $("--regions " + inputs.regions) \
             $(inputs.sampleName === null ? "" : "--sample_name " + inputs.sampleName) \
             $(inputs.postprocessVariantsExtraArgs === null ? "" : "--postprocess_variants_extra_args " + inputs.postprocessVariantsExtraArgs) \
-            $(inputs.VCFStatsReport === null ? "--novcf_stats_report" : "--vcf_stats_report")
+            $(inputs.VCFStatsReport === null ? "" : inputs.VCFStatsReport ? "--vcf_stats_report" : "--novcf_stats_report")
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true

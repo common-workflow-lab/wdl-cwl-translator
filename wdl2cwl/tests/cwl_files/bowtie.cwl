@@ -19,7 +19,7 @@ requirements:
             $(inputs.strata ? "--strata" : "") \
             $(inputs.allowContain ? "--allow-contain" : "") \
             $("--threads " + inputs.threads) \
-            $(inputs.samRG === null ? "" : "--sam-RG '" + inputs.samRG)$(inputs.samRG === null ? "" : "'") \
+            $(inputs.samRG === null ? "" : "--sam-RG '" + inputs.samRG)$(inputs.samRG !== null ? "'" : "") \
             $(inputs.indexFiles[0].replace("(\\.rev)?\\.[0-9]\\.ebwt$", "") ) \
             $(inputs.readsDownstream.length > 0 ? "-1" : "") $(inputs.readsUpstream.map(function(el) {return el.path}).join(",")) \
             $(inputs.readsDownstream.length > 0 ? "-2" : "") $(inputs.readsDownstream.map(function(el) {return el.path}).join(",")) \

@@ -454,10 +454,10 @@ $graph:
                 java -Xms$(inputs.memory_size - 1000)m -Xmx$(inputs.memory_size - 500)m -Dpicard.useLegacyParser=false -jar /usr/picard/picard.jar \
                 CheckFingerprint \
                   --INPUT $([inputs.input_vcf === null ? "" : inputs.input_vcf.path, inputs.input_bam === null ? "" : inputs.input_bam.path].find(function(element) { return element !== null }) ) \
-                  $(inputs.input_vcf ? inputs.input_sample_alias === null ? "" : "--OBSERVED_SAMPLE_ALIAS \"" + inputs.input_sample_alias + "\"" : "") \
+                  $(inputs.input_vcf !== null ? inputs.input_sample_alias === null ? "" : "--OBSERVED_SAMPLE_ALIAS \"" + inputs.input_sample_alias + "\"" : "") \
                   --GENOTYPES $(inputs.genotypes.path) \
                   --EXPECTED_SAMPLE_ALIAS "$(inputs.expected_sample_alias)" \
-                  $(inputs.input_bam ? "--IGNORE_READ_GROUPS true" : "") \
+                  $(inputs.input_bam !== null ? "--IGNORE_READ_GROUPS true" : "") \
                   --HAPLOTYPE_MAP $(inputs.haplotype_database_file.path) \
                   --GENOTYPE_LOD_THRESHOLD $(inputs.genotype_lod_threshold) \
                   --SUMMARY_OUTPUT $(inputs.output_basename + ".fingerprinting_summary_metrics") \
@@ -656,9 +656,9 @@ $graph:
                   OUTPUT=$(inputs.report_filename) \
                   REFERENCE_SEQUENCE=$(inputs.ref_fasta.path) \
                   $(inputs.max_output === null ? "" : "MAX_OUTPUT=" + inputs.max_output) \
-                  IGNORE=$(inputs.ignore.join(" IGNORE=")) \
+                  IGNORE=$(inputs.ignore === null ? "null" : inputs.ignore.join(" IGNORE=")) \
                   MODE=VERBOSE \
-                  $(inputs.is_outlier_data === null ? "SKIP_MATE_VALIDATION=false" : "SKIP_MATE_VALIDATION=true") \
+                  $(inputs.is_outlier_data === null ? "SKIP_MATE_VALIDATION=false" : inputs.is_outlier_data ? "SKIP_MATE_VALIDATION=true" : "SKIP_MATE_VALIDATION=false") \
                   IS_BISULFITE_SEQUENCED=false
       - class: InlineJavascriptRequirement
       - class: NetworkAccess

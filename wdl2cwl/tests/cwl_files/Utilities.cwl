@@ -280,7 +280,7 @@ $graph:
           - entryname: script.bash
             entry: |4
 
-                python3 -c 'print($())'
+                python3 -c 'print($(inputs.sizes.join("+")))'
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true

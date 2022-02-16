@@ -1550,8 +1550,8 @@ $graph:
                 $(inputs.pedigree === null ? "" : "--pedigree " + inputs.pedigree.path) \
                 $(inputs.annotationGroups.length > 0 ? "-G" : "") $(inputs.annotationGroups.join(" -G ")) \
                 -V wd/$(inputs.gvcfFile.basename) \
-                $(inputs.intervals === null ? "" : "--only-output-calls-starting-in-intervals") \
-                $(inputs.intervals === null ? "" : "-L") $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
+                $(inputs.intervals !== null ? "--only-output-calls-starting-in-intervals" : "") \
+                $(inputs.intervals !== null ? "-L" : "") $(inputs.intervals.map(function(el) {return el.path}).join(" -L "))
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -1783,8 +1783,8 @@ $graph:
                 -O $(inputs.outputPath) \
                 (for FILE in $(inputs.inputBams.map(function(el) {return el.path}).join(" ")); do echo -- "-I wd/"\$(basename $FILE); done) \
                 $(inputs.ploidy === null ? "" : "--sample-ploidy " + inputs.ploidy) \
-                $(inputs.intervalList === null ? "" : "-L") $(inputs.intervalList.map(function(el) {return el.path}).join(" -L ")) \
-                $(inputs.excludeIntervalList === null ? "" : "-XL") $(inputs.excludeIntervalList.map(function(el) {return el.path}).join(" -XL ")) \
+                $(inputs.intervalList !== null ? "-L" : "") $(inputs.intervalList.map(function(el) {return el.path}).join(" -L ")) \
+                $(inputs.excludeIntervalList !== null ? "-XL" : "") $(inputs.excludeIntervalList.map(function(el) {return el.path}).join(" -XL ")) \
                 $(inputs.dbsnpVCF === null ? "" : "-D " + inputs.dbsnpVCF.path) \
                 $(inputs.pedigree === null ? "" : "--pedigree " + inputs.pedigree.path) \
                 $(inputs.contamination === null ? "" : "--contamination-fraction-per-sample-file " + inputs.contamination) \

@@ -227,6 +227,18 @@ def get_literal_value(expr: WDL.Expr.Base) -> Optional[Any]:
     return None
 
 
+def nice_quote(value: str) -> str:
+    """Surround string with quotes, with minimal escaping."""
+    single = "'" in value
+    double = '"' in value
+    if not double:
+        return f'"{value}"'
+    if not single and double:
+        return f"'{value}'"
+    # single and double quotes found
+    return '"' + value.replace('"', r"\"") + '"'
+
+
 read_funcs = {
     "read_string": r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
     "read_int": "$(parseInt(self[0].contents))",
@@ -698,6 +710,8 @@ class Converter:
             return self.translate_wdl_placeholder(wdl_expr)
         elif isinstance(wdl_expr, WDL.Expr.String):
             return self.get_expr_string(wdl_expr)
+        elif isinstance(wdl_expr, WDL.Expr.Boolean) and wdl_expr.literal:
+            return str(wdl_expr.literal)  # "true" not "True"
         elif (
             isinstance(
                 wdl_expr,
@@ -756,7 +770,7 @@ class Converter:
             "_div": "/",
             "_sub": "-",
         }
-        single_arg_fn = {
+        single_arg_fn = {  # implemented elsewhere, just return the argument
             "read_string",
             "read_float",
             "glob",
@@ -815,7 +829,10 @@ class Converter:
                 )
         elif function_name == "defined":
             only_operand = arguments[0]
-            return get_expr_name(only_operand.expr)  # type: ignore[attr-defined]
+            assert isinstance(only_operand, WDL.Expr.Get) and isinstance(
+                only_operand.expr, WDL.Expr.Ident
+            )
+            return f"{get_expr_name(only_operand.expr)} !== null"
         elif function_name == "_interpolation_add":
             arg_value, arg_name = arguments
             if isinstance(arg_name, WDL.Expr.String) and isinstance(
@@ -1012,56 +1029,54 @@ class Converter:
 
     def translate_wdl_placeholder(self, wdl_placeholder: WDL.Expr.Placeholder) -> str:
         """Translate WDL Expr Placeholder to a valid CWL expression."""
-        pl_holder_str = ""
         expr = wdl_placeholder.expr
         placeholder_expr = self.get_expr(expr)
         options = wdl_placeholder.options
         if options:
             if "true" in options:
-                true_value = options["true"]
-                false_value = options["false"]
-                true_str = (
-                    f'"{true_value}"' if '"' not in true_value else f"'{true_value}'"
-                )
-                false_str = (
-                    f'"{false_value}"' if '"' not in false_value else f"'{false_value}'"
-                )
+                true_str = nice_quote(options["true"])
+                false_str = nice_quote(options["false"])
+                test_str = f"{placeholder_expr} ? {true_str} : {false_str}"
                 is_optional = False
                 if isinstance(expr, WDL.Expr.Get):
                     is_optional = expr.type.optional
                 elif isinstance(expr, WDL.Expr.Apply):
-                    is_optional = expr.arguments[0].type.optional
-                if not is_optional:
-                    pl_holder_str = f"{placeholder_expr} ? {true_str} : {false_str}"
-                else:
-                    pl_holder_str = (
-                        f"{placeholder_expr} === null ? {false_str} : {true_str}"
+                    is_optional = (
+                        expr.arguments[0].type.optional
+                        and expr.function_name != "defined"  # optimization
                     )
+                if not is_optional:
+                    return test_str
+                else:
+                    if "default" in options:
+                        return (
+                            f"{placeholder_expr} === null ? "
+                            f"{nice_quote(options['default'])} : {test_str}"
+                        )
+                    return f'{placeholder_expr} === null ? "" : {test_str}'
             elif "sep" in options:
                 separator = options["sep"]
-                if isinstance(expr.type, WDL.Type.Array):
-                    item_type = expr.type.item_type
-                    if isinstance(item_type, WDL.Type.String):
-                        pl_holder_str = f'{placeholder_expr}.join("{separator}")'
-                    elif isinstance(item_type, WDL.Type.File):
-                        pl_holder_str = (
-                            f"{placeholder_expr}.map("
-                            + 'function(el) {return el.path}).join("'
-                            + separator
-                            + '")'
-                        )
-                else:
-                    raise WDLSourceLine(wdl_placeholder, ConversionException).makeError(
-                        f"{wdl_placeholder} with expr of type {expr.type} is not yet handled"
+                assert isinstance(expr.type, WDL.Type.Array)
+                item_type = expr.type.item_type
+                if isinstance(item_type, WDL.Type.File):
+                    pl_holder_str = (
+                        placeholder_expr + ".map(function(el) {return el.path})"
+                        f'.join("{separator}")'
                     )
-            else:
-                raise WDLSourceLine(wdl_placeholder, ConversionException).makeError(
-                    f"Placeholders with options {options} are not yet handled."
-                )
-        else:
-            pl_holder_str = placeholder_expr
-
-        return pl_holder_str
+                else:
+                    pl_holder_str = f'{placeholder_expr}.join("{separator}")'
+                if "default" in options and (expr.type.optional or item_type.optional):
+                    return (
+                        f"{placeholder_expr} === null ? "
+                        f"{nice_quote(options['default'])} : {pl_holder_str}"
+                    )
+                return pl_holder_str
+            # options must contain only "default", no "sep" or "true"/"false"
+            return (
+                f"{placeholder_expr} === null ? "
+                f"{nice_quote(options['default'])} : {placeholder_expr}"
+            )
+        return placeholder_expr
 
     def get_cwl_workflow_inputs(
         self,
