@@ -60,6 +60,9 @@ $graph:
     baseCommand:
       - bash
       - script.bash
+    arguments:
+      - valueFrom: ${if (inputs.reports.length == 0) {throw "reports must contain
+            at least one item.";} else { return "";}}
     outputs:
       - id: outputMergedReport
         doc: The PacBio reports merged into one.

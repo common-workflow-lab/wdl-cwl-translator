@@ -205,6 +205,9 @@ steps:
         baseCommand:
           - bash
           - script.bash
+        arguments:
+          - valueFrom: ${if (inputs.counts_txt.length == 0) {throw "counts_txt must
+                contain at least one item.";} else { return "";}}
   - id: align_and_count_summary_top_hits
     in:
       - id: counts_txt
@@ -265,6 +268,9 @@ steps:
         baseCommand:
           - bash
           - script.bash
+        arguments:
+          - valueFrom: ${if (inputs.counts_txt.length == 0) {throw "counts_txt must
+                contain at least one item.";} else { return "";}}
 outputs:
   - id: align_and_count_multiple_report.report
     outputSource: align_and_count_summary/count_summary
