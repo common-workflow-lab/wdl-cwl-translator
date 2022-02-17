@@ -195,3 +195,8 @@
   output:
     result: "true single quote: foo\ntrue double quote: foo\ntrue mixed quotes: foo bar\ntrue mixed quotes: foo bar\ndefault single quote\ndefault double quote\ndefault mixed quotes\ndefault mixed quotes\n1,2,3\nsuccess"
     present: false
+
+- doc: struct literals
+  tool: cwl_files/literal_struct.cwl
+  output:
+    result: "four five seven eight"
