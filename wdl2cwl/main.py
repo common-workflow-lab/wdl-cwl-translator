@@ -215,6 +215,8 @@ def get_literal_value(expr: WDL.Expr.Base) -> Optional[Any]:
         if hasattr(expr.parent, "type") and isinstance(expr.parent.type, WDL.Type.File):  # type: ignore[attr-defined]
             return {"class": "File", "path": literal.value}
         value = literal.value
+        if isinstance(expr.type, WDL.Type.Map):
+            return {key.value: val.value for key, val in value}
         if isinstance(value, list):
             result = []
             for item in value:
@@ -728,7 +730,16 @@ class Converter:
             return (
                 "[ " + ", ".join(self.get_expr(item) for item in wdl_expr.items) + " ]"
             )
-        else:
+        elif isinstance(wdl_expr, WDL.Expr.Map):
+            return (
+                "{ "
+                + ", ".join(
+                    f"{self.get_expr(key)}: {self.get_expr(value)}"
+                    for key, value in wdl_expr.items
+                )
+                + " }"
+            )
+        else:  # pragma: no cover
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"The expression '{wdl_expr}' is not handled yet."
             )
