@@ -1,0 +1,32 @@
+fastq_gzipped_input_read1:
+  class: File
+  size: 44387310
+  checksum: sha1$1f20c3c538327aa933b7b2f635c9d3d47bbd27c8
+  #path: ATAC/demo.R1.fastq.gz
+  location: https://storage.googleapis.com/hca-dcp-mint-test-data/20190507-PipelinesSurge/snaptools_test/demo.R1.fastq.gz
+fastq_gzipped_input_read2:
+  class: File
+  size: 47100447
+  checksum: sha1$fa608e5eeea3a27fd7ea26bddd9e012b1edbf3e0
+  #path: ATAC/demo.R2.fastq.gz
+  location: https://storage.googleapis.com/hca-dcp-mint-test-data/20190507-PipelinesSurge/snaptools_test/demo.R2.fastq.gz
+adapter_seq_read2: TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
+min_map_quality: 30
+quality_cutoff: 0
+adapter_seq_read1: GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+min_length: 10
+output_base_name: scATAC
+tar_bwa_reference:
+  class: File
+  size: 5649459200
+  checksum: sha1$f2c80a15472bd5c43b32ef7cf7779d2c35cbfcd6
+  #path: ATAC/mm10.tar
+  location: https://storage.googleapis.com/hca-dcp-sc-pipelines-test-data/alignmentReferences/snapATAC_BWA/mm10/mm10.tar
+genome_name: mm10
+genome_size_file:
+  class: File
+  size: 1405
+  checksum: sha1$28fc5a618633d8b45d653ddb4a11eae1c73a38f1
+  location: https://storage.googleapis.com/hca-dcp-mint-test-data/20190507-PipelinesSurge/scATAC-seq/bwa_mm10/mm10.chrom.sizes
+  #path: ATAC/mm10.chrom.sizes
+max_fragment_length: 2000

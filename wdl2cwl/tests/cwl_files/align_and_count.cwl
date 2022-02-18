@@ -3,6 +3,8 @@ id: align_and_count_report
 class: Workflow
 doc: Align reads to reference with minimap2 and count the number of hits. Results
     are returned in the format of 'samtools idxstats'.
+requirements:
+  - class: InlineJavascriptRequirement
 inputs:
   - id: align_and_count.reads_bam
     type: File

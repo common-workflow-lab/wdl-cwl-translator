@@ -2,6 +2,7 @@ cwlVersion: v1.2
 id: mergeSvs
 class: Workflow
 requirements:
+  - class: InlineJavascriptRequirement
   - class: StepInputExpressionRequirement
 inputs:
   - id: estimate_sv_distance

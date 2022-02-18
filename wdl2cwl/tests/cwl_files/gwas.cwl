@@ -1,6 +1,8 @@
 cwlVersion: v1.2
 id: gwas
 class: Workflow
+requirements:
+  - class: InlineJavascriptRequirement
 inputs:
   - id: vcf
     type: File

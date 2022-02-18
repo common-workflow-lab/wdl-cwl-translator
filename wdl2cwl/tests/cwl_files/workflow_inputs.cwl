@@ -2,6 +2,7 @@ cwlVersion: v1.2
 id: foo
 class: Workflow
 requirements:
+  - class: InlineJavascriptRequirement
   - class: StepInputExpressionRequirement
 inputs:
   - id: first
@@ -28,7 +29,10 @@ steps:
     in:
       - id: in
         source: fourth
-        valueFrom: $(self.one)
+        valueFrom: $(self.one + ".suffix")
+      - id: other
+        source: fourth
+        valueFrom: $(self.two)
       - id: echo
         default: true
     out:
@@ -39,6 +43,8 @@ steps:
         id: echo
         inputs:
           - id: in
+            type: string
+          - id: other
             type: string
           - id: echo
             type: boolean
@@ -59,7 +65,7 @@ steps:
               - entryname: script.bash
                 entry: |4
 
-                    $(inputs.echo ? "echo " + inputs["in"] : "")
+                    $(inputs.echo ? "echo " + inputs["in"] + " " + inputs.other : "")
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
