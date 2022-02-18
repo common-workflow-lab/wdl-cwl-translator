@@ -29,20 +29,37 @@ steps:
       - id: in
         source: fourth
         valueFrom: $(self.one)
+      - id: echo
+        default: true
     out:
       - id: out
+      - id: result
     run:
         class: CommandLineTool
         id: echo
         inputs:
           - id: in
             type: string
+          - id: echo
+            type: boolean
         outputs:
           - id: out
             type: string
             outputBinding:
                 outputEval: $(inputs["in"])
+          - id: result
+            type: string
+            outputBinding:
+                loadContents: true
+                glob: _stdout
+                outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
         requirements:
+          - class: InitialWorkDirRequirement
+            listing:
+              - entryname: script.bash
+                entry: |4
+
+                    $(inputs.echo ? "echo " + inputs["in"] : "")
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
             networkAccess: true
@@ -51,7 +68,9 @@ steps:
             outdirMin: 1024
         cwlVersion: v1.2
         baseCommand:
-          - 'true'
+          - bash
+          - script.bash
+        stdout: _stdout
 outputs:
   - id: foo.first_result
     outputSource: first
@@ -59,6 +78,9 @@ outputs:
   - id: foo.third_result
     outputSource: third
     type: float
-  - id: foo.echo_result
+  - id: foo.echo_out
     outputSource: echo/out
+    type: string
+  - id: foo.echo_result
+    outputSource: echo/result
     type: string

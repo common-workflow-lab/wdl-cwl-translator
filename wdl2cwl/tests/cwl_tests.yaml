@@ -207,3 +207,4 @@
     foo.first_result: "one "
     foo.third_result: 3.14159
     foo.echo_result: fifth
+    foo.echo_out: fifth

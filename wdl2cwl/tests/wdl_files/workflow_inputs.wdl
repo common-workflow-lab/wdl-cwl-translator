@@ -14,13 +14,15 @@ workflow foo {
 
   call echo {
     input:
-      in = fourth.one
+      in = fourth.one,
+      echo = true
   }
 
   output {
     String first_result = first
     Float third_result = third
-    String echo_result = echo.out
+    String echo_out = echo.out
+    String echo_result = echo.result
   }
 
   parameter_meta { first: "test coverage example" }
@@ -29,10 +31,13 @@ workflow foo {
 task echo {
   input {
     String in
+    Boolean echo
   }
   command <<<
+    ~{if(echo) then "echo " + in else ""}
   >>>
   output {
     String out = in
+    String result = read_string(stdout())
   }
 }

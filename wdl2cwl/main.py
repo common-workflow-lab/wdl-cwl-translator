@@ -307,6 +307,8 @@ class Converter:
                     member = str(wf_expr.member)
                     ident = cast(WDL.Expr.Ident, wf_expr.expr.expr)
                     id_name = ident.name
+            else:
+                return get_literal_value(wf_expr), None
             return id_name, f"self.{member}" if member else None
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
@@ -404,10 +406,7 @@ class Converter:
                         input_expr, value_from = self.get_step_input_expr(
                             value.arguments[0].items[0]
                         )
-                        if not value_from:
-                            value_str = "$([self])"
-                        else:
-                            value_str = f"$([{value_from}])"
+                        value_str = f"$([{value_from if value_from else 'self'}])"
                         inputs_from_call[key] = (
                             input_expr.replace(".", "/"),
                             {
@@ -418,7 +417,9 @@ class Converter:
                     else:
                         input_expr, value_from = self.get_step_input_expr(value)  # type: ignore[arg-type]
                         inputs_from_call[key] = (
-                            input_expr.replace(".", "/"),
+                            input_expr.replace(".", "/")
+                            if isinstance(input_expr, str)
+                            else input_expr,
                             {"valueFrom": f"$({value_from})"} if value_from else {},
                         )
                     if self.scatter_names and not scatter_handled:
