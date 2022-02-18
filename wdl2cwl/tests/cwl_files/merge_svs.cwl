@@ -1,6 +1,8 @@
 cwlVersion: v1.2
 id: mergeSvs
 class: Workflow
+requirements:
+  - class: StepInputExpressionRequirement
 inputs:
   - id: estimate_sv_distance
     type: boolean
