@@ -286,20 +286,28 @@ class Converter:
         elif isinstance(obj, WDL.Tree.Workflow):
             return self.load_wdl_workflow(obj)
 
-    def get_step_input_expr(self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]) -> str:
+    def get_step_input_expr(
+        self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]
+    ) -> Tuple[str, Optional[str]]:
         """Get name of expression referenced in workflow call inputs."""
         with WDLSourceLine(wf_expr, ConversionException):
             if isinstance(wf_expr, WDL.Expr.String):
-                return self.get_expr_string(wf_expr)[1:-1]
+                return self.get_expr_string(wf_expr)[1:-1], None
             elif isinstance(wf_expr, WDL.Expr.Get):
-                ident = cast(WDL.Expr.Ident, wf_expr.expr)
-                id_name = ident.name
-                referee = ident.referee
-                if referee and isinstance(referee, WDL.Tree.Scatter):
-                    scatter_name = self.get_step_input_expr(referee.expr)  # type: ignore [arg-type]
-                    self.scatter_names.append(scatter_name)
-                    return scatter_name
-                return id_name
+                if isinstance(wf_expr.expr, WDL.Expr.Ident):
+                    member = None
+                    id_name = wf_expr.expr.name
+                    referee = wf_expr.expr.referee
+                    if referee and isinstance(referee, WDL.Tree.Scatter):
+                        scatter_name, value_from = self.get_step_input_expr(referee.expr)  # type: ignore [arg-type]
+                        self.scatter_names.append(scatter_name)
+                        return scatter_name, value_from
+                    return id_name, None
+                elif isinstance(wf_expr.expr, WDL.Expr.Get):
+                    member = str(wf_expr.member)
+                    ident = cast(WDL.Expr.Ident, wf_expr.expr.expr)
+                    id_name = ident.name
+            return id_name, f"self.{member}" if member else None
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
@@ -321,7 +329,8 @@ class Converter:
         wf_description = (
             obj.meta.pop("description") if "description" in obj.meta else None
         )
-        is_scatter_present = False
+        scatter_present = False
+        step_valuefrom = False
         for body_part in obj.body:
             if not isinstance(body_part, (WDL.Tree.Call, WDL.Tree.Scatter)):
                 _logger.warning(
@@ -334,12 +343,18 @@ class Converter:
                 continue
             with WDLSourceLine(body_part, ConversionException):
                 if isinstance(body_part, WDL.Tree.Call):
-                    wf_steps.append(self.get_workflow_call(body_part))
+                    step = self.get_workflow_call(body_part)
+                    wf_steps.append(step)
+                    for inp in step.in_:
+                        if inp.valueFrom is not None:
+                            step_valuefrom = True
                 elif isinstance(body_part, WDL.Tree.Scatter):
-                    is_scatter_present = True
+                    scatter_present = True
                     wf_steps.extend(self.get_workflow_scatter(body_part))
-        if is_scatter_present:
+        if scatter_present:
             requirements.append(cwl.ScatterFeatureRequirement())
+        if step_valuefrom:
+            requirements.append(cwl.StepInputExpressionRequirement())
 
         return cwl.Workflow(
             id=wf_name,
@@ -386,21 +401,25 @@ class Converter:
                             (WDL.Expr.Get, WDL.Expr.String),
                         )
                     ):
-                        input_expr = self.get_step_input_expr(
+                        input_expr, value_from = self.get_step_input_expr(
                             value.arguments[0].items[0]
                         )
+                        if not value_from:
+                            value_str = "$([self])"
+                        else:
+                            value_str = f"$([{value_from}])"
                         inputs_from_call[key] = (
                             input_expr.replace(".", "/"),
                             {
                                 "pickValue": "all_non_null",
-                                "valueFrom": "$([self])",
+                                "valueFrom": value_str,
                             },
                         )
                     else:
-                        input_expr = self.get_step_input_expr(value)  # type: ignore[arg-type]
+                        input_expr, value_from = self.get_step_input_expr(value)  # type: ignore[arg-type]
                         inputs_from_call[key] = (
                             input_expr.replace(".", "/"),
-                            {},
+                            {"valueFrom": f"$({value_from})"} if value_from else {},
                         )
                     if self.scatter_names and not scatter_handled:
                         self.scatter_names[-1] = key

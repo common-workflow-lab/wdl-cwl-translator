@@ -200,3 +200,10 @@
   tool: cwl_files/literal_struct.cwl
   output:
     result: "four five seven eight"
+
+- doc: workflow and step inputs
+  tool: cwl_files/workflow_inputs.cwl
+  output:
+    foo.first_result: "one "
+    foo.third_result: 3.14159
+    foo.echo_result: fifth
