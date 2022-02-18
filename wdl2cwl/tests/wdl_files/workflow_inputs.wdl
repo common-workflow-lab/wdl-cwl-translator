@@ -14,7 +14,8 @@ workflow foo {
 
   call echo {
     input:
-      in = fourth.one,
+      in = fourth.one + ".suffix",
+      other = fourth.two,
       echo = true
   }
 
@@ -31,10 +32,11 @@ workflow foo {
 task echo {
   input {
     String in
+    String other
     Boolean echo
   }
   command <<<
-    ~{if(echo) then "echo " + in else ""}
+    ~{if(echo) then "echo " + in + " " + other else ""}
   >>>
   output {
     String out = in

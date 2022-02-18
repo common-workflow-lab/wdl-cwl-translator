@@ -63,7 +63,7 @@ def convert(doc: str) -> Dict[str, Any]:
         WDL.Error.ValidationError,
         WDL.Error.MultipleValidationErrors,
     ) as exn:
-        WDL.CLI.print_error(exn)  # type: ignore[no-untyped-call]
+        WDL.CLI.print_error(exn)
         raise exn
 
     parser = Converter()
@@ -289,7 +289,11 @@ class Converter:
     def get_step_input_expr(
         self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]
     ) -> Tuple[str, Optional[str]]:
-        """Get name of expression referenced in workflow call inputs."""
+        """
+        Get name of expression referenced in workflow call inputs.
+
+        Returns a tuple of the source plus any needed "valueFrom" expression.
+        """
         with WDLSourceLine(wf_expr, ConversionException):
             if isinstance(wf_expr, WDL.Expr.String):
                 return self.get_expr_string(wf_expr)[1:-1], None
@@ -307,6 +311,14 @@ class Converter:
                     member = str(wf_expr.member)
                     ident = cast(WDL.Expr.Ident, wf_expr.expr.expr)
                     id_name = ident.name
+            elif isinstance(wf_expr, WDL.Expr.Apply):
+                expr_str = self.get_expr(wf_expr)
+                if expr_str.count("inputs") == 1:
+                    id_name = re.match(r"inputs\.*?[ \.](.*?)[. ]", expr_str).groups()[
+                        0
+                    ]
+                    value_from = "self" + expr_str.partition(f"inputs.{id_name}")[2]
+                    return id_name, value_from
             else:
                 return get_literal_value(wf_expr), None
             return id_name, f"self.{member}" if member else None
@@ -314,7 +326,7 @@ class Converter:
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
         wf_name = obj.name
-        requirements: List[cwl.ProcessRequirement] = []
+        requirements: List[cwl.ProcessRequirement] = [cwl.InlineJavascriptRequirement()]
         inputs = self.get_cwl_workflow_inputs(obj.available_inputs, obj.parameter_meta)
         outputs = [
             cwl.WorkflowOutputParameter(

@@ -50,3 +50,29 @@
       class: File
       size: 4371
     outputGVCFIndex: null
+
+# snaptools embeds paths and timestamps, and so it is not reproducible
+# - doc: ATAC
+#   tool: cwl_file/ATAC.cwl
+#   job: inputs/ATAC.yaml
+#   output:
+#     ATAC.snap_output:
+#       class: File
+#       basename: output.snap
+#       size: 25534045
+#       checksum: sha1$14e3ead34c5eb8b85f96ab72c5f1497e92643b56
+#     ATAC.bam_chrM_reads_compliant_output:
+#       class: File
+#       basename: scATAC.chrM_reads.compliant.bam
+#       size: 896082
+#       checksum: sha1$fd0685ea444e132aa565465bdf632c25c01b2f88
+#     ATAC.snap_qc_output:
+#       class: File
+#       basename: scATAC.snap.qc
+#       size: 557
+#       checksum: sha1$f9ed2f8d29494c59df8ddbab82d42b4a202c00db
+#     ATAC.bam_filtered_and_sorted_compliant_output:
+#       class: File
+#       basename: scATAC.filtered_and_sorted.compliant.bam
+#       size: 109174275
+#       checksum: sha1$97e8b724d55914841158b5700e79ea21941b1e7b

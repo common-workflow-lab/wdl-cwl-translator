@@ -4,6 +4,7 @@ class: Workflow
 doc: Count the number of times reads map to provided reference sequences. Useful for
     counting spike-ins, etc.
 requirements:
+  - class: InlineJavascriptRequirement
   - class: ScatterFeatureRequirement
 inputs:
   - id: reads_unmapped_bams

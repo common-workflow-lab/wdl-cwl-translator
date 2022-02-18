@@ -1,6 +1,8 @@
 cwlVersion: v1.2
 id: BuildCembaReferences
 class: Workflow
+requirements:
+  - class: InlineJavascriptRequirement
 inputs:
   - id: reference_fasta
     type: File
