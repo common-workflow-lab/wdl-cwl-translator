@@ -331,18 +331,24 @@ class Converter:
         wf_name = obj.name
         requirements: List[cwl.ProcessRequirement] = [cwl.InlineJavascriptRequirement()]
         inputs = self.get_cwl_workflow_inputs(obj.available_inputs, obj.parameter_meta)
-        outputs = [
-            cwl.WorkflowOutputParameter(
-                id=f"{wf_name}.{output_id}",
-                type_=output_type,
-                outputSource=output_source,
-                doc=obj.meta.get(output_id, None),
-            )
-            for output_id, output_type, output_source in self.get_workflow_outputs(
-                obj.effective_outputs
-            )
-        ]
         wf_steps: List[cwl.WorkflowStep] = []
+        outputs: List[cwl.WorkflowOutputParameter] = []
+        for (
+            output_id,
+            output_type,
+            output_source,
+            extra_step,
+        ) in self.get_workflow_outputs(obj.effective_outputs):
+            outputs.append(
+                cwl.WorkflowOutputParameter(
+                    id=f"{wf_name}.{output_id}",
+                    type_=output_type,
+                    outputSource=output_source,
+                    doc=obj.meta.get(output_id, None),
+                )
+            )
+            if extra_step:
+                wf_steps.append(extra_step)
         wf_description = (
             obj.meta.pop("description") if "description" in obj.meta else None
         )
@@ -530,7 +536,7 @@ class Converter:
         else:
             memory_requirement = None
         if "disks" in runtime:
-            with WDLSourceLine(runtime["memory"], ConversionException):
+            with WDLSourceLine(runtime["disks"], ConversionException):
                 outdir_requirement = self.get_outdir_requirement(
                     runtime["disks"]  # type: ignore[arg-type]
                 )
@@ -720,37 +726,111 @@ class Converter:
         self,
         outputs: WDL.Env.Bindings[WDL.Type.Base],
     ) -> Iterator[
-        Tuple[str, Union[cwl.OutputArraySchema, cwl.OutputRecordSchema, str], str]
+        Tuple[
+            str,
+            Union[cwl.OutputArraySchema, cwl.OutputRecordSchema, str],
+            str,
+            Optional[cwl.WorkflowStep],
+        ]
     ]:
         """Return the name, CWL type, and source for a workflow's effective_outputs()."""
         for item in outputs:
             with WDLSourceLine(item.info, ConversionException):
                 output_name = item.name
                 item_expr = item.info.expr
-                output_source = item_expr.expr.name[::-1].replace(".", "/", 1)[::-1]
-                # replace just the last occurrence of a period with a slash
-                # by first reversing the string and the replace the first occurrence
-                # then reversing the result
+                member = None
                 wdl_output = item.info
                 type_of = self.get_cwl_type(
                     wdl_output.type, cwl.OutputArraySchema, cwl.OutputRecordSchema
                 )
-                yield (output_name, type_of, output_source)
+                if isinstance(item_expr, WDL.Expr.Apply):
+                    new_output_name = f"_{output_name}_{str(item_expr.function_name)}"
+                    extra_step = cwl.WorkflowStep(
+                        in_=[
+                            cwl.WorkflowStepInput(
+                                id="target",
+                                # source=output_source,  TODO: refactor get_apply_expr to also return the names of the sources
+                            )
+                        ],
+                        out=["result"],
+                        run=cwl.ExpressionTool(
+                            inputs=[
+                                cwl.WorkflowInputParameter(type_="Any", id="target")
+                            ],
+                            expression='${ return {"result": '
+                            + self.get_expr_apply(item_expr)
+                            + "}; }",
+                            outputs=[
+                                cwl.ExpressionToolOutputParameter(
+                                    type_=type_of, id="result"
+                                )
+                            ],
+                        ),
+                        id=new_output_name,
+                    )
+                    yield (
+                        output_name,
+                        type_of,
+                        f"{new_output_name}/result",
+                        extra_step,
+                    )
+                    continue
+                if isinstance(item_expr.expr, WDL.Expr.Get) and item_expr.member:
+                    member = item_expr.member
+                    item_expr = item_expr.expr
+                output_source = item_expr.expr.name[::-1].replace(".", "/", 1)[::-1]
+                # replace just the last occurrence of a period with a slash
+                # by first reversing the string and the replace the first occurrence
+                # then reversing the result
+                if member:
+                    new_output_name = f"_{item_expr.expr.name}.{member}"
+                    extra_step = cwl.WorkflowStep(
+                        in_=[
+                            cwl.WorkflowStepInput(
+                                id="target",
+                                source=output_source,
+                                valueFrom=f"self.{member}",
+                            )
+                        ],
+                        out=[f"{member}"],
+                        run=cwl.ExpressionTool(
+                            inputs=[
+                                cwl.WorkflowInputParameter(type_="Any", id="target")
+                            ],
+                            expression='${return {"' + str(member) + '": self}; }',
+                            outputs=[
+                                cwl.ExpressionToolOutputParameter(
+                                    type_=type_of, id=str(member)
+                                )
+                            ],
+                        ),
+                        id=new_output_name,
+                    )
+                    yield (
+                        output_name,
+                        type_of,
+                        f"{new_output_name}/{member}",
+                        extra_step,
+                    )
+                else:
+                    yield (output_name, type_of, output_source, None)
 
-    def get_expr(self, wdl_expr: WDL.Expr.Base) -> str:
+    def get_expr(
+        self, wdl_expr: WDL.Expr.Base, target_type: Optional[WDL.Type.Base] = None
+    ) -> str:
         """Translate WDL Expressions."""
         if isinstance(wdl_expr, WDL.Expr.Apply):
-            return self.get_expr_apply(wdl_expr)
+            result = self.get_expr_apply(wdl_expr)
         elif isinstance(wdl_expr, WDL.Expr.Get):
-            return self.get_expr_get(wdl_expr)
+            result = self.get_expr_get(wdl_expr)
         elif isinstance(wdl_expr, WDL.Expr.IfThenElse):
-            return self.get_expr_ifthenelse(wdl_expr)
+            result = self.get_expr_ifthenelse(wdl_expr)
         elif isinstance(wdl_expr, WDL.Expr.Placeholder):
-            return self.translate_wdl_placeholder(wdl_expr)
+            result = self.translate_wdl_placeholder(wdl_expr)
         elif isinstance(wdl_expr, WDL.Expr.String):
-            return self.get_expr_string(wdl_expr)
+            result = self.get_expr_string(wdl_expr)
         elif isinstance(wdl_expr, WDL.Expr.Boolean) and wdl_expr.literal:
-            return str(wdl_expr.literal)  # "true" not "True"
+            result = str(wdl_expr.literal)  # "true" not "True"
         elif (
             isinstance(
                 wdl_expr,
@@ -762,13 +842,13 @@ class Converter:
             )
             and wdl_expr.literal
         ):
-            return str(wdl_expr.literal.value)
+            result = str(wdl_expr.literal.value)
         elif isinstance(wdl_expr, WDL.Expr.Array):
-            return (
+            result = (
                 "[ " + ", ".join(self.get_expr(item) for item in wdl_expr.items) + " ]"
             )
         elif isinstance(wdl_expr, WDL.Expr.Map):
-            return (
+            result = (
                 "{ "
                 + ", ".join(
                     f"{self.get_expr(key)}: {self.get_expr(value)}"
@@ -776,10 +856,22 @@ class Converter:
                 )
                 + " }"
             )
+        elif isinstance(wdl_expr, WDL.Expr.Struct) and isinstance(
+            target_type, WDL.Type.StructInstance
+        ):
+            result = "{ "
+            result += ", ".join(
+                f'"{key}": {self.get_expr(wdl_expr.members[key], member_type)}'
+                for key, member_type in getattr(target_type, "members", {}).items()
+            )
+            result += " }"
         else:  # pragma: no cover
             raise WDLSourceLine(wdl_expr, ConversionException).makeError(
                 f"The expression '{wdl_expr}' is not handled yet."
             )
+        if target_type and isinstance(target_type, WDL.Type.File):
+            return '{ "class": "File", "path": runtime.outdir+"/"+' + result + " }"
+        return result
 
     def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
         """Translate WDL String Expressions."""
@@ -865,7 +957,10 @@ class Converter:
                 basename_target, suffix = arguments
                 is_file = isinstance(basename_target.type, WDL.Type.File)
                 if isinstance(basename_target, WDL.Expr.Get):
-                    basename_target_name = get_expr_name(basename_target.expr)  # type: ignore[arg-type]
+                    if isinstance(basename_target.expr, WDL.Expr.Ident):
+                        basename_target_name = get_expr_name(basename_target.expr)
+                    else:
+                        basename_target_name = f"{self.get_expr(basename_target.expr)}.{basename_target.member}"
                 elif isinstance(basename_target, WDL.Expr.Apply):
                     basename_target_name = self.get_expr(basename_target)
                 suffix_str = str(get_literal_value(suffix))
@@ -1031,6 +1126,8 @@ class Converter:
             with WDLSourceLine(referee, ConversionException):
                 if isinstance(referee, WDL.Tree.Call):
                     return id_name
+                if isinstance(referee, WDL.Tree.Gather):
+                    return "/".join(id_name.rsplit(".", maxsplit=1))
                 if referee.expr and (
                     wdl_ident_expr.name in self.optional_cwl_null
                     or wdl_ident_expr.name not in self.non_static_values
@@ -1390,7 +1487,7 @@ class Converter:
                         )
                     )
                 else:
-                    outputEval = f"$({self.get_expr(wdl_output.expr)})"
+                    outputEval = f"$({self.get_expr(wdl_output.expr, wdl_output.type)})"
                     outputs.append(
                         cwl.CommandOutputParameter(
                             id=output_name,
