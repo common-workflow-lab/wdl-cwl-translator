@@ -76,7 +76,7 @@ WDL features not yet supported
 - Advanced [Scatter](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/183)
 
 WDL types not yet supported
-- [Map](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/77) types
+- Non-static [Map](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/77) types
 - [Nested structs](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/158)
 - [Pair](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#pairx-y)
 - [Object](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-object)
