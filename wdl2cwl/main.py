@@ -1,16 +1,15 @@
 """Main entrypoint for WDL2CWL."""
 import argparse
-import os
 import re
 import sys
 import textwrap
+from pathlib import Path
 from typing import (
     Any,
     Dict,
     Iterator,
     List,
     Optional,
-    Mapping,
     Sequence,
     Set,
     Tuple,
@@ -26,8 +25,8 @@ import WDL
 import WDL._parser  # delete when reloading bug is fixed upstream
 import WDL.CLI
 from ruamel.yaml import scalarstring
-from ruamel.yaml.main import YAML
 from ruamel.yaml.comments import CommentedMap
+from ruamel.yaml.main import YAML
 
 from wdl2cwl import _logger
 from wdl2cwl.errors import WDLSourceLine
@@ -53,9 +52,10 @@ class ConversionException(Exception):
 def convert(doc: str) -> Dict[str, Any]:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
     WDL._parser._lark_comments_buffer.clear()
+    root_folder = str(Path(doc).parent)
     try:
         doc_tree = WDL.load(
-            doc, [], read_source=WDL.CLI.make_read_source(False), check_quant=True  # type: ignore[no-untyped-call]
+            doc, [root_folder], read_source=WDL.CLI.make_read_source(False), check_quant=True  # type: ignore[no-untyped-call]
         )
     except (
         WDL.Error.SyntaxError,
