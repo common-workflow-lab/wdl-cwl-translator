@@ -33,7 +33,7 @@ The ``wdl2cwl`` package uses the ``miniwdl`` package [@miniwdl], an open-source,
 developer toolkit and local runner for running wdl files. The ``wdl2cwl`` package was
 designed to provide a class-based and developer-friendly interface for extracting 
 the various sections of a wdl file, dynamically create the various objects
-needed to create a valid cwl file ( this is done using the ``cwl.utils`` package [@cwl.utils], 
+needed to create a valid cwl file ( this is done using the ``cwl.utils`` package [@cwl_utils], 
 an open-source, Python package for parsing cwl files) and performing error checking 
 for valid imports, input declarations, expressions etc.
 
@@ -48,6 +48,6 @@ that can be used by users of either languages and so much more.
 
 # Acknowledgements
 
-We acknowledge the work by tthe developers of miniwdl, cwl, wdl
+We acknowledge the work by the developers of miniwdl, CWL and WDL.
 
 # References
