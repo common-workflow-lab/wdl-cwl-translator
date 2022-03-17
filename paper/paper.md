@@ -6,6 +6,15 @@ tags:
   - workflow description language
   - common workflow language
   - Language
+authors:
+  - name: Dinithi Wickramaratne
+  - name: Dennis Chukwunta
+  - name: Michael R. Crusoe
+    orcid: 0000-0002-2961-9670
+  - name: Bruno P. Kinoshita
+    orcid: 0000-0001-8250-4074
+  - name: Peter Amstutz
+    orcid: 0000-0003-3566-7705
 date:  August 2022
 bibliography: paper.bib
 ---
@@ -21,7 +30,7 @@ complex analysis tasks, chain them together in workflows, and parallelize their 
 CWL is a way to describe command line tools and connect 
 the together to create workflows. Because CWL is a specification and not a 
 specific piece of software, tools and workflows described using CWL are portable acroos
-a variety of platforms that support the CWL standard [@cwl:2021].
+a variety of platforms that support the CWL standard [@cwl].
 
 It can be hard learning and adapting to the various knowledge requirements and
 specifications of a workflow language. This complication makes it hard for analysts and scientists 
