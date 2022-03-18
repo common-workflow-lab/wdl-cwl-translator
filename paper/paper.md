@@ -5,7 +5,6 @@ tags:
   - workflow
   - workflow description language
   - common workflow language
-  - Language
 authors:
   - name: Dinithi Wickramaratne
   - name: Dennis Chukwunta
@@ -44,12 +43,11 @@ an open source, Python package for parsing CWL files) and performing error check
 for valid imports, input declarations, expressions and other useful operations on CWL files.
 
 ``wdl2cwl`` was designed to be used by both CWL/WDL professionals and researchers, as well
-as students in courses on bioinformatics and data analytics. It has already been
-used to convert a number of WDL workflows. Some reasons why an analyst might want to use the tool are:
-- It can help an analyst to avoid platform dependency issues (like trying to reproduce a WDL workflow on a platform that only allows CWL).
-- It can be used to eliminate the need for an CWL analysts to learn the WDL language in order to use a workflow written in WDL.
-- It can be used to create a more widely available workflow that can be used by users 
-of either languages.
+as students of bioinformatics and data analytics. It can help CWL analysts to avoid
+platform dependency issues (like trying to reproduce a WDL workflow on a platform that 
+only allows CWL). It can help analysts by eliminating the difficulty of learning a new
+workflow language before they an use a WDL worflow. It can be used to create a more 
+widely available workflow that can be used by analysts of either languages.
 
 # Acknowledgements
 
