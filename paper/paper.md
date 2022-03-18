@@ -5,9 +5,6 @@ tags:
   - workflow
   - workflow description language
   - common workflow language
-<<<<<<< HEAD
-  - workflow language
-=======
 authors:
   - name: Dinithi Wickramaratne
   - name: Dennis Chukwunta
@@ -17,7 +14,6 @@ authors:
     orcid: 0000-0001-8250-4074
   - name: Peter Amstutz
     orcid: 0000-0003-3566-7705
->>>>>>> temp
 date:  August 2022
 bibliography: paper.bib
 ---
@@ -25,21 +21,21 @@ bibliography: paper.bib
 # Summary
 
 Computational workflows are used in data analysis, enabling innovation and 
-decision-making in various fields of science. There are several competing workflow description languages, 
+decision-making in various fields of science. There are several competing workflow description systems,
 WDL (Workflow description Language) and CWL (Common Workflow Language) are two examples
 of popularly used systems. WDL offers a way to specify data processiing workflows with 
 a human-readable and writeable syntax. WDL makes it straightforward to define 
 complex analysis tasks, chain them together in workflows, and parallelize their execution [@wdl].
-CWL is a way to describe command line tools and connect 
+CWL on the other hand, is a way to describe command line tools and connect 
 them together to create workflows. Because CWL is a specification and not a 
 specific piece of software, tools and workflows described using CWL are portable across
-<<<<<<< HEAD
-a variety of platforms that support the CWL standard [@cwl:2021].
-=======
 a variety of platforms that support the CWL standard [@cwl].
->>>>>>> temp
 
-Groups using WDL or CWL can find it difficult to learn the other workflow definition language if they need to run their workflows in other platforms. It becomes even harder when the workflows contain domain specific knowledge mixed with the definitions, and when analysts and scientists need to consider future collaboration of other groups on the workflows definitions.
+Groups using WDL or CWL can find it difficult to learn the other workflow definition
+language if they need to run their workflows in other platforms. It becomes even harder 
+when the workflows contain domain specific knowledge mixed with the definitions, and 
+when analysts and scientists need to consider future collaboration of other groups on 
+the workflows definitions.
 
 ``wdl2cwl`` is a Python package for converting workflow written in WDL to workflows in CWL.
 The ``wdl2cwl`` package uses the ``miniwdl`` package [@miniwdl], an open source, Python package, 
@@ -51,20 +47,11 @@ an open source, Python package for parsing CWL files) and performing error check
 for valid imports, input declarations, expressions and other useful operations on CWL files.
 
 ``wdl2cwl`` was designed to be used by both CWL/WDL professionals and researchers, as well
-<<<<<<< HEAD
-as students in courses on bioinformatics and data analytics. It has already been
-used to convert a number of WDL workflows. Some reasons why an analyst might want to use the tool are:
-- It can help an analyst to avoid platform dependency issues (like trying to reproduce a WDL workflow on a platform that only allows CWL).
-- It can be used to eliminate the need for an CWL analysts to learn the WDL language in order to use a workflow written in WDL.
-- It can be used to create a more widely available workflow that can be used by users 
-of either languages.
-=======
 as students of bioinformatics and data analytics. It can help CWL analysts to avoid
 platform dependency issues (like trying to reproduce a WDL workflow on a platform that 
 only allows CWL). It can help analysts by eliminating the difficulty of learning a new
 workflow language before they an use a WDL worflow. It can be used to create a more 
 widely available workflow that can be used by analysts of either languages.
->>>>>>> temp
 
 # Acknowledgements
 
