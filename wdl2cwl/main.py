@@ -1,7 +1,6 @@
 """Main entrypoint for WDL2CWL."""
 import argparse
 import re
-import sys
 import textwrap
 from pathlib import Path
 from typing import (
@@ -11,7 +10,6 @@ from typing import (
     List,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Type,
     TypeVar,
@@ -21,32 +19,24 @@ from typing import (
 
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
-import WDL
-import WDL._parser  # delete when reloading bug is fixed upstream
-import WDL.CLI
+import sys
 from ruamel.yaml import scalarstring
 from ruamel.yaml.comments import CommentedMap
 from ruamel.yaml.main import YAML
 
+import WDL
+import WDL.CLI
+import WDL._parser  # delete when reloading bug is fixed upstream
 from wdl2cwl import _logger
-from wdl2cwl.errors import WDLSourceLine
-
-valid_js_identifier = regex.compile(
-    r"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|null|this|true|"
-    r"void|with|break|catch|class|const|false|super|throw|while|yield|delete|export|"
-    r"import|public|return|static|switch|typeof|default|extends|finally|package|"
-    r"private|continue|debugger|function|arguments|interface|protected|implements|"
-    r"instanceof)$)(?:[$_\p{ID_Start}])(?:[$_\u200C\u200D\p{ID_Continue}])*$"
+from wdl2cwl.errors import WDLSourceLine, ConversionException
+from wdl2cwl.expr import (
+    get_expr,
+    get_literal_value,
+    get_step_input_expr,
+    get_expr_name,
+    translate_wdl_placeholder,
 )
-
-# ^^ is a combination of https://github.com/tc39/proposal-regexp-unicode-property-escapes#other-examples
-# and regex at the bottom of https://stackoverflow.com/a/9392578
-# double checked against https://262.ecma-international.org/5.1/#sec-7.6
-# eval is not on the official list of reserved words, but it is a built-in function
-
-
-class ConversionException(Exception):
-    """Error during conversion."""
+from wdl2cwl.util import get_mem_in_bytes, get_input, ConversionContext
 
 
 def convert(doc: str) -> Dict[str, Any]:
@@ -128,40 +118,6 @@ CWLRecordTypes = TypeVar(
 )
 
 
-def get_mem_in_bytes(unit: str) -> Tuple[int, int]:
-    """
-    Determine the value of a memory unit in bytes.
-
-    Returns the base and exponent, ready for stringifying or evaluation
-    """
-    if unit == "KiB" or unit == "Ki":
-        return 1024, 1
-    elif unit == "MiB" or unit == "Mi":
-        return 1024, 2
-    elif unit == "GiB" or unit == "Gi":
-        return 1024, 3
-    elif unit == "TiB" or unit == "Ti":
-        return 1024, 4
-    elif unit == "B":
-        return 1024, 0
-    elif unit == "KB" or unit == "K":
-        return 1000, 1
-    elif unit == "MB" or unit == "M":
-        return 1000, 2
-    elif unit == "GB" or unit == "G":
-        return 1000, 3
-    elif unit == "TB" or unit == "T":
-        return 1000, 4
-    raise ConversionException(f"Invalid memory unit: ${unit}")
-
-
-def get_input(input_name: str) -> str:
-    """Produce a concise, valid CWL expr/param reference lookup string for a given input name."""
-    if valid_js_identifier.match(input_name):
-        return f"inputs.{input_name}"
-    return f'inputs["{input_name}"]'
-
-
 def get_cwl_docker_requirements(
     wdl_docker: Union[WDL.Expr.Get, WDL.Expr.String]
 ) -> Optional[cwl.ProcessRequirement]:
@@ -196,51 +152,6 @@ def get_cwl_docker_requirements(
     return cwl.DockerRequirement(dockerPull=dockerpull)
 
 
-def get_expr_name(wdl_expr: WDL.Expr.Ident) -> str:
-    """Extract name from WDL expr."""
-    return get_input(wdl_expr.name)
-
-
-def get_expr_name_with_is_file_check(wdl_expr: WDL.Expr.Ident) -> str:
-    """Extract name from WDL expr and check if it's a file path."""
-    expr_name = get_input(wdl_expr.name)
-    is_file = isinstance(wdl_expr.type, WDL.Type.File)
-    return expr_name if not is_file else f"{expr_name}.path"
-
-
-def get_literal_value(expr: WDL.Expr.Base) -> Optional[Any]:
-    """Recursively get a literal value."""
-    literal = expr.literal
-    if literal:
-        if hasattr(expr.parent, "type") and isinstance(expr.parent.type, WDL.Type.File):  # type: ignore[attr-defined]
-            return {"class": "File", "path": literal.value}
-        value = literal.value
-        if isinstance(expr.type, WDL.Type.Map):
-            return {key.value: val.value for key, val in value}
-        if isinstance(value, list):
-            result = []
-            for item in value:
-                if hasattr(expr.parent, "type") and isinstance(expr.parent.type.item_type, WDL.Type.File):  # type: ignore[attr-defined]
-                    result.append({"class": "File", "path": item.value})
-                else:
-                    result.append(item.value)
-            return result
-        return value
-    return None
-
-
-def nice_quote(value: str) -> str:
-    """Surround string with quotes, with minimal escaping."""
-    single = "'" in value
-    double = '"' in value
-    if not double:
-        return f'"{value}"'
-    if not single and double:
-        return f"'{value}'"
-    # single and double quotes found
-    return '"' + value.replace('"', r"\"") + '"'
-
-
 read_funcs = {
     "read_string": r"$(self[0].contents.replace(/[\r\n]+$/, ''))",
     "read_int": "$(parseInt(self[0].contents))",
@@ -272,10 +183,8 @@ class Converter:
     """Object that handles WDL Workflows and task conversion to CWL."""
 
     def __init__(self) -> None:
-        """Initialize the sets used by the object and prevent inconsistent behaviours."""
-        self.non_static_values: Set[str] = set()
-        self.optional_cwl_null: Set[str] = set()
-        self.scatter_names: List[str] = []
+        """Initialize the context used by the object to prevent inconsistent behaviours."""
+        self.ctx = ConversionContext()
 
     def load_wdl_objects(
         self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]
@@ -285,43 +194,6 @@ class Converter:
             return self.load_wdl_task(obj)
         elif isinstance(obj, WDL.Tree.Workflow):
             return self.load_wdl_workflow(obj)
-
-    def get_step_input_expr(
-        self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]
-    ) -> Tuple[str, Optional[str]]:
-        """
-        Get name of expression referenced in workflow call inputs.
-
-        Returns a tuple of the source plus any needed "valueFrom" expression.
-        """
-        with WDLSourceLine(wf_expr, ConversionException):
-            if isinstance(wf_expr, WDL.Expr.String):
-                return self.get_expr_string(wf_expr)[1:-1], None
-            elif isinstance(wf_expr, WDL.Expr.Get):
-                if isinstance(wf_expr.expr, WDL.Expr.Ident):
-                    member = None
-                    id_name = wf_expr.expr.name
-                    referee = wf_expr.expr.referee
-                    if referee and isinstance(referee, WDL.Tree.Scatter):
-                        scatter_name, value_from = self.get_step_input_expr(referee.expr)  # type: ignore [arg-type]
-                        self.scatter_names.append(scatter_name)
-                        return scatter_name, value_from
-                    return id_name, None
-                elif isinstance(wf_expr.expr, WDL.Expr.Get):
-                    member = str(wf_expr.member)
-                    ident = cast(WDL.Expr.Ident, wf_expr.expr.expr)
-                    id_name = ident.name
-            elif isinstance(wf_expr, WDL.Expr.Apply):
-                expr_str = self.get_expr(wf_expr)
-                if expr_str.count("inputs") == 1:
-                    id_name = re.match(r"inputs\.*?[ \.](.*?)[. ]", expr_str).groups()[
-                        0
-                    ]
-                    value_from = "self" + expr_str.partition(f"inputs.{id_name}")[2]
-                    return id_name, value_from
-            else:
-                return get_literal_value(wf_expr), None
-            return id_name, f"self.{member}" if member else None
 
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
@@ -387,7 +259,7 @@ class Converter:
             with WDLSourceLine(body_obj, ConversionException):
                 if isinstance(body_obj, WDL.Tree.Call):
                     wf_step = self.get_workflow_call(body_obj)
-                wf_step.scatter = self.scatter_names.pop()
+                wf_step.scatter = self.ctx.scatter_names.pop()
                 scatter_steps.append(wf_step)
         return scatter_steps
 
@@ -415,8 +287,8 @@ class Converter:
                             (WDL.Expr.Get, WDL.Expr.String),
                         )
                     ):
-                        input_expr, value_from = self.get_step_input_expr(
-                            value.arguments[0].items[0]
+                        input_expr, value_from = get_step_input_expr(
+                            value.arguments[0].items[0], self.ctx
                         )
                         value_str = f"$([{value_from if value_from else 'self'}])"
                         inputs_from_call[key] = (
@@ -427,15 +299,15 @@ class Converter:
                             },
                         )
                     else:
-                        input_expr, value_from = self.get_step_input_expr(value)  # type: ignore[arg-type]
+                        input_expr, value_from = get_step_input_expr(value, self.ctx)  # type: ignore[arg-type]
                         inputs_from_call[key] = (
                             input_expr.replace(".", "/")
                             if isinstance(input_expr, str)
                             else input_expr,
                             {"valueFrom": f"$({value_from})"} if value_from else {},
                         )
-                    if self.scatter_names and not scatter_handled:
-                        self.scatter_names[-1] = key
+                    if self.ctx.scatter_names and not scatter_handled:
+                        self.ctx.scatter_names[-1] = key
                         scatter_handled = True
         wf_step_inputs: List[cwl.WorkflowStepInput] = []
         for inp in cwl_callee_inputs:
@@ -557,7 +429,7 @@ class Converter:
         with WDLSourceLine(time_minutes, ConversionException):
             if isinstance(time_minutes, (WDL.Expr.Int, WDL.Expr.Float)):
                 return cast(int, get_literal_value(time_minutes)) * 60
-            time_minutes_str = self.get_expr(time_minutes)
+            time_minutes_str = get_expr(time_minutes, self.ctx)
         return f"$({time_minutes_str} * 60)"
 
     def get_memory_requirement(
@@ -570,7 +442,7 @@ class Converter:
                 return ram_min_literal
             elif isinstance(memory_runtime, WDL.Expr.Apply):
                 expr, unit = memory_runtime.arguments
-                ram_min = self.get_expr(expr)
+                ram_min = get_expr(expr, self.ctx)
                 return self.get_ram_min_js(
                     ram_min, str(get_literal_value(unit)).strip()
                 )
@@ -585,11 +457,11 @@ class Converter:
             else:
                 _, amount, _, unit, _ = memory_runtime.parts
             if isinstance(amount, WDL.Expr.Placeholder):
-                amount_str = self.get_expr(amount)
+                amount_str = get_expr(amount, self.ctx)
             else:
                 amount_str = amount
             if isinstance(unit, WDL.Expr.Placeholder):
-                unit_str = self.get_expr(unit)
+                unit_str = get_expr(unit, self.ctx)
             else:
                 unit_str = unit.strip()
             return self.get_ram_min_js(amount_str, unit_str)
@@ -618,7 +490,7 @@ class Converter:
                 ):
                     # If it contains an apply expr we don't want to process the _add function
                     # that concatenates it to the chars in the string
-                    expr_str = self.get_expr(outdir)
+                    expr_str = get_expr(outdir, self.ctx)
                     if isinstance(outdir.type, WDL.Type.String):
                         return f"$(parseFloat({expr_str}) * 1024)"
                     else:
@@ -637,7 +509,7 @@ class Converter:
                         # avoid python strings only WDL expressions are handled.
                         return self.get_outdir_requirement(obj)
             elif isinstance(outdir, (WDL.Expr.Get, WDL.Expr.Placeholder)):
-                expr_str = self.get_expr(outdir)
+                expr_str = get_expr(outdir, self.ctx)
                 return (
                     f"$(({expr_str}) * 1024)"
                     if not expr_str.isdigit()
@@ -732,316 +604,6 @@ class Converter:
                 )
                 yield (output_name, type_of, output_source)
 
-    def get_expr(self, wdl_expr: WDL.Expr.Base) -> str:
-        """Translate WDL Expressions."""
-        if isinstance(wdl_expr, WDL.Expr.Apply):
-            return self.get_expr_apply(wdl_expr)
-        elif isinstance(wdl_expr, WDL.Expr.Get):
-            return self.get_expr_get(wdl_expr)
-        elif isinstance(wdl_expr, WDL.Expr.IfThenElse):
-            return self.get_expr_ifthenelse(wdl_expr)
-        elif isinstance(wdl_expr, WDL.Expr.Placeholder):
-            return self.translate_wdl_placeholder(wdl_expr)
-        elif isinstance(wdl_expr, WDL.Expr.String):
-            return self.get_expr_string(wdl_expr)
-        elif isinstance(wdl_expr, WDL.Expr.Boolean) and wdl_expr.literal:
-            return str(wdl_expr.literal)  # "true" not "True"
-        elif (
-            isinstance(
-                wdl_expr,
-                (
-                    WDL.Expr.Boolean,
-                    WDL.Expr.Int,
-                    WDL.Expr.Float,
-                ),
-            )
-            and wdl_expr.literal
-        ):
-            return str(wdl_expr.literal.value)
-        elif isinstance(wdl_expr, WDL.Expr.Array):
-            return (
-                "[ " + ", ".join(self.get_expr(item) for item in wdl_expr.items) + " ]"
-            )
-        elif isinstance(wdl_expr, WDL.Expr.Map):
-            return (
-                "{ "
-                + ", ".join(
-                    f"{self.get_expr(key)}: {self.get_expr(value)}"
-                    for key, value in wdl_expr.items
-                )
-                + " }"
-            )
-        else:  # pragma: no cover
-            raise WDLSourceLine(wdl_expr, ConversionException).makeError(
-                f"The expression '{wdl_expr}' is not handled yet."
-            )
-
-    def get_expr_string(self, wdl_expr_string: WDL.Expr.String) -> str:
-        """Translate WDL String Expressions."""
-        if wdl_expr_string.literal is not None:
-            return str(wdl_expr_string.literal)
-        parts = wdl_expr_string.parts
-        q = cast(str, parts[0])[0]
-        string = (
-            f"{q}{parts[1]}{q}"
-            if isinstance(parts[1], str)
-            else self.get_expr(parts[1])
-        )
-        if parts[2:-1]:
-            string += " + " + " + ".join(
-                f"{q}{part}{q}" if isinstance(part, str) else self.get_expr(part)
-                for part in parts[2:-1]
-            )
-        return string
-
-    def get_expr_ifthenelse(self, wdl_ifthenelse: WDL.Expr.IfThenElse) -> str:
-        """Translate WDL IfThenElse Expressions."""
-        condition = self.get_expr(wdl_ifthenelse.condition)
-        if_true = self.get_expr(wdl_ifthenelse.consequent)
-        if_false = self.get_expr(wdl_ifthenelse.alternative)
-        return f"{condition} ? {if_true} : {if_false}"
-
-    def get_expr_apply(self, wdl_apply_expr: WDL.Expr.Apply) -> str:
-        """Translate WDL Apply Expressions."""
-        binary_ops = {
-            "_gt": ">",
-            "_lor": "||",
-            "_neq": "!==",
-            "_lt": "<",
-            "_mul": "*",
-            "_eqeq": "===",
-            "_div": "/",
-            "_sub": "-",
-        }
-        single_arg_fn = {  # implemented elsewhere, just return the argument
-            "read_string",
-            "read_float",
-            "glob",
-            "read_int",
-            "read_boolean",
-            "read_tsv",
-            "read_lines",
-        }
-        function_name = wdl_apply_expr.function_name
-        arguments = wdl_apply_expr.arguments
-        if not arguments:
-            raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
-                f"The '{wdl_apply_expr}' expression has no arguments."
-            )
-        treat_as_optional = wdl_apply_expr.type.optional
-        if function_name == "_add":
-            add_left_operand = arguments[0]
-            add_right_operand = self.get_expr(arguments[1])
-            add_left_operand_value = self.get_expr(add_left_operand)
-            if getattr(add_left_operand, "function_name", None) == "basename":
-                referer = wdl_apply_expr.parent.name  # type: ignore[attr-defined]
-                treat_as_optional = True if referer in self.non_static_values else False
-            return (
-                f"{add_left_operand_value} + {add_right_operand}"
-                if not treat_as_optional
-                else f"{get_input(referer)} === null ? {add_left_operand_value} + {add_right_operand} : {get_input(referer)}"
-            )
-        elif function_name == "basename":
-            if len(arguments) == 1:
-                only_operand = arguments[0]
-                is_file = isinstance(only_operand.type, WDL.Type.File)
-                if isinstance(only_operand, WDL.Expr.Get) and isinstance(
-                    only_operand.expr, WDL.Expr.Ident
-                ):
-                    only_operand_name = get_expr_name(only_operand.expr)
-                else:
-                    only_operand_name = self.get_expr(only_operand)
-                return (
-                    f"{only_operand_name}.basename"
-                    if is_file
-                    else f"{only_operand_name}.split('/').reverse()[0]"
-                )
-            else:
-                basename_target, suffix = arguments
-                is_file = isinstance(basename_target.type, WDL.Type.File)
-                if isinstance(basename_target, WDL.Expr.Get):
-                    basename_target_name = get_expr_name(basename_target.expr)  # type: ignore[arg-type]
-                elif isinstance(basename_target, WDL.Expr.Apply):
-                    basename_target_name = self.get_expr(basename_target)
-                suffix_str = str(get_literal_value(suffix))
-                regex_str = re.escape(suffix_str)
-                return (
-                    f"{basename_target_name}.basename.replace(/{regex_str}$/, '') "
-                    if is_file
-                    else f"{basename_target_name}.split('/').reverse()[0].replace(/{regex_str}$/, '')"
-                )
-        elif function_name == "defined":
-            only_operand = arguments[0]
-            assert isinstance(only_operand, WDL.Expr.Get) and isinstance(
-                only_operand.expr, WDL.Expr.Ident
-            )
-            return f"{get_expr_name(only_operand.expr)} !== null"
-        elif function_name == "_interpolation_add":
-            arg_value, arg_name = arguments
-            if isinstance(arg_name, WDL.Expr.String) and isinstance(
-                arg_value, (WDL.Expr.Apply, WDL.Expr.String)
-            ):
-                return f"{self.get_expr(arg_value)} + {self.get_expr(arg_name)}"
-            if isinstance(arg_name, (WDL.Expr.Placeholder, WDL.Expr.Get)):
-                just_arg_name = get_expr_name(arg_name.expr)  # type: ignore[arg-type]
-                arg_name_with_file_check = get_expr_name_with_is_file_check(
-                    arg_name.expr  # type: ignore
-                )
-            elif isinstance(arg_value, (WDL.Expr.Placeholder, WDL.Expr.Get)):
-                just_arg_name = get_expr_name(arg_value.expr)  # type: ignore[arg-type]
-                arg_name_with_file_check = get_expr_name_with_is_file_check(
-                    arg_value.expr  # type: ignore
-                )
-                arg_value = arg_name
-            with WDLSourceLine(arg_value, ConversionException):
-                arg_value_str = self.get_expr(arg_value)
-                return (
-                    f'{just_arg_name} === null ? "" : {arg_value_str} + {arg_name_with_file_check}'
-                    if treat_as_optional
-                    else f"{arg_value_str} + {arg_name_with_file_check}"
-                )
-        elif function_name == "sub":
-            wdl_apply, arg_string, arg_sub = arguments
-            sub_expr = self.get_expr(wdl_apply)
-            arg_string_expr = self.get_expr(arg_string)
-            arg_sub_expr = self.get_expr(arg_sub)
-            return f"{sub_expr}.replace({arg_string_expr}, {arg_sub_expr}) "
-
-        elif function_name == "_at":
-            iterable_object, index = arguments
-            iterable_object_expr = self.get_expr(iterable_object)
-            index_expr = self.get_expr(index)
-            return f"{iterable_object_expr}[{index_expr}]"
-        elif function_name in binary_ops:
-            left_operand, right_operand = arguments
-            left_operand_expr = self.get_expr(left_operand)
-            right_operand_expr = self.get_expr(right_operand)
-            return (
-                f"{left_operand_expr} {binary_ops[function_name]} {right_operand_expr}"
-            )
-        elif function_name == "length":
-            only_arg_expr = self.get_expr_get(arguments[0])  # type: ignore
-            return f"{only_arg_expr}.length"
-        elif function_name == "round":
-            only_arg_expr = self.get_expr(arguments[0])
-            return f"Math.round({only_arg_expr})"
-        elif function_name in single_arg_fn:
-            only_arg = arguments[0]
-            return self.get_expr(only_arg)
-        elif function_name == "select_first":
-            array_obj = cast(WDL.Expr.Array, arguments[0])
-            array_items = [str(self.get_expr(item)) for item in array_obj.items]
-            items_str = ", ".join(array_items)
-            return (
-                f"[{items_str}].find(function(element) {{ return element !== null }}) "
-            )
-        elif function_name == "select_all":
-            array_obj = cast(WDL.Expr.Array, arguments[0])
-            array_items = [str(self.get_expr(item)) for item in array_obj.items]
-            items_str = ", ".join(array_items)
-            return f"[{items_str}].filter(function(element) {{ return element !== null }}) "
-        elif function_name == "ceil":
-            only_arg = self.get_expr(arguments[0])  # type: ignore
-            return f"Math.ceil({only_arg}) "
-        elif function_name == "size":
-            if len(arguments) == 1:
-                left_operand = arguments[0]
-                unit_value = "1"
-            else:
-                left_operand, right_operand = arguments
-                right_value = str(get_literal_value(right_operand))
-                unit_base, unit_exponent = get_mem_in_bytes(right_value)
-                unit_value = f"{unit_base}^{unit_exponent}"
-            if isinstance(left_operand, WDL.Expr.Array):
-                array_items = [self.get_expr(item) for item in left_operand.items]
-                left = ", ".join(array_items)
-                left_str = f"[{left}]"
-            else:
-                left_str = self.get_expr(left_operand)
-            return (
-                "(function(size_of=0)"
-                + "{"
-                + f"{left_str}.forEach(function(element)"
-                + "{ if (element) {"
-                + "size_of += element.size"
-                + "}})}"
-                + f") / {unit_value}"
-            )
-        elif function_name == "flatten":
-            flatten_array = arguments[0]
-            with WDLSourceLine(flatten_array, ConversionException):
-                items_str = self.get_expr(flatten_array)
-            result = (
-                "(function () {var new_array = []; "
-                + items_str
-                + ".forEach(function(value, index, obj) "
-                "{value.forEach(function(sub_value, sub_index, sub_obj) "
-                "{new_array.push(sub_value);});}); return new_array;})()"
-            )
-            return result
-        elif function_name == "sep":
-            sep, array = arguments
-            if isinstance(array, WDL.Expr.Get) and isinstance(
-                array.type, WDL.Type.Array
-            ):
-                item_type = array.type.item_type
-            else:
-                raise WDLSourceLine(array, ConversionException).makeError(
-                    f"Unhandled sep array type: {type(array)}: {array}."
-                )
-            sep_str = get_literal_value(sep) or ""
-            if isinstance(item_type, WDL.Type.File):
-                return (
-                    f"{self.get_expr(array)}.map("
-                    + 'function(el) {return el.path}).join("'
-                    + sep_str
-                    + '")'
-                )
-            else:
-                return f'{self.get_expr(array)}.join("{sep_str}")'
-        raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
-            f"Function name '{function_name}' not yet handled."
-        )
-
-    def get_expr_get(self, wdl_get_expr: WDL.Expr.Get) -> str:
-        """Translate WDL Get Expressions."""
-        member = wdl_get_expr.member
-
-        if not member:
-            return self.get_expr_ident(wdl_get_expr.expr)  # type: ignore
-        struct_name = self.get_expr(wdl_get_expr.expr)
-        member_str = f"{struct_name}.{member}"
-        return (
-            member_str
-            if not isinstance(wdl_get_expr.type, WDL.Type.File)
-            else f"{member_str}.path"
-        )
-
-    def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
-        """Translate WDL Ident Expressions."""
-        id_name = wdl_ident_expr.name
-        referee = wdl_ident_expr.referee
-        optional = wdl_ident_expr.type.optional
-        if referee:
-            with WDLSourceLine(referee, ConversionException):
-                if isinstance(referee, WDL.Tree.Call):
-                    return id_name
-                if referee.expr and (
-                    wdl_ident_expr.name in self.optional_cwl_null
-                    or wdl_ident_expr.name not in self.non_static_values
-                ):
-                    return self.get_expr(referee.expr)
-        ident_name = get_input(id_name)
-        if optional and isinstance(wdl_ident_expr.type, WDL.Type.File):
-            # To prevent null showing on the terminal for inputs of type File
-            name_with_file_check = get_expr_name_with_is_file_check(wdl_ident_expr)
-            return f'{ident_name} === null ? "" : {name_with_file_check}'
-        return (
-            ident_name
-            if not isinstance(wdl_ident_expr.type, WDL.Type.File)
-            else f"{ident_name}.path"
-        )
-
     def get_cpu_requirement(self, cpu_runtime: WDL.Expr.Base) -> Union[int, float, str]:
         """Translate WDL Runtime CPU requirement to CWL Resource Requirement."""
         if isinstance(cpu_runtime, (WDL.Expr.Int, WDL.Expr.Float)):
@@ -1049,7 +611,7 @@ class Converter:
         elif isinstance(cpu_runtime, WDL.Expr.String):
             literal_str = cast(Any, get_literal_value(cpu_runtime))
             return int(literal_str) if "." not in literal_str else float(literal_str)
-        return f"$({self.get_expr(cpu_runtime)})"
+        return f"$({get_expr(cpu_runtime, self.ctx)})"
 
     def get_cwl_command_requirements(
         self, wdl_commands: List[Union[str, WDL.Expr.Placeholder]]
@@ -1060,7 +622,7 @@ class Converter:
             if isinstance(wdl_command, str):
                 command_str += wdl_command.replace("$(", "\\$(")
             else:
-                command_str += f"$({self.translate_wdl_placeholder(wdl_command)})"
+                command_str += f"$({translate_wdl_placeholder(wdl_command, self.ctx)})"
         command_str = textwrap.dedent(command_str)
         return (
             cwl.InitialWorkDirRequirement(
@@ -1069,57 +631,6 @@ class Converter:
             if len(command_str.strip()) > 0
             else None
         )
-
-    def translate_wdl_placeholder(self, wdl_placeholder: WDL.Expr.Placeholder) -> str:
-        """Translate WDL Expr Placeholder to a valid CWL expression."""
-        expr = wdl_placeholder.expr
-        placeholder_expr = self.get_expr(expr)
-        options = wdl_placeholder.options
-        if options:
-            if "true" in options:
-                true_str = nice_quote(options["true"])
-                false_str = nice_quote(options["false"])
-                test_str = f"{placeholder_expr} ? {true_str} : {false_str}"
-                is_optional = False
-                if isinstance(expr, WDL.Expr.Get):
-                    is_optional = expr.type.optional
-                elif isinstance(expr, WDL.Expr.Apply):
-                    is_optional = (
-                        expr.arguments[0].type.optional
-                        and expr.function_name != "defined"  # optimization
-                    )
-                if not is_optional:
-                    return test_str
-                else:
-                    if "default" in options:
-                        return (
-                            f"{placeholder_expr} === null ? "
-                            f"{nice_quote(options['default'])} : {test_str}"
-                        )
-                    return f'{placeholder_expr} === null ? "" : {test_str}'
-            elif "sep" in options:
-                separator = options["sep"]
-                assert isinstance(expr.type, WDL.Type.Array)
-                item_type = expr.type.item_type
-                if isinstance(item_type, WDL.Type.File):
-                    pl_holder_str = (
-                        placeholder_expr + ".map(function(el) {return el.path})"
-                        f'.join("{separator}")'
-                    )
-                else:
-                    pl_holder_str = f'{placeholder_expr}.join("{separator}")'
-                if "default" in options and (expr.type.optional or item_type.optional):
-                    return (
-                        f"{placeholder_expr} === null ? "
-                        f"{nice_quote(options['default'])} : {pl_holder_str}"
-                    )
-                return pl_holder_str
-            # options must contain only "default", no "sep" or "true"/"false"
-            return (
-                f"{placeholder_expr} === null ? "
-                f"{nice_quote(options['default'])} : {placeholder_expr}"
-            )
-        return placeholder_expr
 
     def get_cwl_workflow_inputs(
         self,
@@ -1131,7 +642,7 @@ class Converter:
 
         for input_decl in wdl_inputs:
             input_name = input_decl.name
-            self.non_static_values.add(input_name)
+            self.ctx.non_static_values.add(input_name)
             input_value = None
             wdl_input = input_decl.value
             type_of = self.get_cwl_type(
@@ -1197,7 +708,7 @@ class Converter:
 
         for wdl_input in wdl_inputs:
             input_name = wdl_input.name
-            self.non_static_values.add(input_name)
+            self.ctx.non_static_values.add(input_name)
             input_value = None
 
             type_of = self.get_cwl_type(
@@ -1228,7 +739,7 @@ class Converter:
                     cwl.CommandInputRecordSchema,
                 ] = [type_of, "null"]
                 if isinstance(wdl_input.expr, WDL.Expr.Apply):
-                    self.optional_cwl_null.add(input_name)
+                    self.ctx.optional_cwl_null.add(input_name)
             else:
                 final_type_of = type_of
 
@@ -1314,7 +825,7 @@ class Converter:
                 ):
                     glob_str = tool.stdout = "_stdout"
                 else:
-                    glob_expr = self.get_expr(wdl_output.expr)
+                    glob_expr = get_expr(wdl_output.expr, self.ctx)
                     is_literal = wdl_output.expr.arguments[0].literal
                     if is_literal:
                         glob_str = str(get_literal_value(wdl_output.expr.arguments[0]))
@@ -1368,7 +879,7 @@ class Converter:
                     else:
                         targets = [wdl_output.expr]
                     for entry in targets:
-                        glob_str = f"$({self.get_expr(entry)})"
+                        glob_str = f"$({get_expr(entry, self.ctx)})"
                         if (
                             isinstance(wdl_output.expr, WDL.Expr.String)
                             and wdl_output.expr.literal is not None
@@ -1385,7 +896,7 @@ class Converter:
                         )
                     )
                 else:
-                    outputEval = f"$({self.get_expr(wdl_output.expr)})"
+                    outputEval = f"$({get_expr(wdl_output.expr, self.ctx)})"
                     outputs.append(
                         cwl.CommandOutputParameter(
                             id=output_name,
@@ -1429,3 +940,6 @@ def main(args: Union[List[str], None] = None) -> None:
 if __name__ == "__main__":
 
     main(sys.argv[1:])
+
+
+__all__ = ["main", "Converter", "ConversionException"]

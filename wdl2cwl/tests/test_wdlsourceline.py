@@ -5,9 +5,8 @@ import re
 import pytest
 import WDL
 
-from ..errors import WDLSourceLine
-from ..main import ConversionException
-from .util import get_data
+from wdl2cwl.errors import WDLSourceLine, ConversionException
+from wdl2cwl.tests.util import get_data
 
 
 def test_wdlsourceline() -> None:
