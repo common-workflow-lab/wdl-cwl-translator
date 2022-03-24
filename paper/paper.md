@@ -46,12 +46,8 @@ needed to create a valid CWL file ( this is done using the ``cwl-utils`` package
 an open source, Python package for parsing CWL files) and performing error checking 
 for valid imports, input declarations, expressions and other useful operations on CWL files.
 
-``wdl2cwl`` was designed to be used by both CWL/WDL professionals and researchers, as well
-as students of bioinformatics and data analytics. It can help CWL analysts to avoid
-platform dependency issues (like trying to reproduce a WDL workflow on a platform that 
-only allows CWL). It can help analysts by eliminating the difficulty of learning a new
-workflow language before they an use a WDL worflow. It can be used to create a more 
-widely available workflow that can be used by analysts of either languages.
+``wdl2cwl`` was designed for users familiar with CWL or WDL, and can be used in different domains such as data analytics, bioinformatics, GIS, and more. Users that have CWL workflows, for instance, will not have to worry
+about installing the dependencies for running a WDL workflow. It also eases the learning curve when one knows CWL and needs to use WDL and vice-versa.
 
 # Acknowledgements
 
