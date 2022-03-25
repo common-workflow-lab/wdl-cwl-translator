@@ -1,3 +1,0 @@
-mypy==0.942
-types-requests
-types-setuptools

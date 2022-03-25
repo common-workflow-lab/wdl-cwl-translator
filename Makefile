@@ -27,8 +27,7 @@ PACKAGE=wdl2cwl
 # `[[` conditional expressions.
 PYSOURCES=$(wildcard ${MODULE}/**.py ${MODULE}/avro/*.py ${MODULE}/tests/*.py) setup.py
 DEVPKGS=diff_cover black pylint pep257 pydocstyle flake8 tox tox-pyenv \
-	isort wheel autoflake flake8-bugbear pyupgrade bandit \
-	-rtest-requirements.txt -rmypy_requirements.txt
+	isort wheel autoflake flake8-bugbear pyupgrade bandit pip
 COVBASE=coverage run --append
 
 # Updating the Major & Minor version below?
@@ -48,7 +47,7 @@ install-dep: install-dependencies
 
 install-dependencies: FORCE
 	pip install --upgrade $(DEVPKGS)
-	pip install -r requirements.txt
+	pip install .[all]
 
 ## install     : install the ${MODULE} module and schema-salad-tool
 install: FORCE
