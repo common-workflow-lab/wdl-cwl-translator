@@ -1,3 +1,0 @@
-mypy==1.9.0
-types-requests
-types-setuptools
