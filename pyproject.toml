@@ -1,0 +1,118 @@
+[build-system]
+requires = ["setuptools>=61.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wdl2cwl"
+authors = [{name = "Dinithi Wickramaratne", email = "diniwick124@gmail.com"}]
+description = "A translator from WDL to CWL v1.2"
+keywords = [
+    "scientific-workflows",
+    "workflow-engine",
+    "workflow-management",
+    "common-workflow-language",
+    "cwl",
+    "wdl",
+    "workflow-description-language",
+    "transpiler",
+]
+license = {text = "Apache License"}
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "cwl-utils >= 0.12",
+    "miniwdl",
+    "regex",
+    "ruamel.yaml < 0.17.22"
+]
+dynamic = ["version"]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "https://github.com/common-workflow-lab/wdl-cwl-translator"
+Documentation = "https://github.com/common-workflow-lab/wdl-cwl-translator/"
+Source = "https://github.com/common-workflow-lab/wdl-cwl-translator/"
+Tracker = "https://github.com/common-workflow-lab/wdl-cwl-translator/issues"
+
+[project.optional-dependencies]
+
+mypy = [
+    "mypy==1.9.0",
+    "types-requests",
+    "types-setuptools",
+]
+test = [
+    "cwltest",
+    "cwltool >= 3.1.20220202110738",
+    "pytest >= 6.0.2, < 7.2",
+    "pytest-cov",
+    "pytest-xdist",
+]
+all = [
+    "wdl2cwl[mypy]",
+    "wdl2cwl[test]",
+]
+
+[project.scripts]
+wdl2cwl = "wdl2cwl.main:main"
+
+[tool.setuptools]
+platforms = ["any"]
+license-files = ["LICENSE"]
+include-package-data = true
+packages = [
+	"wdl2cwl",
+	"wdl2cwl.tests",
+	"wdl2cwl.tests.cwl_files",
+	"wdl2cwl.tests.inputs",
+	"wdl2cwl.tests.inputs.deepvariant-testdata",
+	"wdl2cwl.tests.inputs.bcftools",
+	"wdl2cwl.tests.wdl_files",
+	"wdl2cwl.tests.wdl_files.tools",
+	"wdl2cwl.tests.wdl_files.tasks"
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "wdl2cwl.__version__"}
+
+[tool.aliases]
+test = "pytest"
+
+[tool.isort]
+multi_line_output = "3"
+include_trailing_comma = "True"
+force_grid_wrap = "0"
+use_parentheses = "True"
+line_length = "88"
+
+[tool.mypy]
+show_error_context = true
+show_column_numbers = true
+show_error_codes = true
+pretty = true
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["ruamel.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["lark.*"]
+ignore_missing_imports = true
