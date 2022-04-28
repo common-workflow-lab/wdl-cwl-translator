@@ -25,14 +25,14 @@ PACKAGE=wdl2cwl
 
 # `SHELL=bash` doesn't work for some, so don't use BASH-isms like
 # `[[` conditional expressions.
-PYSOURCES=$(wildcard ${MODULE}/**.py ${MODULE}/avro/*.py ${MODULE}/tests/*.py) setup.py
+PYSOURCES=$(wildcard ${MODULE}/**.py ${MODULE}/avro/*.py ${MODULE}/tests/*.py)
 DEVPKGS=diff_cover black pylint pep257 pydocstyle flake8 tox tox-pyenv \
-	isort wheel autoflake flake8-bugbear pyupgrade bandit \
-	-rtest-requirements.txt -rmypy_requirements.txt
+	isort wheel autoflake flake8-bugbear pyupgrade bandit pip \
+        setuptools build
 COVBASE=coverage run --append
 
 # Updating the Major & Minor version below?
-# Don't forget to update setup.py as well
+# Don't forget to update setup.cfg as well
 VERSION=7.1.$(shell date +%Y%m%d%H%M%S --utc --date=`git log --first-parent \
 	--max-count=1 --format=format:%cI`)
 
@@ -48,7 +48,7 @@ install-dep: install-dependencies
 
 install-dependencies: FORCE
 	pip install --upgrade $(DEVPKGS)
-	pip install -r requirements.txt
+	pip install .[all]
 
 ## install     : install the ${MODULE} module and schema-salad-tool
 install: FORCE
@@ -62,7 +62,7 @@ dev: install-dep
 dist: dist/${MODULE}-$(VERSION).tar.gz
 
 dist/${MODULE}-$(VERSION).tar.gz: $(SOURCES)
-	python setup.py sdist bdist_wheel
+	python -m build
 
 ## docs	       : make the docs
 docs: FORCE
@@ -71,7 +71,7 @@ docs: FORCE
 ## clean       : clean up all temporary / machine-generated files
 clean: FORCE
 	rm -f ${MODILE}/*.pyc tests/*.pyc
-	python setup.py clean --all || true
+	rm -rf ./dist ./wdl2cwl.egg-info || true
 	rm -Rf .coverage coverage.xml
 	rm -f diff-cover.html
 
@@ -89,7 +89,7 @@ pydocstyle: $(PYSOURCES)
 	pydocstyle --add-ignore=D100,D101,D102,D103 $^ || true
 
 pydocstyle_report.txt: $(PYSOURCES)
-	pydocstyle setup.py $^ > $@ 2>&1 || true
+	pydocstyle $^ > $@ 2>&1 || true
 
 diff_pydocstyle_report: pydocstyle_report.txt
 	diff-quality --compare-branch=main --violations=pydocstyle --fail-under=100 $^
@@ -172,7 +172,7 @@ list-author-emails:
 	@git log --format='%aN,%aE' | sort -u | grep -v 'root'
 
 mypy3: mypy
-mypy: $(filter-out setup.py wdl2cwl/WdlV1_1%,$(PYSOURCES))
+mypy: $(filter-out wdl2cwl/WdlV1_1%,$(PYSOURCES))
 	mypy --exclude '\.tox.*' $^
 
 pyupgrade: $(filter-out wdl2cwl/WdlV1_1%,$(PYSOURCES))
@@ -184,7 +184,7 @@ release-test: FORCE
 
 release: release-test
 	. testenv2/bin/activate && \
-		python testenv2/src/${PACKAGE}/setup.py sdist bdist_wheel
+		python -m build
 	. testenv2/bin/activate && \
 		pip install twine && \
 		twine upload testenv2/src/${PACKAGE}/dist/* && \
