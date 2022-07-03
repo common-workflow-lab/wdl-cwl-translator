@@ -69,3 +69,7 @@ class WDLSourceLine:
             else:
                 errs.append(f"{lead} {m}")
         return self.raise_type("\n".join(errs))
+
+
+class ConversionException(Exception):
+    """Error during conversion."""

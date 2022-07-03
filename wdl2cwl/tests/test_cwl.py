@@ -5,8 +5,8 @@ from typing import Any, NamedTuple, Union
 
 import pytest
 
-from ..main import ConversionException, Converter, main
-from .util import get_data
+from wdl2cwl.main import ConversionException, Converter, main
+from wdl2cwl.tests.util import get_data
 
 
 def test_meta(caplog: pytest.LogCaptureFixture) -> None:
