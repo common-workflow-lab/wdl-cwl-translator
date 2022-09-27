@@ -146,8 +146,6 @@
     gwas.manhattan_plot:
       class: File
       basename: ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.png
-      checksum: sha1$a26b178dfa0be82f991dc2b28b9f2e6403cbfc51
-      size: 51977
 
 - doc: simple flatten() support
   tool: cwl_files/flatten.cwl

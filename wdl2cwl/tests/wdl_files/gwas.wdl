@@ -6,6 +6,7 @@ workflow gwas {
 	input {
 		File vcf
 		File metadata_csv
+		Int chromnum
 	}
 
 	call parse_metadata {
@@ -24,7 +25,8 @@ workflow gwas {
 
 	call create_plot {
 		input:
-			assoc_file = run_gwas.logistic
+			assoc_file = run_gwas.logistic,
+			chromnum = chromnum
 	}
 
 	output {
@@ -118,6 +120,7 @@ task run_gwas {
 task create_plot {
 	input {
 		File assoc_file
+                Int chromnum
 	}
 
 	String assoc_basename = basename(assoc_file, ".assoc.logistic")
@@ -125,6 +128,7 @@ task create_plot {
 	command {
 		manhattan_plot.py \
 			-i ~{assoc_file} \
+			-c ~{chromnum} \
 			-o ~{assoc_basename}.png
 	}
 
