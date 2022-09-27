@@ -8,6 +8,8 @@ inputs:
     type: File
   - id: metadata_csv
     type: File
+  - id: chromnum
+    type: int
 steps:
   - id: parse_metadata
     in:
@@ -149,6 +151,8 @@ steps:
     in:
       - id: assoc_file
         source: run_gwas/logistic
+      - id: chromnum
+        source: chromnum
     out:
       - id: manhattan_plot
     run:
@@ -157,6 +161,8 @@ steps:
         inputs:
           - id: assoc_file
             type: File
+          - id: chromnum
+            type: int
         outputs:
           - id: manhattan_plot
             type: File
@@ -171,6 +177,7 @@ steps:
 
                     manhattan_plot.py \
                     	-i $(inputs.assoc_file.path) \
+                    	-c $(inputs.chromnum) \
                     	-o $(inputs.assoc_file.basename.replace(/\.assoc\.logistic$/, '') ).png
           - class: InlineJavascriptRequirement
           - class: NetworkAccess
