@@ -1427,5 +1427,4 @@ def main(args: Union[List[str], None] = None) -> None:
 
 
 if __name__ == "__main__":
-
     main(sys.argv[1:])
