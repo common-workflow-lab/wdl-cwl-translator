@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 echo true > true.txt
                 echo false > false.txt
@@ -79,7 +79,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 echo 1 > bad-true.txt
                 echo 0 > bad-false.txt
@@ -125,7 +125,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 echo true > $(inputs.filename)
       - class: InlineJavascriptRequirement

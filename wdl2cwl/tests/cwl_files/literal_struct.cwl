@@ -5,7 +5,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
             echo $({ "one": "four", "two": "five" }.one) $({ "one": "four", "two": "five" }.two) $(inputs.six.one) $(inputs.six.two)
   - class: InlineJavascriptRequirement

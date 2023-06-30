@@ -47,7 +47,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4
+                entry: |2
 
                     parse_metadata.sh \
                     	-c $(inputs.metadata_csv.path)
@@ -103,7 +103,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4
+                entry: |2
 
                     plink \
                     	--vcf $(inputs.vcf.path) \
@@ -173,7 +173,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4
+                entry: |2
 
                     manhattan_plot.py \
                     	-i $(inputs.assoc_file.path) \

@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Xms2000m -Xmx3000m -jar /usr/picard/picard.jar \
                   CollectQualityYieldMetrics \
@@ -23,7 +23,8 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3500.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
@@ -47,7 +48,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Xms5000m -Xmx6500m -jar /usr/picard/picard.jar \
                   CollectMultipleMetrics \
@@ -72,7 +73,8 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
@@ -124,7 +126,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 # These are optionally generated, but need to exist for Cromwell's sake
                 touch $(inputs.output_bam_prefix).gc_bias.detail_metrics \
@@ -151,7 +153,8 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
@@ -201,7 +204,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 # These are optionally generated, but need to exist for Cromwell's sake
                 touch $(inputs.output_bam_prefix).gc_bias.detail_metrics \
@@ -233,7 +236,8 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
@@ -319,7 +323,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 input_base=\$(dirname $(inputs.pre_adapter_detail_metrics.path))/$(inputs.base_name)
                 java -Xms$(Math.ceil(4000 * inputs.memory_multiplier)  - 1000)m -Xmx$(Math.ceil(4000 * inputs.memory_multiplier)  - 500)m \
@@ -352,8 +356,10 @@ $graph:
             else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.pre_adapter_detail_metrics.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.bait_bias_detail_metrics.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.pre_adapter_detail_metrics.path.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + 
+            (function(size_of=0){inputs.bait_bias_detail_metrics.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
@@ -391,7 +397,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Dsamjdk.buffer_size=131072 \
                   -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3000m -Xmx3000m \
@@ -448,7 +454,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 java -Xms$(inputs.memory_size - 1000)m -Xmx$(inputs.memory_size - 500)m -Dpicard.useLegacyParser=false -jar /usr/picard/picard.jar \
@@ -573,7 +579,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4+
+            entry: |2+
 
                 set -o pipefail
                 set -e
@@ -648,7 +654,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Xms$(inputs.memory_size - 1000)m -Xmx$(inputs.memory_size - 500)m -jar /usr/picard/picard.jar \
                   ValidateSamFile \
@@ -684,7 +690,8 @@ $graph:
             else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
@@ -741,7 +748,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Xms2000m -Xmx2500m -jar /usr/picard/picard.jar \
                   CollectWgsMetrics \
@@ -761,7 +768,8 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
@@ -797,7 +805,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Xms$(inputs.memory_size - 1 * 1000)m -jar /usr/picard/picard.jar \
                   CollectRawWgsMetrics \
@@ -833,7 +841,8 @@ $graph:
             else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
@@ -876,7 +885,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Xms$(inputs.memory_size - 1000)m -Xmx$(inputs.memory_size - 500)m -jar /usr/picard/picard.jar \
                   CollectHsMetrics \
@@ -913,7 +922,8 @@ $graph:
             else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
@@ -956,7 +966,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Xms1000m -Xmx3500m -jar /usr/picard/picard.jar \
                   CalculateReadGroupChecksum \
@@ -970,7 +980,8 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 4000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 40) * 1024)
     inputs:
       - id: input_bam
@@ -996,7 +1007,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 # Note that WGS needs a lot of memory to do the -L *.vcf if an interval file is not supplied
                 gatk --java-options "-Xms6000m -Xmx6500m" \
@@ -1072,7 +1083,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Xms2000m -Xmx2500m -jar /usr/picard/picard.jar \
                   CollectVariantCallingMetrics \
@@ -1090,7 +1101,8 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
+        outdirMin: 
+            $((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:

@@ -5,7 +5,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
             set -e
             mkdir -p "\$(dirname $(inputs.outputPrefix))"
@@ -29,7 +29,8 @@ requirements:
     networkAccess: true
 hints:
   - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
+    dockerPull: 
+        quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
     ramMin: |-
@@ -124,7 +125,8 @@ inputs:
   - id: dockerImage
     doc: The docker image used for this task. Changing this may result in errors which
         the developers may choose not to address.
-    default: quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
+    default: 
+        quay.io/biocontainers/mulled-v2-ad317f19f5881324e963f6a6d464d696a2825ab6:c59b7a73c87a9fe81737d5d628e10a3b5807f453-0
     type: string
 baseCommand:
   - bash

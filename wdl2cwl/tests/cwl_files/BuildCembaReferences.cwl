@@ -48,7 +48,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4
+                entry: |2
 
                     # if the WDL/task contains a monitoring script as input
                     if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
@@ -116,7 +116,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4
+                entry: |2
 
                     # if the WDL/task contains a monitoring script as input
                     if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
@@ -182,7 +182,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4
+                entry: |2
 
                     # if the WDL/task contains a monitoring script as input
                     if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
@@ -243,7 +243,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4+
+                entry: |2+
 
                     set -euo pipefail
 
@@ -309,7 +309,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4
+                entry: |2
 
                     set -euo pipefail
 

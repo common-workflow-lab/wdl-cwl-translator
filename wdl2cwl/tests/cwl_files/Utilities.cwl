@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 python3 <<CODE
                 with open("$(inputs.ref_dict.path)", "r") as ref_dict_file:
@@ -106,7 +106,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 mkdir out
@@ -170,7 +170,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 set -o pipefail
@@ -232,7 +232,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 set -o pipefail
@@ -278,7 +278,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 python3 -c 'print($(inputs.sizes.join("+")))'
       - class: InlineJavascriptRequirement
@@ -314,7 +314,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 >&2 echo "Error: $(inputs.message)"
                 exit 1

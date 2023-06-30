@@ -5,7 +5,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
             echo $(true ? "true single quote: 'foo' " : "error")
             echo $(true ? 'true double quote: "foo" ' : "error")
