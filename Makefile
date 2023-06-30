@@ -148,13 +148,13 @@ validate-cwl:
 
 # See https://github.com/common-workflow-lab/wdl2cwl_test_cache
 cwltest:
-	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests.yaml -- --cachedir cache --debug
+	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests.yaml -- --cachedir cache
 
 cwltest_bigdata:
-	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests_bigdata.yaml -- --cachedir cache --debug
+	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests_bigdata.yaml -- --cachedir cache 
 
 cwltest_bigdata_bigmem:
-	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests_bigdata_bigmem.yaml -- --cachedir cache --debug
+	cd wdl2cwl/tests && cwltest --timeout 1200 --verbose --junit-verbose --tool cwltool --test cwl_tests_bigdata_bigmem.yaml -- --cachedir cache
 
 ## testcov     : run the ${MODULE} test suite and collect coverage
 testcov: $(PYSOURCES)

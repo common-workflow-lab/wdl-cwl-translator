@@ -1,12 +1,12 @@
 # This file is a cwltest format file
 # https://github.com/common-workflow-language/cwltest/blob/main/cwltest/cwltest-schema.yml
-- doc: validateOptimus_2
+- id: validateOptimus_2
   tool: cwl_files/validateOptimus_2.cwl
   job: inputs/validateOptimus_2.yaml
   output:
     result: PASS
 
-- doc: CollectQualityYieldMetrics
+- id: CollectQualityYieldMetrics
   tool: cwl_files/Qc.cwl#CollectQualityYieldMetrics
   job: inputs/CollectQualityYieldMatrics.yaml
   output:
@@ -17,7 +17,7 @@
       size: 261
 
 
-- doc: bcftools_stats
+- id: bcftools_stats
   tool: cwl_files/bcftools.cwl#Stats
   job: inputs/bcftools_stats.yaml
   output: 
@@ -27,7 +27,7 @@
       size: 6468
       checksum: sha1$1e26ffbc1cd36ebbfd6e83d0905c67226263eceb
 
-- doc: bcftools_annotate
+- id: bcftools_annotate
   tool: cwl_files/bcftools.cwl#Annotate
   job: inputs/bcftools_annotate.yaml
   output:
@@ -42,7 +42,7 @@
       size: 141
       checksum: sha1$2f36160f5e29a5c3c256fef42d7a4959441ff604
 
-- doc: BuildCembaReferences
+- id: BuildCembaReferences
   tool: cwl_files/BuildCembaReferences.cwl
   job: inputs/BuildCembaReferences.yaml
   output:
@@ -117,7 +117,8 @@
       class: File
       size: 60
 
-- doc: basic read_boolean() test
+- id: read_boolean_basic
+  doc: basic read_boolean() test
   tool: cwl_files/read_boolean.cwl#read_boolean
   output:
     good_true: true
@@ -125,16 +126,19 @@
     mixed_case_false: false
     mixed_case_true: true
 
-- doc: read_boolean() with a malformed file
+- id: read_boolean_malformed
+  doc: read_boolean() with a malformed file
   tool: cwl_files/read_boolean.cwl#read_bad_boolean
   should_fail: true
 
-- doc: read_boolean() with a dynamically named file
+- id: read_boolean_dynamic
+  doc: read_boolean() with a dynamically named file
   tool: cwl_files/read_boolean.cwl#read_dynamic_boolean
   output:
     dynamic_true: true
 
-- doc: GA4GH 2020 plenary demonstration workflow
+- id: ga4gh2020_plenary_demo
+  doc: GA4GH 2020 plenary demonstration workflow
   tool: cwl_files/gwas.cwl
   job: inputs/gwas.yaml
   output:
@@ -147,59 +151,69 @@
       class: File
       basename: ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.png
 
-- doc: simple flatten() support
+- id: flatten_simple
+  doc: simple flatten() support
   tool: cwl_files/flatten.cwl
   job: inputs/flatten.yaml
   output:
     out_s: [ Hello, World, How, are, you? ]
     out_a_s: [ Hello, World ]
 
-- doc: simple select_all() support
+- id: select_all_simple
+  doc: simple select_all() support
   tool: cwl_files/select_all_1.cwl
   job: inputs/select_all_1.yaml
   output:
     first1: [1, 2, 1, 2 ]
 
-- doc: literals in inputs of different types
+- id: input_literals_variety
+  doc: literals in inputs of different types
   tool: cwl_files/literal_test.cwl
   output:
     result: "true 42 6.022 hoopla README.md true,false 42,23 6.022,10,23 Hello,World README.md,LICENSE"
 
-- doc: read_lines(stdout)
+- id: readL_lines_from_stdout
+  doc: read_lines(stdout)
   tool: cwl_files/pacbio.cwl#ccsChunks
   job: inputs/pacbio_ccsChunks.yaml
   output:
     chunks: ["1/10", "2/10", "3/10", "4/10", "5/10", "6/10", "7/10", "8/10", "9/10", "10/10"]
 
-- doc: read_tsv() test
+- id: read_tsv_simple
+  doc: read_tsv() test
   tool: cwl_files/Utilities.cwl#CreateSequenceGroupingTSV
   job: inputs/Utilities_CreateSequenceGroupingTSV.yaml
   output:
     sequence_grouping: [ [ "22:1+" ], [ "X:1+" ], [ "Y:1+" ] ]
     sequence_grouping_with_unmapped: [ [ "22:1+" ], [ "X:1+" ], [ "Y:1+" ], [ "unmapped" ] ]
 
-- doc: positive test for non empty arrays
+- id: non_empty_arrays_positive
+  doc: positive test for non empty arrays
   tool: cwl_files/array_nonempty.cwl
   output:
     result: "1,2,3"
 
-- doc: negative test for non empty arrays
+- id: non_empty_arrays_negative
+  doc: negative test for non empty arrays
   tool: cwl_files/array_nonempty.cwl
   job: inputs/array_nonempty.yaml
   should_fail: true
 
-- doc: placeholder true/false quote test
+- id: placeholder_boolean_quote
+  doc: placeholder true/false quote test
   tool: cwl_files/placeholder_options_test.cwl
   output:
     result: "true single quote: foo\ntrue double quote: foo\ntrue mixed quotes: foo bar\ntrue mixed quotes: foo bar\ndefault single quote\ndefault double quote\ndefault mixed quotes\ndefault mixed quotes\n1,2,3\nsuccess"
     present: false
 
-- doc: struct literals
+- id: struct_literals
+  doc: struct literals
   tool: cwl_files/literal_struct.cwl
   output:
     result: "four five seven eight"
 
-- doc: workflow and step inputs
+- id: workflow_and_steo_inputs
+  doc: workflow and step inputs
   tool: cwl_files/workflow_inputs.cwl
   output:
     foo.first_result: "one "
