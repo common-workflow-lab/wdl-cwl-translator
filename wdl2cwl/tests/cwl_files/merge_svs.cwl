@@ -105,7 +105,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     /bin/bash /usr/bin/survivor_merge_helper.sh \
                     $(inputs.vcfs.map(function(el) {return el.path}).join(",")) $(inputs.max_distance_to_merge) $(inputs.minimum_sv_calls) \
@@ -169,7 +169,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -eou pipefail
                     set -o errexit
@@ -249,7 +249,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     /opt/AnnotSV_2.1/bin/AnnotSV -bedtools /usr/bin/bedtools -outputDir "$PWD" \
                     -genomeBuild $(inputs.genome_build) \
@@ -319,7 +319,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     /opt/bcftools/bin/bcftools merge \
                     --force-samples $(inputs.force_merge) \
@@ -384,7 +384,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -eou pipefail
                     set -o errexit
@@ -464,7 +464,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     /opt/AnnotSV_2.1/bin/AnnotSV -bedtools /usr/bin/bedtools -outputDir "$PWD" \
                     -genomeBuild $(inputs.genome_build) \
@@ -527,7 +527,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     python -c '
                     import csv

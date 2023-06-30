@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.annotatedIntervalsPath))"
@@ -123,7 +123,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputBamPath))"
@@ -247,7 +247,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.recalibrationReportPath))"
@@ -376,7 +376,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
@@ -460,7 +460,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPrefix))"
@@ -545,7 +545,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.allelicCountsPath))"
@@ -655,7 +655,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.countsPath))"
@@ -764,7 +764,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -883,7 +883,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir wd
@@ -1022,7 +1022,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.PONpath))"
@@ -1111,7 +1111,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPrefix))"
@@ -1212,7 +1212,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputVcf))"
@@ -1347,7 +1347,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputReportPath))"
@@ -1426,7 +1426,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.genomicsDBWorkspacePath))"
@@ -1531,7 +1531,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -1665,7 +1665,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir bam_dir
@@ -1766,7 +1766,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -1847,8 +1847,8 @@ $graph:
         default: false
         type: boolean
       - id: emitRefConfidence
-        doc: "Whether to include reference calls. Three modes: 'NONE', 'BP_RESOLUTION'
-            and 'GVCF'."
+        doc: "Whether to include reference calls. Three modes: 'NONE', 'BP_RESOLUTION'\
+            \ and 'GVCF'."
         type: string
       - id: dontUseSoftClippedBases
         doc: Do not use soft-clipped bases. Should be 'true' for RNA variant calling.
@@ -1951,7 +1951,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
@@ -2029,7 +2029,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 gatk --java-options '-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1' \
@@ -2106,7 +2106,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p $(inputs.outputDir)
@@ -2265,7 +2265,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputVcf))"
@@ -2430,7 +2430,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p $(inputs.outputDir)
@@ -2555,7 +2555,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p $(inputs.outputDir)
@@ -2657,7 +2657,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputIntervalList))"
@@ -2696,8 +2696,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + 
-            Math.ceil((function(size_of=0){inputs.referenceFasta.path.forEach(function(element){
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.referenceFasta.path.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3 * 6)  * 60)
     inputs:
       - id: referenceFasta
@@ -2764,7 +2763,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -2870,7 +2869,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputBam))"
@@ -2971,7 +2970,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -3152,7 +3151,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -3211,8 +3210,8 @@ $graph:
         default: filtered.vcf.gz
         type: string
       - id: filterArguments
-        doc: "Arguments that should be used for the filter. For example: ['--filter-name',
-            'my_filter', '--filter-expression', 'AB<0.2']."
+        doc: "Arguments that should be used for the filter. For example: ['--filter-name',\
+            \ 'my_filter', '--filter-expression', 'AB<0.2']."
         type:
             items: string
             type: array

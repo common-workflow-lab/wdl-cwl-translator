@@ -63,7 +63,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     $(inputs.echo ? "echo " + inputs["in"] + " " + inputs.other : "")
           - class: InlineJavascriptRequirement

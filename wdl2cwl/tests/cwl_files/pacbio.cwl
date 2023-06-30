@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p \$(dirname $(inputs.outputPathMergedReport))
@@ -76,7 +76,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 python <<CODE

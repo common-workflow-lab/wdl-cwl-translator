@@ -5,7 +5,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |2
+        entry: |4
 
             set -eo pipefail
             mkdir -p "\$(dirname $(inputs.outputPath))"

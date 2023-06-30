@@ -187,7 +187,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -285,7 +285,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -362,7 +362,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -434,7 +434,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -505,7 +505,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -578,7 +578,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -648,7 +648,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -730,7 +730,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     makeCompliantBAM.py \
                       --input-bam $(inputs.bam_input.path) \
@@ -798,7 +798,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -859,7 +859,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     makeCompliantBAM.py \
                       --input-bam $(inputs.bam_input.path) \
@@ -934,7 +934,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -1007,7 +1007,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
 
@@ -1082,7 +1082,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -euo pipefail
                     mkdir output
