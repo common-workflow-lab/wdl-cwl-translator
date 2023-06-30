@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 whatshap phase \
@@ -29,8 +29,7 @@ $graph:
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: 
-            quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        dockerPull: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -134,8 +133,7 @@ $graph:
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
-        default: 
-            quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        default: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
         type: string
     baseCommand:
       - bash
@@ -158,7 +156,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 whatshap stats \
                 $(inputs.vcf.path) \
@@ -172,8 +170,7 @@ $graph:
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: 
-            quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        dockerPull: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -237,8 +234,7 @@ $graph:
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
-        default: 
-            quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        default: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
         type: string
     baseCommand:
       - bash
@@ -272,7 +268,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 whatshap haplotag \
@@ -289,8 +285,7 @@ $graph:
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: 
-            quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        dockerPull: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
       - class: ResourceRequirement
         ramMin: |-
             ${
@@ -364,8 +359,7 @@ $graph:
       - id: dockerImage
         doc: The docker image used for this task. Changing this may result in errors
             which the developers may choose not to address.
-        default: 
-            quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        default: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
         type: string
     baseCommand:
       - bash

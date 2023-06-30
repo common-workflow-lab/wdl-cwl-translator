@@ -99,7 +99,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -ex -o pipefail
 
@@ -186,7 +186,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -ex -o pipefail
 
@@ -249,7 +249,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |2
+                entry: |4
 
                     set -ex -o pipefail
 

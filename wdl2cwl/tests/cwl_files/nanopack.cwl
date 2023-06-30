@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputDir + inputs.outputPrefix))"
@@ -201,7 +201,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |2
+            entry: |4
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputDir))"

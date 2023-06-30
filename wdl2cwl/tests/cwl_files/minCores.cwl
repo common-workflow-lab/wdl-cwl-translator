@@ -5,7 +5,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |2
+        entry: |4
 
             echo "Hello world"
   - class: InlineJavascriptRequirement

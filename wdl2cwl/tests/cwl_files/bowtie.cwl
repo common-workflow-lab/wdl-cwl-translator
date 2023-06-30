@@ -5,7 +5,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |2
+        entry: |4
 
             set -e -o pipefail
             mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -33,8 +33,7 @@ requirements:
     networkAccess: true
 hints:
   - class: DockerRequirement
-    dockerPull: 
-        quay.io/biocontainers/mulled-v2-bfe71839265127576d3cd749c056e7b168308d56:1d8bec77b352cdcf3e9ff3d20af238b33ed96eae-0
+    dockerPull: quay.io/biocontainers/mulled-v2-bfe71839265127576d3cd749c056e7b168308d56:1d8bec77b352cdcf3e9ff3d20af238b33ed96eae-0
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
     ramMin: |-
@@ -135,8 +134,7 @@ inputs:
   - id: dockerImage
     doc: The docker image used for this task. Changing this may result in errors which
         the developers may choose not to address.
-    default: 
-        quay.io/biocontainers/mulled-v2-bfe71839265127576d3cd749c056e7b168308d56:1d8bec77b352cdcf3e9ff3d20af238b33ed96eae-0
+    default: quay.io/biocontainers/mulled-v2-bfe71839265127576d3cd749c056e7b168308d56:1d8bec77b352cdcf3e9ff3d20af238b33ed96eae-0
     type: string
 baseCommand:
   - bash

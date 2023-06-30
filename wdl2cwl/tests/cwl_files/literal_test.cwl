@@ -5,7 +5,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |2
+        entry: |4
 
             echo $(inputs.tenth.map(function(el) {return el.path}).join(" "))
   - class: InlineJavascriptRequirement
