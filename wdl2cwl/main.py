@@ -872,7 +872,7 @@ class Converter:
                 )
         elif function_name == "defined":
             only_operand = arguments[0]
-            assert isinstance(only_operand, WDL.Expr.Get) and isinstance(
+            assert isinstance(only_operand, WDL.Expr.Get) and isinstance(  # nosec
                 only_operand.expr, WDL.Expr.Ident
             )
             return f"{get_expr_name(only_operand.expr)} !== null"
@@ -1099,7 +1099,7 @@ class Converter:
                     return f'{placeholder_expr} === null ? "" : {test_str}'
             elif "sep" in options:
                 separator = options["sep"]
-                assert isinstance(expr.type, WDL.Type.Array)
+                assert isinstance(expr.type, WDL.Type.Array)  # nosec
                 item_type = expr.type.item_type
                 if isinstance(item_type, WDL.Type.File):
                     pl_holder_str = (
