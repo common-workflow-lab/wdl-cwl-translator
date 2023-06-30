@@ -3,7 +3,7 @@
 
 # takes more than 6GiB memory to execute, too big for GitHub Actions
 # about 15GiB usage on mr-c's machine
-- doc: align_and_count
+- id: align_and_count
   tool: cwl_files/align_and_count.cwl
   job: inputs/align_and_count.yaml
   output:
@@ -19,7 +19,7 @@
       size: 69
     align_and_count_report.viral_core_version: v2.1.33
   
-  - doc: scatter example
+- id: scatter_example
   tool: cwl_files/align_and_count_multiple_report.cwl
   # https://github.com/broadinstitute/viral-pipelines/blob/e7bbbb65c1a6bc6ae6dbfc89ff33b128cbad556d/pipes/WDL/workflows/align_and_count_multiple_report.wdl
   job: inputs/align_and_count_multiple_report.yaml

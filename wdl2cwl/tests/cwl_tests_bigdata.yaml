@@ -1,6 +1,6 @@
 # This file is a cwltest format file
 # https://github.com/common-workflow-language/cwltest/blob/main/cwltest/cwltest-schema.yml
-- doc: CollectReadgroupBamQualityMetrics
+- id: CollectReadgroupBamQualityMetrics
   tool: cwl_files/Qc.cwl#CollectReadgroupBamQualityMetrics
   job: inputs/CollectReadgroupBamQualityMetrics.yaml  # over 3 GiB
   output:
@@ -25,7 +25,7 @@
        checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
        size: 0
 
-- doc: deepvariant
+- id: deepvariant
   tool: cwl_files/deepvariant.cwl
   job: inputs/deepvariant.yaml
   output:
