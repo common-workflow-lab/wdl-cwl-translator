@@ -30,6 +30,7 @@ DEVPKGS=diff_cover black pylint pep257 pydocstyle flake8 tox tox-pyenv \
 	isort wheel autoflake flake8-bugbear pyupgrade bandit \
 	-rtest-requirements.txt -rmypy_requirements.txt
 COVBASE=coverage run --append
+PYTEST_EXTRA ?= -rs
 
 # Updating the Major & Minor version below?
 # Don't forget to update setup.py as well
@@ -114,7 +115,7 @@ diff_pylint_report: pylint_report.txt
 	diff-quality --violations=pylint pylint_report.txt
 
 .coverage:
-	pytest --cov --cov-config=.coveragerc --cov-report= -n auto
+	pytest --cov --cov-config=.coveragerc --cov-report= -n auto ${PYTEST_EXTRA}
 
 coverage.xml: .coverage
 	coverage xml
@@ -136,7 +137,7 @@ diff-cover.html: coverage.xml
 
 ## test        : run the ${MODULE} test suite
 test: $(PYSOURCES)
-	pytest
+	python -m pytest ${PYTEST_EXTRA}
 
 vpath %.wdl wdl2cwl/tests/wdl_files
 
@@ -158,7 +159,7 @@ cwltest_bigdata_bigmem:
 
 ## testcov     : run the ${MODULE} test suite and collect coverage
 testcov: $(PYSOURCES)
-	pytest --cov
+	pytest --cov ${PYTEST_EXTRA}
 
 sloccount.sc: $(PYSOURCES) Makefile
 	sloccount --duplicates --wide --details $^ > $@

@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -217,7 +217,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e 
                 mkdir -p "\$(dirname $(inputs.outputPath))"
@@ -315,7 +315,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 mkdir -p "\$(dirname $(inputs.outputPath))" $(inputs.tmpDir)
@@ -403,7 +403,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 mkdir -p \$(dirname $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath))
@@ -629,7 +629,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 mkdir -p "\$(dirname $("output.vcf"))"

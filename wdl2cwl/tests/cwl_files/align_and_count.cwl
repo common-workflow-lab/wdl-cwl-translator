@@ -85,7 +85,7 @@ steps:
           - class: InitialWorkDirRequirement
             listing:
               - entryname: script.bash
-                entry: |4
+                entry: |2
 
                     set -ex -o pipefail
 

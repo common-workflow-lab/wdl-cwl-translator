@@ -5,7 +5,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
             set -e -o pipefail
             mkdir -p "\$(dirname $(inputs.outputBam))"
@@ -32,7 +32,8 @@ requirements:
     networkAccess: true
 hints:
   - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0
+    dockerPull: 
+        quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0
   - class: ResourceRequirement
     coresMin: $(inputs.threads)
     ramMin: |-
@@ -126,7 +127,8 @@ inputs:
   - id: dockerImage
     doc: The docker image used for this task. Changing this may result in errors which
         the developers may choose not to address.
-    default: quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0
+    default: 
+        quay.io/biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2880dd9d8ad0a7b221d4eacda9a818e92983128d-0
     type: string
 baseCommand:
   - bash
@@ -144,5 +146,5 @@ outputs:
     doc: Alignment summary file.
     type: File
     outputBinding:
-        glob: "$(inputs.summaryFilePath === null ? inputs.outputBam.split('/').reverse()[0].replace(/\\\
+        glob: "$(inputs.summaryFilePath === null ? inputs.outputBam.split('/').reverse()[0].replace(/\\
             .bam$/, '') + \".summary.txt\" : inputs.summaryFilePath)"

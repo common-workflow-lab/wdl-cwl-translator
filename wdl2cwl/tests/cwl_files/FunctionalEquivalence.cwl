@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 # not setting set -o pipefail here because /bwa has a rc=1 and we dont want to allow rc=1 to succeed because
                 # the sed may also fail with that error and that is something we actually want to fail on.
@@ -40,7 +40,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -o pipefail
                 set -e
@@ -120,7 +120,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4+
+            entry: |2+
 
                 java -Dsamjdk.compression_level=$(inputs.compression_level) -Xms4000m -jar /usr/gitc/picard.jar \
                   SortSam \
@@ -163,7 +163,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Dsamjdk.compression_level=$(inputs.compression_level) -Xms4000m -jar /usr/gitc/picard.jar \
                   MarkDuplicates \
@@ -203,7 +203,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 python <<CODE
                 with open("$(inputs.ref_dict.path)", "r") as ref_dict_file:
@@ -298,7 +298,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 /usr/gitc/gatk4/gatk-launch --javaOptions "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -XX:+PrintFlagsFinal \
                   -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails \
@@ -334,7 +334,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 /usr/gitc/gatk4/gatk-launch --javaOptions "-XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps \
                   -XX:+PrintGCDetails -Xloggc:gc_log.log \
@@ -376,7 +376,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 /usr/gitc/gatk4/gatk-launch --javaOptions "-Xms3000m" \
                   GatherBQSRReports \
@@ -405,7 +405,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 java -Dsamjdk.compression_level=$(inputs.compression_level) -Xms2000m -jar /usr/gitc/picard.jar \
                   GatherBamFiles \
@@ -444,7 +444,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 mkdir out
@@ -500,7 +500,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -e
                 set -o pipefail
@@ -547,7 +547,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 python -c "print $(inputs.sizes.join("+"))"
       - class: InlineJavascriptRequirement

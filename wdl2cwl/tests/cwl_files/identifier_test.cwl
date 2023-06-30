@@ -6,7 +6,7 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
             echo $(inputs["do"]) $(inputs["for"]) $(inputs["let"]) $(inputs["new"]) $(inputs["try"]) $(inputs["var"]) $(inputs["case"]) $(inputs["enum"]) $(inputs["eval"])
             echo $(inputs["null"]) $(inputs["void"]) $(inputs["with"]) $(inputs["break"]) $(inputs["catch"]) $(inputs["class"]) $(inputs["const"]) $(inputs["super"])

@@ -7,7 +7,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 echo '$(inputs.name)' | tr ' "#$%&*/:;<=>?@[]^{}|~\\()' '_' > safe_name.txt
       - class: InlineJavascriptRequirement
@@ -39,7 +39,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
 
                 export VAULT_ADDR=https://clotho.broadinstitute.org:8200
@@ -175,7 +175,7 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
                 set -eo pipefail
 
