@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         py-ver-major: [3]
-        py-ver-minor: [7, 8, 9, 10]
+        py-ver-minor: [7, 8, 9, 10, 11]
         step: [lint, unit, mypy]
 
     env:
@@ -113,7 +113,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Cache for pip and cwltool intermediate files
         uses: actions/cache@v2
