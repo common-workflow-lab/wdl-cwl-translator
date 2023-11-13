@@ -303,7 +303,9 @@ class Converter:
                     id_name = wf_expr.expr.name
                     referee = wf_expr.expr.referee
                     if referee and isinstance(referee, WDL.Tree.Scatter):
-                        scatter_name, value_from = self.get_step_input_expr(referee.expr)  # type: ignore [arg-type]
+                        scatter_name, value_from = self.get_step_input_expr(
+                            referee.expr
+                        )
                         self.scatter_names.append(scatter_name)
                         return scatter_name, value_from
                     return id_name, None
