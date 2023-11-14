@@ -1,4 +1,4 @@
-cwl-utils >= 0.12,<0.30
+cwl-utils >= 0.12,< 0.32
 ruamel.yaml<0.17.22
 regex
 miniwdl
