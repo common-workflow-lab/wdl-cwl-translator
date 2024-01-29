@@ -26,8 +26,8 @@ PACKAGE=wdl2cwl
 # `SHELL=bash` doesn't work for some, so don't use BASH-isms like
 # `[[` conditional expressions.
 PYSOURCES=$(wildcard ${MODULE}/**.py ${MODULE}/avro/*.py ${MODULE}/tests/*.py) setup.py
-DEVPKGS=diff_cover black pylint pep257 pydocstyle flake8 tox tox-pyenv \
-	isort wheel autoflake flake8-bugbear pyupgrade bandit \
+DEVPKGS=diff_cover pylint pep257 pydocstyle flake8 tox tox-pyenv \
+	isort wheel autoflake pyupgrade bandit -rlint-requirements.txt \
 	-rtest-requirements.txt -rmypy_requirements.txt
 COVBASE=coverage run --append
 PYTEST_EXTRA ?= -rs
@@ -43,6 +43,9 @@ all: dev
 ## help        : print this help message and exit
 help: Makefile
 	@sed -n 's/^##//p' $<
+
+## cleanup                : shortcut for "make sort_imports format flake8 diff_pydocstyle_report"
+cleanup: sort_imports format flake8 diff_pydocstyle_report
 
 ## install-dep : install most of the development dependencies via pip
 install-dep: install-dependencies
