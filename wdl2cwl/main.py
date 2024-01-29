@@ -333,7 +333,7 @@ class Converter:
         outputs = [
             cwl.WorkflowOutputParameter(
                 id=f"{wf_name}.{output_id}",
-                type=output_type,
+                type_=output_type,
                 outputSource=output_source,
                 doc=obj.meta.get(output_id, None),
             )
@@ -701,10 +701,10 @@ class Converter:
             return "float"
         elif isinstance(input_type, WDL.Type.Array):
             sub_type = self.get_cwl_type(input_type.item_type, array_type, record_type)
-            return array_type(type="array", items=sub_type)
+            return array_type(type_="array", items=sub_type)
         elif isinstance(input_type, WDL.Type.StructInstance):
             return record_type(
-                type="record",
+                type_="record",
                 name=input_type.type_name,
                 fields=self.get_struct_inputs(input_type.members),
             )
@@ -1173,7 +1173,7 @@ class Converter:
             inputs.append(
                 cwl.WorkflowInputParameter(
                     id=input_name,
-                    type=final_type_of,
+                    type_=final_type_of,
                     default=input_value,
                     doc=doc,
                 )
@@ -1249,7 +1249,7 @@ class Converter:
                     doc = meta[input_name]["description"]
             inputs.append(
                 cwl.CommandInputParameter(
-                    id=input_name, type=final_type_of, default=input_value, doc=doc
+                    id=input_name, type_=final_type_of, default=input_value, doc=doc
                 )
             )
 
@@ -1267,7 +1267,7 @@ class Converter:
             type_of = self.get_cwl_type(
                 value, cwl.CommandInputArraySchema, cwl.CommandInputRecordSchema
             )
-            inputs.append(cwl.CommandInputRecordField(name=input_name, type=type_of))
+            inputs.append(cwl.CommandInputRecordField(name=input_name, type_=type_of))
         return inputs
 
     def set_cwl_task_outputs(
@@ -1327,7 +1327,7 @@ class Converter:
                     cwl.CommandOutputParameter(
                         id=output_name,
                         doc=doc,
-                        type=type_of,
+                        type_=type_of,
                         outputBinding=cwl.CommandOutputBinding(
                             glob=glob_str,
                             loadContents=True,
@@ -1343,7 +1343,7 @@ class Converter:
                     cwl.CommandOutputParameter(
                         id=output_name,
                         doc=doc,
-                        type="stdout",
+                        type_="stdout",
                     ),
                 )
             else:
@@ -1382,7 +1382,7 @@ class Converter:
                         cwl.CommandOutputParameter(
                             id=output_name,
                             doc=doc,
-                            type=final_type_of,
+                            type_=final_type_of,
                             outputBinding=cwl.CommandOutputBinding(glob=final_glob),
                         )
                     )
@@ -1392,7 +1392,7 @@ class Converter:
                         cwl.CommandOutputParameter(
                             id=output_name,
                             doc=doc,
-                            type=final_type_of,
+                            type_=final_type_of,
                             outputBinding=cwl.CommandOutputBinding(
                                 outputEval=outputEval
                             ),
