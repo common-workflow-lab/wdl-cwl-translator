@@ -1,4 +1,5 @@
 """Helper methods for tests."""
+
 import os
 
 from pkg_resources import Requirement, ResolutionError, resource_filename

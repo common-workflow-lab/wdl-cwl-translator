@@ -1,4 +1,5 @@
 """Main entrypoint for WDL2CWL."""
+
 import argparse
 import re
 import sys
@@ -431,9 +432,11 @@ class Converter:
                     else:
                         input_expr, value_from = self.get_step_input_expr(value)  # type: ignore[arg-type]
                         inputs_from_call[key] = (
-                            input_expr.replace(".", "/")
-                            if isinstance(input_expr, str)
-                            else input_expr,
+                            (
+                                input_expr.replace(".", "/")
+                                if isinstance(input_expr, str)
+                                else input_expr
+                            ),
                             {"valueFrom": f"$({value_from})"} if value_from else {},
                         )
                     if self.scatter_names and not scatter_handled:
