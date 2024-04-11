@@ -18,5 +18,5 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages(),
     setup_requires=[] + pytest_runner,
-    install_requires=["cwl-utils>=0.32,<0.33", "miniwdl", "regex"],
+    install_requires=["cwl-utils>=0.32,<0.34", "miniwdl", "regex"],
 )
