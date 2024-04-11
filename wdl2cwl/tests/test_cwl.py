@@ -1,4 +1,5 @@
 """Tests for miniwdl."""
+
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, NamedTuple, Union

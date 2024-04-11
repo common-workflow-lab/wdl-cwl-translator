@@ -1,4 +1,5 @@
 """Module to convert (Open)WDL documents to CWL v1.2."""
+
 import logging
 
 _logger = logging.getLogger("wdl2cwl")
