@@ -265,7 +265,7 @@ steps:
           - class: ResourceRequirement
             ramMin: 7629.39453125
             outdirMin: $((10 + Math.round((function(size_of=0){inputs.snps_vcf.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3 + (function(size_of=0){inputs.input_vcf.path.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1000^3 + (function(size_of=0){inputs.input_vcf.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3)) * 1024)
         cwlVersion: v1.2
         baseCommand:
@@ -480,7 +480,7 @@ steps:
           - class: ResourceRequirement
             ramMin: 7629.39453125
             outdirMin: $((10 + Math.round((function(size_of=0){inputs.snps_vcf.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3 + (function(size_of=0){inputs.input_vcf.path.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1000^3 + (function(size_of=0){inputs.input_vcf.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3)) * 1024)
         cwlVersion: v1.2
         baseCommand:
@@ -566,7 +566,7 @@ steps:
             dockerPull: python:3
           - class: ResourceRequirement
             ramMin: 3814.697265625
-            outdirMin: $((10 + Math.round(2 * (function(size_of=0){inputs.annotsv_tsv.path.forEach(function(element){
+            outdirMin: $((10 + Math.round(2 * (function(size_of=0){inputs.annotsv_tsv.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1000^3)) * 1024)
         cwlVersion: v1.2
         baseCommand:

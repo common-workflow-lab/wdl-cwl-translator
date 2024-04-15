@@ -210,10 +210,10 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3840.0
-            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.fastq_input_read1.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq_input_read2.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.fastq_input_read1.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq_input_read2.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.fastq_input_read1.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq_input_read2.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.fastq_input_read1.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq_input_read2.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -311,12 +311,12 @@ steps:
           - class: ResourceRequirement
             coresMin: $(inputs.cpu)
             ramMin: 3840.0
-            outdirMin: '$((Math.ceil(3.25 * (function(size_of=0){inputs.fastq_input_read1.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq_input_read2.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.tar_bwa_reference.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.fastq_input_read1.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq_input_read2.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.tar_bwa_reference.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(3.25 * (function(size_of=0){inputs.fastq_input_read1.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq_input_read2.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.tar_bwa_reference.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.fastq_input_read1.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.fastq_input_read2.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.tar_bwa_reference.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -380,8 +380,8 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3840.0
-            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.sam_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.sam_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.sam_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.sam_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -452,8 +452,8 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3750.0
-            outdirMin: '$((Math.ceil(3.25 * (function(size_of=0){inputs.bam_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(3.25 * (function(size_of=0){inputs.bam_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -525,8 +525,8 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3840.0
-            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.bam_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.bam_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -596,8 +596,8 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3750.0
-            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.bam_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.bam_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -687,8 +687,8 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3840.0
-            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.bam_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.bam_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -744,8 +744,8 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 4096.0
-            outdirMin: '$((Math.ceil(2.5 * (function(size_of=0){inputs.bam_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2.5 * (function(size_of=0){inputs.bam_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -816,8 +816,8 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3750.0
-            outdirMin: '$((Math.ceil(3.25 * (function(size_of=0){inputs.bam_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(3.25 * (function(size_of=0){inputs.bam_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -873,8 +873,8 @@ steps:
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 4096.0
-            outdirMin: '$((Math.ceil(2.5 * (function(size_of=0){inputs.bam_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(2.5 * (function(size_of=0){inputs.bam_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.bam_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:
@@ -1097,8 +1097,8 @@ steps:
           - class: ResourceRequirement
             coresMin: $(1)
             ramMin: 15258.7890625
-            outdirMin: '$((Math.ceil(10 * (function(size_of=0){inputs.snap_input.path.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.snap_input.path.forEach(function(element){
+            outdirMin: '$((Math.ceil(10 * (function(size_of=0){inputs.snap_input.forEach(function(element){
+                if (element) {size_of += element.size}})}) / 1024^3 < 1 ? 1 : (function(size_of=0){inputs.snap_input.forEach(function(element){
                 if (element) {size_of += element.size}})}) / 1024^3) ) * 1024)'
         cwlVersion: v1.2
         baseCommand:

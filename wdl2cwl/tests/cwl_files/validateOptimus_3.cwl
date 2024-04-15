@@ -34,7 +34,7 @@ hints:
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 15258.7890625
-    outdirMin: $((Math.ceil((function(size_of=0){inputs.matrix.path.forEach(function(element){
+    outdirMin: $((Math.ceil((function(size_of=0){inputs.matrix.forEach(function(element){
         if (element) {size_of += element.size}})}) / 1000^3 * 1.1) ) * 1024)
 inputs:
   - id: matrix

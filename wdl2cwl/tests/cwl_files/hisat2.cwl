@@ -54,7 +54,7 @@ hints:
         }
     outdirMin: 1024
   - class: ToolTimeLimit
-    timelimit: '$(1 + Math.ceil((function(size_of=0){[inputs.inputR1.path, inputs.inputR2
+    timelimit: '$(1 + Math.ceil((function(size_of=0){[inputs.inputR1, inputs.inputR2
         === null ? "" : inputs.inputR2.path].forEach(function(element){ if (element)
         {size_of += element.size}})}) / 1000^3 * 180 / inputs.threads)  * 60)'
 inputs:

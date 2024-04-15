@@ -63,7 +63,7 @@ hints:
         else throw "Unknown units: " + unit;
         return parseInt(memory);
         }
-    outdirMin: $((Math.ceil((function(size_of=0){inputs.bam_input.path.forEach(function(element){
+    outdirMin: $((Math.ceil((function(size_of=0){inputs.bam_input.forEach(function(element){
         if (element) {size_of += element.size}})}) / 1024^3 * 6)  + 50) * 1024)
 inputs:
   - id: bam_input

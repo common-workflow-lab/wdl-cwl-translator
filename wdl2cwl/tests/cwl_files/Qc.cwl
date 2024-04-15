@@ -23,7 +23,7 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3500.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
@@ -72,7 +72,7 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
@@ -151,10 +151,10 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
@@ -233,10 +233,10 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 7000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
@@ -352,11 +352,11 @@ $graph:
             else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.pre_adapter_detail_metrics.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.bait_bias_detail_metrics.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.pre_adapter_detail_metrics.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.bait_bias_detail_metrics.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: pre_adapter_detail_metrics
@@ -684,10 +684,10 @@ $graph:
             else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
             * 1024)
     inputs:
@@ -761,9 +761,9 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
@@ -833,9 +833,9 @@ $graph:
             else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
             * 1024)
     inputs:
@@ -913,9 +913,9 @@ $graph:
             else throw "Unknown units: " + unit;
             return parseInt(memory);
             }
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + inputs.additional_disk)
             * 1024)
     inputs:
@@ -970,7 +970,7 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 4000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_bam.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 40) * 1024)
     inputs:
       - id: input_bam
@@ -1016,12 +1016,12 @@ $graph:
         dockerPull: us.gcr.io/broad-gatk/gatk:4.1.8.0
       - class: ResourceRequirement
         ramMin: 7000.0
-        outdirMin: '$((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
+        outdirMin: '$((Math.ceil((function(size_of=0){inputs.input_vcf.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf
             === null ? "" : inputs.dbsnp_vcf.path.forEach(function(element){ if (element)
-            {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.path.forEach(function(element){
+            {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_dict.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)'
     inputs:
       - id: input_vcf
@@ -1090,8 +1090,8 @@ $graph:
         dockerPull: us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8
       - class: ResourceRequirement
         ramMin: 3000.0
-        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_vcf.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf.path.forEach(function(element){
+        outdirMin: $((Math.ceil((function(size_of=0){inputs.input_vcf.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.dbsnp_vcf.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_vcf

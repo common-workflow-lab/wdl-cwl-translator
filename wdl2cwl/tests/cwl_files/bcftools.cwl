@@ -61,7 +61,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(60 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
+        timelimit: $(60 + Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: columns
@@ -256,7 +256,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.vcf.path.forEach(function(element){
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.vcf.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: vcf
@@ -352,7 +352,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: inputFile
@@ -461,10 +461,10 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: '$(1 + 2 * Math.ceil((function(size_of=0){[inputs.inputVcf.path,
-            inputs.compareVcf === null ? "" : inputs.compareVcf.path].filter(function(element)
-            { return element !== null }) .forEach(function(element){ if (element)
-            {size_of += element.size}})}) / 1000^3)  * 60)'
+        timelimit: '$(1 + 2 * Math.ceil((function(size_of=0){[inputs.inputVcf, inputs.compareVcf
+            === null ? "" : inputs.compareVcf.path].filter(function(element) { return
+            element !== null }) .forEach(function(element){ if (element) {size_of
+            += element.size}})}) / 1000^3)  * 60)'
     inputs:
       - id: inputVcf
         doc: The VCF to be analysed.
@@ -668,7 +668,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.path.forEach(function(element){
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: inputFile
