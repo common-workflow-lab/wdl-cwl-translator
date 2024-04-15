@@ -113,7 +113,7 @@ pylint_report.txt: $(PYSOURCES)
 diff_pylint_report: pylint_report.txt
 	diff-quality --violations=pylint pylint_report.txt
 
-.coverage:
+.coverage: FORCE
 	pytest --cov --cov-config=.coveragerc --cov-report= -n auto ${PYTEST_EXTRA}
 
 coverage.xml: .coverage
