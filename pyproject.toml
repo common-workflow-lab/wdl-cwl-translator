@@ -83,7 +83,7 @@ packages = [
 	"wdl2cwl.tests",
 	"wdl2cwl.tests.cwl_files",
 	"wdl2cwl.tests.inputs",
-	"wdl2cwl.tests.inputs.deepvariant-testdata",
+	"wdl2cwl.tests.inputs.deepvariant_testdata",
 	"wdl2cwl.tests.inputs.bcftools",
 	"wdl2cwl.tests.wdl_files",
 	"wdl2cwl.tests.wdl_files.tools",
