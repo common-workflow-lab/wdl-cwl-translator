@@ -236,9 +236,9 @@ steps:
                     # index the fasta file
 
                     mkdir genome_fa
-                    ln -s $(inputs.references.genome_fa.path) genome_fa/$(inputs.references.genome_fa.path.basename)
-                    samtools faidx genome_fa/$(inputs.references.genome_fa.path.basename)
-                    cut -f1,2 genome_fa/$(inputs.references.genome_fa.path.basename).fai > sizes.genome
+                    ln -s $(inputs.references.genome_fa.path) genome_fa/$(inputs.references.genome_fa.basename)
+                    samtools faidx genome_fa/$(inputs.references.genome_fa.basename)
+                    cut -f1,2 genome_fa/$(inputs.references.genome_fa.basename).fai > sizes.genome
 
                     awk -F '\t'  '{  printf "@SQ\tSN:%s\tLN:%s\n", $1, $2 }' sizes.genome  >> $(inputs.references.annotation_gtf.basename.replace(/\.gtf$/, '')  + ".interval_list")
 

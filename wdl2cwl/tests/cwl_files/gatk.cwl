@@ -700,7 +700,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputBam.path.forEach(function(element){
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputBam.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3 * 5)  * 60)
     inputs:
       - id: countsPath
@@ -2696,7 +2696,7 @@ $graph:
             }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.referenceFasta.path.forEach(function(element){
+        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.referenceFasta.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1000^3 * 6)  * 60)
     inputs:
       - id: referenceFasta

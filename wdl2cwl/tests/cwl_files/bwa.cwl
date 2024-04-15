@@ -51,7 +51,7 @@ hints:
         }
     outdirMin: 1024
   - class: ToolTimeLimit
-    timelimit: '$(10 + Math.ceil((function(size_of=0){[inputs.read1.path, inputs.read2
+    timelimit: '$(10 + Math.ceil((function(size_of=0){[inputs.read1, inputs.read2
         === null ? "" : inputs.read2.path].forEach(function(element){ if (element)
         {size_of += element.size}})}) / 1000^3 * 300 / inputs.threads)  * 60)'
 inputs:

@@ -194,9 +194,9 @@ $graph:
       - class: ResourceRequirement
         coresMin: 1
         ramMin: 3072.0
-        outdirMin: $((Math.ceil(2 * (function(size_of=0){inputs.input_bam.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.path.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.path.forEach(function(element){
+        outdirMin: $((Math.ceil(2 * (function(size_of=0){inputs.input_bam.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1024^3 + (function(size_of=0){inputs.ref_fasta_index.forEach(function(element){
             if (element) {size_of += element.size}})}) / 1024^3)  + 20) * 1024)
     inputs:
       - id: input_bam
