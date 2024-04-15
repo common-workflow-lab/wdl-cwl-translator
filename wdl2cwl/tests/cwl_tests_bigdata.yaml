@@ -53,7 +53,7 @@
 
 # snaptools embeds paths and timestamps, and so it is not reproducible
 # - doc: ATAC
-#   tool: cwl_file/ATAC.cwl
+#   tool: cwl_files/ATAC.cwl
 #   job: inputs/ATAC.yaml
 #   output:
 #     ATAC.snap_output:

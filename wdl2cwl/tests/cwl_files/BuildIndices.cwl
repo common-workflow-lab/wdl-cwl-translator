@@ -414,7 +414,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: 'quay.io/humancellatlas/snss2-indices:1.1.0 '
+            dockerPull: quay.io/humancellatlas/snss2-indices:1.1.0
           - class: ResourceRequirement
             coresMin: 16
             ramMin: 51200.0

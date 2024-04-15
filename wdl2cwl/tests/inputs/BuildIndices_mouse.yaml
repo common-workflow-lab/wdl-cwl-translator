@@ -1,0 +1,5 @@
+gtf_version: "M21"
+organism: "mouse"
+organism_prefix: "m"
+genome_short_string: "mm10"
+dbsnp_version: "150"
