@@ -132,7 +132,7 @@ task BuildStarSingleNucleus {
   }
 
   runtime {
-    docker: "quay.io/humancellatlas/snss2-indices:1.1.0 "
+    docker: "quay.io/humancellatlas/snss2-indices:1.1.0"
     memory: "50 GiB"
     disks :"local-disk 100 HDD"
     cpu:"16"
