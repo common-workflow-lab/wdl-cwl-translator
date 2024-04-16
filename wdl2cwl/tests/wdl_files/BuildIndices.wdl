@@ -23,7 +23,7 @@ task GetReferences {
   String annotation_gtf = "gencode.v~{gtf_version}.primary_assembly.annotation.gtf"
 
   command <<<
-    set -eo pipefail
+    set -exo pipefail
 
     ## download fasta
     wget ~{ftp_path}/~{genome_fa}.gz
@@ -62,7 +62,7 @@ task BuildStar {
   String star_index_name = "~{ref_name}.tar"
 
   command <<<
-    set -eo pipefail
+    set -exo pipefail
 
     mkdir star
     STAR --runMode genomeGenerate \
@@ -105,9 +105,9 @@ task BuildStarSingleNucleus {
   String annotation_gtf_introns = "introns_modified_gencode.v~{gtf_version}.primary_assembly.annotation.gtf"
 
   command <<<
-    set -eo pipefail
+    set -exo pipefail
 
-    /script/modify_gtf_~{organism}.sh ~{references.genome_fa} ~{references.annotation_gtf}
+    bash -ex /script/modify_gtf_~{organism}.sh ~{references.genome_fa} ~{references.annotation_gtf}
 
     mkdir star
     STAR --runMode genomeGenerate \
@@ -254,24 +254,25 @@ task BuildHisat2SnpHaplotypeSplicing {
 
   command <<<
 
+    set -ex
     HISAT2_DIR=/opt/tools/hisat2-2.1.0
 
     # Compressed fasta required here
-    gzip ~{references.genome_fa}
+    gzip ~{references.genome_fa} -c > ~{basename(references.genome_fa)}.gz
 
     # download snp file
     wget http://hgdownload.cse.ucsc.edu/goldenPath/~{genome_short_string}/database/~{snp_file}.gz
     gunzip ~{snp_file}.gz
 
     # extract snps, splice sites, and exon information
-    $HISAT2_DIR/hisat2_extract_snps_UCSC.py ~{references.genome_fa}.gz ~{snp_file} genome
+    $HISAT2_DIR/hisat2_extract_snps_haplotypes_UCSC.py ~{basename(references.genome_fa)}.gz ~{snp_file} genome
     $HISAT2_DIR/hisat2_extract_splice_sites.py ~{references.annotation_gtf} > genome.ss
     $HISAT2_DIR/hisat2_extract_exons.py ~{references.annotation_gtf} > genome.exon
 
     # build the hisat2 reference
     $HISAT2_DIR/hisat2-build \
       -p 8 \
-      genome.fa \
+      ~{references.genome_fa} \
       --snp genome.snp \
       --haplotype genome.haplotype \
       --ss genome.ss \
@@ -331,7 +332,7 @@ task BuildIntervalList {
   String interval_list_name = basename(references.annotation_gtf, ".gtf") + ".interval_list"
 
   command <<<
-    set -eo pipefail
+    set -exo pipefail
 
 
     # index the fasta file

@@ -127,7 +127,7 @@ steps:
               - entryname: script.bash
                 entry: |4
 
-                    set -eo pipefail
+                    set -exo pipefail
 
                     ## download fasta
                     wget $("ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_" + inputs.organism + "/release_" + inputs.gtf_version)/$("GRC" + inputs.organism_prefix + "38.primary_assembly.genome.fa").gz
@@ -230,7 +230,7 @@ steps:
               - entryname: script.bash
                 entry: |4+
 
-                    set -eo pipefail
+                    set -exo pipefail
 
 
                     # index the fasta file
@@ -305,7 +305,7 @@ steps:
               - entryname: script.bash
                 entry: |4
 
-                    set -eo pipefail
+                    set -exo pipefail
 
                     mkdir star
                     STAR --runMode genomeGenerate \
@@ -394,9 +394,9 @@ steps:
               - entryname: script.bash
                 entry: |4
 
-                    set -eo pipefail
+                    set -exo pipefail
 
-                    /script/modify_gtf_$(inputs.organism).sh $(inputs.references.genome_fa.path) $(inputs.references.annotation_gtf.path)
+                    bash -ex /script/modify_gtf_$(inputs.organism).sh $(inputs.references.genome_fa.path) $(inputs.references.annotation_gtf.path)
 
                     mkdir star
                     STAR --runMode genomeGenerate \
@@ -629,24 +629,25 @@ steps:
                 entry: |4+
 
 
+                    set -ex
                     HISAT2_DIR=/opt/tools/hisat2-2.1.0
 
                     # Compressed fasta required here
-                    gzip $(inputs.references.genome_fa.path)
+                    gzip $(inputs.references.genome_fa.path) -c > $(inputs.references.genome_fa.basename).gz
 
                     # download snp file
                     wget http://hgdownload.cse.ucsc.edu/goldenPath/$(inputs.genome_short_string)/database/$("snp" + inputs.dbsnp_version + "Common.txt").gz
                     gunzip $("snp" + inputs.dbsnp_version + "Common.txt").gz
 
                     # extract snps, splice sites, and exon information
-                    $HISAT2_DIR/hisat2_extract_snps_UCSC.py $(inputs.references.genome_fa.path).gz $("snp" + inputs.dbsnp_version + "Common.txt") genome
+                    $HISAT2_DIR/hisat2_extract_snps_haplotypes_UCSC.py $(inputs.references.genome_fa.basename).gz $("snp" + inputs.dbsnp_version + "Common.txt") genome
                     $HISAT2_DIR/hisat2_extract_splice_sites.py $(inputs.references.annotation_gtf.path) > genome.ss
                     $HISAT2_DIR/hisat2_extract_exons.py $(inputs.references.annotation_gtf.path) > genome.exon
 
                     # build the hisat2 reference
                     $HISAT2_DIR/hisat2-build \
                       -p 8 \
-                      genome.fa \
+                      $(inputs.references.genome_fa.path) \
                       --snp genome.snp \
                       --haplotype genome.haplotype \
                       --ss genome.ss \
