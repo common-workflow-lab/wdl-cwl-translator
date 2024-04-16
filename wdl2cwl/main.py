@@ -727,7 +727,11 @@ class Converter:
             with WDLSourceLine(item.info, ConversionException):
                 output_name = item.name
                 item_expr = item.info.expr
-                output_source = item_expr.expr.name[::-1].replace(".", "/", 1)[::-1]
+                if isinstance(item_expr, WDL.Expr.Get):
+                    output_source = item_expr.expr.name[::-1].replace(".", "/", 1)[::-1]
+                else:
+                    output_source = f"$({self.get_expr(item_expr)})"
+
                 # replace just the last occurrence of a period with a slash
                 # by first reversing the string and the replace the first occurrence
                 # then reversing the result
@@ -1024,16 +1028,20 @@ class Converter:
 
     def get_expr_ident(self, wdl_ident_expr: WDL.Expr.Ident) -> str:
         """Translate WDL Ident Expressions."""
-        id_name = wdl_ident_expr.name
+        id_name: str = wdl_ident_expr.name
         referee = wdl_ident_expr.referee
         optional = wdl_ident_expr.type.optional
         if referee:
             with WDLSourceLine(referee, ConversionException):
                 if isinstance(referee, WDL.Tree.Call):
                     return id_name
-                if referee.expr and (
-                    wdl_ident_expr.name in self.optional_cwl_null
-                    or wdl_ident_expr.name not in self.non_static_values
+                if (
+                    hasattr(referee, "expr")
+                    and referee.expr is not None
+                    and (
+                        wdl_ident_expr.name in self.optional_cwl_null
+                        or wdl_ident_expr.name not in self.non_static_values
+                    )
                 ):
                     return self.get_expr(referee.expr)
         ident_name = get_input(id_name)
