@@ -112,7 +112,7 @@ OpenWDL 1.1 standard library functions to be implemented
 
 Many of the above are straightforward to implement, but we haven't needed them yet.
 So if you are unable to translate a particular WDL document due to lackof a standard library
-function, please [open and issue](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/new/choose)
+function, please [open an issue](https://github.com/common-workflow-lab/wdl-cwl-translator/issues/new/choose)
 and share your example!
 
 ## Incompatibilities possibly requiring manual intervention
