@@ -333,11 +333,14 @@ class Converter:
         inputs = self.get_cwl_workflow_inputs(obj.available_inputs, obj.parameter_meta)
         wf_steps: List[cwl.WorkflowStep] = []
         outputs: List[cwl.WorkflowOutputParameter] = []
+        scatter_present = False
+        step_valuefrom = False
         for (
             output_id,
             output_type,
             output_source,
             extra_step,
+            value_from,
         ) in self.get_workflow_outputs(obj.effective_outputs):
             outputs.append(
                 cwl.WorkflowOutputParameter(
@@ -349,11 +352,11 @@ class Converter:
             )
             if extra_step:
                 wf_steps.append(extra_step)
+            if value_from:
+                step_valuefrom = True
         wf_description = (
             obj.meta.pop("description") if "description" in obj.meta else None
         )
-        scatter_present = False
-        step_valuefrom = False
         for body_part in obj.body:
             if not isinstance(body_part, (WDL.Tree.Call, WDL.Tree.Scatter)):
                 _logger.warning(
@@ -731,10 +734,16 @@ class Converter:
             Union[cwl.OutputArraySchema, cwl.OutputRecordSchema, str],
             str,
             Optional[cwl.WorkflowStep],
+            bool,
         ]
     ]:
-        """Return the name, CWL type, and source for a workflow's effective_outputs()."""
+        """
+        Return the name, CWL type, source, and if valueFrom was used.
+
+        For each of a workflow's effective_outputs().
+        """
         for item in outputs:
+            value_from = False
             with WDLSourceLine(item.info, ConversionException):
                 output_name = item.name
                 item_expr = item.info.expr
@@ -773,6 +782,7 @@ class Converter:
                         type_of,
                         f"{new_output_name}/result",
                         extra_step,
+                        value_from,
                     )
                     continue
                 if isinstance(item_expr.expr, WDL.Expr.Get) and item_expr.member:
@@ -783,13 +793,14 @@ class Converter:
                 # by first reversing the string and the replace the first occurrence
                 # then reversing the result
                 if member:
+                    value_from = True
                     new_output_name = f"_{item_expr.expr.name}.{member}"
                     extra_step = cwl.WorkflowStep(
                         in_=[
                             cwl.WorkflowStepInput(
                                 id="target",
                                 source=output_source,
-                                valueFrom=f"self.{member}",
+                                valueFrom=f"$(self.{member})",
                             )
                         ],
                         out=[f"{member}"],
@@ -797,7 +808,9 @@ class Converter:
                             inputs=[
                                 cwl.WorkflowInputParameter(type_="Any", id="target")
                             ],
-                            expression='${return {"' + str(member) + '": self}; }',
+                            expression='${return {"'
+                            + str(member)
+                            + '": inputs.target}; }',
                             outputs=[
                                 cwl.ExpressionToolOutputParameter(
                                     type_=type_of, id=str(member)
@@ -811,9 +824,10 @@ class Converter:
                         type_of,
                         f"{new_output_name}/{member}",
                         extra_step,
+                        value_from,
                     )
                 else:
-                    yield (output_name, type_of, output_source, None)
+                    yield (output_name, type_of, output_source, None, value_from)
 
     def get_expr(
         self,

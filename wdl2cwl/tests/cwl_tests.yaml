@@ -220,3 +220,24 @@
     foo.third_result: 3.14159
     foo.echo_result: "fifth.suffix sixth"
     foo.echo_out: "fifth.suffix"
+
+- id: struct_output
+  doc: outputs that pull from a struct object
+  tool: cwl_files/struct_output.cwl
+  job: inputs/struct_output.yaml
+  output:
+    test.genome_fa: 
+      class: File
+      basename: GRCm38.primary_assembly.genome.fa
+      size: 2
+      checksum: sha1$3f786850e387550fdab836ed7e6dc881de23001b
+    test.annotation_gtf:
+      class: File
+      basename: gencode.vM21.primary_assembly.annotation.gtf
+      size: 2
+      checksum: sha1$89e6c98d92887913cadf06b2adb97f26cde4849b
+    test.refflat:
+      basename: gencode.vM21.primary_assembly.annotation.refflat.txt
+      class: File
+      checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      size: 0
