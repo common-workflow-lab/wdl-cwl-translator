@@ -25,7 +25,7 @@ steps:
     in:
       - id: target
         source: GetReferences/references
-        valueFrom: self.genome_fa
+        valueFrom: $(self.genome_fa)
     out:
       - genome_fa
     run:
@@ -36,12 +36,12 @@ steps:
         outputs:
           - id: genome_fa
             type: File
-        expression: '${return {"genome_fa": self}; }'
+        expression: '${return {"genome_fa": inputs.target}; }'
   - id: _GetReferences.references.annotation_gtf
     in:
       - id: target
         source: GetReferences/references
-        valueFrom: self.annotation_gtf
+        valueFrom: $(self.annotation_gtf)
     out:
       - annotation_gtf
     run:
@@ -52,12 +52,12 @@ steps:
         outputs:
           - id: annotation_gtf
             type: File
-        expression: '${return {"annotation_gtf": self}; }'
+        expression: '${return {"annotation_gtf": inputs.target}; }'
   - id: _BuildStarSingleNucleus.modified_references.genome_fa
     in:
       - id: target
         source: BuildStarSingleNucleus/modified_references
-        valueFrom: self.genome_fa
+        valueFrom: $(self.genome_fa)
     out:
       - genome_fa
     run:
@@ -68,12 +68,12 @@ steps:
         outputs:
           - id: genome_fa
             type: File
-        expression: '${return {"genome_fa": self}; }'
+        expression: '${return {"genome_fa": inputs.target}; }'
   - id: _BuildStarSingleNucleus.modified_references.annotation_gtf
     in:
       - id: target
         source: BuildStarSingleNucleus/modified_references
-        valueFrom: self.annotation_gtf
+        valueFrom: $(self.annotation_gtf)
     out:
       - annotation_gtf
     run:
@@ -84,7 +84,7 @@ steps:
         outputs:
           - id: annotation_gtf
             type: File
-        expression: '${return {"annotation_gtf": self}; }'
+        expression: '${return {"annotation_gtf": inputs.target}; }'
   - id: GetReferences
     in:
       - id: gtf_version
