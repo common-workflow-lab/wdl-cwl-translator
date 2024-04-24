@@ -717,6 +717,7 @@ class Converter:
         input_type: WDL.Type.Base,
         array_type: Type[CWLArrayTypes],
         record_type: Type[CWLRecordTypes],
+        parent: WDL.Error.SourceNode,
     ) -> Union[str, CWLArrayTypes, CWLRecordTypes]:
         """Determine the CWL type for a WDL input declaration."""
         if isinstance(input_type, WDL.Type.File):
@@ -730,7 +731,9 @@ class Converter:
         elif isinstance(input_type, WDL.Type.Float):
             return "float"
         elif isinstance(input_type, WDL.Type.Array):
-            sub_type = self.get_cwl_type(input_type.item_type, array_type, record_type)
+            sub_type = self.get_cwl_type(
+                input_type.item_type, array_type, record_type, parent
+            )
             return array_type(type_="array", items=sub_type)
         elif isinstance(input_type, WDL.Type.StructInstance):
             return record_type(
@@ -739,7 +742,8 @@ class Converter:
                 fields=self.get_struct_inputs(input_type.members),
             )
         else:
-            raise WDLSourceLine(input_type, ConversionException).makeError(
+            target = input_type if input_type.pos is not None else parent
+            raise WDLSourceLine(target, ConversionException).makeError(
                 f"Input of type {input_type} is not yet handled."
             )
 
@@ -768,7 +772,10 @@ class Converter:
                 member = None
                 wdl_output = item.info
                 type_of = self.get_cwl_type(
-                    wdl_output.type, cwl.OutputArraySchema, cwl.OutputRecordSchema
+                    wdl_output.type,
+                    cwl.OutputArraySchema,
+                    cwl.OutputRecordSchema,
+                    wdl_output,
                 )
                 if isinstance(item_expr, WDL.Expr.Apply):
                     new_output_name = f"_{output_name}_{str(item_expr.function_name)}"
@@ -1443,9 +1450,7 @@ class Converter:
             input_value = None
             wdl_input = input_decl.value
             type_of = self.get_cwl_type(
-                wdl_input.type,
-                cwl.InputArraySchema,
-                cwl.InputRecordSchema,
+                wdl_input.type, cwl.InputArraySchema, cwl.InputRecordSchema, wdl_input
             )
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
@@ -1512,6 +1517,7 @@ class Converter:
                 wdl_input.type,
                 cwl.CommandInputArraySchema,
                 cwl.CommandInputRecordSchema,
+                wdl_input,
             )
 
             if isinstance(wdl_input.type, WDL.Type.Array) and wdl_input.type.nonempty:
@@ -1571,7 +1577,10 @@ class Converter:
         for member, value in members.items():
             input_name = member
             type_of = self.get_cwl_type(
-                value, cwl.CommandInputArraySchema, cwl.CommandInputRecordSchema
+                value,
+                cwl.CommandInputArraySchema,
+                cwl.CommandInputRecordSchema,
+                members,
             )
             inputs.append(cwl.CommandInputRecordField(name=input_name, type_=type_of))
         return inputs
@@ -1601,6 +1610,7 @@ class Converter:
                 wdl_output.type,
                 cwl.CommandOutputArraySchema,
                 cwl.CommandOutputRecordSchema,
+                wdl_output,
             )
             glob = type_of == "File" or (
                 isinstance(type_of, cwl.CommandOutputArraySchema)
