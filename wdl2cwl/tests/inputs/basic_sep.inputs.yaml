@@ -1,0 +1,2 @@
+delimiter: " - "
+to_sep: ["a", "b", "c"]
