@@ -10,6 +10,9 @@ inputs:
     type:
       - File
       - 'null'
+  - id: pipeline_version
+    default: 1.0.0
+    type: string
 steps:
   - id: Convert
     in:
