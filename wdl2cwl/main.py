@@ -1004,7 +1004,9 @@ class Converter:
         """
         binary_ops = {
             "_gt": ">",
+            "_land": "&&",
             "_lor": "||",
+            "_lte": "<=",
             "_neq": "!==",
             "_lt": "<",
             "_mul": "*",
