@@ -1463,6 +1463,8 @@ class Converter:
 
         for input_decl in wdl_inputs:
             input_name = input_decl.name
+            if input_name.endswith("._runtime"):
+                continue
             self.non_static_values.add(input_name)
             input_value = None
             wdl_input = input_decl.value
