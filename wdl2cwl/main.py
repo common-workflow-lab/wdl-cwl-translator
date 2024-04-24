@@ -717,7 +717,7 @@ class Converter:
         input_type: WDL.Type.Base,
         array_type: Type[CWLArrayTypes],
         record_type: Type[CWLRecordTypes],
-        parent: WDL.Error.SourceNode,
+        parent: Optional[WDL.Error.SourceNode],
     ) -> Union[str, CWLArrayTypes, CWLRecordTypes]:
         """Determine the CWL type for a WDL input declaration."""
         if isinstance(input_type, WDL.Type.Any):
@@ -1160,6 +1160,21 @@ class Converter:
         elif function_name == "length":
             only_arg_expr, _, lsources = self.get_expr_get(arguments[0], False)  # type: ignore
             return f"{only_arg_expr}.length", lsources
+        elif function_name == "quote":
+            qtarget = arguments[0]
+            only_arg_expr, _, qsources = self.get_expr(qtarget)
+            if isinstance(qtarget.type, WDL.Type.Array) and isinstance(
+                qtarget.type.item_type, WDL.Type.File
+            ):
+                return (
+                    only_arg_expr
+                    + """.map(function(item) {return '\\"'+item.path+'\\"'})""",
+                    qsources,
+                )
+            return (
+                only_arg_expr + """.map(function(item) {return '\\"'+item+'\\"'})""",
+                qsources,
+            )
         elif function_name == "round":
             only_arg_expr, _, rsources = self.get_expr(arguments[0])
             return f"Math.round({only_arg_expr})", rsources
@@ -1239,7 +1254,7 @@ class Converter:
             return result, fsources
         elif function_name == "sep":
             sep, array = arguments
-            if isinstance(array, WDL.Expr.Get) and isinstance(
+            if isinstance(array, (WDL.Expr.Get, WDL.Expr.Apply)) and isinstance(
                 array.type, WDL.Type.Array
             ):
                 item_type = array.type.item_type
@@ -1582,7 +1597,7 @@ class Converter:
                 value,
                 cwl.CommandInputArraySchema,
                 cwl.CommandInputRecordSchema,
-                members,
+                None,
             )
             inputs.append(cwl.CommandInputRecordField(name=input_name, type_=type_of))
         return inputs
