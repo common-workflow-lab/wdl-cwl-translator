@@ -293,7 +293,7 @@ class Converter:
         """
         Get name of expression referenced in workflow call inputs.
 
-        Returns a tuple of the source plus any needed "valueFrom" expression.
+        :return: The source plus any needed "valueFrom" expression.
         """
         with WDLSourceLine(wf_expr, ConversionException):
             if isinstance(wf_expr, WDL.Expr.String):
@@ -315,11 +315,9 @@ class Converter:
                     ident = cast(WDL.Expr.Ident, wf_expr.expr.expr)
                     id_name = ident.name
             elif isinstance(wf_expr, WDL.Expr.Apply):
-                expr_str, _, _ = self.get_expr(wf_expr)
-                if expr_str.count("inputs") == 1:
-                    id_name = re.match(r"inputs\.*?[ \.](.*?)[. ]", expr_str).groups()[
-                        0
-                    ]
+                expr_str, _, sources = self.get_expr(wf_expr)
+                if len(sources) == 1:
+                    id_name = sources[0]
                     value_from = "self" + expr_str.partition(f"inputs.{id_name}")[2]
                     return id_name, value_from
             else:
@@ -358,26 +356,26 @@ class Converter:
             obj.meta.pop("description") if "description" in obj.meta else None
         )
         for body_part in obj.body:
-            if not isinstance(
-                body_part, (WDL.Tree.Call, WDL.Tree.Scatter, WDL.Tree.Conditional)
-            ):
-                _logger.warning(
-                    WDLSourceLine(body_part).makeError(
-                        "Warning: unhandled Workflow node type:"
-                    )
-                    + " %s",
-                    type(body_part),
-                )
-                continue
             with WDLSourceLine(body_part, ConversionException):
-                if isinstance(body_part, WDL.Tree.Conditional):
+                if (
+                    isinstance(body_part, WDL.Tree.Decl)
+                    and body_part.expr is not None
+                    and get_literal_value(body_part.expr) is not None
+                ):
+                    extra = WDL.Env.Bindings(
+                        binding=WDL.Env.Binding(name=body_part.name, value=body_part)
+                    )
+                    inputs.extend(
+                        self.get_cwl_workflow_inputs(extra, obj.parameter_meta)
+                    )
+                elif isinstance(body_part, WDL.Tree.Conditional):
                     if len(body_part.body) > 1:
                         raise ConversionException(
                             "Multi-task conditionals are not yet supported. Please open an issue with an example!"
                         )
                     step = self.get_workflow_call(body_part.body[0])  # type: ignore
-                    if isinstance(body_part.expr, WDL.Expr.Apply):
-                        when, sources = self.get_expr_apply(body_part.expr, True)
+                    if isinstance(body_part.expr, (WDL.Expr.Apply, WDL.Expr.Get)):
+                        when, _, sources = self.get_expr(body_part.expr, None, True)
                         step.when = f"$({when})"
                         wf_steps.append(step)
                     else:
@@ -395,6 +393,15 @@ class Converter:
                 elif isinstance(body_part, WDL.Tree.Scatter):
                     scatter_present = True
                     wf_steps.extend(self.get_workflow_scatter(body_part))
+                else:
+                    _logger.warning(
+                        WDLSourceLine(body_part).makeError(
+                            "Warning: unhandled Workflow node type:"
+                        )
+                        + " %s",
+                        type(body_part),
+                    )
+                continue
         if scatter_present:
             requirements.append(cwl.ScatterFeatureRequirement())
         if step_valuefrom:

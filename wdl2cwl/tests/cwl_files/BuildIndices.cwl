@@ -20,6 +20,9 @@ inputs:
   - id: dbsnp_version
     doc: integer num, ex 150
     type: string
+  - id: pipeline_version
+    default: 0.1.1
+    type: string
 steps:
   - id: _GetReferences.references.genome_fa
     in:
