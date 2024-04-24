@@ -103,7 +103,6 @@ OpenWDL 1.1 standard library functions to be implemented
 - [cross](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#arraypairxy-crossarrayx-arrayy)
 - [prefix](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#arraystring-prefixstring-arrayp)
 - [suffix](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arraystring-suffixstring-arrayp)
-- [quote](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arraystring-quotearrayp)
 - [squote](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arraystring-squotearrayp)
 - [as_pairs](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-arraypairp-y-as_pairsmapp-y)
 - [as_map](https://github.com/openwdl/wdl/blob/main/versions/1.1/SPEC.md#-mapp-y-as_maparraypairp-y)
