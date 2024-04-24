@@ -1262,19 +1262,26 @@ class Converter:
                 raise WDLSourceLine(array, ConversionException).makeError(
                     f"Unhandled sep array type: {type(array)}: {array}."
                 )
-            sep_str = get_literal_value(sep) or ""
+            sep_str = get_literal_value(sep)
+            if sep_str is None:
+                sep_str, _, sep_sources = self.get_expr(sep)
+            else:
+                sep_str = f'"{sep_str}"'
+                sep_sources = []
             if isinstance(item_type, WDL.Type.File):
-                array_expr, _, sep_sources = self.get_expr(array)
+                array_expr, _, sep_item_sources = self.get_expr(array)
+                sep_sources.extend(sep_item_sources)
                 return (
                     f"{array_expr}.map("
-                    + 'function(el) {return el.path}).join("'
+                    + "function(el) {return el.path}).join("
                     + sep_str
-                    + '")',
+                    + ")",
                     sep_sources,
                 )
             else:
-                sep_expr, _, sep_sources = self.get_expr(array)
-                return f'{sep_expr}.join("{sep_str}")', sep_sources
+                sep_expr, _, sep_item_sources = self.get_expr(array)
+                sep_sources.extend(sep_item_sources)
+                return f"{sep_expr}.join({sep_str})", sep_sources
         raise WDLSourceLine(wdl_apply_expr, ConversionException).makeError(
             f"Function name '{function_name}' not yet handled."
         )

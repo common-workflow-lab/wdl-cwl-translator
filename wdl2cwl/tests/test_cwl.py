@@ -25,6 +25,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
         ("array_nonempty.wdl"),
         ("ATAC.wdl"),
         ("basic_quote.wdl"),
+        ("basic_sep.wdl"),
         ("blast.wdl"),
         ("bcftools.wdl"),
         ("bowtie.wdl"),

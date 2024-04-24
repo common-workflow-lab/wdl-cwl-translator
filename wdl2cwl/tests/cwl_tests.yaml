@@ -241,3 +241,10 @@
       class: File
       checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
       size: 0
+
+- id: basic_sep
+  doc: sep() with dynamic separator selection
+  tool: cwl_files/basic_sep.cwl
+  job: inputs/basic_sep.inputs.yaml
+  output:
+    sepWorkflow.str_output: "a - b - c"
