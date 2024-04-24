@@ -720,6 +720,8 @@ class Converter:
         parent: WDL.Error.SourceNode,
     ) -> Union[str, CWLArrayTypes, CWLRecordTypes]:
         """Determine the CWL type for a WDL input declaration."""
+        if isinstance(input_type, WDL.Type.Any):
+            return "Any"
         if isinstance(input_type, WDL.Type.File):
             return "File"
         elif isinstance(input_type, WDL.Type.String):
