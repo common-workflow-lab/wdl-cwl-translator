@@ -70,34 +70,34 @@ inputs:
     default: '10000'
     type: string
   - id: TrimAdapters.docker_image
-    default: quay.io/broadinstitute/cutadapt:1.18
+    default: quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1
     type: string
   - id: BWAPairedEndAlignment.docker_image
     default: quay.io/humancellatlas/snaptools:0.0.1
     type: string
   - id: SamToBam.docker_image
-    default: quay.io/broadinstitute/samtools:1.9
+    default: quay.io/biocontainers/samtools:1.9--h10a08f8_12
     type: string
   - id: SortCoordinateOrder.sort_order
     default: coordinate
     type: string
   - id: SortCoordinateOrder.docker_image
-    default: quay.io/broadinstitute/picard:2.18.23
+    default: quay.io/biocontainers/picard:2.18.3--py27_0
     type: string
   - id: FilterMinMapQuality.docker_image
-    default: quay.io/broadinstitute/samtools:1.9
+    default: quay.io/biocontainers/samtools:1.9--h10a08f8_12
     type: string
   - id: FilterMaxFragmentLength.docker_image
     default: broadinstitute/gatk:4.1.2.0
     type: string
   - id: FilterMitochondrialReads.docker_image
-    default: quay.io/broadinstitute/samtools:1.9
+    default: quay.io/biocontainers/samtools:1.9--h10a08f8_12
     type: string
   - id: MakeCompliantChrMBAM.docker_image
     default: quay.io/humancellatlas/snaptools:0.0.1
     type: string
   - id: SortQueryName.docker_image
-    default: quay.io/broadinstitute/picard:2.18.23
+    default: quay.io/biocontainers/picard:2.18.3--py27_0
     type: string
   - id: MakeCompliantFilteredAndSortedBAM.docker_image
     default: quay.io/humancellatlas/snaptools:0.0.1
@@ -165,8 +165,8 @@ steps:
             doc: base name to be used for the output of the task
             type: string
           - id: docker_image
-            doc: 'the docker image using cutadapt to be used (default: quay.io/broadinstitute/cutadapt:1.18)'
-            default: quay.io/broadinstitute/cutadapt:1.18
+            doc: 'the docker image using cutadapt to be used (default: quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1)'
+            default: quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1
             type: string
         outputs:
           - id: fastq_trimmed_adapter_output_read1
@@ -206,7 +206,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/cutadapt:1.18
+            dockerPull: quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3840.0
@@ -344,8 +344,8 @@ steps:
             doc: base name to be used for the output of the task
             type: string
           - id: docker_image
-            doc: 'the docker image using samtools to be used (default: quay.io/broadinstitute/samtools:1.9)'
-            default: quay.io/broadinstitute/samtools:1.9
+            doc: 'the docker image using samtools to be used (default: quay.io/biocontainers/samtools:1.9--h10a08f8_12)'
+            default: quay.io/biocontainers/samtools:1.9--h10a08f8_12
             type: string
         outputs:
           - id: bam_output
@@ -376,7 +376,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/samtools:1.9
+            dockerPull: quay.io/biocontainers/samtools:1.9--h10a08f8_12
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3840.0
@@ -415,8 +415,8 @@ steps:
             doc: base name to be used for the output of the task
             type: string
           - id: docker_image
-            doc: 'the docker image using picard to be used (default: quay.io/broadinstitute/picard:2.18.23)'
-            default: quay.io/broadinstitute/picard:2.18.23
+            doc: 'the docker image using picard to be used (default: quay.io/biocontainers/picard:2.18.3--py27_0)'
+            default: quay.io/biocontainers/picard:2.18.3--py27_0
             type: string
         outputs:
           - id: bam_sort_output
@@ -438,7 +438,7 @@ steps:
 
                     set -euo pipefail
 
-                    java -Xmx3250m -jar /picard-tools/picard.jar SortSam \
+                    java -Xmx3250m -jar /usr/local/share/picard-2.18.3-0/picard.jar SortSam \
                       INPUT=$(inputs.bam_input.path) \
                       SORT_ORDER=$(inputs.sort_order) \
                       MAX_RECORDS_IN_RAM=300000 \
@@ -448,7 +448,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/picard:2.18.23
+            dockerPull: quay.io/biocontainers/picard:2.18.3--py27_0
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3750.0
@@ -487,8 +487,8 @@ steps:
             doc: base name to be used for the output of the task
             type: string
           - id: docker_image
-            doc: 'the docker image using samtools to be used (default: quay.io/broadinstitute/samtools:1.9)'
-            default: quay.io/broadinstitute/samtools:1.9
+            doc: 'the docker image using samtools to be used (default: quay.io/biocontainers/samtools:1.9--h10a08f8_12)'
+            default: quay.io/biocontainers/samtools:1.9--h10a08f8_12
             type: string
         outputs:
           - id: bam_filter_mapq_output
@@ -521,7 +521,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/samtools:1.9
+            dockerPull: quay.io/biocontainers/samtools:1.9--h10a08f8_12
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3840.0
@@ -626,8 +626,8 @@ steps:
             doc: base name to be used for the output of the task
             type: string
           - id: docker_image
-            doc: 'the docker image using samtools to be used (default: quay.io/broadinstitute/samtools:1.9)'
-            default: quay.io/broadinstitute/samtools:1.9
+            doc: 'the docker image using samtools to be used (default: quay.io/biocontainers/samtools:1.9--h10a08f8_12)'
+            default: quay.io/biocontainers/samtools:1.9--h10a08f8_12
             type: string
         outputs:
           - id: bam_no_chrM_reads_output
@@ -683,7 +683,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/samtools:1.9
+            dockerPull: quay.io/biocontainers/samtools:1.9--h10a08f8_12
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3840.0
@@ -779,8 +779,8 @@ steps:
             doc: base name to be used for the output of the task
             type: string
           - id: docker_image
-            doc: 'the docker image using picard to be used (default: quay.io/broadinstitute/picard:2.18.23)'
-            default: quay.io/broadinstitute/picard:2.18.23
+            doc: 'the docker image using picard to be used (default: quay.io/biocontainers/picard:2.18.3--py27_0)'
+            default: quay.io/biocontainers/picard:2.18.3--py27_0
             type: string
         outputs:
           - id: bam_sort_output
@@ -802,7 +802,7 @@ steps:
 
                     set -euo pipefail
 
-                    java -Xmx3250m -jar /picard-tools/picard.jar SortSam \
+                    java -Xmx3250m -jar /usr/local/share/picard-2.18.3-0/picard.jar SortSam \
                       INPUT=$(inputs.bam_input.path) \
                       SORT_ORDER=$(inputs.sort_order) \
                       MAX_RECORDS_IN_RAM=300000 \
@@ -812,7 +812,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/picard:2.18.23
+            dockerPull: quay.io/biocontainers/picard:2.18.3--py27_0
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3750.0

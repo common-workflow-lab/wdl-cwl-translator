@@ -88,7 +88,7 @@ task BuildBisulfiteReferences {
   >>>
 
   runtime {
-    docker: "quay.io/broadinstitute/bisulfite-references:1.0"
+    docker: "quay.io/mr_c/bisulfite-references:1.0"
     disks: "local-disk " + ceil(3.5 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
     memory: "3.5 GB"
@@ -127,7 +127,7 @@ task Bowtie2Build {
   >>>
 
   runtime {
-    docker: "quay.io/broadinstitute/bowtie2:2.3.4.3"
+    docker: "quay.io/biocontainers/bowtie2:2.3.4--py36pl5.22.0_0"
     disks: "local-disk " + ceil(3 * (if input_size < 1 then 1 else input_size)) + " HDD"
     cpu: 1
     memory: "7 GB"
@@ -164,7 +164,7 @@ task CreateReferenceDictionary {
     fi
 
     # create a reference dict
-    java -Xmx3500m -jar /picard-tools/picard.jar CreateSequenceDictionary \
+    java -Xmx3500m -jar /usr/local/share/picard-2.18.3-0/picard.jar CreateSequenceDictionary \
       REFERENCE=~{reference_fasta} \
       OUTPUT=~{ref_dict_output_name}
     sed -i "s=$(dirname ~{reference_fasta})/==g" ~{ref_dict_output_name}  # for reproducibility
@@ -173,7 +173,7 @@ task CreateReferenceDictionary {
 
   # use docker image for given tool cutadapat
   runtime {
-    docker: "quay.io/broadinstitute/picard:2.18.23"
+    docker: "quay.io/biocontainers/picard:2.18.3--py27_0"
     # if the input size is less than 1 GB adjust to min input size of 1 GB
     # disks should be set to 2 * input file size
     disks: "local-disk " + ceil(2 * (if input_size < 1 then 1 else input_size)) + " HDD"
@@ -223,7 +223,7 @@ task CreateReferenceFastaIndex {
 
   # use docker image for given tool cutadapat
   runtime {
-    docker: "quay.io/broadinstitute/samtools:1.9"
+    docker: "quay.io/biocontainers/samtools:1.9--h10a08f8_12"
     # if the input size is less than 1 GB adjust to min input size of 1 GB
     # disks should be set to 2.25 * input file size
     disks: "local-disk " + ceil(2.25 * (if input_size < 1 then 1 else input_size)) + " HDD"

@@ -70,7 +70,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bisulfite-references:1.0
+            dockerPull: quay.io/mr_c/bisulfite-references:1.0
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3337.860107421875
@@ -136,7 +136,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
+            dockerPull: quay.io/biocontainers/bowtie2:2.3.4--py36pl5.22.0_0
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 6675.72021484375
@@ -202,7 +202,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/bowtie2:2.3.4.3
+            dockerPull: quay.io/biocontainers/bowtie2:2.3.4--py36pl5.22.0_0
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 6675.72021484375
@@ -259,7 +259,7 @@ steps:
                     fi
 
                     # create a reference dict
-                    java -Xmx3500m -jar /picard-tools/picard.jar CreateSequenceDictionary \
+                    java -Xmx3500m -jar /usr/local/share/picard-2.18.3-0/picard.jar CreateSequenceDictionary \
                       REFERENCE=$(inputs.reference_fasta.path) \
                       OUTPUT=$(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")
                     sed -i "s=\$(dirname $(inputs.reference_fasta.path))/==g" $(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")  # for reproducibility
@@ -269,7 +269,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/picard:2.18.23
+            dockerPull: quay.io/biocontainers/picard:2.18.3--py27_0
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 4000.0
@@ -337,7 +337,7 @@ steps:
             networkAccess: true
         hints:
           - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/samtools:1.9
+            dockerPull: quay.io/biocontainers/samtools:1.9--h10a08f8_12
           - class: ResourceRequirement
             coresMin: 1
             ramMin: 3337.860107421875
