@@ -174,7 +174,7 @@ task TrimAdapters {
     String adapter_seq_read1
     String adapter_seq_read2
     String output_base_name
-    String docker_image = "quay.io/broadinstitute/cutadapt:1.18"
+    String docker_image = "quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1"
   }
 
   parameter_meta {
@@ -185,7 +185,7 @@ task TrimAdapters {
     adapter_seq_read1: "cutadapt option for the sequence adapter for read 1 fastq"
     adapter_seq_read2: "cutadapt option for the sequence adapter for read 2 fastq"
     output_base_name: "base name to be used for the output of the task"
-    docker_image: "the docker image using cutadapt to be used (default: quay.io/broadinstitute/cutadapt:1.18)"
+    docker_image: "the docker image using cutadapt to be used (default: quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1)"
   }
 
   # runtime requirements based upon input file size
@@ -294,13 +294,13 @@ task SamToBam {
   input {
     File sam_input
     String output_base_name
-    String docker_image = "quay.io/broadinstitute/samtools:1.9"
+    String docker_image = "quay.io/biocontainers/samtools:1.9--h10a08f8_12"
   }
 
   parameter_meta {
     sam_input: "the aligned sam produced by the aligner"
     output_base_name: "base name to be used for the output of the task"
-    docker_image: "the docker image using samtools to be used (default: quay.io/broadinstitute/samtools:1.9)"
+    docker_image: "the docker image using samtools to be used (default: quay.io/biocontainers/samtools:1.9--h10a08f8_12)"
   }
 
   # output name for filtered read
@@ -338,14 +338,14 @@ task SortSam {
     File bam_input
     String sort_order = "coordinate"
     String output_base_name
-    String docker_image = "quay.io/broadinstitute/picard:2.18.23"
+    String docker_image = "quay.io/biocontainers/picard:2.18.3--py27_0"
   }
 
   parameter_meta {
     bam_input: "the bam to be sorted by picard tools"
     sort_order: "the desired way for the bam to be sorted (default: coordinate)"
     output_base_name: "base name to be used for the output of the task"
-    docker_image: "the docker image using picard to be used (default: quay.io/broadinstitute/picard:2.18.23)"
+    docker_image: "the docker image using picard to be used (default: quay.io/biocontainers/picard:2.18.3--py27_0)"
   }
 
   # output name for sorted bam
@@ -358,7 +358,7 @@ task SortSam {
   command {
     set -euo pipefail
 
-    java -Xmx3250m -jar /picard-tools/picard.jar SortSam \
+    java -Xmx3250m -jar /usr/local/share/picard-2.18.3-0/picard.jar SortSam \
       INPUT=~{bam_input} \
       SORT_ORDER=~{sort_order} \
       MAX_RECORDS_IN_RAM=300000 \
@@ -383,13 +383,13 @@ task FilterMarkDuplicates {
   input {
     File bam_input
     String output_base_name
-    String docker_image = "quay.io/broadinstitute/picard:2.18.23"
+    String docker_image = "quay.io/biocontainers/picard:2.18.3--py27_0"
   }
 
   parameter_meta {
     bam_input: "the bam to passed into picard tools"
     output_base_name: "base name to be used for the output of the task"
-    docker_image: "the docker image using picard to be used (default: quay.io/broadinstitute/picard:2.18.23)"
+    docker_image: "the docker image using picard to be used (default: quay.io/biocontainers/picard:2.18.3--py27_0)"
   }
 
   # output namefor mark duplicates
@@ -402,7 +402,7 @@ task FilterMarkDuplicates {
   command {
     set -euo pipefail
 
-    java -Xmx3250m -jar /picard-tools/picard.jar MarkDuplicates \
+    java -Xmx3250m -jar /usr/local/share/picard-2.18.3-0/picard.jar MarkDuplicates \
       INPUT=~{bam_input} \
       OUTPUT=~{bam_remove_dup_output_name} \
       METRICS_FILE=~{metric_remove_dup_output_name}
@@ -428,14 +428,14 @@ task FilterMinMapQuality {
     File bam_input
     Int min_map_quality
     String output_base_name
-    String docker_image = "quay.io/broadinstitute/samtools:1.9"
+    String docker_image = "quay.io/biocontainers/samtools:1.9--h10a08f8_12"
   }
 
   parameter_meta {
     bam_input: "the bam to passed into samtools tools"
     min_map_quality: "the minimum mapping quality to be filtered by samtools view and snap-pre (snaptools task)"
     output_base_name: "base name to be used for the output of the task"
-    docker_image: "the docker image using samtools to be used (default: quay.io/broadinstitute/samtools:1.9)"
+    docker_image: "the docker image using samtools to be used (default: quay.io/biocontainers/samtools:1.9--h10a08f8_12)"
   }
 
   # output name for filtered read
@@ -519,13 +519,13 @@ task FilterMitochondrialReads {
   input {
     File bam_input
     String output_base_name
-    String docker_image = "quay.io/broadinstitute/samtools:1.9"
+    String docker_image = "quay.io/biocontainers/samtools:1.9--h10a08f8_12"
   }
 
   parameter_meta {
     bam_input: "the bam to passed into samtools tools"
     output_base_name: "base name to be used for the output of the task"
-    docker_image: "the docker image using samtools to be used (default: quay.io/broadinstitute/samtools:1.9)"
+    docker_image: "the docker image using samtools to be used (default: quay.io/biocontainers/samtools:1.9--h10a08f8_12)"
   }
 
   # output name for sorted bam
