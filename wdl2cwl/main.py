@@ -213,7 +213,11 @@ def get_literal_value(expr: WDL.Expr.Base) -> Optional[Any]:
     """Recursively get a literal value."""
     literal = expr.literal
     if literal:
-        if hasattr(expr.parent, "type") and isinstance(expr.parent.type, WDL.Type.File):  # type: ignore[attr-defined]
+        if (
+            hasattr(expr.parent, "type")
+            and expr.parent is not None
+            and isinstance(expr.parent.type, WDL.Type.File)
+        ):
             return {"class": "File", "path": literal.value}
         value = literal.value
         if isinstance(expr.type, WDL.Type.Map):
@@ -221,7 +225,11 @@ def get_literal_value(expr: WDL.Expr.Base) -> Optional[Any]:
         if isinstance(value, list):
             result = []
             for item in value:
-                if hasattr(expr.parent, "type") and isinstance(expr.parent.type.item_type, WDL.Type.File):  # type: ignore[attr-defined]
+                if (
+                    hasattr(expr.parent, "type")
+                    and expr.parent is not None
+                    and isinstance(expr.parent.type.item_type, WDL.Type.File)
+                ):
                     result.append({"class": "File", "path": item.value})
                 else:
                     result.append(item.value)
@@ -303,7 +311,11 @@ class Converter:
                     member = None
                     id_name = wf_expr.expr.name
                     referee = wf_expr.expr.referee
-                    if referee and isinstance(referee, WDL.Tree.Scatter):
+                    if (
+                        referee
+                        and isinstance(referee, WDL.Tree.Scatter)
+                        and isinstance(referee.expr, (WDL.Expr.Get, WDL.Expr.String))
+                    ):
                         scatter_name, value_from = self.get_step_input_expr(
                             referee.expr
                         )
@@ -1035,8 +1047,10 @@ class Converter:
             add_left_operand_value, _, left_sources = self.get_expr(add_left_operand)
             add_right_operand, _, right_sources = self.get_expr(arguments[1])
             add_sources = left_sources + right_sources
-            if getattr(add_left_operand, "function_name", None) == "basename":
-                referer = wdl_apply_expr.parent.name  # type: ignore[attr-defined]
+            if getattr(
+                add_left_operand, "function_name", None
+            ) == "basename" and isinstance(wdl_apply_expr.parent, WDL.Tree.Decl):
+                referer = wdl_apply_expr.parent.name
                 treat_as_optional = True if referer in self.non_static_values else False
             return (
                 (
