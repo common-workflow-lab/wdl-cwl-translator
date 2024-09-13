@@ -8,6 +8,7 @@ tags:
 authors:
   - name: Dinithi Wickramaratne
   - name: Dennis Uchenna Chukwunta
+    orcid: 0000-0001-8908-0155
   - name: Michael R. Crusoe
     orcid: 0000-0002-2961-9670
   - name: Bruno P. Kinoshita
