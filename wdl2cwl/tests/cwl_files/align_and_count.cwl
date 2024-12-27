@@ -39,8 +39,8 @@ steps:
       - id: top_hit_id
       - id: viralngs_version
     run:
-        class: CommandLineTool
         id: align_and_count
+        class: CommandLineTool
         inputs:
           - id: reads_bam
             type: File

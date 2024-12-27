@@ -55,8 +55,8 @@ steps:
     out:
       - id: references
     run:
-        class: CommandLineTool
         id: GetReferences
+        class: CommandLineTool
         doc: Download files needed for building the designated references
         inputs:
           - id: gtf_version
@@ -107,8 +107,8 @@ steps:
     out:
       - id: refflat
     run:
-        class: CommandLineTool
         id: EchoRef
+        class: CommandLineTool
         inputs:
           - id: ref
             type:

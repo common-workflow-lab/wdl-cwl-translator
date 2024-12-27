@@ -285,8 +285,8 @@ steps:
     out:
       - id: out
     run:
-        class: CommandLineTool
         id: runblastp
+        class: CommandLineTool
         inputs:
           - id: docker
             type: string
@@ -423,8 +423,8 @@ steps:
     out:
       - id: out
     run:
-        class: CommandLineTool
         id: runblastn
+        class: CommandLineTool
         inputs:
           - id: docker
             type: string
@@ -566,8 +566,8 @@ steps:
     out:
       - id: out
     run:
-        class: CommandLineTool
         id: runblastx
+        class: CommandLineTool
         inputs:
           - id: Queryfa
             type: File
@@ -700,8 +700,8 @@ steps:
     out:
       - id: out
     run:
-        class: CommandLineTool
         id: runtblastn
+        class: CommandLineTool
         inputs:
           - id: Queryfa
             type: File
@@ -828,8 +828,8 @@ steps:
     out:
       - id: out
     run:
-        class: CommandLineTool
         id: runtblastx
+        class: CommandLineTool
         inputs:
           - id: Queryfa
             type: File

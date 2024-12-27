@@ -74,8 +74,8 @@ steps:
     out:
       - id: merged_vcf
     run:
-        class: CommandLineTool
         id: survivor
+        class: CommandLineTool
         inputs:
           - id: vcfs
             type:
@@ -141,8 +141,8 @@ steps:
       - id: filtered_sv_vcf
       - id: filtered_sv_vcf_tbi
     run:
-        class: CommandLineTool
         id: filterSvVcfBlocklistBedpe
+        class: CommandLineTool
         inputs:
           - id: input_vcf
             type: File
@@ -226,8 +226,8 @@ steps:
     out:
       - id: sv_variants_tsv
     run:
-        class: CommandLineTool
         id: annotsv
+        class: CommandLineTool
         inputs:
           - id: genome_build
             type: string
@@ -288,8 +288,8 @@ steps:
     out:
       - id: merged_sv_vcf
     run:
-        class: CommandLineTool
         id: bcftoolsMerge
+        class: CommandLineTool
         inputs:
           - id: force_merge
             default: true
@@ -356,8 +356,8 @@ steps:
       - id: filtered_sv_vcf
       - id: filtered_sv_vcf_tbi
     run:
-        class: CommandLineTool
         id: filterSvVcfBlocklistBedpe
+        class: CommandLineTool
         inputs:
           - id: input_vcf
             type: File
@@ -441,8 +441,8 @@ steps:
     out:
       - id: sv_variants_tsv
     run:
-        class: CommandLineTool
         id: annotsv
+        class: CommandLineTool
         inputs:
           - id: genome_build
             type: string
@@ -501,8 +501,8 @@ steps:
     out:
       - id: filtered_tsv
     run:
-        class: CommandLineTool
         id: annotsvFilter
+        class: CommandLineTool
         inputs:
           - id: all_CDS
             default: false

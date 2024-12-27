@@ -25,8 +25,8 @@ steps:
       - id: rev_converted_reference_fasta_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: BuildBisulfiteReferences
+        class: CommandLineTool
         inputs:
           - id: fasta_input
             type: File
@@ -93,8 +93,8 @@ steps:
       - id: bowtie2_index_files
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: Bowtie2Build
+        class: CommandLineTool
         inputs:
           - id: fasta_input
             type: File
@@ -159,8 +159,8 @@ steps:
       - id: bowtie2_index_files
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: Bowtie2Build
+        class: CommandLineTool
         inputs:
           - id: fasta_input
             type: File
@@ -223,8 +223,8 @@ steps:
       - id: ref_dict_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: CreateReferenceDictionary
+        class: CommandLineTool
         inputs:
           - id: reference_fasta
             type: File
@@ -290,8 +290,8 @@ steps:
       - id: ref_index_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: CreateReferenceFastaIndex
+        class: CommandLineTool
         inputs:
           - id: reference_fasta
             type: File
