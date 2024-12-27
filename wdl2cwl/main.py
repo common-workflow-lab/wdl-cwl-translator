@@ -4,21 +4,9 @@ import argparse
 import re
 import sys
 import textwrap
+from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import (
-    Any,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union, cast
 
 import cwl_utils.parser.cwl_v1_2 as cwl
 import regex  # type: ignore
@@ -50,7 +38,7 @@ class ConversionException(Exception):
     """Error during conversion."""
 
 
-def convert(doc: str) -> Dict[str, Any]:
+def convert(doc: str) -> dict[str, Any]:
     """Convert a WDL workflow, reading the file, into a CWL workflow Python object."""
     WDL._parser._lark_comments_buffer.clear()
     root_folder = str(Path(doc).parent)
@@ -82,7 +70,7 @@ def convert(doc: str) -> Dict[str, Any]:
         }
 
 
-def sort_cwl(document: Dict[str, Any]) -> CommentedMap:
+def sort_cwl(document: dict[str, Any]) -> CommentedMap:
     """Sort the sections of the CWL document in a more meaningful order."""
     keyorder = [
         "cwlVersion",
@@ -129,7 +117,7 @@ CWLRecordTypes = TypeVar(
 )
 
 
-def get_mem_in_bytes(unit: str) -> Tuple[int, int]:
+def get_mem_in_bytes(unit: str) -> tuple[int, int]:
     """
     Determine the value of a memory unit in bytes.
 
@@ -211,8 +199,7 @@ def get_expr_name_with_is_file_check(wdl_expr: WDL.Expr.Ident) -> str:
 
 def get_literal_value(expr: WDL.Expr.Base) -> Optional[Any]:
     """Recursively get a literal value."""
-    literal = expr.literal
-    if literal:
+    if literal := expr.literal:
         if (
             hasattr(expr.parent, "type")
             and expr.parent is not None
@@ -282,9 +269,9 @@ class Converter:
 
     def __init__(self) -> None:
         """Initialize the sets used by the object and prevent inconsistent behaviours."""
-        self.non_static_values: Set[str] = set()
-        self.optional_cwl_null: Set[str] = set()
-        self.scatter_names: List[str] = []
+        self.non_static_values: set[str] = set()
+        self.optional_cwl_null: set[str] = set()
+        self.scatter_names: list[str] = []
 
     def load_wdl_objects(
         self, obj: Union[WDL.Tree.Task, WDL.Tree.Workflow]
@@ -297,7 +284,7 @@ class Converter:
 
     def get_step_input_expr(
         self, wf_expr: Union[WDL.Expr.Get, WDL.Expr.String]
-    ) -> Tuple[str, Optional[str]]:
+    ) -> tuple[str, Optional[str]]:
         """
         Get name of expression referenced in workflow call inputs.
 
@@ -339,10 +326,10 @@ class Converter:
     def load_wdl_workflow(self, obj: WDL.Tree.Workflow) -> cwl.Workflow:
         """Load WDL workflow and convert to CWL."""
         wf_name = obj.name
-        requirements: List[cwl.ProcessRequirement] = [cwl.InlineJavascriptRequirement()]
+        requirements: list[cwl.ProcessRequirement] = [cwl.InlineJavascriptRequirement()]
         inputs = self.get_cwl_workflow_inputs(obj.available_inputs, obj.parameter_meta)
-        wf_steps: List[cwl.WorkflowStep] = []
-        outputs: List[cwl.WorkflowOutputParameter] = []
+        wf_steps: list[cwl.WorkflowStep] = []
+        outputs: list[cwl.WorkflowOutputParameter] = []
         scatter_present = False
         step_valuefrom = False
         for (
@@ -429,9 +416,9 @@ class Converter:
             outputs=outputs,
         )
 
-    def get_workflow_scatter(self, scatter: WDL.Tree.Scatter) -> List[cwl.WorkflowStep]:
+    def get_workflow_scatter(self, scatter: WDL.Tree.Scatter) -> list[cwl.WorkflowStep]:
         """Get the CWL Workflow Step equivalent of a list of WDL Scatter Object."""
-        scatter_steps: List[cwl.WorkflowStep] = []
+        scatter_steps: list[cwl.WorkflowStep] = []
         for body_obj in scatter.body:
             with WDLSourceLine(body_obj, ConversionException):
                 if isinstance(body_obj, WDL.Tree.Call):
@@ -446,10 +433,9 @@ class Converter:
         if callee is None:
             raise ConversionException("callee is None. This should not be possible.")
         cwl_callee_inputs = self.get_cwl_task_inputs(callee.inputs)[0]
-        call_inputs = call.inputs
-        inputs_from_call: Dict[str, Tuple[str, Dict[str, Any]]] = {}
+        inputs_from_call: dict[str, tuple[str, dict[str, Any]]] = {}
         input_defaults = set()
-        if call_inputs:
+        if call_inputs := call.inputs:
             scatter_handled = False
             for key, value in call_inputs.items():
                 with WDLSourceLine(value, ConversionException):
@@ -488,7 +474,7 @@ class Converter:
                     if self.scatter_names and not scatter_handled:
                         self.scatter_names[-1] = key
                         scatter_handled = True
-        wf_step_inputs: List[cwl.WorkflowStepInput] = []
+        wf_step_inputs: list[cwl.WorkflowStepInput] = []
         for inp in cwl_callee_inputs:
             call_inp_id = f"{call.name}.{inp.id}"
             source_str, extras = inputs_from_call.get(
@@ -547,12 +533,12 @@ class Converter:
 
     def get_cwl_hints_and_requirements(
         self, obj: WDL.Tree.Task
-    ) -> Tuple[List[cwl.ProcessRequirement], List[cwl.ProcessRequirement]]:
+    ) -> tuple[list[cwl.ProcessRequirement], list[cwl.ProcessRequirement]]:
         """Produce the CWL Requirements list."""
         command = obj.command
         runtime = obj.runtime
-        requirements: List[cwl.ProcessRequirement] = []
-        hints: List[cwl.ProcessRequirement] = []
+        requirements: list[cwl.ProcessRequirement] = []
+        hints: list[cwl.ProcessRequirement] = []
         if "docker" in runtime:
             with WDLSourceLine(runtime["docker"], ConversionException):
                 docker = get_cwl_docker_requirements(
@@ -560,8 +546,7 @@ class Converter:
                 )
                 if docker:
                     hints.append(docker)
-        command_req = self.get_cwl_command_requirements(command.parts)
-        if command_req:
+        if command_req := self.get_cwl_command_requirements(command.parts):
             requirements.append(command_req)
         requirements.append(cwl.InlineJavascriptRequirement())
         requirements.append(cwl.NetworkAccess(networkAccess=True))
@@ -734,8 +719,8 @@ class Converter:
     def get_cwl_type(
         self,
         input_type: WDL.Type.Base,
-        array_type: Type[CWLArrayTypes],
-        record_type: Type[CWLRecordTypes],
+        array_type: type[CWLArrayTypes],
+        record_type: type[CWLRecordTypes],
         parent: Optional[WDL.Error.SourceNode],
     ) -> Union[str, CWLArrayTypes, CWLRecordTypes]:
         """Determine the CWL type for a WDL input declaration."""
@@ -772,7 +757,7 @@ class Converter:
         self,
         outputs: WDL.Env.Bindings[WDL.Type.Base],
     ) -> Iterator[
-        Tuple[
+        tuple[
             str,
             Union[cwl.OutputArraySchema, cwl.OutputRecordSchema, str],
             str,
@@ -884,7 +869,7 @@ class Converter:
         wdl_expr: WDL.Expr.Base,
         target_type: Optional[WDL.Type.Base] = None,
         top: bool = False,
-    ) -> Tuple[str, Optional[WDL.Type.Base], List[str]]:
+    ) -> tuple[str, Optional[WDL.Type.Base], list[str]]:
         """
         Translate WDL Expressions.
 
@@ -895,7 +880,7 @@ class Converter:
         :return: A CWL Expression, and the target WDL type if known, and the list of sources used.
         """
         wdl_type: Optional[WDL.Type.Base] = None
-        sources: List[str] = []
+        sources: list[str] = []
         if isinstance(wdl_expr, WDL.Expr.Apply):
             result, sources = self.get_expr_apply(wdl_expr, top)
         elif isinstance(wdl_expr, WDL.Expr.Get):
@@ -942,7 +927,7 @@ class Converter:
             target_type, WDL.Type.StructInstance
         ):
             decls = []
-            assert target_type.members is not None
+            assert target_type.members is not None  # nosec
             for struct_key, member_type in target_type.members.items():
                 key_expr, _, key_sources = self.get_expr(
                     wdl_expr.members[struct_key], member_type
@@ -964,7 +949,7 @@ class Converter:
 
     def get_expr_string(
         self, wdl_expr_string: WDL.Expr.String, top: bool
-    ) -> Tuple[str, List[str]]:
+    ) -> tuple[str, list[str]]:
         """
         Translate WDL String Expressions.
 
@@ -974,7 +959,7 @@ class Converter:
             return str(wdl_expr_string.literal), []
         parts = wdl_expr_string.parts
         q = cast(str, parts[0])[0]
-        sources: List[str] = []
+        sources: list[str] = []
         if isinstance(parts[1], str):
             string = f"{q}{parts[1]}{q}"
         else:
@@ -993,7 +978,7 @@ class Converter:
 
     def get_expr_ifthenelse(
         self, wdl_ifthenelse: WDL.Expr.IfThenElse
-    ) -> Tuple[str, List[str]]:
+    ) -> tuple[str, list[str]]:
         """
         Translate WDL IfThenElse Expressions.
 
@@ -1008,7 +993,7 @@ class Converter:
 
     def get_expr_apply(
         self, wdl_apply_expr: WDL.Expr.Apply, top: bool
-    ) -> Tuple[str, List[str]]:
+    ) -> tuple[str, list[str]]:
         """
         Translate WDL Apply Expressions.
 
@@ -1084,7 +1069,7 @@ class Converter:
             else:
                 basename_target, suffix = arguments
                 is_file = isinstance(basename_target.type, WDL.Type.File)
-                basename_sources: List[str] = []
+                basename_sources: list[str] = []
                 if isinstance(basename_target, WDL.Expr.Get):
                     if isinstance(basename_target.expr, WDL.Expr.Ident):
                         basename_target_name = get_expr_name(basename_target.expr)
@@ -1120,7 +1105,7 @@ class Converter:
             ]
         elif function_name == "_interpolation_add":
             arg_value, arg_name = arguments
-            iadd_sources: List[str] = []
+            iadd_sources: list[str] = []
             if isinstance(arg_name, WDL.Expr.String) and isinstance(
                 arg_value, (WDL.Expr.Apply, WDL.Expr.String)
             ):
@@ -1219,8 +1204,8 @@ class Converter:
             ), sf_sources
         elif function_name == "select_all":
             array_obj = cast(WDL.Expr.Array, arguments[0])
-            sa_sources: List[str] = []
-            sa_array_items: List[str] = []
+            sa_sources: list[str] = []
+            sa_array_items: list[str] = []
             for item in array_obj.items:
                 item_expr, _, item_sources = self.get_expr(item)
                 sa_array_items.append(str(item_expr))
@@ -1234,7 +1219,7 @@ class Converter:
             only_arg, _, csources = self.get_expr(arguments[0])  # type: ignore
             return f"Math.ceil({only_arg}) ", csources
         elif function_name == "size":
-            ssources: List[str] = []
+            ssources: list[str] = []
             if len(arguments) == 1:
                 left_operand = arguments[0]
                 unit_value = "1"
@@ -1244,7 +1229,7 @@ class Converter:
                 unit_base, unit_exponent = get_mem_in_bytes(right_value)
                 unit_value = f"{unit_base}^{unit_exponent}"
             if isinstance(left_operand, WDL.Expr.Array):
-                sarray_items: List[str] = []
+                sarray_items: list[str] = []
                 for item in left_operand.items:
                     item_expr, _, item_sources = self.get_expr(item)
                     sarray_items.append(item_expr)
@@ -1311,7 +1296,7 @@ class Converter:
 
     def get_expr_get(
         self, wdl_get_expr: WDL.Expr.Get, top: bool
-    ) -> Tuple[str, WDL.Type.Base, List[str]]:
+    ) -> tuple[str, WDL.Type.Base, list[str]]:
         """
         Translate WDL Get Expressions.
 
@@ -1327,7 +1312,7 @@ class Converter:
 
     def get_expr_ident(
         self, wdl_ident_expr: WDL.Expr.Ident, top: bool
-    ) -> Tuple[str, List[str]]:
+    ) -> tuple[str, list[str]]:
         """
         Translate WDL Ident Expressions.
 
@@ -1339,7 +1324,7 @@ class Converter:
         id_name = wdl_ident_expr.name
         referee = wdl_ident_expr.referee
         optional = wdl_ident_expr.type.optional
-        sources: List[str] = []
+        sources: list[str] = []
         if referee:
             with WDLSourceLine(referee, ConversionException):
                 if isinstance(referee, WDL.Tree.Call):
@@ -1380,7 +1365,7 @@ class Converter:
         return f"$({self.get_expr(cpu_runtime)[0]})"
 
     def get_cwl_command_requirements(
-        self, wdl_commands: List[Union[str, WDL.Expr.Placeholder]]
+        self, wdl_commands: list[Union[str, WDL.Expr.Placeholder]]
     ) -> Optional[cwl.InitialWorkDirRequirement]:
         """Translate WDL commands into CWL Initial WorkDir Requirement."""
         command_str: str = ""
@@ -1402,7 +1387,7 @@ class Converter:
 
     def translate_wdl_placeholder(
         self, wdl_placeholder: WDL.Expr.Placeholder, top: bool = False
-    ) -> Tuple[str, Optional[WDL.Type.Base], List[str]]:
+    ) -> tuple[str, Optional[WDL.Type.Base], list[str]]:
         """
         Translate WDL Expr Placeholder.
 
@@ -1416,8 +1401,7 @@ class Converter:
         placeholder_expr, placeholder_expr_type, sources = self.get_expr(
             expr, None, top
         )
-        options = wdl_placeholder.options
-        if options:
+        if options := wdl_placeholder.options:
             if "true" in options:
                 true_str = nice_quote(options["true"])
                 false_str = nice_quote(options["false"])
@@ -1486,10 +1470,10 @@ class Converter:
     def get_cwl_workflow_inputs(
         self,
         wdl_inputs: WDL.Env.Bindings[WDL.Tree.Decl],
-        meta: Optional[Dict[str, Any]] = None,
-    ) -> List[cwl.WorkflowInputParameter]:
+        meta: Optional[dict[str, Any]] = None,
+    ) -> list[cwl.WorkflowInputParameter]:
         """Convert WDL inputs into CWL inputs and return a list of CWL Workflow Input Parameters."""
-        inputs: List[cwl.WorkflowInputParameter] = []
+        inputs: list[cwl.WorkflowInputParameter] = []
 
         for input_decl in wdl_inputs:
             input_name = input_decl.name
@@ -1504,7 +1488,7 @@ class Converter:
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
-                    List[
+                    list[
                         Union[
                             str,
                             cwl.InputArraySchema,
@@ -1543,16 +1527,16 @@ class Converter:
 
     def get_cwl_task_inputs(
         self,
-        wdl_inputs: Optional[List[WDL.Tree.Decl]],
-        meta: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[List[cwl.CommandInputParameter], List[str]]:
+        wdl_inputs: Optional[list[WDL.Tree.Decl]],
+        meta: Optional[dict[str, Any]] = None,
+    ) -> tuple[list[cwl.CommandInputParameter], list[str]]:
         """
         Convert WDL inputs into CWL inputs.
 
         Return a tuple: list of CWL Command Input Parameters and list of restriction checks.
         """
-        inputs: List[cwl.CommandInputParameter] = []
-        restriction_checks: List[str] = []
+        inputs: list[cwl.CommandInputParameter] = []
+        restriction_checks: list[str] = []
 
         if not wdl_inputs:
             return inputs, restriction_checks
@@ -1579,7 +1563,7 @@ class Converter:
 
             if wdl_input.type.optional or isinstance(wdl_input.expr, WDL.Expr.Apply):
                 final_type_of: Union[
-                    List[
+                    list[
                         Union[
                             str,
                             cwl.CommandInputArraySchema,
@@ -1617,10 +1601,10 @@ class Converter:
         return inputs, restriction_checks
 
     def get_struct_inputs(
-        self, members: Optional[Dict[str, WDL.Type.Base]]
-    ) -> List[cwl.CommandInputRecordField]:
+        self, members: Optional[dict[str, WDL.Type.Base]]
+    ) -> list[cwl.CommandInputRecordField]:
         """Get member items of a WDL struct and return a list of cwl.CommandInputRecordField."""
-        inputs: List[cwl.CommandInputRecordField] = []
+        inputs: list[cwl.CommandInputRecordField] = []
         if not members:
             return inputs
         for member, value in members.items():
@@ -1636,12 +1620,12 @@ class Converter:
 
     def set_cwl_task_outputs(
         self,
-        wdl_outputs: List[WDL.Tree.Decl],
-        meta: Optional[Dict[str, Any]],
+        wdl_outputs: list[WDL.Tree.Decl],
+        meta: Optional[dict[str, Any]],
         tool: cwl.CommandLineTool,
-    ) -> List[cwl.CommandOutputParameter]:
+    ) -> list[cwl.CommandOutputParameter]:
         """Convert WDL outputs into CWL outputs and return a list of CWL Command Output Parameters."""
-        outputs: List[cwl.CommandOutputParameter] = []
+        outputs: list[cwl.CommandOutputParameter] = []
 
         if not wdl_outputs:
             return outputs
@@ -1714,7 +1698,7 @@ class Converter:
             else:
                 if wdl_output.type.optional:
                     final_type_of: Union[
-                        List[
+                        list[
                             Union[
                                 str,
                                 cwl.CommandOutputArraySchema,
@@ -1729,7 +1713,7 @@ class Converter:
                 else:
                     final_type_of = type_of
                 if glob:
-                    globs: List[str] = []
+                    globs: list[str] = []
                     if isinstance(wdl_output.expr, WDL.Expr.Array):
                         targets: Sequence[WDL.Expr.Base] = wdl_output.expr.items
                     else:
@@ -1768,7 +1752,7 @@ class Converter:
         return outputs
 
 
-def main(args: Union[List[str], None] = None) -> None:
+def main(args: Union[list[str], None] = None) -> None:
     """Entry point."""
     # Command-line parsing.
     parser = argparse.ArgumentParser(

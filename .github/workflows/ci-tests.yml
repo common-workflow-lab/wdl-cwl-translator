@@ -11,12 +11,12 @@ jobs:
   tox:
     name: CI tests via Tox
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
         py-ver-major: [3]
-        py-ver-minor: [8, 9, 10, 11]
+        py-ver-minor: [9, 10, 11, 12, 13]
         step: [lint, unit, mypy]
 
     env:
@@ -63,15 +63,15 @@ jobs:
   tox-style:
     name: CI linters via Tox
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
         step: [pydocstyle]
 
     env:
-      py-semver: 3.9
-      TOXENV: ${{ format('py39-{0}', matrix.step) }}
+      py-semver: 3.12
+      TOXENV: ${{ format('py312-{0}', matrix.step) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +104,7 @@ jobs:
   cwltests:
     name: Run functional tests
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -114,7 +114,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: Cache for pip and cwltool intermediate files
         uses: actions/cache@v4

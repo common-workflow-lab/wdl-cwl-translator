@@ -28,7 +28,7 @@ PACKAGE=wdl2cwl
 PYSOURCES=$(wildcard ${MODULE}/**.py ${MODULE}/avro/*.py ${MODULE}/tests/*.py)
 DEVPKGS=diff_cover black pylint pep257 pydocstyle flake8 tox tox-pyenv \
 	isort wheel autoflake flake8-bugbear pyupgrade bandit pip \
-        setuptools build
+        setuptools build auto-walrus
 COVBASE=coverage run --append
 
 VERSION=v$(shell echo $$(tail -n 1 wdl2cwl/__init__.py | awk '{print $$3}'))
@@ -176,7 +176,8 @@ mypy: $(filter-out wdl2cwl/WdlV1_1%,$(PYSOURCES))
 	mypy $^
 
 pyupgrade: $(filter-out wdl2cwl/WdlV1_1%,$(PYSOURCES))
-	pyupgrade --exit-zero-even-if-changed --py37-plus $^
+	pyupgrade --exit-zero-even-if-changed --py39-plus $^
+	auto-walrus $^
 
 release-test: FORCE
 	git diff-index --quiet HEAD -- || ( echo You have uncommitted changes, please commit them and try again; false )
