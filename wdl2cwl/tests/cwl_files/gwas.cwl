@@ -21,8 +21,8 @@ steps:
       - id: sex
       - id: ids
     run:
-        class: CommandLineTool
         id: parse_metadata
+        class: CommandLineTool
         inputs:
           - id: metadata_csv
             type: File
@@ -80,8 +80,8 @@ steps:
     out:
       - id: logistic
     run:
-        class: CommandLineTool
         id: run_gwas
+        class: CommandLineTool
         inputs:
           - id: vcf
             type: File
@@ -156,8 +156,8 @@ steps:
     out:
       - id: manhattan_plot
     run:
-        class: CommandLineTool
         id: create_plot
+        class: CommandLineTool
         inputs:
           - id: assoc_file
             type: File

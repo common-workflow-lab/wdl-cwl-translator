@@ -53,8 +53,8 @@ steps:
       - id: top_hit_id
       - id: viralngs_version
     run:
-        class: CommandLineTool
         id: align_and_count
+        class: CommandLineTool
         inputs:
           - id: reads_bam
             type: File
@@ -158,8 +158,8 @@ steps:
       - id: count_summary
       - id: viralngs_version
     run:
-        class: CommandLineTool
         id: align_and_count_summary
+        class: CommandLineTool
         inputs:
           - id: counts_txt
             type:
@@ -221,8 +221,8 @@ steps:
       - id: count_summary
       - id: viralngs_version
     run:
-        class: CommandLineTool
         id: align_and_count_summary
+        class: CommandLineTool
         inputs:
           - id: counts_txt
             type:

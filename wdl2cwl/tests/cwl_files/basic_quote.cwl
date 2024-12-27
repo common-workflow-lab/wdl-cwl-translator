@@ -104,8 +104,8 @@ steps:
     out:
       - id: out
     run:
-        class: CommandLineTool
         id: file_quote
+        class: CommandLineTool
         inputs:
           - id: file_arr
             type:

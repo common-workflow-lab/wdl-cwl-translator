@@ -99,8 +99,8 @@ steps:
     out:
       - id: references
     run:
-        class: CommandLineTool
         id: GetReferences
+        class: CommandLineTool
         doc: Download files needed for building the designated references
         inputs:
           - id: gtf_version
@@ -158,8 +158,8 @@ steps:
     out:
       - id: refflat
     run:
-        class: CommandLineTool
         id: BuildPicardRefFlat
+        class: CommandLineTool
         inputs:
           - id: references
             type:
@@ -209,8 +209,8 @@ steps:
     out:
       - id: interval_list
     run:
-        class: CommandLineTool
         id: BuildIntervalList
+        class: CommandLineTool
         inputs:
           - id: references
             type:
@@ -279,8 +279,8 @@ steps:
     out:
       - id: star_index
     run:
-        class: CommandLineTool
         id: BuildStar
+        class: CommandLineTool
         doc: build reference index files for STAR aligner
         inputs:
           - id: gtf_version
@@ -348,8 +348,8 @@ steps:
       - id: annotation_gtf_modified_introns
       - id: modified_references
     run:
-        class: CommandLineTool
         id: BuildStarSingleNucleus
+        class: CommandLineTool
         doc: Modify gtf files and build reference index files for STAR aligner
         inputs:
           - id: gtf_version
@@ -437,8 +437,8 @@ steps:
     out:
       - id: rsem_index
     run:
-        class: CommandLineTool
         id: BuildRsem
+        class: CommandLineTool
         doc: build reference index files for RSEM
         inputs:
           - id: gtf_version
@@ -490,8 +490,8 @@ steps:
     out:
       - id: hisat2_index
     run:
-        class: CommandLineTool
         id: BuildHisat2FromRsem
+        class: CommandLineTool
         inputs:
           - id: rsem_index
             type: File
@@ -542,8 +542,8 @@ steps:
     out:
       - id: hisat2_index
     run:
-        class: CommandLineTool
         id: BuildHisat2
+        class: CommandLineTool
         inputs:
           - id: gtf_version
             type: string
@@ -599,8 +599,8 @@ steps:
     out:
       - id: hisat2_index
     run:
-        class: CommandLineTool
         id: BuildHisat2SnpHaplotypeSplicing
+        class: CommandLineTool
         inputs:
           - id: organism
             type: string

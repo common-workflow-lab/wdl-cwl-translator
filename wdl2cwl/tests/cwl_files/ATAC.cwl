@@ -138,8 +138,8 @@ steps:
       - id: fastq_trimmed_adapter_output_read2
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: TrimAdapters
+        class: CommandLineTool
         inputs:
           - id: fastq_input_read1
             doc: read 1 fastq file as input for the pipeline
@@ -241,8 +241,8 @@ steps:
       - id: sam_aligned_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: BWAPairedEndAlignment
+        class: CommandLineTool
         inputs:
           - id: fastq_input_read1
             doc: the trimmed read 1 fastq file as input for the aligner
@@ -334,8 +334,8 @@ steps:
       - id: bam_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: SamToBam
+        class: CommandLineTool
         inputs:
           - id: sam_input
             doc: the aligned sam produced by the aligner
@@ -401,8 +401,8 @@ steps:
       - id: bam_sort_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: SortSam
+        class: CommandLineTool
         inputs:
           - id: bam_input
             doc: the bam to be sorted by picard tools
@@ -473,8 +473,8 @@ steps:
       - id: bam_filter_mapq_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: FilterMinMapQuality
+        class: CommandLineTool
         inputs:
           - id: bam_input
             doc: the bam to passed into samtools tools
@@ -546,8 +546,8 @@ steps:
       - id: bam_filter_fragment_length_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: FilterMaxFragmentLength
+        class: CommandLineTool
         inputs:
           - id: bam_input
             doc: the bam to passed into gatk tools
@@ -616,8 +616,8 @@ steps:
       - id: bam_chrM_reads_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: FilterMitochondrialReads
+        class: CommandLineTool
         inputs:
           - id: bam_input
             doc: the bam to passed into samtools tools
@@ -706,8 +706,8 @@ steps:
     out:
       - id: compliant_bam_output
     run:
-        class: CommandLineTool
         id: MakeCompliantBAM
+        class: CommandLineTool
         inputs:
           - id: bam_input
             doc: the bam with barcodes in the read ids that need to be converted to
@@ -765,8 +765,8 @@ steps:
       - id: bam_sort_output
       - id: monitoring_log
     run:
-        class: CommandLineTool
         id: SortSam
+        class: CommandLineTool
         inputs:
           - id: bam_input
             doc: the bam to be sorted by picard tools
@@ -835,8 +835,8 @@ steps:
     out:
       - id: compliant_bam_output
     run:
-        class: CommandLineTool
         id: MakeCompliantBAM
+        class: CommandLineTool
         inputs:
           - id: bam_input
             doc: the bam with barcodes in the read ids that need to be converted to
@@ -898,8 +898,8 @@ steps:
       - id: snap_file_output
       - id: snap_qc_output
     run:
-        class: CommandLineTool
         id: SnapPre
+        class: CommandLineTool
         inputs:
           - id: bam_input
             doc: the bam to passed into snaptools tools
@@ -981,8 +981,8 @@ steps:
     out:
       - id: snap_output
     run:
-        class: CommandLineTool
         id: SnapCellByBin
+        class: CommandLineTool
         inputs:
           - id: snap_input
             doc: the bam to passed into snaptools tools
@@ -1047,8 +1047,8 @@ steps:
       - id: binCounts
       - id: barcodesSection
     run:
-        class: CommandLineTool
         id: BreakoutSnap
+        class: CommandLineTool
         inputs:
           - id: snap_input
             type: File

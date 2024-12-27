@@ -39,8 +39,8 @@ steps:
       - id: out
       - id: result
     run:
-        class: CommandLineTool
         id: echo
+        class: CommandLineTool
         inputs:
           - id: in
             type: string
