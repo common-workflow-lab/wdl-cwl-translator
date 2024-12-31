@@ -55,7 +55,7 @@ Tracker = "https://github.com/common-workflow-lab/wdl-cwl-translator/issues"
 [project.optional-dependencies]
 
 mypy = [
-    "mypy==1.14.0",
+    "mypy==1.14.1",
     "types-requests",
     "types-setuptools",
 ]
