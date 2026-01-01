@@ -38,7 +38,7 @@ dependencies = [
     "cwl-utils >= 0.36, < 0.37",
     "miniwdl",
     "regex",
-    "ruamel.yaml < 0.17.22"
+    "ruamel.yaml < 0.19.1"
 ]
 dynamic = ["version"]
 
