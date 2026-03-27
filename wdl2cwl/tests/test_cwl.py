@@ -7,7 +7,7 @@ from typing import Any, NamedTuple, Union
 import pytest
 
 from ..main import ConversionException, Converter, main
-from .util import get_data
+from .util import get_data, get_path
 
 
 def test_meta(caplog: pytest.LogCaptureFixture) -> None:
@@ -79,7 +79,7 @@ def test_meta(caplog: pytest.LogCaptureFixture) -> None:
 def test_wdls(description_name: str) -> None:
     """Test WDL to CWL conversion."""
     with open(
-        get_data(f"cwl_files/{description_name[:-3]}cwl"), encoding="utf-8"
+        get_path(f"cwl_files/{description_name[:-3]}cwl"), encoding="utf-8"
     ) as file:
         with NamedTemporaryFile(mode="w", encoding="utf-8") as output:
             main(["-o", output.name, get_data(f"wdl_files/{description_name}")])
@@ -102,7 +102,7 @@ def test_wdl_url(
     caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Test WDL to CWL conversion using a HTTPS URL."""
-    with open(get_data("cwl_files/bowtie.cwl"), encoding="utf-8") as file:
+    with open(get_path("cwl_files/bowtie.cwl"), encoding="utf-8") as file:
         main(
             [
                 "https://github.com/biowdl/tasks/raw/c5cfd2f5acc2ff729987b86d38b29af046677fdc/bowtie.wdl"
