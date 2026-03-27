@@ -26,7 +26,7 @@ PACKAGE=wdl2cwl
 # `SHELL=bash` doesn't work for some, so don't use BASH-isms like
 # `[[` conditional expressions.
 PYSOURCES=$(wildcard ${MODULE}/**.py ${MODULE}/avro/*.py ${MODULE}/tests/*.py)
-DEVPKGS=diff_cover black pylint pep257 pydocstyle flake8 tox tox-pyenv \
+DEVPKGS=diff_cover black pylint pep257 pydocstyle flake8 tox \
 	isort wheel autoflake flake8-bugbear pyupgrade bandit pip \
         setuptools build auto-walrus
 COVBASE=coverage run --append
