@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.2"]
+requires = ["setuptools>=61.2", "setuptools_scm>=8.0.4,<10"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -79,15 +79,10 @@ platforms = ["any"]
 license-files = ["LICENSE"]
 include-package-data = true
 packages = [
-	"wdl2cwl",
-	"wdl2cwl.tests",
-	"wdl2cwl.tests.cwl_files",
-	"wdl2cwl.tests.inputs",
-	"wdl2cwl.tests.inputs.deepvariant_testdata",
-	"wdl2cwl.tests.inputs.bcftools",
-	"wdl2cwl.tests.wdl_files",
-	"wdl2cwl.tests.wdl_files.tools",
-	"wdl2cwl.tests.wdl_files.tasks"
+        "wdl2cwl",
+        "wdl2cwl.tests",
+        "wdl2cwl.tests.cwl_files",
+        "wdl2cwl.tests.wdl_files",
 ]
 
 [tool.setuptools.dynamic]
