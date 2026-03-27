@@ -1,19 +1,22 @@
 """Helper methods for tests."""
 
+import atexit
 import os
+from contextlib import ExitStack
+from importlib.resources import as_file, files
+from pathlib import Path
 
-from pkg_resources import Requirement, ResolutionError, resource_filename
+
+def get_path(filename: str) -> Path:
+    """Get the filepath for a given test file."""
+    # normalizing path depending on OS or else it will cause problem when joining path
+    filename = os.path.normpath(filename)
+    file_manager = ExitStack()
+    atexit.register(file_manager.close)
+    traversable = files("wdl2cwl") / "tests" / filename
+    filepath = file_manager.enter_context(as_file(traversable))
+    return filepath.resolve()
 
 
 def get_data(filename: str) -> str:
-    """Safely get a data file even if we are installed or running from an archive."""
-    filename = os.path.normpath(filename)  # normalizing path depending on OS
-    # or else it will cause problem when joining path
-    filepath = None
-    try:
-        filepath = resource_filename(Requirement.parse("wdl2cwl"), filename)
-    except ResolutionError:
-        pass
-    if not filepath or not os.path.isfile(filepath):
-        filepath = os.path.join(os.path.dirname(__file__), filename)
-    return filepath
+    return str(get_path(filename))
