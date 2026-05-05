@@ -20,14 +20,15 @@ steps:
     out:
       - genome_fa
     run:
-        class: ExpressionTool
-        inputs:
-          - id: target
-            type: Any
-        outputs:
-          - id: genome_fa
-            type: File
-        expression: '${return {"genome_fa": inputs.target}; }'
+      id: _GetReferences.references.genome_fa_etool
+      class: ExpressionTool
+      inputs:
+        - id: target
+          type: Any
+      outputs:
+        - id: genome_fa
+          type: File
+      expression: '${return {"genome_fa": inputs.target}; }'
   - id: _GetReferences.references.annotation_gtf
     in:
       - id: target
@@ -36,14 +37,15 @@ steps:
     out:
       - annotation_gtf
     run:
-        class: ExpressionTool
-        inputs:
-          - id: target
-            type: Any
-        outputs:
-          - id: annotation_gtf
-            type: File
-        expression: '${return {"annotation_gtf": inputs.target}; }'
+      id: _GetReferences.references.annotation_gtf_etool
+      class: ExpressionTool
+      inputs:
+        - id: target
+          type: Any
+      outputs:
+        - id: annotation_gtf
+          type: File
+      expression: '${return {"annotation_gtf": inputs.target}; }'
   - id: GetReferences
     in:
       - id: gtf_version
@@ -55,51 +57,51 @@ steps:
     out:
       - id: references
     run:
-        id: GetReferences
-        class: CommandLineTool
-        doc: Download files needed for building the designated references
-        inputs:
-          - id: gtf_version
-            type: string
-          - id: organism
-            type: string
-          - id: organism_prefix
-            type: string
-        outputs:
-          - id: references
-            type:
-                name: References
-                fields:
-                  - name: genome_fa
-                    type: File
-                  - name: annotation_gtf
-                    type: File
-                type: record
-            outputBinding:
-                outputEval: '$({ "genome_fa": { "class": "File", "path": runtime.outdir+"/"+"GRC"
-                    + inputs.organism_prefix + "38.primary_assembly.genome.fa" },
-                    "annotation_gtf": { "class": "File", "path": runtime.outdir+"/"+"gencode.v"
-                    + inputs.gtf_version + ".primary_assembly.annotation.gtf" } })'
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: GetReferences
+      class: CommandLineTool
+      doc: Download files needed for building the designated references
+      inputs:
+        - id: gtf_version
+          type: string
+        - id: organism
+          type: string
+        - id: organism_prefix
+          type: string
+      outputs:
+        - id: references
+          type:
+            name: References
+            fields:
+              - name: genome_fa
+                type: File
+              - name: annotation_gtf
+                type: File
+            type: record
+          outputBinding:
+            outputEval: '$({ "genome_fa": { "class": "File", "path": runtime.outdir+"/"+"GRC"
+              + inputs.organism_prefix + "38.primary_assembly.genome.fa" }, "annotation_gtf":
+              { "class": "File", "path": runtime.outdir+"/"+"gencode.v" + inputs.gtf_version
+              + ".primary_assembly.annotation.gtf" } })'
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    set -eo pipefail
+                set -eo pipefail
 
-                    echo a > $("GRC" + inputs.organism_prefix + "38.primary_assembly.genome.fa")
-                    echo b > $("gencode.v" + inputs.gtf_version + ".primary_assembly.annotation.gtf")
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: ResourceRequirement
-            outdirMin: 1024
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+                echo a > $("GRC" + inputs.organism_prefix + "38.primary_assembly.genome.fa")
+                echo b > $("gencode.v" + inputs.gtf_version + ".primary_assembly.annotation.gtf")
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: ResourceRequirement
+          outdirMin: 1024
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
   - id: EchoRef
     in:
       - id: ref
@@ -107,41 +109,41 @@ steps:
     out:
       - id: refflat
     run:
-        id: EchoRef
-        class: CommandLineTool
-        inputs:
-          - id: ref
-            type:
-                name: References
-                fields:
-                  - name: genome_fa
-                    type: File
-                  - name: annotation_gtf
-                    type: File
-                type: record
-        outputs:
-          - id: refflat
-            type: File
-            outputBinding:
-                glob: $(inputs.ref.annotation_gtf.basename.replace(/\.gtf$/, '')  +
-                    ".refflat.txt")
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: EchoRef
+      class: CommandLineTool
+      inputs:
+        - id: ref
+          type:
+            name: References
+            fields:
+              - name: genome_fa
+                type: File
+              - name: annotation_gtf
+                type: File
+            type: record
+      outputs:
+        - id: refflat
+          type: File
+          outputBinding:
+            glob: $(inputs.ref.annotation_gtf.basename.replace(/\.gtf$/, '')  + 
+              ".refflat.txt")
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    touch $(inputs.ref.annotation_gtf.basename.replace(/\.gtf$/, '')  + ".refflat.txt")
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: ResourceRequirement
-            outdirMin: 1024
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+                touch $(inputs.ref.annotation_gtf.basename.replace(/\.gtf$/, '')  + ".refflat.txt")
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: ResourceRequirement
+          outdirMin: 1024
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
 outputs:
   - id: test.genome_fa
     outputSource: _GetReferences.references.genome_fa/genome_fa

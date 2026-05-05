@@ -5,36 +5,36 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4+
+        entry: |2+
 
 
-            set -eo pipefail
+          set -eo pipefail
 
-            cacheInvalidationRandomString=4
+          cacheInvalidationRandomString=4
 
-            # test each output for equality, echoing any failure states to stdout
-            fail=false
+          # test each output for equality, echoing any failure states to stdout
+          fail=false
 
-            echo Metrics Validation: $(inputs.metric_and_index_validation_result)
-            if [ $(inputs.metric_and_index_validation_result) == "FAIL" ]; then
-                echo --- Ignoring failed metric and index test ---
-                # Do not fail tests for this
-                # fail=true
-            fi
+          echo Metrics Validation: $(inputs.metric_and_index_validation_result)
+          if [ $(inputs.metric_and_index_validation_result) == "FAIL" ]; then
+              echo --- Ignoring failed metric and index test ---
+              # Do not fail tests for this
+              # fail=true
+          fi
 
-            echo Matrix Validation: $(inputs.matrix_validation_result)
-            if [ "$(inputs.matrix_validation_result)" == "FAIL" ]; then
-                fail=true
-            fi
+          echo Matrix Validation: $(inputs.matrix_validation_result)
+          if [ "$(inputs.matrix_validation_result)" == "FAIL" ]; then
+              fail=true
+          fi
 
-            echo Loom Validation: $(inputs.loom_validation_result)
-            if [ "$(inputs.loom_validation_result)" == "FAIL" ]; then
-                echo --- Ignoring failed loom test ---
-                # Do not fail tests for this
-                # fail=true
-            fi
+          echo Loom Validation: $(inputs.loom_validation_result)
+          if [ "$(inputs.loom_validation_result)" == "FAIL" ]; then
+              echo --- Ignoring failed loom test ---
+              # Do not fail tests for this
+              # fail=true
+          fi
 
-            if [ "$fail" == "true" ]; then exit 1; fi
+          if [ "$fail" == "true" ]; then exit 1; fi
 
   - class: InlineJavascriptRequirement
   - class: NetworkAccess

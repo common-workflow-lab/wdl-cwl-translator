@@ -7,31 +7,31 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                echo "Hello world"
+              echo "Hello world"
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory_units;
-            var value = parseInt(`${inputs.memory_amount}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory_units;
+          var value = parseInt(`${inputs.memory_amount}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
     inputs:
       - id: memory_units
@@ -51,31 +51,31 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                echo "Hello world"
+              echo "Hello world"
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory_units;
-            var value = parseInt(`${10 }`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory_units;
+          var value = parseInt(`${10 }`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
     inputs:
       - id: memory_units
@@ -93,31 +93,31 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                echo "Hello world"
+              echo "Hello world"
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = "KiB";
-            var value = parseInt(`${inputs.memory_amount}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = "KiB";
+          var value = parseInt(`${inputs.memory_amount}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
     inputs:
       - id: memory_amount

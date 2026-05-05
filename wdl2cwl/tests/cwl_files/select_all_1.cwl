@@ -21,9 +21,10 @@ outputs:
   - id: first1
     doc: amalgamation
     type:
-        items: int
-        type: array
+      name: _first1_int_array
+      items: int
+      type: array
     outputBinding:
-        outputEval: $([inputs.one, inputs.two, 1, [inputs.two, inputs.one].find(function(element)
-            { return element !== null }) ].filter(function(element) { return element
-            !== null }) )
+      outputEval: $([inputs.one, inputs.two, 1, [inputs.two, 
+        inputs.one].find(function(element) { return element !== null }) 
+        ].filter(function(element) { return element !== null }) )

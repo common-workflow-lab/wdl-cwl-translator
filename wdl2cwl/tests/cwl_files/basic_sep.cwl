@@ -8,8 +8,9 @@ inputs:
     type: string
   - id: to_sep
     type:
-        items: string
-        type: array
+      name: _to_sep_string_array
+      items: string
+      type: array
 steps:
   - id: _str_output_sep
     in:
@@ -20,16 +21,17 @@ steps:
     out:
       - result
     run:
-        class: ExpressionTool
-        inputs:
-          - id: delimiter
-            type: Any
-          - id: to_sep
-            type: Any
-        outputs:
-          - id: result
-            type: string
-        expression: '${ return {"result": inputs.to_sep.join(inputs.delimiter)}; }'
+      id: _str_output_sep_etool
+      class: ExpressionTool
+      inputs:
+        - id: delimiter
+          type: Any
+        - id: to_sep
+          type: Any
+      outputs:
+        - id: result
+          type: string
+      expression: '${ return {"result": inputs.to_sep.join(inputs.delimiter)}; }'
 outputs:
   - id: sepWorkflow.str_output
     outputSource: _str_output_sep/result

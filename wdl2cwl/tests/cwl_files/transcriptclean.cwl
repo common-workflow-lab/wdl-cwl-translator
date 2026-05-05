@@ -7,15 +7,15 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                get_SJs_from_gtf \
-                --f=$(inputs.gtfFile.path) \
-                --g=$(inputs.genomeFile.path) \
-                --minIntronSize=$(inputs.minIntronSize) \
-                $("--o=" + inputs.outputPrefix + ".tsv")
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              get_SJs_from_gtf \
+              --f=$(inputs.gtfFile.path) \
+              --g=$(inputs.genomeFile.path) \
+              --minIntronSize=$(inputs.minIntronSize) \
+              $("--o=" + inputs.outputPrefix + ".tsv")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -24,22 +24,22 @@ $graph:
         dockerPull: biocontainers/transcriptclean:v2.0.2_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -66,8 +66,8 @@ $graph:
         default: 30
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/transcriptclean:v2.0.2_cv1
         type: string
     baseCommand:
@@ -78,7 +78,7 @@ $graph:
         doc: Extracted splice junctions.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + ".tsv")
+          glob: $(inputs.outputPrefix + ".tsv")
   - cwlVersion: v1.2
     id: GetTranscriptCleanStats
     class: CommandLineTool
@@ -86,13 +86,13 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                get_TranscriptClean_stats \
-                $(inputs.inputSam.path) \
-                $(inputs.outputPrefix)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              get_TranscriptClean_stats \
+              $(inputs.inputSam.path) \
+              $(inputs.outputPrefix)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -101,22 +101,22 @@ $graph:
         dockerPull: biocontainers/transcriptclean:v2.0.2_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -136,8 +136,8 @@ $graph:
         default: 30
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/transcriptclean:v2.0.2_cv1
         type: string
     baseCommand:
@@ -154,27 +154,27 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                TranscriptClean \
-                -s $(inputs.inputSam.path) \
-                -g $(inputs.referenceGenome.path) \
-                -t $(inputs.cores) \
-                --maxLenIndel=$(inputs.maxLenIndel) \
-                --maxSJOffset=$(inputs.maxSJOffset) \
-                -o $(inputs.outputPrefix) \
-                $(inputs.correctMismatches ? "-m true" : "-m false") \
-                $(inputs.correctIndels ? "-i true" : "-i false") \
-                $(inputs.correctSJs ? "--correctSJs=true" : "--correctSJs=false") \
-                $(inputs.dryRun ? "--dryRun" : "") \
-                $(inputs.primaryOnly ? "--primaryOnly" : "") \
-                $(inputs.canonOnly ? "--canonOnly" : "") \
-                --bufferSize=$(inputs.bufferSize) \
-                $(inputs.deleteTmp ? "--deleteTmp" : "") \
-                $(inputs.spliceJunctionAnnotation === null ? "" : "-j " + inputs.spliceJunctionAnnotation.path) \
-                $(inputs.variantFile === null ? "" : "-v " + inputs.variantFile.path)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              TranscriptClean \
+              -s $(inputs.inputSam.path) \
+              -g $(inputs.referenceGenome.path) \
+              -t $(inputs.cores) \
+              --maxLenIndel=$(inputs.maxLenIndel) \
+              --maxSJOffset=$(inputs.maxSJOffset) \
+              -o $(inputs.outputPrefix) \
+              $(inputs.correctMismatches ? "-m true" : "-m false") \
+              $(inputs.correctIndels ? "-i true" : "-i false") \
+              $(inputs.correctSJs ? "--correctSJs=true" : "--correctSJs=false") \
+              $(inputs.dryRun ? "--dryRun" : "") \
+              $(inputs.primaryOnly ? "--primaryOnly" : "") \
+              $(inputs.canonOnly ? "--canonOnly" : "") \
+              --bufferSize=$(inputs.bufferSize) \
+              $(inputs.deleteTmp ? "--deleteTmp" : "") \
+              $(inputs.spliceJunctionAnnotation === null ? "" : "-j " + inputs.spliceJunctionAnnotation.path) \
+              $(inputs.variantFile === null ? "" : "-v " + inputs.variantFile.path)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -184,22 +184,22 @@ $graph:
       - class: ResourceRequirement
         coresMin: $(inputs.cores)
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
     inputs:
       - id: inputSam
@@ -240,16 +240,18 @@ $graph:
         default: false
         type: boolean
       - id: canonOnly
-        doc: Only output canonical transcripts and transcript containing annotated
-            noncanonical junctions.
+        doc: Only output canonical transcripts and transcript containing 
+          annotated noncanonical junctions.
         default: false
         type: boolean
       - id: bufferSize
-        doc: Number of lines to output to file at once by each thread during run.
+        doc: Number of lines to output to file at once by each thread during 
+          run.
         default: 100
         type: int
       - id: deleteTmp
-        doc: The temporary directory generated by transcriptclean will be removed.
+        doc: The temporary directory generated by transcriptclean will be 
+          removed.
         default: true
         type: boolean
       - id: spliceJunctionAnnotation
@@ -275,8 +277,8 @@ $graph:
         default: 2880
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/transcriptclean:v2.0.2_cv1
         type: string
     baseCommand:
@@ -287,19 +289,19 @@ $graph:
         doc: Fasta file containing corrected reads.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_clean.fa")
+          glob: $(inputs.outputPrefix + "_clean.fa")
       - id: logFile
         doc: Log file of transcriptclean run.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_clean.log")
+          glob: $(inputs.outputPrefix + "_clean.log")
       - id: outputSam
         doc: Sam file containing corrected aligned reads.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_clean.sam")
+          glob: $(inputs.outputPrefix + "_clean.sam")
       - id: logFileTE
         doc: TE log file of transcriptclean run.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_clean.TE.log")
+          glob: $(inputs.outputPrefix + "_clean.TE.log")

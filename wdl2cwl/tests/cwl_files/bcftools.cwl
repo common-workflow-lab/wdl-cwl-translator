@@ -7,34 +7,34 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPath))"
-                bcftools annotate \
-                -o $(inputs.outputPath) \
-                -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
-                $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path) \
-                $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
-                $(inputs.columns.length > 0 ? "--columns" : "") $(inputs.columns.join(",")) \
-                $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
-                $(inputs.force ? "--force" : "") \
-                $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines.path) \
-                $(inputs.newId === null ? "" : "--set-id " + inputs.newId) \
-                $(inputs.include === null ? "" : "--include " + inputs.include) \
-                $(inputs.keepSites ? "--keep-sites" : "") \
-                $(inputs.markSites === null ? "" : "--mark-sites " + inputs.markSites) \
-                $(inputs.noVersion ? "--no-version" : "") \
-                $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
-                $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
-                $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs.path) \
-                $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
-                $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
-                $(inputs.singleOverlaps ? "--single-overlaps" : "") \
-                $(inputs.removeAnns.length > 0 ? "--remove" : "") $(inputs.removeAnns.join(",")) \
-                $(inputs.inputFile.path)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPath))"
+              bcftools annotate \
+              -o $(inputs.outputPath) \
+              -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
+              $(inputs.annsFile === null ? "" : "--annotations " + inputs.annsFile.path) \
+              $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
+              $(inputs.columns.length > 0 ? "--columns" : "") $(inputs.columns.join(",")) \
+              $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
+              $(inputs.force ? "--force" : "") \
+              $(inputs.headerLines === null ? "" : "--header-lines " + inputs.headerLines.path) \
+              $(inputs.newId === null ? "" : "--set-id " + inputs.newId) \
+              $(inputs.include === null ? "" : "--include " + inputs.include) \
+              $(inputs.keepSites ? "--keep-sites" : "") \
+              $(inputs.markSites === null ? "" : "--mark-sites " + inputs.markSites) \
+              $(inputs.noVersion ? "--no-version" : "") \
+              $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
+              $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
+              $(inputs.renameChrs === null ? "" : "--rename-chrs " + inputs.renameChrs.path) \
+              $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
+              $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
+              $(inputs.singleOverlaps ? "--single-overlaps" : "") \
+              $(inputs.removeAnns.length > 0 ? "--remove" : "") $(inputs.removeAnns.join(",")) \
+              $(inputs.inputFile.path)
 
-                $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath : "")
+              $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath : "")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -43,54 +43,58 @@ $graph:
         dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(60 + Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
+        timelimit: $(60 + 
+          Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
+          if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: columns
-        doc: Comma-separated list of columns or tags to carry over from the annotation
-            file (see man page for details).
+        doc: Comma-separated list of columns or tags to carry over from the 
+          annotation file (see man page for details).
         default: []
         type:
-            items: string
-            type: array
+          name: _columns_string_array
+          items: string
+          type: array
       - id: force
-        doc: Continue even when parsing errors, such as undefined tags, are encountered.
+        doc: Continue even when parsing errors, such as undefined tags, are 
+          encountered.
         default: false
         type: boolean
       - id: keepSites
-        doc: Keep sites which do not pass -i and -e expressions instead of discarding
-            them.
+        doc: Keep sites which do not pass -i and -e expressions instead of 
+          discarding them.
         default: false
         type: boolean
       - id: noVersion
-        doc: Do not append version and command line information to the output VCF
-            header.
+        doc: Do not append version and command line information to the output 
+          VCF header.
         default: false
         type: boolean
       - id: samples
         doc: List of samples for sample stats, "-" to include all samples.
         default: []
         type:
-            items: string
-            type: array
+          name: _samples_string_array
+          items: string
+          type: array
       - id: singleOverlaps
         doc: keep memory requirements low with very large annotation files.
         default: false
@@ -99,8 +103,9 @@ $graph:
         doc: List of annotations to remove (see man page for details).
         default: []
         type:
-            items: string
-            type: array
+          name: _removeAnns_string_array
+          items: string
+          type: array
       - id: inputFile
         doc: A vcf or bcf file.
         type: File
@@ -114,8 +119,8 @@ $graph:
         default: output.vcf.gz
         type: string
       - id: annsFile
-        doc: Bgzip-compressed and tabix-indexed file with annotations (see man page
-            for details).
+        doc: Bgzip-compressed and tabix-indexed file with annotations (see man 
+          page for details).
         type:
           - File
           - 'null'
@@ -125,13 +130,14 @@ $graph:
           - File
           - 'null'
       - id: collapse
-        doc: Treat as identical records with <snps|indels|both|all|some|none>, see
-            man page for details.
+        doc: Treat as identical records with <snps|indels|both|all|some|none>, 
+          see man page for details.
         type:
           - string
           - 'null'
       - id: exclude
-        doc: Exclude sites for which the expression is true (see man page for details).
+        doc: Exclude sites for which the expression is true (see man page for 
+          details).
         type:
           - string
           - 'null'
@@ -146,13 +152,14 @@ $graph:
           - string
           - 'null'
       - id: include
-        doc: Select sites for which the expression is true (see man page for details).
+        doc: Select sites for which the expression is true (see man page for 
+          details).
         type:
           - string
           - 'null'
       - id: markSites
-        doc: Annotate sites which are present ('+') or absent ('-') in the -a file
-            with a new INFO/TAG flag.
+        doc: Annotate sites which are present ('+') or absent ('-') in the -a 
+          file with a new INFO/TAG flag.
         type:
           - string
           - 'null'
@@ -167,7 +174,8 @@ $graph:
           - File
           - 'null'
       - id: renameChrs
-        doc: rename chromosomes according to the map in file (see man page for details).
+        doc: rename chromosomes according to the map in file (see man page for 
+          details).
         type:
           - File
           - 'null'
@@ -190,8 +198,8 @@ $graph:
           - int
           - 'null'
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     baseCommand:
@@ -202,14 +210,14 @@ $graph:
         doc: Annotated VCF file.
         type: File
         outputBinding:
-            glob: $(inputs.outputPath)
+          glob: $(inputs.outputPath)
       - id: outputVcfIndex
         doc: Index of the annotated VCF file.
         type:
           - File
           - 'null'
         outputBinding:
-            glob: $(inputs.outputPath + ".tbi")
+          glob: $(inputs.outputPath + ".tbi")
   - cwlVersion: v1.2
     id: Filter
     class: CommandLineTool
@@ -217,19 +225,19 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e 
-                mkdir -p "\$(dirname $(inputs.outputPath))"
-                bcftools \
-                filter \
-                $(inputs.include === null ? "" : "-i " + inputs.include) \
-                $(inputs.exclude === null ? "" : "-e " + inputs.exclude) \
-                $(inputs.softFilter === null ? "" : "-s " + inputs.softFilter) \
-                $(inputs.vcf.path) \
-                -O z \
-                -o $(inputs.outputPath)
-                bcftools index --tbi $(inputs.outputPath)
+              set -e 
+              mkdir -p "\$(dirname $(inputs.outputPath))"
+              bcftools \
+              filter \
+              $(inputs.include === null ? "" : "-i " + inputs.include) \
+              $(inputs.exclude === null ? "" : "-e " + inputs.exclude) \
+              $(inputs.softFilter === null ? "" : "-s " + inputs.softFilter) \
+              $(inputs.vcf.path) \
+              -O z \
+              -o $(inputs.outputPath)
+              bcftools index --tbi $(inputs.outputPath)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -238,26 +246,27 @@ $graph:
         dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.vcf.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
+        timelimit: $(1 + 
+          Math.ceil((function(size_of=0){inputs.vcf.forEach(function(element){ 
+          if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: vcf
         doc: The VCF file to operate on.
@@ -292,8 +301,8 @@ $graph:
           - int
           - 'null'
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     baseCommand:
@@ -303,11 +312,11 @@ $graph:
       - id: outputVcf
         type: File
         outputBinding:
-            glob: $(inputs.outputPath)
+          glob: $(inputs.outputPath)
       - id: outputVcfIndex
         type: File
         outputBinding:
-            glob: $(inputs.outputPath + ".tbi")
+          glob: $(inputs.outputPath + ".tbi")
   - cwlVersion: v1.2
     id: Sort
     class: CommandLineTool
@@ -315,17 +324,17 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPath))" $(inputs.tmpDir)
-                bcftools sort \
-                -o $(inputs.outputPath) \
-                -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
-                -T $(inputs.tmpDir) \
-                $(inputs.inputFile.path)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPath))" $(inputs.tmpDir)
+              bcftools sort \
+              -o $(inputs.outputPath) \
+              -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
+              -T $(inputs.tmpDir) \
+              $(inputs.inputFile.path)
 
-                $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath : "")
+              $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + inputs.outputPath : "")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -334,26 +343,27 @@ $graph:
         dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
+        timelimit: $(1 + 
+          Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
+          if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: inputFile
         doc: A vcf or bcf file.
@@ -376,8 +386,8 @@ $graph:
           - int
           - 'null'
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     baseCommand:
@@ -388,14 +398,14 @@ $graph:
         doc: Sorted VCF file.
         type: File
         outputBinding:
-            glob: $(inputs.outputPath)
+          glob: $(inputs.outputPath)
       - id: outputVcfIndex
         doc: Index of sorted VCF file.
         type:
           - File
           - 'null'
         outputBinding:
-            glob: $(inputs.outputPath + ".tbi")
+          glob: $(inputs.outputPath + ".tbi")
   - cwlVersion: v1.2
     id: Stats
     class: CommandLineTool
@@ -403,37 +413,37 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p \$(dirname $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath))
-                mkdir fastaRef_dir  # to ensure correct localization
-                ln -s $(inputs.fastaRef === null ? "" : inputs.fastaRef.path) fastaRef_dir/\$(basename $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))
-                ln -s $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path) fastaRef_dir/\$(basename $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path))
-                bcftools stats \
-                $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
-                $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
-                $(inputs.firstAlleleOnly ? "--1st-allele-only" : "") \
-                $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
-                $(inputs.depth === null ? "" : "--depth " + inputs.depth) \
-                $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
-                $(inputs.exons === null ? "" : "--exons " + inputs.exons.path) \
-                $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
-                $(inputs.fastaRef === null ? "" : "--fasta-ref fastaRef_dir/$(basename " + inputs.fastaRef.path + ")") \
-                $(inputs.include === null ? "" : "--include " + inputs.include) \
-                $(inputs.splitByID ? "--split-by-ID" : "") \
-                $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
-                $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
-                $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
-                $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
-                $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
-                $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path) \
-                $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
-                --threads $(inputs.threads) \
-                $(inputs.verbose ? "--verbose" : "") \
-                $(inputs.inputVcf.path) $(inputs.compareVcf === null ? "" : inputs.compareVcf.path) > $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)
-                sed -i "s=\$(dirname $(inputs.inputVcf.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
-                sed -i "s=\$(dirname $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
+              set -e
+              mkdir -p \$(dirname $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath))
+              mkdir fastaRef_dir  # to ensure correct localization
+              ln -s $(inputs.fastaRef === null ? "" : inputs.fastaRef.path) fastaRef_dir/\$(basename $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))
+              ln -s $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path) fastaRef_dir/\$(basename $(inputs.fastaRefIndex === null ? "" : inputs.fastaRefIndex.path))
+              bcftools stats \
+              $(inputs.afBins === null ? "" : "--af-bins " + inputs.afBins) \
+              $(inputs.afTag === null ? "" : "--af-tag " + inputs.afTag) \
+              $(inputs.firstAlleleOnly ? "--1st-allele-only" : "") \
+              $(inputs.collapse === null ? "" : "--collapse " + inputs.collapse) \
+              $(inputs.depth === null ? "" : "--depth " + inputs.depth) \
+              $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
+              $(inputs.exons === null ? "" : "--exons " + inputs.exons.path) \
+              $(inputs.applyFilters === null ? "" : "--apply-filters " + inputs.applyFilters) \
+              $(inputs.fastaRef === null ? "" : "--fasta-ref fastaRef_dir/$(basename " + inputs.fastaRef.path + ")") \
+              $(inputs.include === null ? "" : "--include " + inputs.include) \
+              $(inputs.splitByID ? "--split-by-ID" : "") \
+              $(inputs.regions === null ? "" : "--regions " + inputs.regions) \
+              $(inputs.regionsFile === null ? "" : "--regions-file " + inputs.regionsFile.path) \
+              $(inputs.samples.length > 0 ? "--samples" : "") $(inputs.samples.join(",")) \
+              $(inputs.samplesFile === null ? "" : "--samples-file " + inputs.samplesFile.path) \
+              $(inputs.targets === null ? "" : "--targets " + inputs.targets) \
+              $(inputs.targetsFile === null ? "" : "--targets-file " + inputs.targetsFile.path) \
+              $(inputs.userTsTv === null ? "" : "--user-tstv " + inputs.userTsTv) \
+              --threads $(inputs.threads) \
+              $(inputs.verbose ? "--verbose" : "") \
+              $(inputs.inputVcf.path) $(inputs.compareVcf === null ? "" : inputs.compareVcf.path) > $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)
+              sed -i "s=\$(dirname $(inputs.inputVcf.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
+              sed -i "s=\$(dirname $(inputs.fastaRef === null ? "" : inputs.fastaRef.path))/==g" $(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats" : inputs.outputPath)  # for reproducibility
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -443,28 +453,28 @@ $graph:
       - class: ResourceRequirement
         coresMin: $(inputs.threads + 1)
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: '$(1 + 2 * Math.ceil((function(size_of=0){[inputs.inputVcf, inputs.compareVcf
-            === null ? "" : inputs.compareVcf.path].filter(function(element) { return
-            element !== null }) .forEach(function(element){ if (element) {size_of
-            += element.size}})}) / 1000^3)  * 60)'
+          === null ? "" : inputs.compareVcf.path].filter(function(element) { return
+          element !== null }) .forEach(function(element){ if (element) {size_of +=
+          element.size}})}) / 1000^3)  * 60)'
     inputs:
       - id: inputVcf
         doc: The VCF to be analysed.
@@ -489,16 +499,18 @@ $graph:
         doc: List of samples for sample stats, "-" to include all samples.
         default: []
         type:
-            items: string
-            type: array
+          name: _samples_string_array
+          items: string
+          type: array
       - id: verbose
         doc: Produce verbose per-site and per-sample output.
         default: false
         type: boolean
       - id: compareVcf
-        doc: When inputVcf and compareVCF are given, the program generates separate
-            stats for intersection and the complements. By default only sites are
-            compared, samples must be given to include also sample columns.
+        doc: When inputVcf and compareVCF are given, the program generates 
+          separate stats for intersection and the complements. By default only 
+          sites are compared, samples must be given to include also sample 
+          columns.
         type:
           - File
           - 'null'
@@ -509,9 +521,9 @@ $graph:
           - 'null'
       - id: afBins
         doc: |-
-            Allele frequency bins, a list (0.1,0.5,1) or a file (0.1
-            0.5
-            1).
+          Allele frequency bins, a list (0.1,0.5,1) or a file (0.1
+          0.5
+          1).
         type:
           - string
           - 'null'
@@ -521,8 +533,8 @@ $graph:
           - string
           - 'null'
       - id: collapse
-        doc: Treat as identical records with <snps|indels|both|all|some|none>, see
-            man page for details.
+        doc: Treat as identical records with <snps|indels|both|all|some|none>, 
+          see man page for details.
         type:
           - string
           - 'null'
@@ -532,13 +544,14 @@ $graph:
           - string
           - 'null'
       - id: exclude
-        doc: Exclude sites for which the expression is true (see man page for details).
+        doc: Exclude sites for which the expression is true (see man page for 
+          details).
         type:
           - string
           - 'null'
       - id: exons
-        doc: Tab-delimited file with exons for indel frameshifts (chr,from,to; 1-based,
-            inclusive, bgzip compressed).
+        doc: Tab-delimited file with exons for indel frameshifts (chr,from,to; 
+          1-based, inclusive, bgzip compressed).
         type:
           - File
           - 'null'
@@ -553,12 +566,14 @@ $graph:
           - File
           - 'null'
       - id: fastaRefIndex
-        doc: Index file (.fai) for fastaRef. Must be supplied if fastaRef is supplied.
+        doc: Index file (.fai) for fastaRef. Must be supplied if fastaRef is 
+          supplied.
         type:
           - File
           - 'null'
       - id: include
-        doc: Select sites for which the expression is true (see man page for details).
+        doc: Select sites for which the expression is true (see man page for 
+          details).
         type:
           - string
           - 'null'
@@ -588,8 +603,8 @@ $graph:
           - File
           - 'null'
       - id: userTsTv
-        doc: <TAG[:min:max:n]>. Collect Ts/Tv stats for any tag using the given binning
-            [0:1:100].
+        doc: <TAG[:min:max:n]>. Collect Ts/Tv stats for any tag using the given 
+          binning [0:1:100].
         type:
           - string
           - 'null'
@@ -607,8 +622,8 @@ $graph:
           - int
           - 'null'
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     baseCommand:
@@ -616,12 +631,12 @@ $graph:
       - script.bash
     outputs:
       - id: stats
-        doc: Text file stats which is suitable for machine processing and can be plotted
-            using plot-vcfstats.
+        doc: Text file stats which is suitable for machine processing and can be
+          plotted using plot-vcfstats.
         type: File
         outputBinding:
-            glob: '$(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats"
-                : inputs.outputPath)'
+          glob: '$(inputs.outputPath === null ? inputs.inputVcf.basename + ".stats"
+            : inputs.outputPath)'
   - cwlVersion: v1.2
     id: View
     class: CommandLineTool
@@ -629,19 +644,19 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $("output.vcf"))"
-                bcftools view \
-                $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
-                $(inputs.include === null ? "" : "--include " + inputs.include) \
-                $(inputs.excludeUncalled ? "--exclude-uncalled" : "") \
-                -o $("output.vcf") \
-                -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
-                $(inputs.inputFile.path)
+              set -e
+              mkdir -p "\$(dirname $("output.vcf"))"
+              bcftools view \
+              $(inputs.exclude === null ? "" : "--exclude " + inputs.exclude) \
+              $(inputs.include === null ? "" : "--include " + inputs.include) \
+              $(inputs.excludeUncalled ? "--exclude-uncalled" : "") \
+              -o $("output.vcf") \
+              -O $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? "z" : "v") \
+              $(inputs.inputFile.path)
 
-                $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + "output.vcf" : "")
+              $(inputs.outputPath.split('/').reverse()[0] !== inputs.outputPath.split('/').reverse()[0].replace(/\.gz$/, '') ? 'bcftools index --tbi ' + "output.vcf" : "")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -650,26 +665,27 @@ $graph:
         dockerPull: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
-        timelimit: $(1 + Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
-            if (element) {size_of += element.size}})}) / 1000^3)  * 60)
+        timelimit: $(1 + 
+          Math.ceil((function(size_of=0){inputs.inputFile.forEach(function(element){
+          if (element) {size_of += element.size}})}) / 1000^3)  * 60)
     inputs:
       - id: inputFile
         doc: A vcf or bcf file.
@@ -683,12 +699,14 @@ $graph:
         default: false
         type: boolean
       - id: exclude
-        doc: Exclude sites for which the expression is true (see man page for details).
+        doc: Exclude sites for which the expression is true (see man page for 
+          details).
         type:
           - string
           - 'null'
       - id: include
-        doc: Select sites for which the expression is true (see man page for details).
+        doc: Select sites for which the expression is true (see man page for 
+          details).
         type:
           - string
           - 'null'
@@ -702,8 +720,8 @@ $graph:
           - int
           - 'null'
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: quay.io/biocontainers/bcftools:1.10.2--h4f4756c_2
         type: string
     baseCommand:
@@ -714,11 +732,11 @@ $graph:
         doc: VCF file.
         type: File
         outputBinding:
-            glob: $("output.vcf")
+          glob: $("output.vcf")
       - id: outputVcfIndex
         doc: Index of VCF file.
         type:
           - File
           - 'null'
         outputBinding:
-            glob: $("output.vcf" + ".tbi")
+          glob: $("output.vcf" + ".tbi")

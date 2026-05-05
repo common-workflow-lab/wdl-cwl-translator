@@ -5,32 +5,32 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
-            set -e -o pipefail
-            export JAVA_OPTS="-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1"
-            vardict-java \
-            $("-th " + inputs.threads) \
-            -G $(inputs.referenceFasta.path) \
-            -N $(inputs.tumorSampleName) \
-            -b "$(inputs.tumorBam.path)$(inputs.normalBam === null ? "" : "|" + inputs.normalBam.path)" \
-            $(inputs.normalBam !== null ? "" : "-z") \
-            -c $(inputs.chromosomeColumn) \
-            -S $(inputs.startColumn) \
-            -E $(inputs.endColumn) \
-            -g $(inputs.geneColumn) \
-            $(inputs.bedFile.path) | \
-            $(inputs.normalBam !== null ? "testsomatic.R" : "teststrandbias.R") | \
-            $(inputs.normalBam !== null ? "var2vcf_paired.pl" : "var2vcf_valid.pl") \
-            -N "$(inputs.tumorSampleName)$(inputs.normalSampleName === null ? "" : "|" + inputs.normalSampleName)" \
-            $(inputs.normalBam !== null ? "" : "-E") \
-            $(inputs.outputCandidateSomaticOnly ? "-M" : "") \
-            $(inputs.outputAllVariantsAtSamePosition ? "-A" : "") \
-            -Q $(inputs.mappingQuality) \
-            -d $(inputs.minimumTotalDepth) \
-            -v $(inputs.minimumVariantDepth) \
-            -f $(inputs.minimumAlleleFrequency) \
-            > $(inputs.outputVcf)
+          set -e -o pipefail
+          export JAVA_OPTS="-Xmx$(inputs.javaXmx) -XX:ParallelGCThreads=1"
+          vardict-java \
+          $("-th " + inputs.threads) \
+          -G $(inputs.referenceFasta.path) \
+          -N $(inputs.tumorSampleName) \
+          -b "$(inputs.tumorBam.path)$(inputs.normalBam === null ? "" : "|" + inputs.normalBam.path)" \
+          $(inputs.normalBam !== null ? "" : "-z") \
+          -c $(inputs.chromosomeColumn) \
+          -S $(inputs.startColumn) \
+          -E $(inputs.endColumn) \
+          -g $(inputs.geneColumn) \
+          $(inputs.bedFile.path) | \
+          $(inputs.normalBam !== null ? "testsomatic.R" : "teststrandbias.R") | \
+          $(inputs.normalBam !== null ? "var2vcf_paired.pl" : "var2vcf_valid.pl") \
+          -N "$(inputs.tumorSampleName)$(inputs.normalSampleName === null ? "" : "|" + inputs.normalSampleName)" \
+          $(inputs.normalBam !== null ? "" : "-E") \
+          $(inputs.outputCandidateSomaticOnly ? "-M" : "") \
+          $(inputs.outputAllVariantsAtSamePosition ? "-A" : "") \
+          -Q $(inputs.mappingQuality) \
+          -d $(inputs.minimumTotalDepth) \
+          -v $(inputs.minimumVariantDepth) \
+          -f $(inputs.minimumAlleleFrequency) \
+          > $(inputs.outputVcf)
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
@@ -40,22 +40,22 @@ hints:
   - class: ResourceRequirement
     coresMin: $(inputs.threads + 2)
     ramMin: |-
-        ${
-        var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-        var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-        var memory = "";
-        if(unit==="KiB") memory = value/1024;
-        else if(unit==="MiB") memory = value;
-        else if(unit==="GiB") memory = value*1024;
-        else if(unit==="TiB") memory = value*1024*1024;
-        else if(unit==="B") memory = value/(1024*1024);
-        else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-        else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-        else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-        else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-        else throw "Unknown units: " + unit;
-        return parseInt(memory);
-        }
+      ${
+      var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+      var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+      var memory = "";
+      if(unit==="KiB") memory = value/1024;
+      else if(unit==="MiB") memory = value;
+      else if(unit==="GiB") memory = value*1024;
+      else if(unit==="TiB") memory = value*1024*1024;
+      else if(unit==="B") memory = value/(1024*1024);
+      else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+      else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+      else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+      else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+      else throw "Unknown units: " + unit;
+      return parseInt(memory);
+      }
     outdirMin: 1024
   - class: ToolTimeLimit
     timelimit: $(inputs.timeMinutes * 60)
@@ -76,8 +76,8 @@ inputs:
     doc: The index for the reference fasta file.
     type: File
   - id: bedFile
-    doc: A bed file describing the regions to operate on. These regions must be below
-        1e6 bases in size.
+    doc: A bed file describing the regions to operate on. These regions must be 
+      below 1e6 bases in size.
     type: File
   - id: outputVcf
     doc: The location to write the output VCF file to.
@@ -138,8 +138,8 @@ inputs:
       - File
       - 'null'
   - id: javaXmx
-    doc: The maximum memory available to the program. Should be lower than `memory`
-        to accommodate JVM overhead.
+    doc: The maximum memory available to the program. Should be lower than 
+      `memory` to accommodate JVM overhead.
     default: 16G
     type: string
   - id: threads
@@ -155,8 +155,8 @@ inputs:
     default: 300
     type: int
   - id: dockerImage
-    doc: The docker image used for this task. Changing this may result in errors which
-        the developers may choose not to address.
+    doc: The docker image used for this task. Changing this may result in errors
+      which the developers may choose not to address.
     default: quay.io/biocontainers/vardict-java:1.5.8--1
     type: string
 baseCommand:
@@ -167,4 +167,4 @@ outputs:
     doc: Output VCF file.
     type: File
     outputBinding:
-        glob: $(inputs.outputVcf)
+      glob: $(inputs.outputVcf)

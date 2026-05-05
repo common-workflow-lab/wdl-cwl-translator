@@ -5,9 +5,9 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
-            echo $({ "one": "four", "two": "five" }.one) $({ "one": "four", "two": "five" }.two) $(inputs.six.one) $(inputs.six.two)
+          echo $({ "one": "four", "two": "five" }.one) $({ "one": "four", "two": "five" }.two) $(inputs.six.one) $(inputs.six.two)
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
@@ -17,16 +17,16 @@ hints:
 inputs:
   - id: six
     default:
-        one: seven
-        two: eight
+      one: seven
+      two: eight
     type:
-        name: Foo
-        fields:
-          - name: one
-            type: string
-          - name: two
-            type: string
-        type: record
+      name: Foo
+      fields:
+        - name: one
+          type: string
+        - name: two
+          type: string
+      type: record
 baseCommand:
   - bash
   - script.bash
@@ -35,6 +35,6 @@ outputs:
   - id: result
     type: string
     outputBinding:
-        loadContents: true
-        glob: _stdout
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+      loadContents: true
+      glob: _stdout
+      outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))

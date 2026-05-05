@@ -5,24 +5,24 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
-            cacheInvalidationRandomString=4
+          cacheInvalidationRandomString=4
 
-            echo Starting checksum generation...
+          echo Starting checksum generation...
 
-            # calculate hash for alignment positions only (a reduced bam hash)
-            calculated_checksum=\$( samtools view -F 256 "$(inputs.bam.path)" | cut -f 1-11 | md5sum | awk '{print $1}' )
-            echo Reduced checksum generation complete
+          # calculate hash for alignment positions only (a reduced bam hash)
+          calculated_checksum=\$( samtools view -F 256 "$(inputs.bam.path)" | cut -f 1-11 | md5sum | awk '{print $1}' )
+          echo Reduced checksum generation complete
 
-            if [ "$calculated_checksum" == "$(inputs.expected_checksum)" ]
-            then
-                 echo Computed and expected bam hashes match \( "$calculated_checksum" \)
-                 printf PASS > result.txt
-            else
-                 echo Computed \( "$calculated_checksum" \) and expected \( "$(inputs.expected_checksum)" \) bam file hashes do not match
-                 printf FAIL > result.txt
-            fi
+          if [ "$calculated_checksum" == "$(inputs.expected_checksum)" ]
+          then
+               echo Computed and expected bam hashes match \( "$calculated_checksum" \)
+               printf PASS > result.txt
+          else
+               echo Computed \( "$calculated_checksum" \) and expected \( "$(inputs.expected_checksum)" \) bam file hashes do not match
+               printf FAIL > result.txt
+          fi
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
@@ -32,8 +32,9 @@ hints:
   - class: ResourceRequirement
     coresMin: 1
     ramMin: 3576.2786865234375
-    outdirMin: $((Math.ceil((function(size_of=0){inputs.bam.forEach(function(element){
-        if (element) {size_of += element.size}})}) / 1000^3 * 1.1) ) * 1024)
+    outdirMin: 
+      $((Math.ceil((function(size_of=0){inputs.bam.forEach(function(element){ if
+      (element) {size_of += element.size}})}) / 1000^3 * 1.1) ) * 1024)
 inputs:
   - id: bam
     type: File
@@ -46,6 +47,6 @@ outputs:
   - id: result
     type: string
     outputBinding:
-        loadContents: true
-        glob: result.txt
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+      loadContents: true
+      glob: result.txt
+      outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))

@@ -5,9 +5,9 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
-            echo $(inputs.numbers.join(","))
+          echo $(inputs.numbers.join(","))
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
@@ -21,19 +21,20 @@ inputs:
       - 2
       - 3
     type:
-        items: int
-        type: array
+      name: _numbers_int_array
+      items: int
+      type: array
 baseCommand:
   - bash
   - script.bash
 arguments:
-  - valueFrom: ${if (inputs.numbers.length == 0) {throw "numbers must contain at least
-        one item.";} else { return "";}}
+  - valueFrom: ${if (inputs.numbers.length == 0) {throw "numbers must contain at
+      least one item.";} else { return "";}}
 stdout: _stdout
 outputs:
   - id: result
     type: string
     outputBinding:
-        loadContents: true
-        glob: _stdout
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+      loadContents: true
+      glob: _stdout
+      outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
