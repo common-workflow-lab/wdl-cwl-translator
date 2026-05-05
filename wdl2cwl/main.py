@@ -1768,7 +1768,7 @@ def main(args: Union[list[str], None] = None) -> None:
     # Serialize result in YAML to either <stdout> or specified output file.
     yaml = YAML()
     yaml.default_flow_style = False
-    yaml.indent = 4
+    yaml.indent(mapping=2, sequence=4, offset=2)
     yaml.block_seq_indent = 2
     scalarstring.walk_tree(cwl_result)
 
