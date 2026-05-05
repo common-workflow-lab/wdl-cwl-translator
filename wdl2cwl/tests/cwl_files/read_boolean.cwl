@@ -7,12 +7,12 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                echo true > true.txt
-                echo false > false.txt
-                echo True > True.txt
-                echo False > False.txt
+              echo true > true.txt
+              echo false > false.txt
+              echo True > True.txt
+              echo False > False.txt
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -27,51 +27,51 @@ $graph:
       - id: good_true
         type: boolean
         outputBinding:
-            loadContents: true
-            glob: true.txt
-            outputEval: |-
-                ${
-                  var contents = self[0].contents.trim().toLowerCase()
-                  if (contents == 'true') { return true;}
-                  if (contents == 'false') { return false;}
-                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
+          loadContents: true
+          glob: true.txt
+          outputEval: |-
+            ${
+              var contents = self[0].contents.trim().toLowerCase()
+              if (contents == 'true') { return true;}
+              if (contents == 'false') { return false;}
+              throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+            }
       - id: good_false
         type: boolean
         outputBinding:
-            loadContents: true
-            glob: false.txt
-            outputEval: |-
-                ${
-                  var contents = self[0].contents.trim().toLowerCase()
-                  if (contents == 'true') { return true;}
-                  if (contents == 'false') { return false;}
-                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
+          loadContents: true
+          glob: false.txt
+          outputEval: |-
+            ${
+              var contents = self[0].contents.trim().toLowerCase()
+              if (contents == 'true') { return true;}
+              if (contents == 'false') { return false;}
+              throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+            }
       - id: mixed_case_true
         type: boolean
         outputBinding:
-            loadContents: true
-            glob: True.txt
-            outputEval: |-
-                ${
-                  var contents = self[0].contents.trim().toLowerCase()
-                  if (contents == 'true') { return true;}
-                  if (contents == 'false') { return false;}
-                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
+          loadContents: true
+          glob: True.txt
+          outputEval: |-
+            ${
+              var contents = self[0].contents.trim().toLowerCase()
+              if (contents == 'true') { return true;}
+              if (contents == 'false') { return false;}
+              throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+            }
       - id: mixed_case_false
         type: boolean
         outputBinding:
-            loadContents: true
-            glob: False.txt
-            outputEval: |-
-                ${
-                  var contents = self[0].contents.trim().toLowerCase()
-                  if (contents == 'true') { return true;}
-                  if (contents == 'false') { return false;}
-                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
+          loadContents: true
+          glob: False.txt
+          outputEval: |-
+            ${
+              var contents = self[0].contents.trim().toLowerCase()
+              if (contents == 'true') { return true;}
+              if (contents == 'false') { return false;}
+              throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+            }
   - cwlVersion: v1.2
     id: read_bad_boolean
     class: CommandLineTool
@@ -79,10 +79,10 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                echo 1 > bad-true.txt
-                echo 0 > bad-false.txt
+              echo 1 > bad-true.txt
+              echo 0 > bad-false.txt
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -97,27 +97,27 @@ $graph:
       - id: bad_true
         type: boolean
         outputBinding:
-            loadContents: true
-            glob: bad-true.txt
-            outputEval: |-
-                ${
-                  var contents = self[0].contents.trim().toLowerCase()
-                  if (contents == 'true') { return true;}
-                  if (contents == 'false') { return false;}
-                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
+          loadContents: true
+          glob: bad-true.txt
+          outputEval: |-
+            ${
+              var contents = self[0].contents.trim().toLowerCase()
+              if (contents == 'true') { return true;}
+              if (contents == 'false') { return false;}
+              throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+            }
       - id: bad_false
         type: boolean
         outputBinding:
-            loadContents: true
-            glob: bad-false.txt
-            outputEval: |-
-                ${
-                  var contents = self[0].contents.trim().toLowerCase()
-                  if (contents == 'true') { return true;}
-                  if (contents == 'false') { return false;}
-                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
+          loadContents: true
+          glob: bad-false.txt
+          outputEval: |-
+            ${
+              var contents = self[0].contents.trim().toLowerCase()
+              if (contents == 'true') { return true;}
+              if (contents == 'false') { return false;}
+              throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+            }
   - cwlVersion: v1.2
     id: read_dynamic_boolean
     class: CommandLineTool
@@ -125,9 +125,9 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                echo true > $(inputs.filename)
+              echo true > $(inputs.filename)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -145,12 +145,12 @@ $graph:
       - id: dynamic_true
         type: boolean
         outputBinding:
-            loadContents: true
-            glob: $(inputs.filename)
-            outputEval: |-
-                ${
-                  var contents = self[0].contents.trim().toLowerCase()
-                  if (contents == 'true') { return true;}
-                  if (contents == 'false') { return false;}
-                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
+          loadContents: true
+          glob: $(inputs.filename)
+          outputEval: |-
+            ${
+              var contents = self[0].contents.trim().toLowerCase()
+              if (contents == 'true') { return true;}
+              if (contents == 'false') { return false;}
+              throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+            }

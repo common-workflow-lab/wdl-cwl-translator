@@ -226,24 +226,25 @@ steps:
     out:
       - result
     run:
-        class: ExpressionTool
-        inputs:
-          - id: runtblastx_out
-            type: Any
-          - id: runblastp_out
-            type: Any
-          - id: runblastn_out
-            type: Any
-          - id: runblastx_out
-            type: Any
-          - id: runtblastn_out
-            type: Any
-        outputs:
-          - id: result
-            type: File
-        expression: '${ return {"result": [runtblastx_out, runblastp_out, runblastn_out,
-            runblastx_out, runtblastn_out].find(function(element) { return element
-            !== null }) }; }'
+      id: _fina_output_select_first_etool
+      class: ExpressionTool
+      inputs:
+        - id: runtblastx_out
+          type: Any
+        - id: runblastp_out
+          type: Any
+        - id: runblastn_out
+          type: Any
+        - id: runblastx_out
+          type: Any
+        - id: runtblastn_out
+          type: Any
+      outputs:
+        - id: result
+          type: File
+      expression: '${ return {"result": [runtblastx_out, runblastp_out, runblastn_out,
+        runblastx_out, runtblastn_out].find(function(element) { return element !==
+        null }) }; }'
   - id: runblastp
     in:
       - id: docker
@@ -285,98 +286,98 @@ steps:
     out:
       - id: out
     run:
-        id: runblastp
-        class: CommandLineTool
-        inputs:
-          - id: docker
-            type: string
-          - id: Queryfa
-            type: File
-          - id: Fname
-            type: string
-          - id: outfmt
-            type: int
-          - id: Outfile
-            type: string
-          - id: evalue
-            type: float
-          - id: threads
-            type: int
-          - id: max_target_seqs
-            default: 100
-            type: int
-          - id: word_size
-            default: 6
-            type: int
-          - id: seg
-            default: no
-            type: string
-          - id: comp_based_stats
-            default: '2'
-            type: string
-          - id: matrix
-            default: BLOSUM62
-            type: string
-          - id: gapopen
-            default: 11
-            type: int
-          - id: gapextend
-            default: 1
-            type: int
-          - id: max_hsps
-            type:
-              - int
-              - 'null'
-          - id: taxids
-            type:
-              - string
-              - 'null'
-          - id: negative_taxids
-            type:
-              - string
-              - 'null'
-          - id: lcase_masking
-            default: false
-            type: boolean
-        outputs:
-          - id: out
-            type: File
-            outputBinding:
-                glob: $(inputs.Outfile)
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4+
+      id: runblastp
+      class: CommandLineTool
+      inputs:
+        - id: docker
+          type: string
+        - id: Queryfa
+          type: File
+        - id: Fname
+          type: string
+        - id: outfmt
+          type: int
+        - id: Outfile
+          type: string
+        - id: evalue
+          type: float
+        - id: threads
+          type: int
+        - id: max_target_seqs
+          default: 100
+          type: int
+        - id: word_size
+          default: 6
+          type: int
+        - id: seg
+          default: no
+          type: string
+        - id: comp_based_stats
+          default: '2'
+          type: string
+        - id: matrix
+          default: BLOSUM62
+          type: string
+        - id: gapopen
+          default: 11
+          type: int
+        - id: gapextend
+          default: 1
+          type: int
+        - id: max_hsps
+          type:
+            - int
+            - 'null'
+        - id: taxids
+          type:
+            - string
+            - 'null'
+        - id: negative_taxids
+          type:
+            - string
+            - 'null'
+        - id: lcase_masking
+          default: false
+          type: boolean
+      outputs:
+        - id: out
+          type: File
+          outputBinding:
+            glob: $(inputs.Outfile)
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2+
 
-                    set -e
-                    blastp -db "$(inputs.Fname)" \
-                    -query $(inputs.Queryfa.path) \
-                    -outfmt $(inputs.outfmt) \
-                    -out     $(inputs.Outfile) \
-                    -max_target_seqs $(inputs.max_target_seqs) \
-                    -comp_based_stats $(inputs.comp_based_stats) \
-                    -evalue $(inputs.evalue) \
-                    -word_size $(inputs.word_size) \
-                    -matrix   $(inputs.matrix) \
-                    -seg     $(inputs.seg) \
-                    -gapopen $(inputs.gapopen) \
-                    -gapextend $(inputs.gapextend) \
-                    -num_threads $(inputs.threads) \
-                    $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids) \
+                set -e
+                blastp -db "$(inputs.Fname)" \
+                -query $(inputs.Queryfa.path) \
+                -outfmt $(inputs.outfmt) \
+                -out     $(inputs.Outfile) \
+                -max_target_seqs $(inputs.max_target_seqs) \
+                -comp_based_stats $(inputs.comp_based_stats) \
+                -evalue $(inputs.evalue) \
+                -word_size $(inputs.word_size) \
+                -matrix   $(inputs.matrix) \
+                -seg     $(inputs.seg) \
+                -gapopen $(inputs.gapopen) \
+                -gapextend $(inputs.gapextend) \
+                -num_threads $(inputs.threads) \
+                $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids) \
 
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: ResourceRequirement
-            coresMin: 8
-            ramMin: 15258.7890625
-            outdirMin: 1024
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: ResourceRequirement
+          coresMin: 8
+          ramMin: 15258.7890625
+          outdirMin: 1024
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
     when: $(inputs.method === "blastp")
   - id: runblastn
     in:
@@ -423,107 +424,107 @@ steps:
     out:
       - id: out
     run:
-        id: runblastn
-        class: CommandLineTool
-        inputs:
-          - id: docker
-            type: string
-          - id: Queryfa
-            type: File
-          - id: Fname
-            type: string
-          - id: Outfile
-            type: string
-          - id: threads
-            type: int
-          - id: outfmt
-            type: int
-          - id: max_target_seqs
-            default: 100
-            type: int
-          - id: evalue
-            type: float
-          - id: word_size
-            default: 28
-            type: int
-          - id: reward
-            default: 1
-            type: int
-          - id: penalty
-            default: -2
-            type: int
-          - id: strand
-            default: both
-            type: string
-          - id: gapopen
-            default: 0
-            type: int
-          - id: gapextend
-            default: 0
-            type: int
-          - id: dust
-            default: "'20 64 1'"
-            type: string
-          - id: max_hsps
-            type:
-              - int
-              - 'null'
-          - id: tasks
-            default: megablast
-            type: string
-          - id: taxids
-            type:
-              - string
-              - 'null'
-          - id: negative_taxids
-            type:
-              - string
-              - 'null'
-          - id: lcase_masking
-            default: false
-            type: boolean
-        outputs:
-          - id: out
-            type: File
-            outputBinding:
-                glob: $(inputs.Outfile)
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4+
+      id: runblastn
+      class: CommandLineTool
+      inputs:
+        - id: docker
+          type: string
+        - id: Queryfa
+          type: File
+        - id: Fname
+          type: string
+        - id: Outfile
+          type: string
+        - id: threads
+          type: int
+        - id: outfmt
+          type: int
+        - id: max_target_seqs
+          default: 100
+          type: int
+        - id: evalue
+          type: float
+        - id: word_size
+          default: 28
+          type: int
+        - id: reward
+          default: 1
+          type: int
+        - id: penalty
+          default: -2
+          type: int
+        - id: strand
+          default: both
+          type: string
+        - id: gapopen
+          default: 0
+          type: int
+        - id: gapextend
+          default: 0
+          type: int
+        - id: dust
+          default: "'20 64 1'"
+          type: string
+        - id: max_hsps
+          type:
+            - int
+            - 'null'
+        - id: tasks
+          default: megablast
+          type: string
+        - id: taxids
+          type:
+            - string
+            - 'null'
+        - id: negative_taxids
+          type:
+            - string
+            - 'null'
+        - id: lcase_masking
+          default: false
+          type: boolean
+      outputs:
+        - id: out
+          type: File
+          outputBinding:
+            glob: $(inputs.Outfile)
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2+
 
-                    set -e
-                    blastn -db "$(inputs.Fname)" \
-                    -show_gis \
-                    -query $(inputs.Queryfa.path) \
-                    -outfmt $(inputs.outfmt) \
-                    -out     $(inputs.Outfile) \
-                    -max_target_seqs $(inputs.max_target_seqs) \
-                    -evalue $(inputs.evalue) \
-                    -word_size $(inputs.word_size) \
-                    -penalty $(inputs.penalty) \
-                    -reward  $(inputs.reward) \
-                    -dust $(inputs.dust) \
-                    -gapopen $(inputs.gapopen) \
-                    -gapextend $(inputs.gapextend) \
-                    -task $(inputs.tasks) \
-                    -strand  $(inputs.strand) \
-                    -num_threads $(inputs.threads) \
-                    $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids)\
+                set -e
+                blastn -db "$(inputs.Fname)" \
+                -show_gis \
+                -query $(inputs.Queryfa.path) \
+                -outfmt $(inputs.outfmt) \
+                -out     $(inputs.Outfile) \
+                -max_target_seqs $(inputs.max_target_seqs) \
+                -evalue $(inputs.evalue) \
+                -word_size $(inputs.word_size) \
+                -penalty $(inputs.penalty) \
+                -reward  $(inputs.reward) \
+                -dust $(inputs.dust) \
+                -gapopen $(inputs.gapopen) \
+                -gapextend $(inputs.gapextend) \
+                -task $(inputs.tasks) \
+                -strand  $(inputs.strand) \
+                -num_threads $(inputs.threads) \
+                $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids)\
 
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: ResourceRequirement
-            coresMin: 8
-            ramMin: 15258.7890625
-            outdirMin: 1024
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: ResourceRequirement
+          coresMin: 8
+          ramMin: 15258.7890625
+          outdirMin: 1024
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
     when: $(inputs.method === "blastn")
   - id: runblastx
     in:
@@ -566,98 +567,98 @@ steps:
     out:
       - id: out
     run:
-        id: runblastx
-        class: CommandLineTool
-        inputs:
-          - id: Queryfa
-            type: File
-          - id: Fname
-            type: string
-          - id: outfmt
-            type: int
-          - id: evalue
-            type: float
-          - id: Outfile
-            type: string
-          - id: docker
-            type: string
-          - id: threads
-            type: int
-          - id: max_target_seqs
-            default: 100
-            type: int
-          - id: word_size
-            default: 6
-            type: int
-          - id: seg
-            default: "'12 2.2 2.5'"
-            type: string
-          - id: comp_based_stats
-            default: '2'
-            type: string
-          - id: matrix
-            default: BLOSUM62
-            type: string
-          - id: gapopen
-            default: 11
-            type: int
-          - id: gapextend
-            default: 1
-            type: int
-          - id: taxids
-            type:
-              - string
-              - 'null'
-          - id: negative_taxids
-            type:
-              - string
-              - 'null'
-          - id: max_hsps
-            type:
-              - int
-              - 'null'
-          - id: lcase_masking
-            default: false
-            type: boolean
-        outputs:
-          - id: out
-            type: File
-            outputBinding:
-                glob: $("$" + inputs.Outfile)
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4+
+      id: runblastx
+      class: CommandLineTool
+      inputs:
+        - id: Queryfa
+          type: File
+        - id: Fname
+          type: string
+        - id: outfmt
+          type: int
+        - id: evalue
+          type: float
+        - id: Outfile
+          type: string
+        - id: docker
+          type: string
+        - id: threads
+          type: int
+        - id: max_target_seqs
+          default: 100
+          type: int
+        - id: word_size
+          default: 6
+          type: int
+        - id: seg
+          default: "'12 2.2 2.5'"
+          type: string
+        - id: comp_based_stats
+          default: '2'
+          type: string
+        - id: matrix
+          default: BLOSUM62
+          type: string
+        - id: gapopen
+          default: 11
+          type: int
+        - id: gapextend
+          default: 1
+          type: int
+        - id: taxids
+          type:
+            - string
+            - 'null'
+        - id: negative_taxids
+          type:
+            - string
+            - 'null'
+        - id: max_hsps
+          type:
+            - int
+            - 'null'
+        - id: lcase_masking
+          default: false
+          type: boolean
+      outputs:
+        - id: out
+          type: File
+          outputBinding:
+            glob: $("$" + inputs.Outfile)
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2+
 
-                    set -e
-                    blastx -db "$(inputs.Fname)" \
-                    -query $(inputs.Queryfa.path) \
-                    -outfmt $(inputs.outfmt) \
-                    -out     $(inputs.Outfile) \
-                    -max_target_seqs $(inputs.max_target_seqs) \
-                    -comp_based_stats $(inputs.comp_based_stats) \
-                    -evalue $(inputs.evalue) \
-                    -word_size $(inputs.word_size) \
-                    -matrix   $(inputs.matrix) \
-                    -seg     $(inputs.seg) \
-                    -gapopen $(inputs.gapopen) \
-                    -gapextend $(inputs.gapextend) \
-                    -num_threads $(inputs.threads) \
-                    $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids)\
+                set -e
+                blastx -db "$(inputs.Fname)" \
+                -query $(inputs.Queryfa.path) \
+                -outfmt $(inputs.outfmt) \
+                -out     $(inputs.Outfile) \
+                -max_target_seqs $(inputs.max_target_seqs) \
+                -comp_based_stats $(inputs.comp_based_stats) \
+                -evalue $(inputs.evalue) \
+                -word_size $(inputs.word_size) \
+                -matrix   $(inputs.matrix) \
+                -seg     $(inputs.seg) \
+                -gapopen $(inputs.gapopen) \
+                -gapextend $(inputs.gapextend) \
+                -num_threads $(inputs.threads) \
+                $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids)\
 
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: ResourceRequirement
-            coresMin: 8
-            ramMin: 15258.7890625
-            outdirMin: 1024
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: ResourceRequirement
+          coresMin: 8
+          ramMin: 15258.7890625
+          outdirMin: 1024
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
     when: $(inputs.method === "blastx")
   - id: runtblastn
     in:
@@ -700,98 +701,98 @@ steps:
     out:
       - id: out
     run:
-        id: runtblastn
-        class: CommandLineTool
-        inputs:
-          - id: Queryfa
-            type: File
-          - id: Fname
-            type: string
-          - id: outfmt
-            type: int
-          - id: evalue
-            type: float
-          - id: Outfile
-            type: string
-          - id: docker
-            type: string
-          - id: threads
-            type: int
-          - id: max_target_seqs
-            default: 100
-            type: int
-          - id: word_size
-            default: 6
-            type: int
-          - id: seg
-            default: "'12 2.2 2.5'"
-            type: string
-          - id: comp_based_stats
-            default: '2'
-            type: string
-          - id: matrix
-            default: BLOSUM62
-            type: string
-          - id: gapopen
-            default: 11
-            type: int
-          - id: gapextend
-            default: 1
-            type: int
-          - id: lcase_masking
-            default: false
-            type: boolean
-          - id: max_hsps
-            type:
-              - int
-              - 'null'
-          - id: taxids
-            type:
-              - string
-              - 'null'
-          - id: negative_taxids
-            type:
-              - string
-              - 'null'
-        outputs:
-          - id: out
-            type: File
-            outputBinding:
-                glob: $(inputs.Outfile)
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4+
+      id: runtblastn
+      class: CommandLineTool
+      inputs:
+        - id: Queryfa
+          type: File
+        - id: Fname
+          type: string
+        - id: outfmt
+          type: int
+        - id: evalue
+          type: float
+        - id: Outfile
+          type: string
+        - id: docker
+          type: string
+        - id: threads
+          type: int
+        - id: max_target_seqs
+          default: 100
+          type: int
+        - id: word_size
+          default: 6
+          type: int
+        - id: seg
+          default: "'12 2.2 2.5'"
+          type: string
+        - id: comp_based_stats
+          default: '2'
+          type: string
+        - id: matrix
+          default: BLOSUM62
+          type: string
+        - id: gapopen
+          default: 11
+          type: int
+        - id: gapextend
+          default: 1
+          type: int
+        - id: lcase_masking
+          default: false
+          type: boolean
+        - id: max_hsps
+          type:
+            - int
+            - 'null'
+        - id: taxids
+          type:
+            - string
+            - 'null'
+        - id: negative_taxids
+          type:
+            - string
+            - 'null'
+      outputs:
+        - id: out
+          type: File
+          outputBinding:
+            glob: $(inputs.Outfile)
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2+
 
-                    set -e
-                    tblastn -db "$(inputs.Fname)" \
-                    -query $(inputs.Queryfa.path) \
-                    -outfmt $(inputs.outfmt) \
-                    -out    $(inputs.Outfile) \
-                    -max_target_seqs $(inputs.max_target_seqs) \
-                    -comp_based_stats $(inputs.comp_based_stats) \
-                    -evalue $(inputs.evalue) \
-                    -word_size $(inputs.word_size) \
-                    -matrix   $(inputs.matrix) \
-                    -seg     $(inputs.seg) \
-                    -gapopen $(inputs.gapopen) \
-                    -gapextend $(inputs.gapextend) \
-                    -num_threads $(inputs.threads) \
-                    $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids)\
+                set -e
+                tblastn -db "$(inputs.Fname)" \
+                -query $(inputs.Queryfa.path) \
+                -outfmt $(inputs.outfmt) \
+                -out    $(inputs.Outfile) \
+                -max_target_seqs $(inputs.max_target_seqs) \
+                -comp_based_stats $(inputs.comp_based_stats) \
+                -evalue $(inputs.evalue) \
+                -word_size $(inputs.word_size) \
+                -matrix   $(inputs.matrix) \
+                -seg     $(inputs.seg) \
+                -gapopen $(inputs.gapopen) \
+                -gapextend $(inputs.gapextend) \
+                -num_threads $(inputs.threads) \
+                $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids)\
 
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: ResourceRequirement
-            coresMin: 8
-            ramMin: 15258.7890625
-            outdirMin: 1024
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: ResourceRequirement
+          coresMin: 8
+          ramMin: 15258.7890625
+          outdirMin: 1024
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
     when: $(inputs.method === "queryfa")
   - id: runtblastx
     in:
@@ -828,85 +829,85 @@ steps:
     out:
       - id: out
     run:
-        id: runtblastx
-        class: CommandLineTool
-        inputs:
-          - id: Queryfa
-            type: File
-          - id: Fname
-            type: string
-          - id: outfmt
-            type: int
-          - id: Outfile
-            type: string
-          - id: threads
-            type: int
-          - id: evalue
-            type: float
-          - id: docker
-            type: string
-          - id: taxids
-            type:
-              - string
-              - 'null'
-          - id: word_size
-            default: 3
-            type: int
-          - id: max_target_seqs
-            default: 100
-            type: int
-          - id: seg
-            default: "'12 2.2 2.5'"
-            type: string
-          - id: matrix
-            default: BLOSUM62
-            type: string
-          - id: lcase_masking
-            default: false
-            type: boolean
-          - id: negative_taxids
-            type:
-              - string
-              - 'null'
-          - id: max_hsps
-            type:
-              - int
-              - 'null'
-        outputs:
-          - id: out
-            type: File
-            outputBinding:
-                glob: $(inputs.Outfile)
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: runtblastx
+      class: CommandLineTool
+      inputs:
+        - id: Queryfa
+          type: File
+        - id: Fname
+          type: string
+        - id: outfmt
+          type: int
+        - id: Outfile
+          type: string
+        - id: threads
+          type: int
+        - id: evalue
+          type: float
+        - id: docker
+          type: string
+        - id: taxids
+          type:
+            - string
+            - 'null'
+        - id: word_size
+          default: 3
+          type: int
+        - id: max_target_seqs
+          default: 100
+          type: int
+        - id: seg
+          default: "'12 2.2 2.5'"
+          type: string
+        - id: matrix
+          default: BLOSUM62
+          type: string
+        - id: lcase_masking
+          default: false
+          type: boolean
+        - id: negative_taxids
+          type:
+            - string
+            - 'null'
+        - id: max_hsps
+          type:
+            - int
+            - 'null'
+      outputs:
+        - id: out
+          type: File
+          outputBinding:
+            glob: $(inputs.Outfile)
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    set -e
-                    tblastx -db "$(inputs.Fname)" \
-                    -query $(inputs.Queryfa.path) \
-                    -outfmt $(inputs.outfmt) \
-                    -out     $(inputs.Outfile) \
-                    -max_target_seqs $(inputs.max_target_seqs) \
-                    -evalue $(inputs.evalue) \
-                    -word_size $(inputs.word_size) \
-                    -matrix   $(inputs.matrix) \
-                    -seg     $(inputs.seg) \
-                    -num_threads $(inputs.threads) \
-                    $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids)\
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: ResourceRequirement
-            coresMin: 8
-            ramMin: 15258.7890625
-            outdirMin: 1024
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+                set -e
+                tblastx -db "$(inputs.Fname)" \
+                -query $(inputs.Queryfa.path) \
+                -outfmt $(inputs.outfmt) \
+                -out     $(inputs.Outfile) \
+                -max_target_seqs $(inputs.max_target_seqs) \
+                -evalue $(inputs.evalue) \
+                -word_size $(inputs.word_size) \
+                -matrix   $(inputs.matrix) \
+                -seg     $(inputs.seg) \
+                -num_threads $(inputs.threads) \
+                $(inputs.lcase_masking ? "-lcase_masking" : "") $(inputs.max_hsps === null ? "" : "-max_hsps " + inputs.max_hsps) $(inputs.taxids === null ? "" : "-taxids " + inputs.taxids) $(inputs.negative_taxids === null ? "" : "-negative_taxids " + inputs.negative_taxids)\
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: ResourceRequirement
+          coresMin: 8
+          ramMin: 15258.7890625
+          outdirMin: 1024
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
     when: $(inputs.method === "tblastx")
 outputs:
   - id: blast.fina_output

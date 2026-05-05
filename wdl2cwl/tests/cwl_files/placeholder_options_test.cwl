@@ -5,18 +5,18 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
-            echo $(true ? "true single quote: 'foo' " : "error")
-            echo $(true ? 'true double quote: "foo" ' : "error")
-            echo $(true ? "true mixed quotes: \"foo\" 'bar' " : "error")
-            echo $(true ? "true mixed quotes: \"foo\" 'bar' " : "error")
-            echo $(inputs.absent === null ? "default single 'quote'" : inputs.absent)
-            echo $(inputs.absent === null ? 'default double "quote"' : inputs.absent)
-            echo $(inputs.absent === null ? "default \"mixed\" 'quotes'" : inputs.absent)
-            echo $(inputs.absent === null ? "default \"mixed\" 'quotes'" : inputs.absent)
-            echo $([ 1, 2, 3 ].join(","))
-            echo $(inputs.missing_numbers === null ? "success" : inputs.missing_numbers.join(","))
+          echo $(true ? "true single quote: 'foo' " : "error")
+          echo $(true ? 'true double quote: "foo" ' : "error")
+          echo $(true ? "true mixed quotes: \"foo\" 'bar' " : "error")
+          echo $(true ? "true mixed quotes: \"foo\" 'bar' " : "error")
+          echo $(inputs.absent === null ? "default single 'quote'" : inputs.absent)
+          echo $(inputs.absent === null ? 'default double "quote"' : inputs.absent)
+          echo $(inputs.absent === null ? "default \"mixed\" 'quotes'" : inputs.absent)
+          echo $(inputs.absent === null ? "default \"mixed\" 'quotes'" : inputs.absent)
+          echo $([ 1, 2, 3 ].join(","))
+          echo $(inputs.missing_numbers === null ? "success" : inputs.missing_numbers.join(","))
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
@@ -30,7 +30,8 @@ inputs:
       - 'null'
   - id: missing_numbers
     type:
-      - items: int
+      - name: _missing_numbers_int_array
+        items: int
         type: array
       - 'null'
 baseCommand:
@@ -41,10 +42,10 @@ outputs:
   - id: result
     type: string
     outputBinding:
-        loadContents: true
-        glob: _stdout
-        outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+      loadContents: true
+      glob: _stdout
+      outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
   - id: present
     type: boolean
     outputBinding:
-        outputEval: $(inputs.absent !== null)
+      outputEval: $(inputs.absent !== null)

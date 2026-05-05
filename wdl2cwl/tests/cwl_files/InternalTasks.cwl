@@ -7,9 +7,9 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                echo '$(inputs.name)' | tr ' "#$%&*/:;<=>?@[]^{}|~\\()' '_' > safe_name.txt
+              echo '$(inputs.name)' | tr ' "#$%&*/:;<=>?@[]^{}|~\\()' '_' > safe_name.txt
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -29,9 +29,9 @@ $graph:
       - id: output_safe_name
         type: string
         outputBinding:
-            loadContents: true
-            glob: safe_name.txt
-            outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+          loadContents: true
+          glob: safe_name.txt
+          outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
   - cwlVersion: v1.2
     id: DownloadGenotypes
     class: CommandLineTool
@@ -39,63 +39,64 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
 
-                export VAULT_ADDR=https://clotho.broadinstitute.org:8200
-                export VAULT_TOKEN=\$(cat $(inputs.vault_token_path.path))
-                if [ $(inputs.environment) == prod ]; then
-                  export MERCURY_AUTH_KEY=secret/dsde/gotc/prod/wdl/secrets
-                  export MERCURY_FP_STORE_URI=https://portals.broadinstitute.org/portal/mercury-ws/fingerprint
-                else
-                  export MERCURY_AUTH_KEY=secret/dsde/gotc/dev/wdl/secrets
-                  export MERCURY_FP_STORE_URI=https://portals.broadinstitute.org/portal-test/mercury-ws/fingerprint
-                fi
+              export VAULT_ADDR=https://clotho.broadinstitute.org:8200
+              export VAULT_TOKEN=\$(cat $(inputs.vault_token_path.path))
+              if [ $(inputs.environment) == prod ]; then
+                export MERCURY_AUTH_KEY=secret/dsde/gotc/prod/wdl/secrets
+                export MERCURY_FP_STORE_URI=https://portals.broadinstitute.org/portal/mercury-ws/fingerprint
+              else
+                export MERCURY_AUTH_KEY=secret/dsde/gotc/dev/wdl/secrets
+                export MERCURY_FP_STORE_URI=https://portals.broadinstitute.org/portal-test/mercury-ws/fingerprint
+              fi
 
+              exit_code=0
+
+              # TODO - there is a bug in DownloadGenotypes - we should NOT have to set EXPECTED_GENOTYPING_PLATFORMS here
+              # it * should * default to all of them.
+
+              java -Xms2000m -Xmx3000m -Dpicard.useLegacyParser=false -jar /usr/gitc/picard-private.jar \
+              DownloadGenotypes \
+                --SAMPLE_ALIAS "$(inputs.sample_alias)" \
+                --SAMPLE_LSID "$(inputs.sample_lsid)" \
+                --OUTPUT "$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf")" \
+                --CREATE_INDEX true \
+                --REFERENCE_SEQUENCE $(inputs.ref_fasta.path) \
+                --HAPLOTYPE_MAP $(inputs.haplotype_database_file.path) \
+                --EXPECTED_GENOTYPING_PLATFORMS FLUIDIGM \
+                --EXPECTED_GENOTYPING_PLATFORMS GENERAL_ARRAY \
+                $(inputs.ignoreSpecificGenotypesLsid !== null ? inputs.ignoreSpecificGenotypesLsid === null ? "" : "--IGNORE_SPECIFIC_GENOTYPES_LSID \"" + inputs.ignoreSpecificGenotypesLsid + "\"" : "") \
+                $(inputs.ignoreSpecificGenotypesPlatform !== null ? inputs.ignoreSpecificGenotypesPlatform === null ? "" : "--IGNORE_SPECIFIC_GENOTYPES_PLATFORM \"" + inputs.ignoreSpecificGenotypesPlatform + "\"" : "") \
+                --MERCURY_FP_STORE_URI $MERCURY_FP_STORE_URI \
+                --CREDENTIALS_VAULT_PATH $MERCURY_AUTH_KEY \
+                --ERR_NO_GENOTYPES_AVAILABLE 7
+              exit_code=$?
+
+              if [ $exit_code -eq 0 ]; then
+                echo "true" > $("fp_retrieved.txt")
+              elif [ $exit_code -eq 7 ]; then
+                # Exit code from DownloadGenotypes if no fingerprints were found.
+                # Treat this as a normal condition, but set a variable to indicate no fingerprints available.
+                # Create empty file so that it exists.
                 exit_code=0
+                echo "Found no fingerprints for $(inputs.sample_lsid)"
+                echo "false" > $("fp_retrieved.txt")
+                touch $(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf")
+                touch $(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf" + inputs.compress ? ".tbi" : ".idx")
+              else
+                echo "false" > $("fp_retrieved.txt")
+              fi
 
-                # TODO - there is a bug in DownloadGenotypes - we should NOT have to set EXPECTED_GENOTYPING_PLATFORMS here
-                # it * should * default to all of them.
-
-                java -Xms2000m -Xmx3000m -Dpicard.useLegacyParser=false -jar /usr/gitc/picard-private.jar \
-                DownloadGenotypes \
-                  --SAMPLE_ALIAS "$(inputs.sample_alias)" \
-                  --SAMPLE_LSID "$(inputs.sample_lsid)" \
-                  --OUTPUT "$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf")" \
-                  --CREATE_INDEX true \
-                  --REFERENCE_SEQUENCE $(inputs.ref_fasta.path) \
-                  --HAPLOTYPE_MAP $(inputs.haplotype_database_file.path) \
-                  --EXPECTED_GENOTYPING_PLATFORMS FLUIDIGM \
-                  --EXPECTED_GENOTYPING_PLATFORMS GENERAL_ARRAY \
-                  $(inputs.ignoreSpecificGenotypesLsid !== null ? inputs.ignoreSpecificGenotypesLsid === null ? "" : "--IGNORE_SPECIFIC_GENOTYPES_LSID \"" + inputs.ignoreSpecificGenotypesLsid + "\"" : "") \
-                  $(inputs.ignoreSpecificGenotypesPlatform !== null ? inputs.ignoreSpecificGenotypesPlatform === null ? "" : "--IGNORE_SPECIFIC_GENOTYPES_PLATFORM \"" + inputs.ignoreSpecificGenotypesPlatform + "\"" : "") \
-                  --MERCURY_FP_STORE_URI $MERCURY_FP_STORE_URI \
-                  --CREDENTIALS_VAULT_PATH $MERCURY_AUTH_KEY \
-                  --ERR_NO_GENOTYPES_AVAILABLE 7
-                exit_code=$?
-
-                if [ $exit_code -eq 0 ]; then
-                  echo "true" > $("fp_retrieved.txt")
-                elif [ $exit_code -eq 7 ]; then
-                  # Exit code from DownloadGenotypes if no fingerprints were found.
-                  # Treat this as a normal condition, but set a variable to indicate no fingerprints available.
-                  # Create empty file so that it exists.
-                  exit_code=0
-                  echo "Found no fingerprints for $(inputs.sample_lsid)"
-                  echo "false" > $("fp_retrieved.txt")
-                  touch $(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf")
-                  touch $(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf" + inputs.compress ? ".tbi" : ".idx")
-                else
-                  echo "false" > $("fp_retrieved.txt")
-                fi
-
-                exit $exit_code
+              exit $exit_code
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
+        dockerPull: 
+          us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: 1024
@@ -110,16 +111,18 @@ $graph:
         default: true
         type: boolean
       - id: ignoreSpecificGenotypesLsid
-        doc: Optional, MUST be specified with ignoreSpecificGenotypesPlatform. If
-            both are defined will not download fingerprints for an LSID run on a specific
-            genotyping platform. The intent is to ignore its own fingerprint
+        doc: Optional, MUST be specified with ignoreSpecificGenotypesPlatform. 
+          If both are defined will not download fingerprints for an LSID run on 
+          a specific genotyping platform. The intent is to ignore its own 
+          fingerprint
         type:
           - string
           - 'null'
       - id: ignoreSpecificGenotypesPlatform
-        doc: Optional, MUST be specified with ignoreSpecificGenotypesLsid. If both
-            are defined will not download fingerprints for an LSID run on a specific
-            genotyping platform. The intent is to ignore its own fingerprint
+        doc: Optional, MUST be specified with ignoreSpecificGenotypesLsid. If 
+          both are defined will not download fingerprints for an LSID run on a 
+          specific genotyping platform. The intent is to ignore its own 
+          fingerprint
         type:
           - string
           - 'null'
@@ -150,24 +153,24 @@ $graph:
       - id: fingerprint_retrieved
         type: boolean
         outputBinding:
-            loadContents: true
-            glob: $("fp_retrieved.txt")
-            outputEval: |-
-                ${
-                  var contents = self[0].contents.trim().toLowerCase()
-                  if (contents == 'true') { return true;}
-                  if (contents == 'false') { return false;}
-                  throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
-                }
+          loadContents: true
+          glob: $("fp_retrieved.txt")
+          outputEval: |-
+            ${
+              var contents = self[0].contents.trim().toLowerCase()
+              if (contents == 'true') { return true;}
+              if (contents == 'false') { return false;}
+              throw "'read_boolean' received neither 'true' nor 'false': " + self[0].contents;
+            }
       - id: reference_fingerprint_vcf
         type: File
         outputBinding:
-            glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf")'
+          glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf")'
       - id: reference_fingerprint_vcf_index
         type: File
         outputBinding:
-            glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf"
-                + inputs.compress ? ".tbi" : ".idx")'
+          glob: '$(inputs.output_vcf_base_name + inputs.compress ? ".vcf.gz" : ".vcf"
+            + inputs.compress ? ".tbi" : ".idx")'
   - cwlVersion: v1.2
     id: UploadFingerprintToMercury
     class: CommandLineTool
@@ -175,36 +178,37 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -eo pipefail
+              set -eo pipefail
 
-                export VAULT_ADDR=https://clotho.broadinstitute.org:8200
-                export VAULT_TOKEN=\$(cat $(inputs.vault_token_path.path))
-                if [ $(inputs.environment) == prod ]; then
-                  export MERCURY_AUTH_KEY=secret/dsde/gotc/prod/wdl/secrets
-                  export MERCURY_FP_STORE_URI=https://portals.broadinstitute.org/portal/mercury-ws/fingerprint
-                else
-                  export MERCURY_AUTH_KEY=secret/dsde/gotc/dev/wdl/secrets
-                  export MERCURY_FP_STORE_URI=https://portals.broadinstitute.org/portal-test/mercury-ws/fingerprint
-                fi
+              export VAULT_ADDR=https://clotho.broadinstitute.org:8200
+              export VAULT_TOKEN=\$(cat $(inputs.vault_token_path.path))
+              if [ $(inputs.environment) == prod ]; then
+                export MERCURY_AUTH_KEY=secret/dsde/gotc/prod/wdl/secrets
+                export MERCURY_FP_STORE_URI=https://portals.broadinstitute.org/portal/mercury-ws/fingerprint
+              else
+                export MERCURY_AUTH_KEY=secret/dsde/gotc/dev/wdl/secrets
+                export MERCURY_FP_STORE_URI=https://portals.broadinstitute.org/portal-test/mercury-ws/fingerprint
+              fi
 
-                du -k $(inputs.gtc_file.path) | cut -f 1 > size.txt
+              du -k $(inputs.gtc_file.path) | cut -f 1 > size.txt
 
-                # TODO -Fix UploadFingerprintToMercury so I don't need to pass a file size
+              # TODO -Fix UploadFingerprintToMercury so I don't need to pass a file size
 
-                java -Xms2000m -Xmx3000m -Dpicard.useLegacyParser=false -jar /usr/gitc/picard-private.jar \
-                  UploadFingerprintToMercury \
-                  --INPUT "$(inputs.fingerprint_json_file.path)" \
-                  --GTC_FILE_SIZE size.txt \
-                  --MERCURY_FP_STORE_URI $MERCURY_FP_STORE_URI \
-                  --CREDENTIALS_VAULT_PATH $MERCURY_AUTH_KEY \
+              java -Xms2000m -Xmx3000m -Dpicard.useLegacyParser=false -jar /usr/gitc/picard-private.jar \
+                UploadFingerprintToMercury \
+                --INPUT "$(inputs.fingerprint_json_file.path)" \
+                --GTC_FILE_SIZE size.txt \
+                --MERCURY_FP_STORE_URI $MERCURY_FP_STORE_URI \
+                --CREDENTIALS_VAULT_PATH $MERCURY_AUTH_KEY \
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
+        dockerPull: 
+          us.gcr.io/broad-arrays-prod/arrays-picard-private:4.1.0-1641925612
       - class: ResourceRequirement
         ramMin: 3500.0
         outdirMin: 1024

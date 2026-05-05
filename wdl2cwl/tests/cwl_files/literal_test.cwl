@@ -5,9 +5,9 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
-            echo $(inputs.tenth.map(function(el) {return el.path}).join(" "))
+          echo $(inputs.tenth.map(function(el) {return el.path}).join(" "))
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true
@@ -29,38 +29,42 @@ inputs:
     type: string
   - id: fifth
     default:
-        class: File
-        path: ../../../README.md
+      class: File
+      path: ../../../README.md
     type: File
   - id: sixth
     default:
       - true
       - false
     type:
-        items: boolean
-        type: array
+      name: _sixth_boolean_array
+      items: boolean
+      type: array
   - id: seventh
     default:
       - 42
       - 23
     type:
-        items: int
-        type: array
+      name: _seventh_int_array
+      items: int
+      type: array
   - id: eighth
     default:
       - 6.022
       - 10.0
       - 23.0
     type:
-        items: float
-        type: array
+      name: _eighth_float_array
+      items: float
+      type: array
   - id: nineth
     default:
       - Hello
       - World
     type:
-        items: string
-        type: array
+      name: _nineth_string_array
+      items: string
+      type: array
   - id: tenth
     default:
       - class: File
@@ -68,8 +72,9 @@ inputs:
       - class: File
         path: ../../../LICENSE
     type:
-        items: File
-        type: array
+      name: _tenth_File_array
+      items: File
+      type: array
 baseCommand:
   - bash
   - script.bash
@@ -77,7 +82,8 @@ outputs:
   - id: result
     type: string
     outputBinding:
-        outputEval: $(inputs.first + " " + inputs.second + " " + inputs.third + "
-            " + inputs.fourth + " " + inputs.fifth.basename + " " + inputs.sixth.join(",")
-            + " " + inputs.seventh.join(",") + " " + inputs.eighth.join(",") + " "
-            + inputs.nineth.join(",") + " " + inputs.tenth[0].basename + "," + inputs.tenth[1].basename)
+      outputEval: $(inputs.first + " " + inputs.second + " " + inputs.third + " 
+        " + inputs.fourth + " " + inputs.fifth.basename + " " + 
+        inputs.sixth.join(",") + " " + inputs.seventh.join(",") + " " + 
+        inputs.eighth.join(",") + " " + inputs.nineth.join(",") + " " + 
+        inputs.tenth[0].basename + "," + inputs.tenth[1].basename)

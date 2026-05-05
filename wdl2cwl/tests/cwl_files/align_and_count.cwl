@@ -1,8 +1,8 @@
 cwlVersion: v1.2
 id: align_and_count_report
 class: Workflow
-doc: Align reads to reference with minimap2 and count the number of hits. Results
-    are returned in the format of 'samtools idxstats'.
+doc: Align reads to reference with minimap2 and count the number of hits. 
+  Results are returned in the format of 'samtools idxstats'.
 requirements:
   - class: InlineJavascriptRequirement
 inputs:
@@ -39,98 +39,98 @@ steps:
       - id: top_hit_id
       - id: viralngs_version
     run:
-        id: align_and_count
-        class: CommandLineTool
-        inputs:
-          - id: reads_bam
-            type: File
-          - id: ref_db
-            type: File
-          - id: topNHits
-            default: 3
-            type: int
-          - id: machine_mem_gb
-            type:
-              - int
-              - 'null'
-          - id: docker
-            default: quay.io/broadinstitute/viral-core:2.1.33
-            type: string
-        outputs:
-          - id: report
-            type: File
-            outputBinding:
-                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
-                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".txt")
-          - id: report_top_hits
-            type: File
-            outputBinding:
-                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
-                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".top_" +
-                    inputs.topNHits + "_hits.txt")
-          - id: top_hit_id
-            type: string
-            outputBinding:
-                loadContents: true
-                glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
-                    + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".top.txt")
-                outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
-          - id: viralngs_version
-            type: string
-            outputBinding:
-                loadContents: true
-                glob: VERSION
-                outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: align_and_count
+      class: CommandLineTool
+      inputs:
+        - id: reads_bam
+          type: File
+        - id: ref_db
+          type: File
+        - id: topNHits
+          default: 3
+          type: int
+        - id: machine_mem_gb
+          type:
+            - int
+            - 'null'
+        - id: docker
+          default: quay.io/broadinstitute/viral-core:2.1.33
+          type: string
+      outputs:
+        - id: report
+          type: File
+          outputBinding:
+            glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
+              + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".txt")
+        - id: report_top_hits
+          type: File
+          outputBinding:
+            glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
+              + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".top_" + 
+              inputs.topNHits + "_hits.txt")
+        - id: top_hit_id
+          type: string
+          outputBinding:
+            loadContents: true
+            glob: $(inputs.reads_bam.basename.replace(/\.bam$/, '')  + ".count."
+              + inputs.ref_db.basename.replace(/\.fasta$/, '')  + ".top.txt")
+            outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+        - id: viralngs_version
+          type: string
+          outputBinding:
+            loadContents: true
+            glob: VERSION
+            outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    set -ex -o pipefail
+                set -ex -o pipefail
 
-                    read_utils.py --version | tee VERSION
+                read_utils.py --version | tee VERSION
 
-                    ln -s "$(inputs.reads_bam.path)" "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).bam"
-                    read_utils.py minimap2_idxstats \
-                      "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).bam" \
-                      "$(inputs.ref_db.path)" \
-                      --outStats "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt.unsorted" \
-                      --loglevel=DEBUG
+                ln -s "$(inputs.reads_bam.path)" "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).bam"
+                read_utils.py minimap2_idxstats \
+                  "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).bam" \
+                  "$(inputs.ref_db.path)" \
+                  --outStats "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt.unsorted" \
+                  --loglevel=DEBUG
 
-                    sort -b -r -n -k3 "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt.unsorted" > "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt"
-                    head -n $(inputs.topNHits) "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt" > "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).top_$(inputs.topNHits)_hits.txt"
-                    head -1 "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt" | cut -f 1 > "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).top.txt"
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: DockerRequirement
-            dockerPull: quay.io/broadinstitute/viral-core:2.1.33
-          - class: ResourceRequirement
-            coresMin: 4
-            ramMin: |-
-                ${
-                var unit = "GB";
-                var value = parseInt(`${[inputs.machine_mem_gb, 15].find(function(element) { return element !== null }) }`.match(/[0-9]+/g));
-                var memory = "";
-                if(unit==="KiB") memory = value/1024;
-                else if(unit==="MiB") memory = value;
-                else if(unit==="GiB") memory = value*1024;
-                else if(unit==="TiB") memory = value*1024*1024;
-                else if(unit==="B") memory = value/(1024*1024);
-                else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-                else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-                else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-                else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-                else throw "Unknown units: " + unit;
-                return parseInt(memory);
-                }
-            outdirMin: 384000
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+                sort -b -r -n -k3 "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt.unsorted" > "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt"
+                head -n $(inputs.topNHits) "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt" > "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).top_$(inputs.topNHits)_hits.txt"
+                head -1 "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).txt" | cut -f 1 > "$(inputs.reads_bam.basename.replace(/\.bam$/, '') ).count.$(inputs.ref_db.basename.replace(/\.fasta$/, '') ).top.txt"
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: DockerRequirement
+          dockerPull: quay.io/broadinstitute/viral-core:2.1.33
+        - class: ResourceRequirement
+          coresMin: 4
+          ramMin: |-
+            ${
+            var unit = "GB";
+            var value = parseInt(`${[inputs.machine_mem_gb, 15].find(function(element) { return element !== null }) }`.match(/[0-9]+/g));
+            var memory = "";
+            if(unit==="KiB") memory = value/1024;
+            else if(unit==="MiB") memory = value;
+            else if(unit==="GiB") memory = value*1024;
+            else if(unit==="TiB") memory = value*1024*1024;
+            else if(unit==="B") memory = value/(1024*1024);
+            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+            else throw "Unknown units: " + unit;
+            return parseInt(memory);
+            }
+          outdirMin: 384000
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
 outputs:
   - id: align_and_count_report.report
     outputSource: align_and_count/report

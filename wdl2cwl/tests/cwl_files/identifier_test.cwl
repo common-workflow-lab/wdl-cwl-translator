@@ -6,14 +6,14 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entryname: script.bash
-        entry: |4
+        entry: |2
 
-            echo $(inputs["do"]) $(inputs["for"]) $(inputs["let"]) $(inputs["new"]) $(inputs["try"]) $(inputs["var"]) $(inputs["case"]) $(inputs["enum"]) $(inputs["eval"])
-            echo $(inputs["null"]) $(inputs["void"]) $(inputs["with"]) $(inputs["break"]) $(inputs["catch"]) $(inputs["class"]) $(inputs["const"]) $(inputs["super"])
-            echo $(inputs["throw"]) $(inputs["while"]) $(inputs["yield"]) $(inputs["delete"]) $(inputs["export"]) $(inputs["public"]) $(inputs["return"])
-            echo $(inputs["static"]) $(inputs["switch"]) $(inputs["typeof"]) $(inputs["default"]) $(inputs["finally"]) $(inputs["package"]) $(inputs["private"])
-            echo $(inputs["continue"]) $(inputs["debugger"]) $(inputs["function"]) $(inputs["arguments"]) $(inputs["interface"]) $(inputs["protected"])
-            echo $(inputs["implements"]) $(inputs["instanceof"])
+          echo $(inputs["do"]) $(inputs["for"]) $(inputs["let"]) $(inputs["new"]) $(inputs["try"]) $(inputs["var"]) $(inputs["case"]) $(inputs["enum"]) $(inputs["eval"])
+          echo $(inputs["null"]) $(inputs["void"]) $(inputs["with"]) $(inputs["break"]) $(inputs["catch"]) $(inputs["class"]) $(inputs["const"]) $(inputs["super"])
+          echo $(inputs["throw"]) $(inputs["while"]) $(inputs["yield"]) $(inputs["delete"]) $(inputs["export"]) $(inputs["public"]) $(inputs["return"])
+          echo $(inputs["static"]) $(inputs["switch"]) $(inputs["typeof"]) $(inputs["default"]) $(inputs["finally"]) $(inputs["package"]) $(inputs["private"])
+          echo $(inputs["continue"]) $(inputs["debugger"]) $(inputs["function"]) $(inputs["arguments"]) $(inputs["interface"]) $(inputs["protected"])
+          echo $(inputs["implements"]) $(inputs["instanceof"])
   - class: InlineJavascriptRequirement
   - class: NetworkAccess
     networkAccess: true

@@ -25,62 +25,62 @@ steps:
       - id: rev_converted_reference_fasta_output
       - id: monitoring_log
     run:
-        id: BuildBisulfiteReferences
-        class: CommandLineTool
-        inputs:
-          - id: fasta_input
-            type: File
-          - id: monitoring_script
-            type:
-              - File
-              - 'null'
-        outputs:
-          - id: fwd_converted_reference_fasta_output
-            type: File
-            outputBinding:
-                glob: $("genome_mfa.CT_conversion.fa")
-          - id: rev_converted_reference_fasta_output
-            type: File
-            outputBinding:
-                glob: $("genome_mfa.GA_conversion.fa")
-          - id: monitoring_log
-            type: File
-            outputBinding:
-                glob: monitoring.log
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: BuildBisulfiteReferences
+      class: CommandLineTool
+      inputs:
+        - id: fasta_input
+          type: File
+        - id: monitoring_script
+          type:
+            - File
+            - 'null'
+      outputs:
+        - id: fwd_converted_reference_fasta_output
+          type: File
+          outputBinding:
+            glob: $("genome_mfa.CT_conversion.fa")
+        - id: rev_converted_reference_fasta_output
+          type: File
+          outputBinding:
+            glob: $("genome_mfa.GA_conversion.fa")
+        - id: monitoring_log
+          type: File
+          outputBinding:
+            glob: monitoring.log
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    # if the WDL/task contains a monitoring script as input
-                    if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
-                      chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
-                      $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
-                    else
-                      echo "No monitoring script given as input" > monitoring.log &
-                    fi
+                # if the WDL/task contains a monitoring script as input
+                if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
+                  chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
+                  $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
+                else
+                  echo "No monitoring script given as input" > monitoring.log &
+                fi
 
-                    python3 /build_bisulfite_references.py \
-                      --input-fasta $(inputs.fasta_input.path) \
-                      --forward-convert-out $("genome_mfa.CT_conversion.fa") \
-                      --reverse-convert-out $("genome_mfa.GA_conversion.fa")
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: DockerRequirement
-            dockerPull: quay.io/mr_c/bisulfite-references:1.0
-          - class: ResourceRequirement
-            coresMin: 1
-            ramMin: 3337.860107421875
-            outdirMin: '$((Math.ceil(3.5 * (function(size_of=0){inputs.fasta_input.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+                python3 /build_bisulfite_references.py \
+                  --input-fasta $(inputs.fasta_input.path) \
+                  --forward-convert-out $("genome_mfa.CT_conversion.fa") \
+                  --reverse-convert-out $("genome_mfa.GA_conversion.fa")
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: DockerRequirement
+          dockerPull: quay.io/mr_c/bisulfite-references:1.0
+        - class: ResourceRequirement
+          coresMin: 1
+          ramMin: 3337.860107421875
+          outdirMin: '$((Math.ceil(3.5 * (function(size_of=0){inputs.fasta_input.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
   - id: IndexForward
     in:
       - id: fasta_input
@@ -93,60 +93,61 @@ steps:
       - id: bowtie2_index_files
       - id: monitoring_log
     run:
-        id: Bowtie2Build
-        class: CommandLineTool
-        inputs:
-          - id: fasta_input
-            type: File
-          - id: index_prefix
-            type: string
-          - id: monitoring_script
-            type:
-              - File
-              - 'null'
-        outputs:
-          - id: bowtie2_index_files
-            type:
-                items: File
-                type: array
-            outputBinding:
-                glob: $(inputs.index_prefix + "*")
-          - id: monitoring_log
-            type: File
-            outputBinding:
-                glob: monitoring.log
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: Bowtie2Build
+      class: CommandLineTool
+      inputs:
+        - id: fasta_input
+          type: File
+        - id: index_prefix
+          type: string
+        - id: monitoring_script
+          type:
+            - File
+            - 'null'
+      outputs:
+        - id: bowtie2_index_files
+          type:
+            name: _bowtie2_index_files_File_array
+            items: File
+            type: array
+          outputBinding:
+            glob: $(inputs.index_prefix + "*")
+        - id: monitoring_log
+          type: File
+          outputBinding:
+            glob: monitoring.log
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    # if the WDL/task contains a monitoring script as input
-                    if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
-                      chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
-                      $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
-                    else
-                      echo "No monitoring script given as input" > monitoring.log &
-                    fi
+                # if the WDL/task contains a monitoring script as input
+                if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
+                  chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
+                  $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
+                else
+                  echo "No monitoring script given as input" > monitoring.log &
+                fi
 
-                    bowtie2-build \
-                      -f $(inputs.fasta_input.path) $(inputs.index_prefix)
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: DockerRequirement
-            dockerPull: quay.io/biocontainers/bowtie2:2.3.4--py36pl5.22.0_0
-          - class: ResourceRequirement
-            coresMin: 1
-            ramMin: 6675.72021484375
-            outdirMin: '$((Math.ceil(3 * (function(size_of=0){inputs.fasta_input.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+                bowtie2-build \
+                  -f $(inputs.fasta_input.path) $(inputs.index_prefix)
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: DockerRequirement
+          dockerPull: quay.io/biocontainers/bowtie2:2.3.4--py36pl5.22.0_0
+        - class: ResourceRequirement
+          coresMin: 1
+          ramMin: 6675.72021484375
+          outdirMin: '$((Math.ceil(3 * (function(size_of=0){inputs.fasta_input.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
   - id: IndexReverse
     in:
       - id: fasta_input
@@ -159,60 +160,61 @@ steps:
       - id: bowtie2_index_files
       - id: monitoring_log
     run:
-        id: Bowtie2Build
-        class: CommandLineTool
-        inputs:
-          - id: fasta_input
-            type: File
-          - id: index_prefix
-            type: string
-          - id: monitoring_script
-            type:
-              - File
-              - 'null'
-        outputs:
-          - id: bowtie2_index_files
-            type:
-                items: File
-                type: array
-            outputBinding:
-                glob: $(inputs.index_prefix + "*")
-          - id: monitoring_log
-            type: File
-            outputBinding:
-                glob: monitoring.log
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: Bowtie2Build
+      class: CommandLineTool
+      inputs:
+        - id: fasta_input
+          type: File
+        - id: index_prefix
+          type: string
+        - id: monitoring_script
+          type:
+            - File
+            - 'null'
+      outputs:
+        - id: bowtie2_index_files
+          type:
+            name: _bowtie2_index_files_File_array
+            items: File
+            type: array
+          outputBinding:
+            glob: $(inputs.index_prefix + "*")
+        - id: monitoring_log
+          type: File
+          outputBinding:
+            glob: monitoring.log
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    # if the WDL/task contains a monitoring script as input
-                    if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
-                      chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
-                      $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
-                    else
-                      echo "No monitoring script given as input" > monitoring.log &
-                    fi
+                # if the WDL/task contains a monitoring script as input
+                if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
+                  chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
+                  $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
+                else
+                  echo "No monitoring script given as input" > monitoring.log &
+                fi
 
-                    bowtie2-build \
-                      -f $(inputs.fasta_input.path) $(inputs.index_prefix)
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: DockerRequirement
-            dockerPull: quay.io/biocontainers/bowtie2:2.3.4--py36pl5.22.0_0
-          - class: ResourceRequirement
-            coresMin: 1
-            ramMin: 6675.72021484375
-            outdirMin: '$((Math.ceil(3 * (function(size_of=0){inputs.fasta_input.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+                bowtie2-build \
+                  -f $(inputs.fasta_input.path) $(inputs.index_prefix)
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: DockerRequirement
+          dockerPull: quay.io/biocontainers/bowtie2:2.3.4--py36pl5.22.0_0
+        - class: ResourceRequirement
+          coresMin: 1
+          ramMin: 6675.72021484375
+          outdirMin: '$((Math.ceil(3 * (function(size_of=0){inputs.fasta_input.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.fasta_input.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
   - id: CreateReferenceDictionary
     in:
       - id: reference_fasta
@@ -223,63 +225,63 @@ steps:
       - id: ref_dict_output
       - id: monitoring_log
     run:
-        id: CreateReferenceDictionary
-        class: CommandLineTool
-        inputs:
-          - id: reference_fasta
-            type: File
-          - id: monitoring_script
-            type:
-              - File
-              - 'null'
-        outputs:
-          - id: ref_dict_output
-            type: File
-            outputBinding:
-                glob: $(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/,
-                    '') + ".dict")
-          - id: monitoring_log
-            type: File
-            outputBinding:
-                glob: monitoring.log
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4+
+      id: CreateReferenceDictionary
+      class: CommandLineTool
+      inputs:
+        - id: reference_fasta
+          type: File
+        - id: monitoring_script
+          type:
+            - File
+            - 'null'
+      outputs:
+        - id: ref_dict_output
+          type: File
+          outputBinding:
+            glob: $(inputs.reference_fasta.basename.replace(/\.fa$/, 
+              '').split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")
+        - id: monitoring_log
+          type: File
+          outputBinding:
+            glob: monitoring.log
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2+
 
-                    set -euo pipefail
+                set -euo pipefail
 
-                    # if the WDL/task contains a monitoring script as input
-                    if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
-                      chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
-                      $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
-                    else
-                      echo "No monitoring script given as input" > monitoring.log &
-                    fi
+                # if the WDL/task contains a monitoring script as input
+                if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
+                  chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
+                  $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
+                else
+                  echo "No monitoring script given as input" > monitoring.log &
+                fi
 
-                    # create a reference dict
-                    java -Xmx3500m -jar /usr/local/share/picard-2.18.3-0/picard.jar CreateSequenceDictionary \
-                      REFERENCE=$(inputs.reference_fasta.path) \
-                      OUTPUT=$(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")
-                    sed -i "s=\$(dirname $(inputs.reference_fasta.path))/==g" $(inputs.reference_fasta.basename.replace(/\.fa$/, '') .split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")  # for reproducibility
+                # create a reference dict
+                java -Xmx3500m -jar /usr/local/share/picard-2.18.3-0/picard.jar CreateSequenceDictionary \
+                  REFERENCE=$(inputs.reference_fasta.path) \
+                  OUTPUT=$(inputs.reference_fasta.basename.replace(/\.fa$/, '').split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")
+                sed -i "s=\$(dirname $(inputs.reference_fasta.path))/==g" $(inputs.reference_fasta.basename.replace(/\.fa$/, '').split('/').reverse()[0].replace(/\.fasta$/, '') + ".dict")  # for reproducibility
 
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: DockerRequirement
-            dockerPull: quay.io/biocontainers/picard:2.18.3--py27_0
-          - class: ResourceRequirement
-            coresMin: 1
-            ramMin: 4000.0
-            outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.reference_fasta.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.reference_fasta.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: DockerRequirement
+          dockerPull: quay.io/biocontainers/picard:2.18.3--py27_0
+        - class: ResourceRequirement
+          coresMin: 1
+          ramMin: 4000.0
+          outdirMin: '$((Math.ceil(2 * (function(size_of=0){inputs.reference_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.reference_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
   - id: CreateReferenceFastaIndex
     in:
       - id: reference_fasta
@@ -290,64 +292,64 @@ steps:
       - id: ref_index_output
       - id: monitoring_log
     run:
-        id: CreateReferenceFastaIndex
-        class: CommandLineTool
-        inputs:
-          - id: reference_fasta
-            type: File
-          - id: monitoring_script
-            type:
-              - File
-              - 'null'
-        outputs:
-          - id: ref_index_output
-            type: File
-            outputBinding:
-                glob: $(inputs.reference_fasta.basename + ".fai")
-          - id: monitoring_log
-            type: File
-            outputBinding:
-                glob: monitoring.log
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: CreateReferenceFastaIndex
+      class: CommandLineTool
+      inputs:
+        - id: reference_fasta
+          type: File
+        - id: monitoring_script
+          type:
+            - File
+            - 'null'
+      outputs:
+        - id: ref_index_output
+          type: File
+          outputBinding:
+            glob: $(inputs.reference_fasta.basename + ".fai")
+        - id: monitoring_log
+          type: File
+          outputBinding:
+            glob: monitoring.log
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    set -euo pipefail
+                set -euo pipefail
 
-                    # if the WDL/task contains a monitoring script as input
-                    if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
-                      chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
-                      $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
-                    else
-                      echo "No monitoring script given as input" > monitoring.log &
-                    fi
+                # if the WDL/task contains a monitoring script as input
+                if [ ! -z "$(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)" ]; then
+                  chmod a+x $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path)
+                  $(inputs.monitoring_script === null ? "" : inputs.monitoring_script.path) > monitoring.log &
+                else
+                  echo "No monitoring script given as input" > monitoring.log &
+                fi
 
-                    declare -a FASTA_TEMP=\$(mktemp fasta_XXXXXX)
-                    cp $(inputs.reference_fasta.path) $FASTA_TEMP
+                declare -a FASTA_TEMP=\$(mktemp fasta_XXXXXX)
+                cp $(inputs.reference_fasta.path) $FASTA_TEMP
 
-                    # create a reference index
-                    samtools faidx \
-                        $FASTA_TEMP
+                # create a reference index
+                samtools faidx \
+                    $FASTA_TEMP
 
-                    mv $FASTA_TEMP.fai $(inputs.reference_fasta.basename + ".fai")
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: DockerRequirement
-            dockerPull: quay.io/biocontainers/samtools:1.9--h10a08f8_12
-          - class: ResourceRequirement
-            coresMin: 1
-            ramMin: 3337.860107421875
-            outdirMin: '$((Math.ceil(2.25 * (function(size_of=0){inputs.reference_fasta.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.reference_fasta.forEach(function(element){
-                if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
+                mv $FASTA_TEMP.fai $(inputs.reference_fasta.basename + ".fai")
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: DockerRequirement
+          dockerPull: quay.io/biocontainers/samtools:1.9--h10a08f8_12
+        - class: ResourceRequirement
+          coresMin: 1
+          ramMin: 3337.860107421875
+          outdirMin: '$((Math.ceil(2.25 * (function(size_of=0){inputs.reference_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3 < 1 ? 1 : (function(size_of=0){inputs.reference_fasta.forEach(function(element){
+            if (element) {size_of += element.size}})}) / 1000^3) ) * 1024)'
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
 outputs:
   - id: BuildCembaReferences.reference_fasta_dict
     outputSource: CreateReferenceDictionary/ref_dict_output
@@ -364,10 +366,12 @@ outputs:
   - id: BuildCembaReferences.fwd_bowtie2_index_files
     outputSource: IndexForward/bowtie2_index_files
     type:
-        items: File
-        type: array
+      name: _fwd_bowtie2_index_files_File_array
+      items: File
+      type: array
   - id: BuildCembaReferences.rev_bowtie2_index_files
     outputSource: IndexReverse/bowtie2_index_files
     type:
-        items: File
-        type: array
+      name: _rev_bowtie2_index_files_File_array
+      items: File
+      type: array

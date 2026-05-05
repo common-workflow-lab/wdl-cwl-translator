@@ -7,17 +7,17 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                talon_abundance \
-                --db=$(inputs.databaseFile.path) \
-                -a $(inputs.annotationVersion) \
-                -b $(inputs.genomeBuild) \
-                --o=$(inputs.outputPrefix) \
-                $(inputs.whitelistFile === null ? "" : "--whitelist=" + inputs.whitelistFile.path) \
-                $(inputs.datasetsFile === null ? "" : "-d " + inputs.datasetsFile.path)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              talon_abundance \
+              --db=$(inputs.databaseFile.path) \
+              -a $(inputs.annotationVersion) \
+              -b $(inputs.genomeBuild) \
+              --o=$(inputs.outputPrefix) \
+              $(inputs.whitelistFile === null ? "" : "--whitelist=" + inputs.whitelistFile.path) \
+              $(inputs.datasetsFile === null ? "" : "-d " + inputs.datasetsFile.path)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -26,22 +26,22 @@ $graph:
         dockerPull: biocontainers/talon:v5.0_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -77,8 +77,8 @@ $graph:
         default: 30
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -86,10 +86,11 @@ $graph:
       - script.bash
     outputs:
       - id: abundanceFile
-        doc: Abundance for each transcript in the talon database across datasets.
+        doc: Abundance for each transcript in the talon database across 
+          datasets.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_talon_abundance.tsv")
+          glob: $(inputs.outputPrefix + "_talon_abundance.tsv")
   - cwlVersion: v1.2
     id: CreateGtfFromDatabase
     class: CommandLineTool
@@ -97,18 +98,18 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                talon_create_GTF \
-                --db=$(inputs.databaseFile.path) \
-                -b $(inputs.genomeBuild) \
-                -a $(inputs.annotationVersion) \
-                --o=$(inputs.outputPrefix) \
-                $(inputs.observedInDataset ? "--observed" : "") \
-                $(inputs.whitelistFile === null ? "" : "--whitelist=" + inputs.whitelistFile.path) \
-                $(inputs.datasetFile === null ? "" : "-d " + inputs.datasetFile.path)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              talon_create_GTF \
+              --db=$(inputs.databaseFile.path) \
+              -b $(inputs.genomeBuild) \
+              -a $(inputs.annotationVersion) \
+              --o=$(inputs.outputPrefix) \
+              $(inputs.observedInDataset ? "--observed" : "") \
+              $(inputs.whitelistFile === null ? "" : "--whitelist=" + inputs.whitelistFile.path) \
+              $(inputs.datasetFile === null ? "" : "-d " + inputs.datasetFile.path)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -117,22 +118,22 @@ $graph:
         dockerPull: biocontainers/talon:v5.0_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -150,8 +151,8 @@ $graph:
         doc: Output directory path + output file prefix.
         type: string
       - id: observedInDataset
-        doc: The output will only include transcripts that were observed at least
-            once.
+        doc: The output will only include transcripts that were observed at 
+          least once.
         default: false
         type: boolean
       - id: whitelistFile
@@ -173,8 +174,8 @@ $graph:
         default: 30
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -182,10 +183,11 @@ $graph:
       - script.bash
     outputs:
       - id: gtfFile
-        doc: The genes, transcripts, and exons stored a talon database in gtf format.
+        doc: The genes, transcripts, and exons stored a talon database in gtf 
+          format.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_talon.gtf")
+          glob: $(inputs.outputPrefix + "_talon.gtf")
   - cwlVersion: v1.2
     id: FilterTalonTranscripts
     class: CommandLineTool
@@ -193,19 +195,19 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                talon_filter_transcripts \
-                --db=$(inputs.databaseFile.path) \
-                -a $(inputs.annotationVersion) \
-                $("--o=" + inputs.outputPrefix + "_whitelist.csv") \
-                --maxFracA=$(inputs.maxFracA) \
-                --minCount=$(inputs.minCount) \
-                $(inputs.allowGenomic ? "--allowGenomic" : "") \
-                --datasets=$(inputs.datasetsFile === null ? "" : inputs.datasetsFile.path) \
-                --minDatasets=$(inputs.minDatasets)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              talon_filter_transcripts \
+              --db=$(inputs.databaseFile.path) \
+              -a $(inputs.annotationVersion) \
+              $("--o=" + inputs.outputPrefix + "_whitelist.csv") \
+              --maxFracA=$(inputs.maxFracA) \
+              --minCount=$(inputs.minCount) \
+              $(inputs.allowGenomic ? "--allowGenomic" : "") \
+              --datasets=$(inputs.datasetsFile === null ? "" : inputs.datasetsFile.path) \
+              --minDatasets=$(inputs.minDatasets)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -214,22 +216,22 @@ $graph:
         dockerPull: biocontainers/talon:v5.0_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -244,17 +246,18 @@ $graph:
         doc: Output directory path + output file prefix.
         type: string
       - id: maxFracA
-        doc: Maximum fraction of As to allow in the window located immediately after
-            any read assigned to a novel transcript.
+        doc: Maximum fraction of As to allow in the window located immediately 
+          after any read assigned to a novel transcript.
         default: 0.5
         type: float
       - id: minCount
-        doc: Number of minimum occurrences required for a novel transcript per dataset.
+        doc: Number of minimum occurrences required for a novel transcript per 
+          dataset.
         default: 5
         type: int
       - id: allowGenomic
-        doc: If this option is set, transcripts from the Genomic novelty category
-            will be permitted in the output.
+        doc: If this option is set, transcripts from the Genomic novelty 
+          category will be permitted in the output.
         default: false
         type: boolean
       - id: datasetsFile
@@ -276,8 +279,8 @@ $graph:
         default: 30
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -288,7 +291,7 @@ $graph:
         doc: Transcript whitelist produced from the talon database.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_whitelist.csv")
+          glob: $(inputs.outputPrefix + "_whitelist.csv")
   - cwlVersion: v1.2
     id: GetReadAnnotations
     class: CommandLineTool
@@ -296,15 +299,15 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                talon_fetch_reads \
-                --db $(inputs.databaseFile.path) \
-                --build $(inputs.genomeBuild) \
-                --o $(inputs.outputPrefix) \
-                $(inputs.datasetFile === null ? "" : "--datasets " + inputs.datasetFile.path)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              talon_fetch_reads \
+              --db $(inputs.databaseFile.path) \
+              --build $(inputs.genomeBuild) \
+              --o $(inputs.outputPrefix) \
+              $(inputs.datasetFile === null ? "" : "--datasets " + inputs.datasetFile.path)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -313,22 +316,22 @@ $graph:
         dockerPull: biocontainers/talon:v5.0_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -356,8 +359,8 @@ $graph:
         default: 30
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -368,7 +371,7 @@ $graph:
         doc: Read-specific annotation information from a talon database.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_talon_read_annot.tsv")
+          glob: $(inputs.outputPrefix + "_talon_read_annot.tsv")
   - cwlVersion: v1.2
     id: GetSpliceJunctions
     class: CommandLineTool
@@ -376,15 +379,15 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                talon_get_sjs \
-                $({ "db": "--db", "gtf": "--gtf" }[inputs.inputFileType] + inputs.sjInformationFile.path) \
-                --ref $(inputs.referenceGtf.path) \
-                --mode $(inputs.runMode) \
-                --outprefix $(inputs.outputPrefix)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              talon_get_sjs \
+              $({ "db": "--db", "gtf": "--gtf" }[inputs.inputFileType] + inputs.sjInformationFile.path) \
+              --ref $(inputs.referenceGtf.path) \
+              --mode $(inputs.runMode) \
+              --outprefix $(inputs.outputPrefix)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -393,22 +396,22 @@ $graph:
         dockerPull: biocontainers/talon:v5.0_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -439,8 +442,8 @@ $graph:
         default: 30
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -448,10 +451,11 @@ $graph:
       - script.bash
     outputs:
       - id: spliceJunctions
-        doc: File containing locations, novelty and transcript assignments of exons/introns.
+        doc: File containing locations, novelty and transcript assignments of 
+          exons/introns.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_" + inputs.runMode + "s.tsv")
+          glob: $(inputs.outputPrefix + "_" + inputs.runMode + "s.tsv")
   - cwlVersion: v1.2
     id: InitializeTalonDatabase
     class: CommandLineTool
@@ -459,19 +463,19 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                talon_initialize_database \
-                --f=$(inputs.gtfFile.path) \
-                --g=$(inputs.genomeBuild) \
-                --a=$(inputs.annotationVersion) \
-                --l=$(inputs.minimumLength) \
-                --idprefix=$(inputs.novelPrefix) \
-                --5p=$(inputs.cutOff5p) \
-                --3p=$(inputs.cutOff3p) \
-                --o=$(inputs.outputPrefix)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              talon_initialize_database \
+              --f=$(inputs.gtfFile.path) \
+              --g=$(inputs.genomeBuild) \
+              --a=$(inputs.annotationVersion) \
+              --l=$(inputs.minimumLength) \
+              --idprefix=$(inputs.novelPrefix) \
+              --5p=$(inputs.cutOff5p) \
+              --3p=$(inputs.cutOff3p) \
+              --o=$(inputs.outputPrefix)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -480,22 +484,22 @@ $graph:
         dockerPull: biocontainers/talon:v5.0_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -537,8 +541,8 @@ $graph:
         default: 60
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -549,7 +553,7 @@ $graph:
         doc: Talon database.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + ".db")
+          glob: $(inputs.outputPrefix + ".db")
   - cwlVersion: v1.2
     id: LabelReads
     class: CommandLineTool
@@ -557,18 +561,18 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                talon_label_reads \
-                --f=$(inputs.inputSam.path) \
-                --g=$(inputs.referenceGenome.path) \
-                --t=$(inputs.threads) \
-                --ar=$(inputs.fracaRangeSize) \
-                --tmpDir=$(inputs.tmpDir) \
-                $(inputs.deleteTmp ? "--deleteTmp" : "") \
-                --o=$(inputs.outputPrefix)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              talon_label_reads \
+              --f=$(inputs.inputSam.path) \
+              --g=$(inputs.referenceGenome.path) \
+              --t=$(inputs.threads) \
+              --ar=$(inputs.fracaRangeSize) \
+              --tmpDir=$(inputs.tmpDir) \
+              $(inputs.deleteTmp ? "--deleteTmp" : "") \
+              --o=$(inputs.outputPrefix)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -578,22 +582,22 @@ $graph:
       - class: ResourceRequirement
         coresMin: $(inputs.threads)
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -632,8 +636,8 @@ $graph:
         default: 2880
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -644,12 +648,12 @@ $graph:
         doc: Sam file with labeled transcripts.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_labeled.sam")
+          glob: $(inputs.outputPrefix + "_labeled.sam")
       - id: readLabels
         doc: Tabular file with fraction description per read.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_read_labels.tsv")
+          glob: $(inputs.outputPrefix + "_read_labels.tsv")
   - cwlVersion: v1.2
     id: ReformatGtf
     class: CommandLineTool
@@ -657,11 +661,11 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                talon_reformat_gtf \
-                -gtf $(inputs.gtfFile.path)
+              set -e
+              talon_reformat_gtf \
+              -gtf $(inputs.gtfFile.path)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -670,22 +674,22 @@ $graph:
         dockerPull: biocontainers/talon:v5.0_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -702,8 +706,8 @@ $graph:
         default: 30
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -714,7 +718,7 @@ $graph:
         doc: Reformatted gtf file.
         type: File
         outputBinding:
-            glob: $(inputs.gtfFile.path)
+          glob: $(inputs.gtfFile.path)
   - cwlVersion: v1.2
     id: SummarizeDatasets
     class: CommandLineTool
@@ -722,15 +726,15 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                talon_summarize \
-                --db $(inputs.databaseFile.path) \
-                $(inputs.setVerbose ? "--verbose" : "") \
-                --o $(inputs.outputPrefix) \
-                $(inputs.datasetGroupsCsv === null ? "" : "--groups " + inputs.datasetGroupsCsv.path)
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              talon_summarize \
+              --db $(inputs.databaseFile.path) \
+              $(inputs.setVerbose ? "--verbose" : "") \
+              --o $(inputs.outputPrefix) \
+              $(inputs.datasetGroupsCsv === null ? "" : "--groups " + inputs.datasetGroupsCsv.path)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -739,22 +743,22 @@ $graph:
         dockerPull: biocontainers/talon:v5.0_cv1
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -783,8 +787,8 @@ $graph:
         default: 50
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -795,7 +799,7 @@ $graph:
         doc: Tab-delimited file of gene and transcript counts for each dataset.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "_talon_summary.tsv")
+          glob: $(inputs.outputPrefix + "_talon_summary.tsv")
   - cwlVersion: v1.2
     id: Talon
     class: CommandLineTool
@@ -803,27 +807,27 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                mkdir -p "\$(dirname $(inputs.outputPrefix))"
-                mkdir -p $PWD/tmp #Standard /tmp fills up which makes the SQLite process crash.
-                ln -s $PWD/tmp /tmp/sqltmp #Multiprocessing will crash if the absolute path is too long.
-                export TMPDIR=/tmp/sqltmp
-                printf "" > $(inputs.outputPrefix)/talonConfigFile.csv #File needs to be emptied when task is rerun.
-                for file in $(inputs.samFiles.map(function(el) {return el.path}).join(" "))
-                do
-                    configFileLine="\$(basename ${file%.*}),$(inputs.organism),$(inputs.sequencingPlatform),${file}"
-                    echo ${configFileLine} >> $(inputs.outputPrefix)/talonConfigFile.csv
-                done
-                talon \
-                $("--f " + inputs.outputPrefix + "/talonConfigFile.csv") \
-                --db $(inputs.databaseFile.path) \
-                --build $(inputs.genomeBuild) \
-                --threads $(inputs.threads) \
-                --cov $(inputs.minimumCoverage) \
-                --identity $(inputs.minimumIdentity) \
-                $("--o " + inputs.outputPrefix + "/run")
+              set -e
+              mkdir -p "\$(dirname $(inputs.outputPrefix))"
+              mkdir -p $PWD/tmp #Standard /tmp fills up which makes the SQLite process crash.
+              ln -s $PWD/tmp /tmp/sqltmp #Multiprocessing will crash if the absolute path is too long.
+              export TMPDIR=/tmp/sqltmp
+              printf "" > $(inputs.outputPrefix)/talonConfigFile.csv #File needs to be emptied when task is rerun.
+              for file in $(inputs.samFiles.map(function(el) {return el.path}).join(" "))
+              do
+                  configFileLine="\$(basename ${file%.*}),$(inputs.organism),$(inputs.sequencingPlatform),${file}"
+                  echo ${configFileLine} >> $(inputs.outputPrefix)/talonConfigFile.csv
+              done
+              talon \
+              $("--f " + inputs.outputPrefix + "/talonConfigFile.csv") \
+              --db $(inputs.databaseFile.path) \
+              --build $(inputs.genomeBuild) \
+              --threads $(inputs.threads) \
+              --cov $(inputs.minimumCoverage) \
+              --identity $(inputs.minimumIdentity) \
+              $("--o " + inputs.outputPrefix + "/run")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
@@ -833,22 +837,22 @@ $graph:
       - class: ResourceRequirement
         coresMin: $(inputs.threads)
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -856,8 +860,9 @@ $graph:
       - id: samFiles
         doc: Input sam files.
         type:
-            items: File
-            type: array
+          name: _samFiles_File_array
+          items: File
+          type: array
       - id: organism
         doc: The name of the organism from which the samples originated.
         type: string
@@ -895,8 +900,8 @@ $graph:
         default: 2880
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
         default: biocontainers/talon:v5.0_cv1
         type: string
     baseCommand:
@@ -907,19 +912,19 @@ $graph:
         doc: Updated talon database.
         type: File
         outputBinding:
-            glob: $(inputs.databaseFile.path)
+          glob: $(inputs.databaseFile.path)
       - id: talonLog
         doc: Log file from talon run.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "/run_QC.log")
+          glob: $(inputs.outputPrefix + "/run_QC.log")
       - id: talonAnnotation
         doc: Read annotation file from talon run.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "/run_talon_read_annot.tsv")
+          glob: $(inputs.outputPrefix + "/run_talon_read_annot.tsv")
       - id: talonConfigFile
         doc: The talon configuration file.
         type: File
         outputBinding:
-            glob: $(inputs.outputPrefix + "/talonConfigFile.csv")
+          glob: $(inputs.outputPrefix + "/talonConfigFile.csv")

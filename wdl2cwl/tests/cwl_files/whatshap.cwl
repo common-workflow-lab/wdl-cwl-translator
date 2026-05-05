@@ -7,71 +7,74 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                whatshap phase \
-                $(inputs.vcf.path) \
-                $(inputs.phaseInput.path) \
-                $(inputs.outputVCF !== null ? "--output " + "\"" + inputs.outputVCF + "\"" : "") \
-                $(inputs.reference !== null ? inputs.reference === null ? "" : "--reference " + "\"" + inputs.reference.path + "\"" : "") \
-                $(inputs.tag !== null ? inputs.tag === null ? "" : "--tag " + "\"" + inputs.tag + "\"" : "") \
-                $(inputs.algorithm !== null ? inputs.algorithm === null ? "" : "--algorithm " + "\"" + inputs.algorithm + "\"" : "") \
-                $(inputs.indels === null ? "" : inputs.indels ? "--indels" : "") \
-                $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "") \
-                $(inputs.chromosome !== null ? inputs.chromosome === null ? "" : "--chromosome " + "\"" + inputs.chromosome + "\"" : "") \
-                $(inputs.threshold !== null ? inputs.threshold === null ? "" : "--threshold " + "\"" + inputs.threshold + "\"" : "") \
-                $(inputs.ped !== null ? inputs.ped === null ? "" : "--ped " + "\"" + inputs.ped + "\"" : "")
+              set -e
+              whatshap phase \
+              $(inputs.vcf.path) \
+              $(inputs.phaseInput.path) \
+              $(inputs.outputVCF !== null ? "--output " + "\"" + inputs.outputVCF + "\"" : "") \
+              $(inputs.reference !== null ? inputs.reference === null ? "" : "--reference " + "\"" + inputs.reference.path + "\"" : "") \
+              $(inputs.tag !== null ? inputs.tag === null ? "" : "--tag " + "\"" + inputs.tag + "\"" : "") \
+              $(inputs.algorithm !== null ? inputs.algorithm === null ? "" : "--algorithm " + "\"" + inputs.algorithm + "\"" : "") \
+              $(inputs.indels === null ? "" : inputs.indels ? "--indels" : "") \
+              $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "") \
+              $(inputs.chromosome !== null ? inputs.chromosome === null ? "" : "--chromosome " + "\"" + inputs.chromosome + "\"" : "") \
+              $(inputs.threshold !== null ? inputs.threshold === null ? "" : "--threshold " + "\"" + inputs.threshold + "\"" : "") \
+              $(inputs.ped !== null ? inputs.ped === null ? "" : "--ped " + "\"" + inputs.ped + "\"" : "")
 
-                tabix -p vcf $(inputs.outputVCF)
+              tabix -p vcf $(inputs.outputVCF)
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        dockerPull: 
+          quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
     inputs:
       - id: outputVCF
-        doc: Output VCF file. Add .gz to the file name to get compressed output. If
-            omitted, use standard output.
+        doc: Output VCF file. Add .gz to the file name to get compressed output.
+          If omitted, use standard output.
         type: string
       - id: vcf
-        doc: VCF or BCF file with variants to be phased (can be gzip-compressed).
+        doc: VCF or BCF file with variants to be phased (can be 
+          gzip-compressed).
         type: File
       - id: vcfIndex
         doc: Index for the VCF or BCF file with variants to be phased.
         type: File
       - id: phaseInput
-        doc: BAM, CRAM, VCF or BCF file(s) with phase information, either through
-            sequencing reads (BAM, CRAM) or through phased blocks (VCF, BCF).
+        doc: BAM, CRAM, VCF or BCF file(s) with phase information, either 
+          through sequencing reads (BAM, CRAM) or through phased blocks (VCF, 
+          BCF).
         type: File
       - id: phaseInputIndex
         doc: Index of BAM, CRAM, VCF or BCF file(s) with phase information.
         type: File
       - id: reference
-        doc: Reference file. Provide this to detect alleles through re-alignment.
-            If no index (.fai) exists, it will be created.
+        doc: Reference file. Provide this to detect alleles through 
+          re-alignment. If no index (.fai) exists, it will be created.
         type:
           - File
           - 'null'
@@ -82,7 +85,7 @@ $graph:
           - 'null'
       - id: tag
         doc: 'Store phasing information with PS tag (standardized) or HP tag (used
-            by GATK ReadBackedPhasing) (default: {description: PS).'
+          by GATK ReadBackedPhasing) (default: {description: PS).'
         type:
           - string
           - 'null'
@@ -97,28 +100,29 @@ $graph:
           - boolean
           - 'null'
       - id: sample
-        doc: Name of a sample to phase. If not given, all samples in the input VCF
-            are phased. Can be used multiple times.
+        doc: Name of a sample to phase. If not given, all samples in the input 
+          VCF are phased. Can be used multiple times.
         type:
           - string
           - 'null'
       - id: chromosome
-        doc: Name of chromosome to phase. If not given, all chromosomes in the input
-            VCF are phased. Can be used multiple times.
+        doc: Name of chromosome to phase. If not given, all chromosomes in the 
+          input VCF are phased. Can be used multiple times.
         type:
           - string
           - 'null'
       - id: threshold
         doc: 'The threshold of the ratio between the probabilities that a pair of
-            reads come from the same haplotype and different haplotypes in the read
-            merging model (default: {description: 1000000).'
+          reads come from the same haplotype and different haplotypes in the read
+          merging model (default: {description: 1000000).'
         type:
           - string
           - 'null'
       - id: ped
-        doc: Use pedigree information in PED file to improve phasing (switches to
-            PedMEC algorithm). Columns 2, 3, 4 must refer to child, mother, and father
-            sample names as used in the VCF and BAM/CRAM. Other columns are ignored.
+        doc: Use pedigree information in PED file to improve phasing (switches 
+          to PedMEC algorithm). Columns 2, 3, 4 must refer to child, mother, and
+          father sample names as used in the VCF and BAM/CRAM. Other columns are
+          ignored.
         type:
           - string
           - 'null'
@@ -131,9 +135,10 @@ $graph:
         default: 120
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
+        default: 
+          quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
         type: string
     baseCommand:
       - bash
@@ -143,12 +148,12 @@ $graph:
         doc: VCF file containing phased variants.
         type: File
         outputBinding:
-            glob: $(inputs.outputVCF)
+          glob: $(inputs.outputVCF)
       - id: phasedVCFIndex
         doc: Index of phased VCF file.
         type: File
         outputBinding:
-            glob: $(inputs.outputVCF + ".tbi")
+          glob: $(inputs.outputVCF + ".tbi")
   - cwlVersion: v1.2
     id: Stats
     class: CommandLineTool
@@ -156,39 +161,40 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                whatshap stats \
-                $(inputs.vcf.path) \
-                $(inputs.gtf !== null ? inputs.gtf === null ? "" : "--gtf " + "\"" + inputs.gtf + "\"" : "") \
-                $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "") \
-                $(inputs.tsv !== null ? inputs.tsv === null ? "" : "--tsv " + "\"" + inputs.tsv + "\"" : "") \
-                $(inputs.blockList !== null ? inputs.blockList === null ? "" : "--block-list " + "\"" + inputs.blockList + "\"" : "") \
-                $(inputs.chromosome !== null ? inputs.chromosome === null ? "" : "--chromosome " + "\"" + inputs.chromosome + "\"" : "")
+              whatshap stats \
+              $(inputs.vcf.path) \
+              $(inputs.gtf !== null ? inputs.gtf === null ? "" : "--gtf " + "\"" + inputs.gtf + "\"" : "") \
+              $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "") \
+              $(inputs.tsv !== null ? inputs.tsv === null ? "" : "--tsv " + "\"" + inputs.tsv + "\"" : "") \
+              $(inputs.blockList !== null ? inputs.blockList === null ? "" : "--block-list " + "\"" + inputs.blockList + "\"" : "") \
+              $(inputs.chromosome !== null ? inputs.chromosome === null ? "" : "--chromosome " + "\"" + inputs.chromosome + "\"" : "")
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        dockerPull: 
+          quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
@@ -202,8 +208,8 @@ $graph:
           - string
           - 'null'
       - id: sample
-        doc: Name of the sample to process. If not given, use first sample found in
-            VCF.
+        doc: Name of the sample to process. If not given, use first sample found
+          in VCF.
         type:
           - string
           - 'null'
@@ -218,8 +224,8 @@ $graph:
           - string
           - 'null'
       - id: chromosome
-        doc: Name of chromosome to process. If not given, all chromosomes in the input
-            VCF are considered.
+        doc: Name of chromosome to process. If not given, all chromosomes in the
+          input VCF are considered.
         type:
           - string
           - 'null'
@@ -232,9 +238,10 @@ $graph:
         default: 120
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
+        default: 
+          quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
         type: string
     baseCommand:
       - bash
@@ -246,21 +253,21 @@ $graph:
           - File
           - 'null'
         outputBinding:
-            glob: $(inputs.gtf)
+          glob: $(inputs.gtf)
       - id: phasedTSV
         doc: Statistics in a tab-separated value format.
         type:
           - File
           - 'null'
         outputBinding:
-            glob: $(inputs.tsv)
+          glob: $(inputs.tsv)
       - id: phasedBlockList
         doc: List of the total number of phase sets/blocks.
         type:
           - File
           - 'null'
         outputBinding:
-            glob: $(inputs.blockList)
+          glob: $(inputs.blockList)
   - cwlVersion: v1.2
     id: Haplotag
     class: CommandLineTool
@@ -268,48 +275,50 @@ $graph:
       - class: InitialWorkDirRequirement
         listing:
           - entryname: script.bash
-            entry: |4
+            entry: |2
 
-                set -e
-                whatshap haplotag \
-                $(inputs.vcf.path) \
-                $(inputs.alignments.path) \
-                $(inputs.outputFile !== null ? "--output " + "\"" + inputs.outputFile + "\"" : "") \
-                $(inputs.reference !== null ? inputs.reference === null ? "" : "--reference " + "\"" + inputs.reference.path + "\"" : "") \
-                $(inputs.regions !== null ? inputs.regions === null ? "" : "--regions " + "\"" + inputs.regions + "\"" : "") \
-                $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "")
+              set -e
+              whatshap haplotag \
+              $(inputs.vcf.path) \
+              $(inputs.alignments.path) \
+              $(inputs.outputFile !== null ? "--output " + "\"" + inputs.outputFile + "\"" : "") \
+              $(inputs.reference !== null ? inputs.reference === null ? "" : "--reference " + "\"" + inputs.reference.path + "\"" : "") \
+              $(inputs.regions !== null ? inputs.regions === null ? "" : "--regions " + "\"" + inputs.regions + "\"" : "") \
+              $(inputs.sample !== null ? inputs.sample === null ? "" : "--sample " + "\"" + inputs.sample + "\"" : "")
 
-                python3 -c "import pysam; pysam.index('$(inputs.outputFile)')"
+              python3 -c "import pysam; pysam.index('$(inputs.outputFile)')"
       - class: InlineJavascriptRequirement
       - class: NetworkAccess
         networkAccess: true
     hints:
       - class: DockerRequirement
-        dockerPull: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        dockerPull: 
+          quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
       - class: ResourceRequirement
         ramMin: |-
-            ${
-            var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
-            var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
-            var memory = "";
-            if(unit==="KiB") memory = value/1024;
-            else if(unit==="MiB") memory = value;
-            else if(unit==="GiB") memory = value*1024;
-            else if(unit==="TiB") memory = value*1024*1024;
-            else if(unit==="B") memory = value/(1024*1024);
-            else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
-            else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
-            else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
-            else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
-            else throw "Unknown units: " + unit;
-            return parseInt(memory);
-            }
+          ${
+          var unit = inputs.memory.match(/[a-zA-Z]+/g).join("");
+          var value = parseInt(`${inputs.memory}`.match(/[0-9]+/g));
+          var memory = "";
+          if(unit==="KiB") memory = value/1024;
+          else if(unit==="MiB") memory = value;
+          else if(unit==="GiB") memory = value*1024;
+          else if(unit==="TiB") memory = value*1024*1024;
+          else if(unit==="B") memory = value/(1024*1024);
+          else if(unit==="KB" || unit==="K") memory = (value*1000)/(1024*1024);
+          else if(unit==="MB" || unit==="M") memory = (value*(1000*1000))/(1024*1024);
+          else if(unit==="GB" || unit==="G") memory = (value*(1000*1000*1000))/(1024*1024);
+          else if(unit==="TB" || unit==="T") memory = (value*(1000*1000*1000*1000))/(1024*1024);
+          else throw "Unknown units: " + unit;
+          return parseInt(memory);
+          }
         outdirMin: 1024
       - class: ToolTimeLimit
         timelimit: $(inputs.timeMinutes * 60)
     inputs:
       - id: vcf
-        doc: VCF file with phased variants (must be gzip-compressed and indexed).
+        doc: VCF file with phased variants (must be gzip-compressed and 
+          indexed).
         type: File
       - id: vcfIndex
         doc: Index for the VCF or BCF file with variants to be phased.
@@ -324,8 +333,8 @@ $graph:
         doc: Output file. If omitted, use standard output.
         type: string
       - id: reference
-        doc: Reference file. Provide this to detect alleles through re-alignment.
-            If no index (.fai) exists, it will be created.
+        doc: Reference file. Provide this to detect alleles through 
+          re-alignment. If no index (.fai) exists, it will be created.
         type:
           - File
           - 'null'
@@ -335,16 +344,17 @@ $graph:
           - File
           - 'null'
       - id: regions
-        doc: Specify region(s) of interest to limit the tagging to reads/variants
-            overlapping those regions. You can specify a space-separated list of regions
-            in the form of chrom:start-end, chrom (consider entire chromosome), or
-            chrom:start (consider region from this start to end of chromosome).
+        doc: Specify region(s) of interest to limit the tagging to 
+          reads/variants overlapping those regions. You can specify a 
+          space-separated list of regions in the form of chrom:start-end, chrom 
+          (consider entire chromosome), or chrom:start (consider region from 
+          this start to end of chromosome).
         type:
           - string
           - 'null'
       - id: sample
-        doc: Name of a sample to phase. If not given, all samples in the input VCF
-            are phased. Can be used multiple times.
+        doc: Name of a sample to phase. If not given, all samples in the input 
+          VCF are phased. Can be used multiple times.
         type:
           - string
           - 'null'
@@ -357,9 +367,10 @@ $graph:
         default: 120
         type: int
       - id: dockerImage
-        doc: The docker image used for this task. Changing this may result in errors
-            which the developers may choose not to address.
-        default: quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
+        doc: The docker image used for this task. Changing this may result in 
+          errors which the developers may choose not to address.
+        default: 
+          quay.io/biocontainers/mulled-v2-5c61fe1d8c284dd05d26238ce877aa323205bf82:89b4005d04552bdd268e8af323df83357e968d83-0
         type: string
     baseCommand:
       - bash
@@ -369,9 +380,9 @@ $graph:
         doc: BAM file containing tagged reads for haplotype.
         type: File
         outputBinding:
-            glob: $(inputs.outputFile)
+          glob: $(inputs.outputFile)
       - id: bamIndex
         doc: Index of the tagged BAM file.
         type: File
         outputBinding:
-            glob: $(inputs.outputFile + ".bai")
+          glob: $(inputs.outputFile + ".bai")

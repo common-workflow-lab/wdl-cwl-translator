@@ -14,16 +14,16 @@ inputs:
     type: float
   - id: fourth
     default:
-        one: fifth
-        two: sixth
+      one: fifth
+      two: sixth
     type:
-        name: Foo
-        fields:
-          - name: one
-            type: string
-          - name: two
-            type: string
-        type: record
+      name: Foo
+      fields:
+        - name: one
+          type: string
+        - name: two
+          type: string
+      type: record
 steps:
   - id: echo
     in:
@@ -39,44 +39,44 @@ steps:
       - id: out
       - id: result
     run:
-        id: echo
-        class: CommandLineTool
-        inputs:
-          - id: in
-            type: string
-          - id: other
-            type: string
-          - id: echo
-            type: boolean
-        outputs:
-          - id: out
-            type: string
-            outputBinding:
-                outputEval: $(inputs["in"])
-          - id: result
-            type: string
-            outputBinding:
-                loadContents: true
-                glob: _stdout
-                outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
-        requirements:
-          - class: InitialWorkDirRequirement
-            listing:
-              - entryname: script.bash
-                entry: |4
+      id: echo
+      class: CommandLineTool
+      inputs:
+        - id: in
+          type: string
+        - id: other
+          type: string
+        - id: echo
+          type: boolean
+      outputs:
+        - id: out
+          type: string
+          outputBinding:
+            outputEval: $(inputs["in"])
+        - id: result
+          type: string
+          outputBinding:
+            loadContents: true
+            glob: _stdout
+            outputEval: $(self[0].contents.replace(/[\r\n]+$/, ''))
+      requirements:
+        - class: InitialWorkDirRequirement
+          listing:
+            - entryname: script.bash
+              entry: |2
 
-                    $(inputs.echo ? "echo " + inputs["in"] + " " + inputs.other : "")
-          - class: InlineJavascriptRequirement
-          - class: NetworkAccess
-            networkAccess: true
-        hints:
-          - class: ResourceRequirement
-            outdirMin: 1024
-        cwlVersion: v1.2
-        baseCommand:
-          - bash
-          - script.bash
-        stdout: _stdout
+                $(inputs.echo ? "echo " + inputs["in"] + " " + inputs.other : "")
+        - class: InlineJavascriptRequirement
+        - class: NetworkAccess
+          networkAccess: true
+      hints:
+        - class: ResourceRequirement
+          outdirMin: 1024
+      cwlVersion: v1.2
+      baseCommand:
+        - bash
+        - script.bash
+      stdout: _stdout
 outputs:
   - id: foo.first_result
     outputSource: first
