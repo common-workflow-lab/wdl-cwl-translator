@@ -477,9 +477,7 @@ class Converter:
         wf_step_inputs: list[cwl.WorkflowStepInput] = []
         for inp in cwl_callee_inputs:
             call_inp_id = f"{call.name}.{inp.id}"
-            source_str, extras = inputs_from_call.get(
-                cast(str, inp.id), (call_inp_id, {})
-            )
+            source_str, extras = inputs_from_call.get(inp.id, (call_inp_id, {}))
 
             if inp.id not in input_defaults:
                 wf_step_inputs.append(
@@ -496,8 +494,8 @@ class Converter:
         )
         wf_step_run = self.load_wdl_objects(callee)
         wf_step = cwl.WorkflowStep(
-            wf_step_inputs,
             id=call.name,
+            in_=wf_step_inputs,
             run=wf_step_run,
             out=wf_step_outputs,
         )
@@ -721,7 +719,7 @@ class Converter:
         input_type: WDL.Type.Base,
         array_type: type[CWLArrayTypes],
         record_type: type[CWLRecordTypes],
-        parent: Optional[WDL.Error.SourceNode],
+        parent: Optional[WDL.Tree.Decl],
     ) -> Union[str, CWLArrayTypes, CWLRecordTypes]:
         """Determine the CWL type for a WDL input declaration."""
         if isinstance(input_type, WDL.Type.Any):
@@ -740,7 +738,13 @@ class Converter:
             sub_type = self.get_cwl_type(
                 input_type.item_type, array_type, record_type, parent
             )
-            return array_type(type_="array", items=sub_type)
+            if isinstance(sub_type, str):
+                type_name = f"_{sub_type}_array"
+                if parent:
+                    type_name = f"_{parent.name}{type_name}"
+            else:
+                type_name = f"{sub_type.name}_array"
+            return array_type(name=type_name, type_="array", items=sub_type)
         elif isinstance(input_type, WDL.Type.StructInstance):
             return record_type(
                 type_="record",
@@ -795,6 +799,7 @@ class Converter:
                         ],
                         out=["result"],
                         run=cwl.ExpressionTool(
+                            id=f"{new_output_name}_etool",
                             inputs=[
                                 cwl.WorkflowInputParameter(
                                     type_="Any", id="_".join(source.split("/"))
@@ -840,6 +845,7 @@ class Converter:
                         ],
                         out=[f"{member}"],
                         run=cwl.ExpressionTool(
+                            id=f"{new_output_name}_etool",
                             inputs=[
                                 cwl.WorkflowInputParameter(type_="Any", id="target")
                             ],
@@ -1087,6 +1093,7 @@ class Converter:
                     )
                 suffix_str = str(get_literal_value(suffix))
                 regex_str = re.escape(suffix_str)
+                basename_target_name = basename_target_name.strip()
                 return (
                     (
                         f"{basename_target_name}.basename.replace(/{regex_str}$/, '') "
